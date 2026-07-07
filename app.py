@@ -5,6 +5,8 @@ from engine.calculations import (
     calculate_move_score,
     get_best_move,
     get_worst_incoming_move,
+    calculate_matchup_ratio,
+    find_best_team_member,
 )
 
 st.title("Pokémon Battle Compass")
@@ -234,3 +236,40 @@ worst_move, worst_score = get_worst_incoming_move(
 
 st.write(f"Worst incoming move: **{worst_move['Move']}**")
 st.write(f"Incoming Worst Score: **{round(worst_score, 2)}**")
+
+st.divider()
+
+st.header("Matchup Ratio Test")
+
+best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
+    selected_pokemon,
+    selected_opponent,
+    items
+)
+
+st.write(f"Best player move: **{best_move['Move']}**")
+st.write(f"Best MoveScore: **{round(best_score, 2)}**")
+
+st.write(f"Worst incoming move: **{worst_move['Move']}**")
+st.write(f"Incoming Worst Score: **{round(worst_score, 2)}**")
+
+st.write(f"Ratio: **{round(ratio, 2)}**")
+
+st.divider()
+
+st.header("Recommendation Test")
+
+recommended_pokemon, recommendation_result = find_best_team_member(
+    team_data,
+    selected_opponent,
+    items
+)
+
+best_move, best_score, worst_move, worst_score, ratio = recommendation_result
+
+st.write(f"Recommended Pokémon: **{recommended_pokemon['Pokemon']}**")
+st.write(f"Best move: **{best_move['Move']}**")
+st.write(f"Best MoveScore: **{round(best_score, 2)}**")
+st.write(f"Worst incoming move: **{worst_move['Move']}**")
+st.write(f"Incoming Worst Score: **{round(worst_score, 2)}**")
+st.write(f"Ratio: **{round(ratio, 2)}**")

@@ -116,3 +116,44 @@ def get_worst_incoming_move(opponent, defender, items):
             worst_move = move
 
     return worst_move, worst_score
+
+def calculate_matchup_ratio(attacker, defender, items):
+    best_move, best_score = get_best_move(
+        attacker,
+        defender,
+        items
+    )
+
+    worst_move, worst_score = get_worst_incoming_move(
+        defender,
+        attacker,
+        items
+    )
+
+    if worst_score == 0:
+        return best_move, best_score, worst_move, worst_score, 99
+
+    ratio = best_score / worst_score
+
+    return best_move, best_score, worst_move, worst_score, ratio
+
+def find_best_team_member(team, opponent, items):
+    best_pokemon = None
+    best_ratio = -1
+    best_result = None
+
+    for pokemon in team:
+        result = calculate_matchup_ratio(
+            pokemon,
+            opponent,
+            items
+        )
+
+        ratio = result[4]
+
+        if ratio > best_ratio:
+            best_ratio = ratio
+            best_pokemon = pokemon
+            best_result = result
+
+    return best_pokemon, best_result
