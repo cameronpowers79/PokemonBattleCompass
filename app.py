@@ -1,6 +1,7 @@
 import streamlit as st
 from engine.data_loader import load_json
 from engine.mechanics import get_type_multiplier
+from engine.mechanics import get_type_multiplier, get_stab_multiplier
 
 st.title("Pokémon Battle Compass")
 
@@ -23,6 +24,19 @@ st.subheader("Result")
 st.write(
     f"{attack_type} vs {defender_type_1}/{defender_type_2 or 'None'} = **{multiplier}x**"
 )
+
+st.subheader("STAB Test")
+
+attacker_type_1 = st.selectbox("Attacker Type 1", types)
+attacker_type_2 = st.selectbox("Attacker Type 2", [""] + types)
+move_type = st.selectbox("Move type", types)
+
+stab = get_stab_multiplier(
+    move_type,
+    [attacker_type_1, attacker_type_2]
+)
+
+st.write(f"{move_type} used by {attacker_type_1}/{attacker_type_2 or 'None'} = **{stab}x STAB**")
 
 st.divider()
 
