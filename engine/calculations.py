@@ -3,6 +3,8 @@ from engine.mechanics import (
     get_type_multiplier,
     get_item_multiplier,
     get_ability_multiplier,
+    get_attack_stat_multiplier,
+    get_attack_reduction_multiplier,
 )
 from engine.notes import build_notes, build_why_explanation
 
@@ -67,6 +69,8 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
 
     attack_stat = get_relevant_attack_stat(attacker, move["Category"])
+    attack_stat *= get_attack_stat_multiplier(attacker, move, ability_rules)
+    attack_stat *= get_attack_reduction_multiplier(attacker, defender, move, ability_rules)
     defense_stat = get_relevant_defense_stat(defender, move["Category"])
 
     return move["Power"] * effectiveness * stab * item_multiplier * attack_stat / defense_stat

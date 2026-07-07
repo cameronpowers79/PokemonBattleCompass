@@ -91,3 +91,39 @@ def get_ability_multiplier(defender, move, ability_rules, effectiveness=1):
                 return modifier
 
     return 1
+
+def get_attack_stat_multiplier(attacker, move, ability_rules):
+    ability_name = attacker.get("Ability")
+
+    if not ability_name:
+        return 1
+
+    for rule in ability_rules:
+        if rule.get("Ability") != ability_name:
+            continue
+
+        if rule.get("Effect") != "AttackBoost":
+            continue
+
+        if rule.get("TargetType") == move.get("Category"):
+            return rule.get("Modifier", 1)
+
+    return 1
+
+def get_attack_reduction_multiplier(attacker, defender, move, ability_rules):
+    defender_ability = defender.get("Ability")
+
+    if not defender_ability:
+        return 1
+
+    for rule in ability_rules:
+        if rule.get("Ability") != defender_ability:
+            continue
+
+        if rule.get("Effect") != "AttackReduction":
+            continue
+
+        if rule.get("TargetType") == move.get("Category"):
+            return rule.get("Modifier", 1)
+
+    return 1
