@@ -1,28 +1,25 @@
 import streamlit as st
+from engine.data_loader import load_json
 from engine.mechanics import get_type_multiplier
 
 st.title("Pokémon Battle Compass")
 st.write("Type effectiveness test")
 
+types = load_json("types")
+
 attack_type = st.selectbox(
     "Attacking type",
-    ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
-    "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug",
-    "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
+    types
 )
 
 defender_type_1 = st.selectbox(
     "Defender Type 1",
-    ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
-    "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug",
-    "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
+    types
 )
 
 defender_type_2 = st.selectbox(
     "Defender Type 2",
-    ["", "Normal", "Fire", "Water", "Electric", "Grass", "Ice",
-    "Fighting", "Poison", "Ground", "Flying", "Psychic", "Bug",
-    "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
+    [""] + types
 )
 
 multiplier = get_type_multiplier(
