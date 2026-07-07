@@ -1,12 +1,8 @@
-import json
-from pathlib import Path
+from engine.data_loader import load_json
 
 
 def load_type_chart():
-    data_path = Path("data/type_chart.json")
-
-    with open(data_path, "r", encoding="utf-8") as file:
-        return json.load(file)
+    return load_json("type_chart")
 
 
 def get_type_multiplier(attack_type, defender_types):
