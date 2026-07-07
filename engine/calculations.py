@@ -61,3 +61,58 @@ def calculate_move_score(attacker, defender, move, items=None):
     defense_stat = get_relevant_defense_stat(defender, move["Category"])
 
     return move["Power"] * effectiveness * stab * item_multiplier * attack_stat / defense_stat
+
+def get_moves(pokemon):
+    moves = []
+
+    for slot in range(1, 5):
+        move_name = pokemon.get(f"Move{slot}")
+
+        if not move_name:
+            continue
+
+        moves.append({
+            "Move": move_name,
+            "Type": pokemon.get(f"Move{slot}Type"),
+            "Power": pokemon.get(f"Move{slot}Power"),
+            "Category": pokemon.get(f"Move{slot}Category"),
+            "Accuracy": pokemon.get(f"Move{slot}Accuracy"),
+        })
+
+    return moves
+
+def get_best_move(attacker, defender, items):
+    best_move = None
+    best_score = -1
+
+    for move in get_moves(attacker):
+        score = calculate_move_score(
+            attacker,
+            defender,
+            move,
+            items
+        )
+
+        if score > best_score:
+            best_score = score
+            best_move = move
+
+    return best_move, best_score
+
+def get_worst_incoming_move(opponent, defender, items):
+    worst_move = None
+    worst_score = -1
+
+    for move in get_moves(opponent):
+        score = calculate_move_score(
+            opponent,
+            defender,
+            move,
+            items
+        )
+
+        if score > worst_score:
+            worst_score = score
+            worst_move = move
+
+    return worst_move, worst_score

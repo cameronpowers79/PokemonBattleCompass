@@ -1,7 +1,11 @@
 import streamlit as st
 from engine.data_loader import load_json
 from engine.mechanics import get_type_multiplier, get_stab_multiplier
-from engine.calculations import calculate_move_score
+from engine.calculations import (
+    calculate_move_score,
+    get_best_move,
+    get_worst_incoming_move,
+)
 
 st.title("Pokémon Battle Compass")
 
@@ -204,3 +208,29 @@ st.subheader("MoveScore")
 st.write(f"**{selected_pokemon['Pokemon']}** using **{selected_move_name}** against **{selected_opponent['Pokemon']}**")
 
 st.write(f"MoveScore: **{round(move_score, 2)}**")
+
+st.divider()
+
+st.header("Best Move Test")
+
+best_move, best_score = get_best_move(
+    selected_pokemon,
+    selected_opponent,
+    items
+)
+
+st.write(f"Best move: **{best_move['Move']}**")
+st.write(f"MoveScore: **{round(best_score, 2)}**")
+
+st.divider()
+
+st.header("Incoming Worst Test")
+
+worst_move, worst_score = get_worst_incoming_move(
+    selected_opponent,
+    selected_pokemon,
+    items
+)
+
+st.write(f"Worst incoming move: **{worst_move['Move']}**")
+st.write(f"Incoming Worst Score: **{round(worst_score, 2)}**")
