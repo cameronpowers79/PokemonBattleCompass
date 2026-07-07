@@ -157,3 +157,28 @@ def find_best_team_member(team, opponent, items):
             best_result = result
 
     return best_pokemon, best_result
+
+def evaluate_team_matchups(team, opponent, items):
+    results = []
+
+    for pokemon in team:
+        best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
+            pokemon,
+            opponent,
+            items
+        )
+
+        results.append({
+    "Pokemon": pokemon["Pokemon"],
+    "Best Move": best_move["Move"],
+    "Best MoveScore": round(best_score, 2),
+    "Worst Incoming Move": worst_move["Move"],
+    "Incoming Worst Score": round(worst_score, 2),
+    "Ratio": round(ratio, 2)
+})
+
+    return sorted(
+        results,
+        key=lambda row: row["Ratio"],
+        reverse=True
+    )

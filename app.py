@@ -7,6 +7,7 @@ from engine.calculations import (
     get_worst_incoming_move,
     calculate_matchup_ratio,
     find_best_team_member,
+    evaluate_team_matchups,
 )
 
 st.title("Pokémon Battle Compass")
@@ -273,3 +274,15 @@ st.write(f"Best MoveScore: **{round(best_score, 2)}**")
 st.write(f"Worst incoming move: **{worst_move['Move']}**")
 st.write(f"Incoming Worst Score: **{round(worst_score, 2)}**")
 st.write(f"Ratio: **{round(ratio, 2)}**")
+
+st.divider()
+
+st.header("Team Matchup Table Test")
+
+matchup_results = evaluate_team_matchups(
+    team_data,
+    selected_opponent,
+    items
+)
+
+st.dataframe(matchup_results)
