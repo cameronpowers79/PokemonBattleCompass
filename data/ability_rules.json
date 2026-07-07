@@ -1,0 +1,212 @@
+[
+  {
+    "Ability": "Levitate",
+    "Effect": "Immunity",
+    "TargetType": "Ground",
+    "Modifier": 0,
+    "Notes": "Immune to Ground moves"
+  },
+  {
+    "Ability": "Flash Fire",
+    "Effect": "Immunity",
+    "TargetType": "Fire",
+    "Modifier": 0,
+    "Notes": "Immune to Fire moves"
+  },
+  {
+    "Ability": "Water Absorb",
+    "Effect": "Immunity",
+    "TargetType": "Water",
+    "Modifier": 0,
+    "Notes": "Immune to Water moves"
+  },
+  {
+    "Ability": "Volt Absorb",
+    "Effect": "Immunity",
+    "TargetType": "Electric",
+    "Modifier": 0,
+    "Notes": "Immune to Electric moves"
+  },
+  {
+    "Ability": "Lightning Rod",
+    "Effect": "Immunity",
+    "TargetType": "Electric",
+    "Modifier": 0,
+    "Notes": "Immune to Electric moves"
+  },
+  {
+    "Ability": "Motor Drive",
+    "Effect": "Immunity",
+    "TargetType": "Electric",
+    "Modifier": 0,
+    "Notes": "Immune to Electric moves"
+  },
+  {
+    "Ability": "Storm Drain",
+    "Effect": "Immunity",
+    "TargetType": "Water",
+    "Modifier": 0,
+    "Notes": "Immune to Water moves"
+  },
+  {
+    "Ability": "Sap Sipper",
+    "Effect": "Immunity",
+    "TargetType": "Grass",
+    "Modifier": 0,
+    "Notes": "Immune to Grass moves"
+  },
+  {
+    "Ability": "Dry Skin",
+    "Effect": "Immunity",
+    "TargetType": "Water",
+    "Modifier": 0,
+    "Notes": "Immune to Water moves"
+  },
+  {
+    "Ability": "Thick Fat",
+    "Effect": "Reduction",
+    "TargetType": "Fire",
+    "Modifier": 0.5,
+    "Notes": "Fire damage x0.5"
+  },
+  {
+    "Ability": "Thick Fat",
+    "Effect": "Reduction",
+    "TargetType": "Ice",
+    "Modifier": 0.5,
+    "Notes": "Ice damage x0.5"
+  },
+  {
+    "Ability": "Heatproof",
+    "Effect": "Reduction",
+    "TargetType": "Fire",
+    "Modifier": 0.5,
+    "Notes": "Fire damage x0.5"
+  },
+  {
+    "Ability": "Filter",
+    "Effect": "Reduction",
+    "TargetType": "SuperEffective",
+    "Modifier": 0.75,
+    "Notes": "Super-effective damage x0.75"
+  },
+  {
+    "Ability": "Solid Rock",
+    "Effect": "Reduction",
+    "TargetType": "SuperEffective",
+    "Modifier": 0.75,
+    "Notes": "Super-effective damage x0.75"
+  },
+  {
+    "Ability": "Prism Armor",
+    "Effect": "Reduction",
+    "TargetType": "SuperEffective",
+    "Modifier": 0.75,
+    "Notes": "Super-effective damage x0.75"
+  },
+  {
+    "Ability": "Adaptability",
+    "Effect": "STABBoost",
+    "TargetType": "STAB",
+    "Modifier": 2,
+    "Notes": "STAB is 2x instead of 1.5x"
+  },
+  {
+    "Ability": "Huge Power",
+    "Effect": "AttackBoost",
+    "TargetType": "Physical",
+    "Modifier": 2,
+    "Notes": "Physical attack x2"
+  },
+  {
+    "Ability": "Pure Power",
+    "Effect": "AttackBoost",
+    "TargetType": "Physical",
+    "Modifier": 2,
+    "Notes": "Physical attack x2"
+  },
+  {
+    "Ability": "Technician",
+    "Effect": "PowerBoost",
+    "TargetType": "LowPower",
+    "Modifier": 1.5,
+    "Notes": "Moves with BP \u226460 get x1.5"
+  },
+  {
+    "Ability": "Intimidate",
+    "Effect": "AttackReduction",
+    "TargetType": "Physical",
+    "Modifier": 0.667,
+    "Notes": "Reduces opponent ATK by 1 stage (\u00d72/3) for incoming Physical moves. Singles matchup evaluation only."
+  },
+  {
+    "Ability": "Rough Skin",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact attacker takes damage."
+  },
+  {
+    "Ability": "Iron Barbs",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact attacker takes damage."
+  },
+  {
+    "Ability": "Static",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact may cause paralysis."
+  },
+  {
+    "Ability": "Flame Body",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact may cause burn."
+  },
+  {
+    "Ability": "Poison Point",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact may cause poison."
+  },
+  {
+    "Ability": "Effect Spore",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact may inflict sleep, poison, or paralysis."
+  },
+  {
+    "Ability": "Gooey",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact lowers attacker's Speed."
+  },
+  {
+    "Ability": "Tangling Hair",
+    "Effect": "Tactical",
+    "TargetType": "Contact",
+    "Modifier": 0,
+    "Notes": "Contact lowers attacker's Speed."
+  },
+  {
+    "Ability": "Aftermath",
+    "Effect": "Tactical",
+    "TargetType": "Faint",
+    "Modifier": 0,
+    "Notes": "Contact attacker takes damage if this Pok\u00e9mon faints."
+  },
+  {
+    "Ability": "Sturdy",
+    "Effect": "Tactical",
+    "TargetType": "OHKO",
+    "Modifier": 0,
+    "Notes": "May survive an otherwise lethal hit at full HP."
+  }
+]
