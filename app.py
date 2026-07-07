@@ -1,7 +1,7 @@
 import streamlit as st
 from engine.data_loader import load_json
-from engine.mechanics import get_type_multiplier
 from engine.mechanics import get_type_multiplier, get_stab_multiplier
+from engine.calculations import calculate_move_score
 
 st.title("Pokémon Battle Compass")
 
@@ -151,3 +151,54 @@ battle_opponents = [
 st.subheader(f"{selected_trainer} — {selected_battle}")
 
 st.dataframe(battle_opponents)
+
+st.divider()
+
+st.header("MoveScore Test")
+
+opponent_names = [
+    opponent["Pokemon"]
+    for opponent in battle_opponents
+    if opponent.get("Pokemon")
+]
+
+selected_opponent_name = st.selectbox(
+    "Choose opponent Pokémon",
+    opponent_names
+)
+
+selected_opponent = next(
+    opponent
+    for opponent in battle_opponents
+    if opponent["Pokemon"] == selected_opponent_name
+)
+
+move_options = [
+    selected_pokemon["Move1"],
+    selected_pokemon["Move2"],
+    selected_pokemon["Move3"],
+    selected_pokemon["Move4"],
+]
+
+selected_move_name = st.selectbox(
+    "Choose move",
+    move_options
+)
+
+selected_move = {
+    "Move": selected_move_name,
+    "Type": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Type"],
+    "Power": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Power"],
+    "Category": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Category"],
+}
+
+move_score = calculate_move_score(
+    selected_pokemon,
+    selected_opponent,
+    selected_move
+)
+
+st.subheader("MoveScore")
+st.write(f"**{selected_pokemon['Pokemon']}** using **{selected_move_name}** against **{selected_opponent['Pokemon']}**")
+
+st.write(f"MoveScore: **{round(move_score, 2)}**")
