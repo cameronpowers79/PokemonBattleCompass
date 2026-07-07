@@ -4,7 +4,7 @@ from engine.mechanics import (
     get_item_multiplier,
     get_ability_multiplier,
 )
-from engine.notes import build_notes
+from engine.notes import build_notes, build_why_explanation
 
 def is_opponent_record(pokemon):
     return pokemon.get("Trainer") is not None and pokemon.get("Battle") is not None
@@ -170,7 +170,17 @@ def find_best_team_member(team, opponent, items, ability_rules=None):
             best_pokemon = pokemon
             best_result = result
 
-    return best_pokemon, best_result
+        best_move, best_score, worst_move, worst_score, ratio = best_result
+
+    why = build_why_explanation(
+        len(team),
+        best_pokemon,
+        best_score,
+        worst_score,
+        ratio
+    )
+
+    return best_pokemon, best_result, why
 
 
 def evaluate_team_matchups(team, opponent, items, ability_rules=None):

@@ -265,7 +265,7 @@ st.divider()
 
 st.header("Recommendation Test")
 
-recommended_pokemon, recommendation_result = find_best_team_member(
+recommended_pokemon, recommendation_result, why = find_best_team_member(
     team_data,
     selected_opponent,
     items,
@@ -275,6 +275,7 @@ recommended_pokemon, recommendation_result = find_best_team_member(
 best_move, best_score, worst_move, worst_score, ratio = recommendation_result
 
 st.write(f"Recommended Pokémon: **{recommended_pokemon['Pokemon']}**")
+st.write(f"Why: **{why}**")
 st.write(f"Best move: **{best_move['Move']}**")
 st.write(f"Best MoveScore: **{round(best_score, 2)}**")
 st.write(f"Worst incoming move: **{worst_move['Move']}**")

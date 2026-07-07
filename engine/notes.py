@@ -15,3 +15,29 @@ def build_notes(best_score, worst_score, ratio):
         notes.append("Possible Incoming OHKO")
 
     return "; ".join(notes)
+
+def build_why_explanation(team_size, recommended_pokemon, best_score, worst_score, ratio):
+    if team_size == 1:
+        return "Only Pokemon available"
+
+    if worst_score == 0:
+        ability = recommended_pokemon.get("Ability")
+
+        if ability:
+            return f"{ability} grants full immunity"
+
+        return "Immune to all opponent's attacks"
+
+    if ratio >= 5:
+        return "Overwhelming offensive advantage"
+
+    if best_score >= 260 and ratio >= 2:
+        return "Strongest attack against this opponent"
+
+    if worst_score <= 100 and ratio >= 1:
+        return "Best durability against this opponent"
+
+    if ratio >= 1:
+        return "Best overall matchup"
+
+    return "Highest overall matchup rating"
