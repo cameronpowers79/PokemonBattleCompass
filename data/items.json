@@ -1,0 +1,152 @@
+[
+  {
+    "Item": "None",
+    "EffectType": "None",
+    "AppliesTo": "None",
+    "StatAffected": "None",
+    "MoveTypeAffected": "None",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1,
+    "Condition": "None"
+  },
+  {
+    "Item": "Eviolite",
+    "EffectType": "StatMultiplier",
+    "AppliesTo": "Defense",
+    "StatAffected": "DEF/SPD",
+    "MoveTypeAffected": "None",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.5,
+    "Condition": "CanEvolve"
+  },
+  {
+    "Item": "Charcoal",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Fire",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Miracle Seed",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Grass",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Magnet",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Electric",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Mystic Water",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Water",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Sharp Beak",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Flying",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Spell Tag",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Ghost",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Black Glasses",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Dark",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Pixie Plate",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Fairy",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Wise Glasses",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "None",
+    "MoveCategoryAffected": "Special",
+    "Multiplier": 1.1,
+    "Condition": "None"
+  },
+  {
+    "Item": "Expert Belt",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "None",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "SuperEffective"
+  },
+  {
+    "Item": "Metal Coat",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Steel",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  },
+  {
+    "Item": "Leftovers",
+    "EffectType": "None",
+    "AppliesTo": "None",
+    "StatAffected": "None",
+    "MoveTypeAffected": "None",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1,
+    "Condition": "None"
+  },
+  {
+    "Item": "Soft Sand",
+    "EffectType": "DamageMultiplier",
+    "AppliesTo": "Offense",
+    "StatAffected": "None",
+    "MoveTypeAffected": "Ground",
+    "MoveCategoryAffected": "None",
+    "Multiplier": 1.2,
+    "Condition": "None"
+  }
+]
