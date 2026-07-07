@@ -45,11 +45,13 @@ team_data = sheet_to_records(wb, "Team Data")
 movelist = sheet_to_records(wb, "Movelist")
 ability_rules = sheet_to_records(wb, "Ability Rules")
 items = sheet_to_records(wb, "Items")
+opponents = sheet_to_records(wb, "Opponent")
 
 # Keep workbook sheet naming for now where it represents actual app data.
 export_json(team_data, "team_data.json")
 export_json(movelist, "moves.json")
 export_json(ability_rules, "ability_rules.json")
 export_json(items, "items.json")
+export_json(opponents, "opponents.json")
 
 print("\nImport complete.")
