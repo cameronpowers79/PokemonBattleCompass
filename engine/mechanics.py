@@ -50,3 +50,21 @@ def get_item_multiplier(item_name, move, items):
             return item.get("Multiplier", 1)
 
     return 1
+
+def get_ability_multiplier(defender, move, ability_rules):
+    ability_name = defender.get("Ability")
+
+    if not ability_name:
+        return 1
+
+    for rule in ability_rules:
+        if rule.get("Ability") != ability_name:
+            continue
+
+        if rule.get("Effect") != "Immunity":
+            continue
+
+        if rule.get("TargetType") == move.get("Type"):
+            return rule.get("Modifier", 0)
+
+    return 1

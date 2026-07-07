@@ -16,6 +16,7 @@ types = load_json("types")
 team_data = load_json("team_data")
 opponents = load_json("opponents")
 items = load_json("items")
+ability_rules = load_json("ability_rules")
 
 st.header("Type Effectiveness Test")
 
@@ -204,7 +205,8 @@ move_score = calculate_move_score(
     selected_pokemon,
     selected_opponent,
     selected_move,
-    items
+    items,
+    ability_rules
 )
 
 st.subheader("MoveScore")
@@ -219,7 +221,8 @@ st.header("Best Move Test")
 best_move, best_score = get_best_move(
     selected_pokemon,
     selected_opponent,
-    items
+    items,
+    ability_rules
 )
 
 st.write(f"Best move: **{best_move['Move']}**")
@@ -232,7 +235,8 @@ st.header("Incoming Worst Test")
 worst_move, worst_score = get_worst_incoming_move(
     selected_opponent,
     selected_pokemon,
-    items
+    items,
+    ability_rules
 )
 
 st.write(f"Worst incoming move: **{worst_move['Move']}**")
@@ -245,7 +249,8 @@ st.header("Matchup Ratio Test")
 best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
     selected_pokemon,
     selected_opponent,
-    items
+    items,
+    ability_rules
 )
 
 st.write(f"Best player move: **{best_move['Move']}**")
@@ -263,7 +268,8 @@ st.header("Recommendation Test")
 recommended_pokemon, recommendation_result = find_best_team_member(
     team_data,
     selected_opponent,
-    items
+    items,
+    ability_rules
 )
 
 best_move, best_score, worst_move, worst_score, ratio = recommendation_result
@@ -282,7 +288,8 @@ st.header("Team Matchup Table Test")
 matchup_results = evaluate_team_matchups(
     team_data,
     selected_opponent,
-    items
+    items,
+    ability_rules
 )
 
 st.dataframe(matchup_results)
