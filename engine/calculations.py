@@ -4,7 +4,7 @@ from engine.mechanics import (
     get_item_multiplier,
     get_ability_multiplier,
 )
-
+from engine.notes import build_notes
 
 def is_opponent_record(pokemon):
     return pokemon.get("Trainer") is not None and pokemon.get("Battle") is not None
@@ -185,13 +185,14 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None):
         )
 
         results.append({
-            "Pokemon": pokemon["Pokemon"],
-            "Best Move": best_move["Move"],
-            "Best MoveScore": round(best_score, 2),
-            "Worst Incoming Move": worst_move["Move"],
-            "Incoming Worst Score": round(worst_score, 2),
-            "Ratio": round(ratio, 2)
-        })
+    "Pokemon": pokemon["Pokemon"],
+    "Best Move": best_move["Move"],
+    "Best MoveScore": round(best_score, 2),
+    "Worst Incoming Move": worst_move["Move"],
+    "Incoming Worst Score": round(worst_score, 2),
+    "Ratio": round(ratio, 2),
+    "Notes": build_notes(best_score, worst_score, ratio)
+})
 
     return sorted(
         results,
