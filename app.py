@@ -6,6 +6,7 @@ st.title("Pokémon Battle Compass")
 
 types = load_json("types")
 team_data = load_json("team_data")
+opponents = load_json("opponents")
 
 st.header("Type Effectiveness Test")
 
@@ -100,3 +101,39 @@ st.dataframe({
         selected_pokemon["Move4Accuracy"],
     ],
 })
+st.divider()
+
+st.header("Opponent Data Test")
+
+trainer_names = sorted({
+    opponent["Trainer"]
+    for opponent in opponents
+    if opponent.get("Trainer")
+})
+
+selected_trainer = st.selectbox(
+    "Choose a trainer",
+    trainer_names
+)
+
+available_battles = sorted({
+    opponent["Battle"]
+    for opponent in opponents
+    if opponent.get("Trainer") == selected_trainer and opponent.get("Battle")
+})
+
+selected_battle = st.selectbox(
+    "Choose a battle",
+    available_battles
+)
+
+battle_opponents = [
+    opponent
+    for opponent in opponents
+    if opponent.get("Trainer") == selected_trainer
+    and opponent.get("Battle") == selected_battle
+]
+
+st.subheader(f"{selected_trainer} — {selected_battle}")
+
+st.dataframe(battle_opponents)
