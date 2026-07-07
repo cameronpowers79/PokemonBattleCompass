@@ -8,6 +8,7 @@ st.title("Pokémon Battle Compass")
 types = load_json("types")
 team_data = load_json("team_data")
 opponents = load_json("opponents")
+items = load_json("items")
 
 st.header("Type Effectiveness Test")
 
@@ -181,7 +182,7 @@ move_options = [
 ]
 
 selected_move_name = st.selectbox(
-    "Choose move",
+    "Choose player move",
     move_options
 )
 
@@ -195,7 +196,8 @@ selected_move = {
 move_score = calculate_move_score(
     selected_pokemon,
     selected_opponent,
-    selected_move
+    selected_move,
+    items
 )
 
 st.subheader("MoveScore")

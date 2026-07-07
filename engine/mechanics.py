@@ -1,6 +1,5 @@
 from engine.data_loader import load_json
 
-
 def load_type_chart():
     return load_json("type_chart")
 
@@ -19,5 +18,35 @@ def get_type_multiplier(attack_type, defender_types):
 def get_stab_multiplier(move_type, attacker_types):
     if move_type in attacker_types:
         return 1.5
+
+    return 1
+
+def get_item_multiplier(item_name, move, items):
+    if not item_name:
+        return 1
+
+    for item in items:
+        if item.get("Item") != item_name:
+            continue
+
+        if item.get("EffectType") != "DamageMultiplier":
+            continue
+
+        if item.get("AppliesTo") != "Offense":
+            continue
+
+        move_type_affected = item.get("MoveTypeAffected")
+        move_category_affected = item.get("MoveCategoryAffected")
+
+        type_matches = (
+            move_type_affected in [None, "None", move.get("Type")]
+        )
+
+        category_matches = (
+            move_category_affected in [None, "None", move.get("Category")]
+        )
+
+        if type_matches and category_matches:
+            return item.get("Multiplier", 1)
 
     return 1

@@ -15,7 +15,7 @@ def get_stat(pokemon, stat_name):
 
     return pokemon[stat_name]
 
-from engine.mechanics import get_stab_multiplier, get_type_multiplier
+from engine.mechanics import get_stab_multiplier, get_type_multiplier, get_item_multiplier
 
 
 def get_relevant_attack_stat(attacker, move_category):
@@ -36,9 +36,12 @@ def get_relevant_defense_stat(defender, move_category):
         return get_stat(defender, "SPD")
 
 
-def calculate_move_score(attacker, defender, move):
+def calculate_move_score(attacker, defender, move, items=None):
     if move["Category"] == "Status" or not move["Power"]:
         return 0
+
+    if items is None:
+        items = []
 
     attacker_types = [
         attacker.get("Type1"),
@@ -52,8 +55,9 @@ def calculate_move_score(attacker, defender, move):
 
     effectiveness = get_type_multiplier(move["Type"], defender_types)
     stab = get_stab_multiplier(move["Type"], attacker_types)
+    item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
 
     attack_stat = get_relevant_attack_stat(attacker, move["Category"])
     defense_stat = get_relevant_defense_stat(defender, move["Category"])
 
-    return move["Power"] * effectiveness * stab * attack_stat / defense_stat
+    return move["Power"] * effectiveness * stab * item_multiplier * attack_stat / defense_stat
