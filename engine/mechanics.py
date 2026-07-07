@@ -51,7 +51,7 @@ def get_item_multiplier(item_name, move, items):
 
     return 1
 
-def get_ability_multiplier(defender, move, ability_rules):
+def get_ability_multiplier(defender, move, ability_rules, effectiveness=1):
     ability_name = defender.get("Ability")
 
     if not ability_name:
@@ -61,10 +61,18 @@ def get_ability_multiplier(defender, move, ability_rules):
         if rule.get("Ability") != ability_name:
             continue
 
-        if rule.get("Effect") != "Immunity":
-            continue
+        effect = rule.get("Effect")
+        target_type = rule.get("TargetType")
+        modifier = rule.get("Modifier", 1)
 
-        if rule.get("TargetType") == move.get("Type"):
-            return rule.get("Modifier", 0)
+        if effect == "Immunity" and target_type == move.get("Type"):
+            return modifier
+
+        if effect == "Reduction":
+            if target_type == move.get("Type"):
+                return modifier
+
+            if target_type == "SuperEffective" and effectiveness > 1:
+                return modifier
 
     return 1

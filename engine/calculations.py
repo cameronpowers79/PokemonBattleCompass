@@ -55,7 +55,7 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     defender_types = [defender.get("Type1"), defender.get("Type2")]
 
     effectiveness = get_type_multiplier(move["Type"], defender_types)
-    ability_multiplier = get_ability_multiplier(defender, move, ability_rules)
+    ability_multiplier = get_ability_multiplier(defender, move, ability_rules, effectiveness)
     effectiveness *= ability_multiplier
 
     stab = get_stab_multiplier(move["Type"], attacker_types)
