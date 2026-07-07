@@ -58,7 +58,12 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     ability_multiplier = get_ability_multiplier(defender, move, ability_rules, effectiveness)
     effectiveness *= ability_multiplier
 
-    stab = get_stab_multiplier(move["Type"], attacker_types)
+    stab = get_stab_multiplier(
+    move["Type"],
+    attacker_types,
+    attacker,
+    ability_rules
+)
     item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
 
     attack_stat = get_relevant_attack_stat(attacker, move["Category"])

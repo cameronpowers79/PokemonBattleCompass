@@ -15,11 +15,26 @@ def get_type_multiplier(attack_type, defender_types):
     return multiplier
 
 
-def get_stab_multiplier(move_type, attacker_types):
-    if move_type in attacker_types:
+def get_stab_multiplier(move_type, attacker_types, attacker=None, ability_rules=None):
+    if move_type not in attacker_types:
+        return 1
+
+    if attacker is None:
         return 1.5
 
-    return 1
+    if ability_rules is None:
+        ability_rules = []
+
+    ability_name = attacker.get("Ability")
+
+    for rule in ability_rules:
+        if rule.get("Ability") != ability_name:
+            continue
+
+        if rule.get("Effect") == "STABBoost" and rule.get("TargetType") == "STAB":
+            return rule.get("Modifier", 1.5)
+
+    return 1.5
 
 def get_item_multiplier(item_name, move, items):
     if not item_name:
