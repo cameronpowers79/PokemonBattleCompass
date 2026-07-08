@@ -1,20 +1,89 @@
 # Battle Compass Parking Lot
 
-## Notes / Why logic
-- Replace placeholder Notes thresholds with workbook-accurate logic.
-- Port full Notes ordering and verbiage from Compass.
-- Port full Why? explanation logic, including “Best balance of damage and durability.”
+## Engine Parity
 
-## Mechanics
-- Fix workbook bug: Flash Fire should block Max Flare.
-- Add Technician / low-power move boost.
-- Add tactical ability notes: Sturdy, Rough Skin, Iron Barbs, Static, Flame Body, Poison Point, Effect Spore, Gooey, Tangling Hair, Aftermath.
-- Add contact-aware warnings.
-- Add priority move notes.
-- Add Body Press using DEF.
-- Add Shell Trap handling.
+### Notes / Why
+- [ ] Replace placeholder OHKO Notes thresholds with workbook HP-aware logic.
+- [ ] Port remaining Notes ordering, conditions, and verbiage from Compass.
+- [x] Port workbook-derived Why? explanation logic.
+- [ ] Refine Why? wording for the app (compose explanations from multiple factors using story-player tone).
 
-## App/UI
-- Replace diagnostic test sections with Battle Compass Alpha interface.
-- Split `app.py` before it becomes a crime scene.
-- Improve importer output with counts and elapsed time.
+### Mechanics
+- [x] Flash Fire immunity (Excel bug fixed; Python already correct).
+- [x] Body Press uses DEF.
+- [x] Psyshock / Psystrike / Secret Sword use target DEF.
+- [x] Technician / low-power move boost.
+- [ ] Add remaining special move mechanics (Shell Trap, etc.).
+- [ ] Verify all DamageMethod values from `moves.json` are implemented.
+
+---
+
+## Battle Notes
+
+- [ ] Replace plain-text notes with structured Battle Notes.
+- [ ] Introduce note categories:
+  - 💡 Worth Considering
+  - ℹ️ Information
+  - ⚠️ Caution
+  - 🚨 Warning
+- [ ] Refine priority warnings to be move-specific.
+- [ ] Refine contact warnings with move-specific wording.
+- [ ] Replace "Defense-boosted Body Press possible" with coaching-style wording.
+
+---
+
+## Player Experience
+
+### Alpha UI
+- [x] Build Alpha prototype.
+- [ ] Promote Alpha into main application.
+
+### Layout
+- [ ] Recommendation card.
+- [ ] Battle Snapshot card.
+- [ ] Top 3 recommendations.
+- [ ] Expandable Full Analysis.
+- [ ] Matchup Strength indicator.
+
+### Polish
+- [ ] Pokémon sprites.
+- [ ] Type badges.
+- [ ] Stat data bars with numeric values.
+- [ ] Worst Incoming Move displays move category (Physical/Special).
+- [ ] Info link from Why? to Full Analysis.
+- [ ] Typography:
+  - Exo 2 (headers)
+  - Aptos (body)
+  - Bahnschrift (metrics)
+
+---
+
+## Documentation
+
+- [ ] About Battle Compass.
+- [ ] Explain recommendation methodology.
+- [ ] Explain Matchup Strength.
+- [ ] Explain Ratio.
+- [ ] Explain Battle Notes.
+- [ ] Update README.
+
+---
+
+## Architecture
+
+- [x] Split app.py before it became a crime scene.
+- [ ] Continue separating UI from engine.
+- [ ] Improve importer output.
+- [ ] Centralize move metadata lookups.
+- [ ] Implement sprite lookup layer.
+
+---
+
+## Design Principles
+
+- Advice first. Analysis second. Calculations third.
+- Explain the recommendation, not the game.
+- Battle Compass is a compass, not a GPS.
+- Write for experienced story-mode players.
+- Be transparent without being overwhelming.
+- Every calculation should answer a player question.
