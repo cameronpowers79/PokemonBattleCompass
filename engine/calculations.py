@@ -24,21 +24,31 @@ def get_stat(pokemon, stat_name):
     return pokemon[stat_name]
 
 
-def get_relevant_attack_stat(attacker, move_category):
-    if move_category == "Physical":
+def get_relevant_attack_stat(attacker, move):
+    damage_method = move.get("DamageMethod")
+
+    if damage_method == "UseDEF":
+        return get_stat(attacker, "DEF")
+
+    if move.get("Category") == "Physical":
         return get_stat(attacker, "ATK")
 
-    if move_category == "Special":
+    if move.get("Category") == "Special":
         return get_stat(attacker, "SPA")
 
     return 0
 
 
-def get_relevant_defense_stat(defender, move_category):
-    if move_category == "Physical":
+def get_relevant_defense_stat(defender, move):
+    damage_method = move.get("DamageMethod")
+
+    if damage_method == "TargetDEFasSPD":
         return get_stat(defender, "DEF")
 
-    if move_category == "Special":
+    if move.get("Category") == "Physical":
+        return get_stat(defender, "DEF")
+
+    if move.get("Category") == "Special":
         return get_stat(defender, "SPD")
 
     return 1
@@ -69,10 +79,10 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
 )
     item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
 
-    attack_stat = get_relevant_attack_stat(attacker, move["Category"])
-    attack_stat *= get_attack_stat_multiplier(attacker, move, ability_rules)
+    attack_stat = get_relevant_attack_stat(attacker, move)
     attack_stat *= get_attack_reduction_multiplier(attacker, defender, move, ability_rules)
-    defense_stat = get_relevant_defense_stat(defender, move["Category"])
+    
+    defense_stat = get_relevant_defense_stat(defender, move)
     power_multiplier = get_move_power_multiplier(attacker, move, ability_rules)
 
     return move["Power"] * power_multiplier * effectiveness * stab * item_multiplier * attack_stat / defense_stat
