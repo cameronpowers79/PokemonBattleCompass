@@ -17,6 +17,7 @@ team_data = load_json("team_data")
 opponents = load_json("opponents")
 items = load_json("items")
 ability_rules = load_json("ability_rules")
+moves_data = load_json("moves")
 
 st.header("Type Effectiveness Test")
 
@@ -194,12 +195,18 @@ selected_move_name = st.selectbox(
     move_options
 )
 
-selected_move = {
+move_lookup = {
+    move["Move"]: move
+    for move in moves_data
+    if move.get("Move")
+}
+
+selected_move = move_lookup.get(selected_move_name, {
     "Move": selected_move_name,
     "Type": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Type"],
     "Power": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Power"],
     "Category": selected_pokemon[f"Move{move_options.index(selected_move_name) + 1}Category"],
-}
+})
 
 move_score = calculate_move_score(
     selected_pokemon,
@@ -222,7 +229,8 @@ best_move, best_score = get_best_move(
     selected_pokemon,
     selected_opponent,
     items,
-    ability_rules
+    ability_rules,
+    moves_data
 )
 
 st.write(f"Best move: **{best_move['Move']}**")
@@ -236,7 +244,8 @@ worst_move, worst_score = get_worst_incoming_move(
     selected_opponent,
     selected_pokemon,
     items,
-    ability_rules
+    ability_rules,
+    moves_data
 )
 
 st.write(f"Worst incoming move: **{worst_move['Move']}**")
@@ -250,7 +259,8 @@ best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
     selected_pokemon,
     selected_opponent,
     items,
-    ability_rules
+    ability_rules,
+    moves_data
 )
 
 st.write(f"Best player move: **{best_move['Move']}**")
@@ -269,7 +279,8 @@ recommended_pokemon, recommendation_result, why = find_best_team_member(
     team_data,
     selected_opponent,
     items,
-    ability_rules
+    ability_rules,
+    moves_data
 )
 
 best_move, best_score, worst_move, worst_score, ratio = recommendation_result
@@ -290,7 +301,8 @@ matchup_results = evaluate_team_matchups(
     team_data,
     selected_opponent,
     items,
-    ability_rules
+    ability_rules,
+    moves_data
 )
 
 st.dataframe(matchup_results)

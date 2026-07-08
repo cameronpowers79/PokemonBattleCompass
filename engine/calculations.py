@@ -9,6 +9,7 @@ from engine.mechanics import (
 )
 from engine.notes import build_notes, build_why_explanation
 
+
 def is_opponent_record(pokemon):
     return pokemon.get("Trainer") is not None and pokemon.get("Battle") is not None
 
@@ -68,28 +69,57 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     defender_types = [defender.get("Type1"), defender.get("Type2")]
 
     effectiveness = get_type_multiplier(move["Type"], defender_types)
-    ability_multiplier = get_ability_multiplier(defender, move, ability_rules, effectiveness)
+    ability_multiplier = get_ability_multiplier(
+        defender,
+        move,
+        ability_rules,
+        effectiveness
+    )
     effectiveness *= ability_multiplier
 
     stab = get_stab_multiplier(
-    move["Type"],
-    attacker_types,
-    attacker,
-    ability_rules
-)
-    item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
+        move["Type"],
+        attacker_types,
+        attacker,
+        ability_rules
+    )
 
-    attack_stat = get_relevant_attack_stat(attacker, move)
-    attack_stat *= get_attack_reduction_multiplier(attacker, defender, move, ability_rules)
-    
-    defense_stat = get_relevant_defense_stat(defender, move)
+    item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
     power_multiplier = get_move_power_multiplier(attacker, move, ability_rules)
 
-    return move["Power"] * power_multiplier * effectiveness * stab * item_multiplier * attack_stat / defense_stat
+    attack_stat = get_relevant_attack_stat(attacker, move)
+    attack_stat *= get_attack_stat_multiplier(attacker, move, ability_rules)
+    attack_stat *= get_attack_reduction_multiplier(
+        attacker,
+        defender,
+        move,
+        ability_rules
+    )
+
+    defense_stat = get_relevant_defense_stat(defender, move)
+
+    return (
+        move["Power"]
+        * power_multiplier
+        * effectiveness
+        * stab
+        * item_multiplier
+        * attack_stat
+        / defense_stat
+    )
 
 
-def get_moves(pokemon):
+def get_moves(pokemon, moves_data=None):
     moves = []
+
+    if moves_data is None:
+        moves_data = []
+
+    move_lookup = {
+        move.get("Move"): move
+        for move in moves_data
+        if move.get("Move")
+    }
 
     for slot in range(1, 5):
         move_name = pokemon.get(f"Move{slot}")
@@ -97,25 +127,32 @@ def get_moves(pokemon):
         if not move_name:
             continue
 
+        move_info = move_lookup.get(move_name, {})
+
         moves.append({
             "Move": move_name,
+
+            # Trust the battle/team sheet for scoring fields.
             "Type": pokemon.get(f"Move{slot}Type"),
             "Power": pokemon.get(f"Move{slot}Power"),
             "Category": pokemon.get(f"Move{slot}Category"),
             "Accuracy": pokemon.get(f"Move{slot}Accuracy"),
-            "MakesContact": pokemon.get(f"Move{slot}MakesContact"),
-            "Priority": pokemon.get(f"Move{slot}Priority"),
-            "MechanicsNotes": pokemon.get(f"Move{slot}MechanicsNotes"),
+
+            # Use moves.json for mechanics metadata.
+            "MakesContact": move_info.get("MakesContact"),
+            "Priority": move_info.get("Priority"),
+            "DamageMethod": move_info.get("DamageMethod"),
+            "MechanicsNotes": move_info.get("MechanicsNotes"),
         })
 
     return moves
 
 
-def get_best_move(attacker, defender, items, ability_rules=None):
+def get_best_move(attacker, defender, items, ability_rules=None, moves_data=None):
     best_move = None
     best_score = -1
 
-    for move in get_moves(attacker):
+    for move in get_moves(attacker, moves_data):
         score = calculate_move_score(
             attacker,
             defender,
@@ -131,11 +168,11 @@ def get_best_move(attacker, defender, items, ability_rules=None):
     return best_move, best_score
 
 
-def get_worst_incoming_move(opponent, defender, items, ability_rules=None):
+def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves_data=None):
     worst_move = None
     worst_score = -1
 
-    for move in get_moves(opponent):
+    for move in get_moves(opponent, moves_data):
         score = calculate_move_score(
             opponent,
             defender,
@@ -151,19 +188,21 @@ def get_worst_incoming_move(opponent, defender, items, ability_rules=None):
     return worst_move, worst_score
 
 
-def calculate_matchup_ratio(attacker, defender, items, ability_rules=None):
+def calculate_matchup_ratio(attacker, defender, items, ability_rules=None, moves_data=None):
     best_move, best_score = get_best_move(
         attacker,
         defender,
         items,
-        ability_rules
+        ability_rules,
+        moves_data
     )
 
     worst_move, worst_score = get_worst_incoming_move(
         defender,
         attacker,
         items,
-        ability_rules
+        ability_rules,
+        moves_data
     )
 
     if worst_score == 0:
@@ -174,7 +213,7 @@ def calculate_matchup_ratio(attacker, defender, items, ability_rules=None):
     return best_move, best_score, worst_move, worst_score, ratio
 
 
-def find_best_team_member(team, opponent, items, ability_rules=None):
+def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=None):
     all_results = []
 
     for pokemon in team:
@@ -182,7 +221,8 @@ def find_best_team_member(team, opponent, items, ability_rules=None):
             pokemon,
             opponent,
             items,
-            ability_rules
+            ability_rules,
+            moves_data
         )
 
         all_results.append({
@@ -217,7 +257,7 @@ def find_best_team_member(team, opponent, items, ability_rules=None):
     return selected_result["pokemon"], best_result, why
 
 
-def evaluate_team_matchups(team, opponent, items, ability_rules=None):
+def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
 
     for pokemon in team:
@@ -225,27 +265,28 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None):
             pokemon,
             opponent,
             items,
-            ability_rules
+            ability_rules,
+            moves_data
         )
 
         results.append({
-    "Pokemon": pokemon["Pokemon"],
-    "Best Move": best_move["Move"],
-    "Best MoveScore": round(best_score, 2),
-    "Worst Incoming Move": worst_move["Move"],
-    "Incoming Worst Score": round(worst_score, 2),
-    "Ratio": round(ratio, 2),
-    "Notes": build_notes(
-    pokemon,
-    opponent,
-    best_move,
-    best_score,
-    worst_move,
-    worst_score,
-    ratio,
-    ability_rules
-)
-})
+            "Pokemon": pokemon["Pokemon"],
+            "Best Move": best_move["Move"],
+            "Best MoveScore": round(best_score, 2),
+            "Worst Incoming Move": worst_move["Move"],
+            "Incoming Worst Score": round(worst_score, 2),
+            "Ratio": round(ratio, 2),
+            "Notes": build_notes(
+                pokemon,
+                opponent,
+                best_move,
+                best_score,
+                worst_move,
+                worst_score,
+                ratio,
+                ability_rules
+            )
+        })
 
     return sorted(
         results,
