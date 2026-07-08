@@ -1,3 +1,32 @@
+# ---------- Tactical helpers ----------
+
+def get_tactical_ability_notes(attacker, defender, best_move, best_score, ability_rules):
+    notes = []
+    defender_ability = defender.get("Ability")
+
+    if not defender_ability:
+        return notes
+
+    for rule in ability_rules:
+        if rule.get("Ability") != defender_ability:
+            continue
+
+        if rule.get("Effect") != "Tactical":
+            continue
+
+        target_type = rule.get("TargetType")
+
+        if target_type == "OHKO" and best_score >= 260:
+            notes.append("Sturdy may prevent OHKO")
+
+        if target_type == "Contact" and best_move.get("MakesContact"):
+            notes.append(rule.get("Notes"))
+
+    return notes
+
+
+# ---------- Notes ----------
+
 def build_notes(
     attacker,
     defender,
@@ -21,6 +50,16 @@ def build_notes(
     elif best_score >= 220:
         notes.append("Possible OHKO")
 
+    notes.extend(
+        get_tactical_ability_notes(
+            attacker,
+            defender,
+            best_move,
+            best_score,
+            ability_rules
+        )
+    )
+
     if worst_score >= 260:
         notes.append("Likely Incoming OHKO")
     elif worst_score >= 220:
@@ -28,6 +67,8 @@ def build_notes(
 
     return "; ".join(notes)
 
+
+# ---------- Recommendation text ----------
 
 def build_why_explanation(team_size, recommended_pokemon, best_score, worst_score, ratio):
     if team_size == 1:
