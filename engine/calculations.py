@@ -219,7 +219,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None):
     best_score,
     worst_move,
     worst_score,
-    ratio
+    ratio,
+    ability_rules
 )
 })
 

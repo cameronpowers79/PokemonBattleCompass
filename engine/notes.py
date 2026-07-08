@@ -1,4 +1,16 @@
-def build_notes(attacker, defender, best_move, best_score, worst_move, worst_score, ratio):
+def build_notes(
+    attacker,
+    defender,
+    best_move,
+    best_score,
+    worst_move,
+    worst_score,
+    ratio,
+    ability_rules=None
+):
+    if ability_rules is None:
+        ability_rules = []
+
     notes = []
 
     if worst_score == 0:
