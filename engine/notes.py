@@ -155,7 +155,8 @@ def build_notes(
     worst_move,
     worst_score,
     ratio,
-    ability_rules=None
+    ability_rules=None,
+    boosted_body_press_score=None
 ):
     if ability_rules is None:
         ability_rules = []
@@ -169,6 +170,13 @@ def build_notes(
         notes.append("Likely OHKO")
     elif best_score >= 220:
         notes.append("Possible OHKO")
+
+    if (
+    boosted_body_press_score
+    and best_move.get("Move") != "Body Press"
+    and boosted_body_press_score > best_score
+):
+        notes.append("One Iron Defense makes Body Press the strongest move.")
 
     notes.extend(
         get_tactical_ability_notes(

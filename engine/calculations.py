@@ -147,6 +147,38 @@ def get_moves(pokemon, moves_data=None):
 
     return moves
 
+def calculate_boosted_body_press_score(attacker, defender, items, ability_rules=None, moves_data=None):
+    move_names = [
+        attacker.get("Move1"),
+        attacker.get("Move2"),
+        attacker.get("Move3"),
+        attacker.get("Move4"),
+    ]
+
+    if "Iron Defense" not in move_names or "Body Press" not in move_names:
+        return None
+
+    body_press = None
+
+    for move in get_moves(attacker, moves_data):
+        if move.get("Move") == "Body Press":
+            body_press = move
+            break
+
+    if body_press is None:
+        return None
+
+    boosted_attacker = dict(attacker)
+    boosted_attacker["DEF"] = attacker["DEF"] * 2
+
+    return calculate_move_score(
+        boosted_attacker,
+        defender,
+        body_press,
+        items,
+        ability_rules
+    )
+
 
 def get_best_move(attacker, defender, items, ability_rules=None, moves_data=None):
     best_move = None
@@ -269,6 +301,14 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             moves_data
         )
 
+        boosted_body_press_score = calculate_boosted_body_press_score(
+            pokemon,
+            opponent,
+            items,
+            ability_rules,
+            moves_data
+        )
+
         results.append({
             "Pokemon": pokemon["Pokemon"],
             "Best Move": best_move["Move"],
@@ -284,7 +324,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 worst_move,
                 worst_score,
                 ratio,
-                ability_rules
+                ability_rules,
+                boosted_body_press_score
             )
         })
 
