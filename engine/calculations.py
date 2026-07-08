@@ -319,6 +319,7 @@ def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=
 def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
     team_status_effects = get_team_status_effects(team, moves_data)
+    opponent_moves = get_moves(opponent, moves_data)
 
     for pokemon in team:
         best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
@@ -354,7 +355,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 ratio,
                 ability_rules,
                 boosted_body_press_score,
-                team_status_effects
+                team_status_effects,
+                opponent_moves
             )
         })
 

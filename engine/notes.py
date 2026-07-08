@@ -1,11 +1,45 @@
 from engine.mechanics import get_ability_multiplier, get_type_multiplier
 
 
-# ---------- Tactical helpers ----------
+# ---------- General helpers ----------
 
 def move_makes_contact(move):
     return move.get("MakesContact") in [True, "TRUE", "True", "Yes", "Y", 1]
 
+
+def move_has_priority(move):
+    return move.get("Priority") is not None and move.get("Priority") > 0
+
+
+def pokemon_knows_move(pokemon, move_name):
+    return move_name in [
+        pokemon.get("Move1"),
+        pokemon.get("Move2"),
+        pokemon.get("Move3"),
+        pokemon.get("Move4"),
+    ]
+
+
+def unique_text_list(values):
+    cleaned = []
+
+    for value in values:
+        if value and value not in cleaned:
+            cleaned.append(value)
+
+    if len(cleaned) == 0:
+        return ""
+
+    if len(cleaned) == 1:
+        return cleaned[0]
+
+    if len(cleaned) == 2:
+        return f"{cleaned[0]} and {cleaned[1]}"
+
+    return f"{', '.join(cleaned[:-1])} and {cleaned[-1]}"
+
+
+# ---------- Tactical ability notes ----------
 
 def build_tactical_note(rule, best_move, best_score, move_name):
     target_type = rule.get("TargetType")
@@ -51,6 +85,91 @@ def get_tactical_ability_notes(attacker, defender, best_move, best_score, abilit
     return notes
 
 
+# ---------- Move mechanics notes ----------
+
+def get_priority_notes(best_move, worst_move, opponent):
+    notes = []
+
+    opponent_name = opponent.get("Pokemon", "The opponent")
+    opponent_move_name = worst_move.get("Move", "its move")
+    best_move_name = best_move.get("Move", "Your move")
+
+    player_has_priority = move_has_priority(best_move)
+    opponent_has_priority = move_has_priority(worst_move)
+
+    if player_has_priority and opponent_has_priority:
+        notes.append("Both sides have priority")
+    elif player_has_priority:
+        notes.append(f"{best_move_name} has priority")
+    elif opponent_has_priority:
+        if worst_move.get("Power", 0) >= 70:
+            notes.append(f"{opponent_name}'s {opponent_move_name} is powerful and has priority")
+        else:
+            notes.append(f"{opponent_name}'s {opponent_move_name} has priority")
+
+    return notes
+
+
+def get_activation_condition_notes(attacker, defender, best_move, opponent_moves):
+    notes = []
+
+    opponent_name = defender.get("Pokemon", "The opponent")
+    best_move_name = best_move.get("Move", "This move")
+    best_move_category = best_move.get("Category")
+    best_move_power = best_move.get("Power", 0)
+
+    for opponent_move in opponent_moves:
+        move_name = opponent_move.get("Move")
+        condition = opponent_move.get("ActivationCondition")
+
+        if not move_name or not condition:
+            continue
+
+        if condition == "RequiresTargetContactMove" and move_makes_contact(best_move):
+            notes.append(f"{best_move_name} may trigger {opponent_name}'s {move_name}")
+
+        if condition == "RequiresTargetPhysicalMove" and best_move_category == "Physical":
+            notes.append(f"Physical attacks may trigger {opponent_name}'s {move_name}")
+
+        if condition == "RequiresTargetSpecialMove" and best_move_category == "Special":
+            notes.append(f"Special attacks may trigger {opponent_name}'s {move_name}")
+
+        if condition == "RequiresTargetDamagingMove" and best_move_power and best_move_power > 0:
+            notes.append(f"{opponent_name}'s {move_name} can punish damaging attacks")
+
+        if (
+            condition == "RequiresFirstTurn"
+            and opponent_move.get("Power", 0) >= 70
+            and move_has_priority(opponent_move)
+        ):
+            notes.append(f"{opponent_name}'s {move_name} is powerful and has priority")
+
+    return notes
+
+
+def get_move_mechanics_notes(attacker, defender, best_move, worst_move, opponent_moves):
+    notes = []
+
+    notes.extend(
+        get_priority_notes(
+            best_move,
+            worst_move,
+            defender
+        )
+    )
+
+    notes.extend(
+        get_activation_condition_notes(
+            attacker,
+            defender,
+            best_move,
+            opponent_moves
+        )
+    )
+
+    return unique_text_list(notes).split("; ") if False else list(dict.fromkeys(notes))
+
+
 # ---------- Incoming move helpers ----------
 
 def get_move_type_list(pokemon):
@@ -69,25 +188,6 @@ def get_move_type_list(pokemon):
             })
 
     return move_types
-
-
-def unique_text_list(values):
-    cleaned = []
-
-    for value in values:
-        if value and value not in cleaned:
-            cleaned.append(value)
-
-    if len(cleaned) == 0:
-        return ""
-
-    if len(cleaned) == 1:
-        return cleaned[0]
-
-    if len(cleaned) == 2:
-        return f"{cleaned[0]} and {cleaned[1]}"
-
-    return f"{', '.join(cleaned[:-1])} and {cleaned[-1]}"
 
 
 def get_immune_and_resisted_types(pokemon, opponent, ability_rules):
@@ -144,14 +244,8 @@ def has_type_immunity(pokemon, opponent):
 
     return False
 
-def pokemon_knows_move(pokemon, move_name):
-    return move_name in [
-        pokemon.get("Move1"),
-        pokemon.get("Move2"),
-        pokemon.get("Move3"),
-        pokemon.get("Move4"),
-    ]
 
+# ---------- Opportunity notes ----------
 
 def get_status_boosted_move_notes(attacker, team_status_effects):
     notes = []
@@ -179,12 +273,17 @@ def build_notes(
     ratio,
     ability_rules=None,
     boosted_body_press_score=None,
-    team_status_effects=None
+    team_status_effects=None,
+    opponent_moves=None
 ):
     if ability_rules is None:
         ability_rules = []
+
     if team_status_effects is None:
         team_status_effects = set()
+
+    if opponent_moves is None:
+        opponent_moves = []
 
     notes = []
 
@@ -197,18 +296,18 @@ def build_notes(
         notes.append("Possible OHKO")
 
     if (
-    boosted_body_press_score
-    and best_move.get("Move") != "Body Press"
-    and boosted_body_press_score > best_score
-):
-        notes.append("One Iron Defense makes Body Press the strongest move.")
+        boosted_body_press_score
+        and best_move.get("Move") != "Body Press"
+        and boosted_body_press_score > best_score
+    ):
+        notes.append("One Iron Defense makes Body Press the strongest move")
 
     notes.extend(
-    get_status_boosted_move_notes(
-        attacker,
-        team_status_effects
+        get_status_boosted_move_notes(
+            attacker,
+            team_status_effects
+        )
     )
-)
 
     notes.extend(
         get_tactical_ability_notes(
@@ -220,12 +319,22 @@ def build_notes(
         )
     )
 
+    notes.extend(
+        get_move_mechanics_notes(
+            attacker,
+            defender,
+            best_move,
+            worst_move,
+            opponent_moves
+        )
+    )
+
     if worst_score >= 260:
         notes.append("Likely Incoming OHKO")
     elif worst_score >= 220:
         notes.append("Possible Incoming OHKO")
 
-    return "; ".join(notes)
+    return "; ".join(list(dict.fromkeys(notes)))
 
 
 # ---------- Recommendation text ----------
@@ -354,18 +463,12 @@ def build_why_explanation(all_results, selected_result, opponent, ability_rules=
     selected_pokemon = selected_result["pokemon"]
     worst_score = selected_result["worst_score"]
 
-    ability_immunity = has_ability_immunity(
-        selected_pokemon,
-        opponent,
-        ability_rules
-    )
-
     if worst_score == 0:
         return build_durability_reason(
-        selected_pokemon,
-        opponent,
-        ability_rules
-    )
+            selected_pokemon,
+            opponent,
+            ability_rules
+        )
 
     why_code = get_why_code(
         selected_result,
@@ -378,14 +481,18 @@ def build_why_explanation(all_results, selected_result, opponent, ability_rules=
         return "Overwhelming offensive advantage"
 
     if why_code == 1:
-        return f"{selected_pokemon.get('Ability')} negates opponent's attacks"
+        return build_durability_reason(
+            selected_pokemon,
+            opponent,
+            ability_rules
+        )
 
     if why_code == 2:
         return build_durability_reason(
-        selected_pokemon,
-        opponent,
-        ability_rules
-    )
+            selected_pokemon,
+            opponent,
+            ability_rules
+        )
 
     if why_code == 3:
         return "Best overall matchup"
