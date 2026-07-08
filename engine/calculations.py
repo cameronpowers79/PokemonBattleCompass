@@ -5,6 +5,7 @@ from engine.mechanics import (
     get_ability_multiplier,
     get_attack_stat_multiplier,
     get_attack_reduction_multiplier,
+    get_move_power_multiplier,
 )
 from engine.notes import build_notes, build_why_explanation
 
@@ -72,8 +73,9 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     attack_stat *= get_attack_stat_multiplier(attacker, move, ability_rules)
     attack_stat *= get_attack_reduction_multiplier(attacker, defender, move, ability_rules)
     defense_stat = get_relevant_defense_stat(defender, move["Category"])
+    power_multiplier = get_move_power_multiplier(attacker, move, ability_rules)
 
-    return move["Power"] * effectiveness * stab * item_multiplier * attack_stat / defense_stat
+    return move["Power"] * power_multiplier * effectiveness * stab * item_multiplier * attack_stat / defense_stat
 
 
 def get_moves(pokemon):

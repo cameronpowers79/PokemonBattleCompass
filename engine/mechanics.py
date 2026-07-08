@@ -127,3 +127,21 @@ def get_attack_reduction_multiplier(attacker, defender, move, ability_rules):
             return rule.get("Modifier", 1)
 
     return 1
+
+def get_move_power_multiplier(attacker, move, ability_rules):
+    ability_name = attacker.get("Ability")
+
+    if not ability_name:
+        return 1
+
+    for rule in ability_rules:
+        if rule.get("Ability") != ability_name:
+            continue
+
+        if rule.get("Effect") != "PowerBoost":
+            continue
+
+        if rule.get("TargetType") == "LowPower" and move.get("Power", 0) <= 60:
+            return rule.get("Modifier", 1)
+
+    return 1
