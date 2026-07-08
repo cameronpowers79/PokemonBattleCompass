@@ -1,7 +1,11 @@
+from engine.mechanics import get_ability_multiplier, get_type_multiplier
+
+
 # ---------- Tactical helpers ----------
 
 def move_makes_contact(move):
     return move.get("MakesContact") in [True, "TRUE", "True", "Yes", "Y", 1]
+
 
 def build_tactical_note(rule, best_move, best_score, move_name):
     target_type = rule.get("TargetType")
@@ -16,6 +20,7 @@ def build_tactical_note(rule, best_move, best_score, move_name):
             return f"{move_name} will trigger {ability}"
 
     return None
+
 
 def get_tactical_ability_notes(attacker, defender, best_move, best_score, ability_rules):
     notes = []
@@ -44,6 +49,100 @@ def get_tactical_ability_notes(attacker, defender, best_move, best_score, abilit
             notes.append(note)
 
     return notes
+
+
+# ---------- Incoming move helpers ----------
+
+def get_move_type_list(pokemon):
+    move_types = []
+
+    for slot in range(1, 5):
+        move_name = pokemon.get(f"Move{slot}")
+        move_type = pokemon.get(f"Move{slot}Type")
+
+        if move_name and move_type:
+            move_types.append({
+                "Move": move_name,
+                "Type": move_type,
+                "Power": pokemon.get(f"Move{slot}Power"),
+                "Category": pokemon.get(f"Move{slot}Category"),
+            })
+
+    return move_types
+
+
+def unique_text_list(values):
+    cleaned = []
+
+    for value in values:
+        if value and value not in cleaned:
+            cleaned.append(value)
+
+    if len(cleaned) == 0:
+        return ""
+
+    if len(cleaned) == 1:
+        return cleaned[0]
+
+    if len(cleaned) == 2:
+        return f"{cleaned[0]} and {cleaned[1]}"
+
+    return f"{', '.join(cleaned[:-1])} and {cleaned[-1]}"
+
+
+def get_immune_and_resisted_types(pokemon, opponent, ability_rules):
+    pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
+
+    immune_types = []
+    resisted_types = []
+
+    for move in get_move_type_list(opponent):
+        move_type = move["Type"]
+
+        type_multiplier = get_type_multiplier(move_type, pokemon_types)
+        ability_multiplier = get_ability_multiplier(
+            pokemon,
+            move,
+            ability_rules,
+            type_multiplier
+        )
+
+        final_multiplier = type_multiplier * ability_multiplier
+
+        if final_multiplier == 0:
+            immune_types.append(move_type)
+        elif 0 < final_multiplier < 1:
+            resisted_types.append(move_type)
+
+    return unique_text_list(immune_types), unique_text_list(resisted_types)
+
+
+def has_ability_immunity(pokemon, opponent, ability_rules):
+    pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
+
+    for move in get_move_type_list(opponent):
+        type_multiplier = get_type_multiplier(move["Type"], pokemon_types)
+        ability_multiplier = get_ability_multiplier(
+            pokemon,
+            move,
+            ability_rules,
+            type_multiplier
+        )
+
+        if ability_multiplier == 0:
+            return True
+
+    return False
+
+
+def has_type_immunity(pokemon, opponent):
+    pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
+
+    for move in get_move_type_list(opponent):
+        if get_type_multiplier(move["Type"], pokemon_types) == 0:
+            return True
+
+    return False
 
 
 # ---------- Notes ----------
@@ -91,28 +190,172 @@ def build_notes(
 
 # ---------- Recommendation text ----------
 
-def build_why_explanation(team_size, recommended_pokemon, best_score, worst_score, ratio):
-    if team_size == 1:
+def get_second_largest(values):
+    sorted_values = sorted(values, reverse=True)
+
+    if len(sorted_values) < 2:
+        return sorted_values[0] if sorted_values else 1
+
+    return sorted_values[1]
+
+
+def get_second_smallest(values):
+    sorted_values = sorted(values)
+
+    if len(sorted_values) < 2:
+        return sorted_values[0] if sorted_values else 1
+
+    return sorted_values[1]
+
+
+def get_why_code(selected_result, all_results, opponent, ability_rules):
+    best_scores = [result["best_score"] for result in all_results]
+    worst_scores = [result["worst_score"] for result in all_results]
+
+    selected_best_score = selected_result["best_score"]
+    selected_worst_score = selected_result["worst_score"]
+    selected_ratio = selected_result["ratio"]
+    selected_pokemon = selected_result["pokemon"]
+
+    second_best_score = get_second_largest(best_scores)
+    second_lowest_worst_score = get_second_smallest(worst_scores)
+
+    off_adv_ratio = selected_best_score / second_best_score if second_best_score else selected_best_score
+    def_adv_ratio = second_lowest_worst_score / selected_worst_score if selected_worst_score else 999
+
+    overwhelming_results = [
+        result
+        for result in all_results
+        if result["best_score"] > 300 and result["ratio"] > 10
+    ]
+
+    has_overwhelming_offense = (
+        selected_best_score > 300
+        and selected_ratio > 10
+    )
+
+    any_overwhelming = len(overwhelming_results) > 0
+
+    best_overwhelming_ratio = max(
+        [result["ratio"] for result in overwhelming_results],
+        default=None
+    )
+
+    ability_immunity = has_ability_immunity(
+        selected_pokemon,
+        opponent,
+        ability_rules
+    )
+
+    type_immunity = has_type_immunity(
+        selected_pokemon,
+        opponent
+    )
+
+    if (
+        any_overwhelming
+        and selected_ratio == best_overwhelming_ratio
+        and has_overwhelming_offense
+    ):
+        return 0
+
+    if ability_immunity:
+        return 1
+
+    if type_immunity and selected_worst_score == min(worst_scores):
+        return 2
+
+    if off_adv_ratio > 1.3 and def_adv_ratio > 1.3:
+        return 3
+
+    if off_adv_ratio >= def_adv_ratio * 0.9 and off_adv_ratio > 1.2:
+        return 4
+
+    if def_adv_ratio > off_adv_ratio * 1.1 and def_adv_ratio > 1.2:
+        return 5
+
+    if selected_ratio >= 0.8:
+        return 6
+
+    return 7
+
+
+def build_durability_reason(pokemon, opponent, ability_rules):
+    immune_types, resisted_types = get_immune_and_resisted_types(
+        pokemon,
+        opponent,
+        ability_rules
+    )
+
+    if immune_types and resisted_types:
+        return f"Immune to {immune_types}; resists {resisted_types} attacks"
+
+    if immune_types:
+        return f"Immune to {immune_types} attacks"
+
+    if resisted_types:
+        return f"Resists {resisted_types} attacks"
+
+    return "Best durability against this opponent"
+
+
+def build_why_explanation(all_results, selected_result, opponent, ability_rules=None):
+    if ability_rules is None:
+        ability_rules = []
+
+    if len(all_results) == 1:
         return "Only Pokemon available"
 
-    if worst_score == 0:
-        ability = recommended_pokemon.get("Ability")
+    selected_pokemon = selected_result["pokemon"]
+    worst_score = selected_result["worst_score"]
 
-        if ability:
-            return f"{ability} grants full immunity"
+    ability_immunity = has_ability_immunity(
+        selected_pokemon,
+        opponent,
+        ability_rules
+    )
+
+    if worst_score == 0:
+        if ability_immunity:
+            return f"{selected_pokemon.get('Ability')} grants full immunity"
 
         return "Immune to all opponent's attacks"
 
-    if ratio >= 5:
+    why_code = get_why_code(
+        selected_result,
+        all_results,
+        opponent,
+        ability_rules
+    )
+
+    if why_code == 0:
         return "Overwhelming offensive advantage"
 
-    if best_score >= 260 and ratio >= 2:
+    if why_code == 1:
+        return f"{selected_pokemon.get('Ability')} negates opponent's attacks"
+
+    if why_code == 2:
+        immune_types, _ = get_immune_and_resisted_types(
+            selected_pokemon,
+            opponent,
+            ability_rules
+        )
+        return f"Immune to {immune_types}-type attacks"
+
+    if why_code == 3:
+        return "Best overall matchup"
+
+    if why_code == 4:
         return "Strongest attack against this opponent"
 
-    if worst_score <= 100 and ratio >= 1:
-        return "Best durability against this opponent"
+    if why_code == 5:
+        return build_durability_reason(
+            selected_pokemon,
+            opponent,
+            ability_rules
+        )
 
-    if ratio >= 1:
+    if why_code == 6:
         return "Best balance of damage and durability"
 
     return "Highest overall matchup rating"

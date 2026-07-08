@@ -93,6 +93,9 @@ def get_moves(pokemon):
             "Power": pokemon.get(f"Move{slot}Power"),
             "Category": pokemon.get(f"Move{slot}Category"),
             "Accuracy": pokemon.get(f"Move{slot}Accuracy"),
+            "MakesContact": pokemon.get(f"Move{slot}MakesContact"),
+            "Priority": pokemon.get(f"Move{slot}Priority"),
+            "MechanicsNotes": pokemon.get(f"Move{slot}MechanicsNotes"),
         })
 
     return moves
@@ -162,36 +165,46 @@ def calculate_matchup_ratio(attacker, defender, items, ability_rules=None):
 
 
 def find_best_team_member(team, opponent, items, ability_rules=None):
-    best_pokemon = None
-    best_ratio = -1
-    best_result = None
+    all_results = []
 
     for pokemon in team:
-        result = calculate_matchup_ratio(
+        best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
             pokemon,
             opponent,
             items,
             ability_rules
         )
 
-        ratio = result[4]
+        all_results.append({
+            "pokemon": pokemon,
+            "best_move": best_move,
+            "best_score": best_score,
+            "worst_move": worst_move,
+            "worst_score": worst_score,
+            "ratio": ratio
+        })
 
-        if ratio > best_ratio:
-            best_ratio = ratio
-            best_pokemon = pokemon
-            best_result = result
-
-        best_move, best_score, worst_move, worst_score, ratio = best_result
-
-    why = build_why_explanation(
-        len(team),
-        best_pokemon,
-        best_score,
-        worst_score,
-        ratio
+    selected_result = max(
+        all_results,
+        key=lambda result: result["ratio"]
     )
 
-    return best_pokemon, best_result, why
+    why = build_why_explanation(
+        all_results,
+        selected_result,
+        opponent,
+        ability_rules
+    )
+
+    best_result = (
+        selected_result["best_move"],
+        selected_result["best_score"],
+        selected_result["worst_move"],
+        selected_result["worst_score"],
+        selected_result["ratio"]
+    )
+
+    return selected_result["pokemon"], best_result, why
 
 
 def evaluate_team_matchups(team, opponent, items, ability_rules=None):
