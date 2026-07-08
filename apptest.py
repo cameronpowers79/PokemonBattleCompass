@@ -7,6 +7,24 @@ st.set_page_config(
     layout="wide"
 )
 
+NOTE_ICONS = {
+    "info": "ℹ️",
+    "opportunity": "💡",
+    "caution": "⚠️",
+    "warning": "🚨",
+}
+
+
+def render_battle_notes(notes):
+    if not notes:
+        st.caption("No special notes.")
+        return
+
+    for note in notes:
+        icon = NOTE_ICONS.get(note.get("category"), "•")
+        st.write(f"{icon} {note.get('text')}")
+
+
 st.title("Pokémon Battle Compass")
 st.caption("Alpha UI preview — advice first, spreadsheet goblins later.")
 
@@ -78,6 +96,7 @@ matchup_results = evaluate_team_matchups(
 )
 
 top_three = matchup_results[:3]
+top_notes = top_three[0].get("Battle Notes", [])
 
 st.divider()
 
@@ -89,15 +108,18 @@ with left:
     st.write(f"**Best move:** {best_move['Move']}")
     st.write(f"**Why:** {why}")
 
-    if top_three[0].get("Notes"):
-        st.info(top_three[0]["Notes"])
+    st.markdown("### Battle Notes")
+    render_battle_notes(top_notes)
 
 with right:
-    st.subheader("Matchup Snapshot")
+    st.subheader("Battle Snapshot")
     st.metric("Ratio", round(ratio, 2))
     st.metric("Best MoveScore", round(best_score, 2))
     st.metric("Incoming Worst", round(worst_score, 2))
-    st.write(f"**Worst incoming move:** {worst_move['Move']}")
+    st.write(
+        f"**Worst incoming move:** {worst_move['Move']} "
+        f"({worst_move.get('Category', 'Unknown')})"
+    )
 
 st.divider()
 
@@ -109,8 +131,17 @@ for index, row in enumerate(top_three, start=1):
         st.write(f"**Best move:** {row['Best Move']}")
         st.write(f"**Ratio:** {row['Ratio']}")
 
-        if row.get("Notes"):
-            st.caption(row["Notes"])
+        notes = row.get("Battle Notes", [])
+        render_battle_notes(notes)
+
+analysis_rows = [
+    {
+        key: value
+        for key, value in row.items()
+        if key != "Battle Notes"
+    }
+    for row in matchup_results
+]
 
 with st.expander("Full Analysis"):
-    st.dataframe(matchup_results)
+    st.dataframe(analysis_rows)
