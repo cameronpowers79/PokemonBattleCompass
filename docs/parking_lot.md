@@ -6,13 +6,18 @@
 - [ ] Replace placeholder OHKO Notes thresholds with workbook HP-aware logic.
 - [ ] Port remaining Notes ordering, conditions, and verbiage from Compass.
 - [x] Port workbook-derived Why? explanation logic.
-- [ ] Refine Why? wording for the app (compose explanations from multiple factors using story-player tone).
+- [x] Refine Why? wording for the app (compose explanations from multiple factors using story-player tone).
+- [ ] Compose richer Why? explanations from multiple factors.
 
 ### Mechanics
 - [x] Flash Fire immunity (Excel bug fixed; Python already correct).
 - [x] Body Press uses DEF.
 - [x] Psyshock / Psystrike / Secret Sword use target DEF.
 - [x] Technician / low-power move boost.
+- [x] Body Press + Iron Defense opportunity note.
+- [x] Status-boosted Hex / Venoshock notes.
+- [x] Priority move mechanics note framework.
+- [x] Contact-triggered tactical notes.
 - [ ] Add remaining special move mechanics (Shell Trap, etc.).
 - [ ] Verify all DamageMethod values from `moves.json` are implemented.
 
@@ -26,9 +31,9 @@
   - ℹ️ Information
   - ⚠️ Caution
   - 🚨 Warning
-- [ ] Refine priority warnings to be move-specific.
-- [ ] Refine contact warnings with move-specific wording.
-- [ ] Replace "Defense-boosted Body Press possible" with coaching-style wording.
+- [x] Refine priority warnings to be move-specific.
+- [x] Refine contact warnings with move-specific wording.
+- [x] Replace "Defense-boosted Body Press possible" with coaching-style wording.
 
 ---
 

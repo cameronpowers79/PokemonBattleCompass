@@ -18,9 +18,22 @@ def approximate_stat(base_stat, level):
     return ((2 * base_stat + 31) * level / 100) + 5
 
 
+def approximate_hp(base_hp, level):
+    return ((2 * base_hp + 31) * level / 100) + level + 10
+
+
 def get_stat(pokemon, stat_name):
     if is_opponent_record(pokemon):
-        return approximate_stat(pokemon[stat_name], pokemon["Level"])
+        if stat_name == "HP":
+            return approximate_hp(
+                pokemon[stat_name],
+                pokemon["Level"]
+            )
+
+        return approximate_stat(
+            pokemon[stat_name],
+            pokemon["Level"]
+        )
 
     return pokemon[stat_name]
 
@@ -139,13 +152,18 @@ def get_moves(pokemon, moves_data=None):
             "Accuracy": pokemon.get(f"Move{slot}Accuracy"),
 
             # Use moves.json for mechanics metadata.
+            "Hits": move_info.get("Hits", 1),
             "MakesContact": move_info.get("MakesContact"),
             "Priority": move_info.get("Priority"),
             "DamageMethod": move_info.get("DamageMethod"),
             "MechanicsNotes": move_info.get("MechanicsNotes"),
+            "ActivationCondition": move_info.get("ActivationCondition"),
+            "StatusEffect": move_info.get("StatusEffect"),
+            "ActivationPowerMultiplier": move_info.get("ActivationPowerMultiplier", 1),
         })
 
     return moves
+
 
 def get_team_status_effects(team, moves_data=None):
     if moves_data is None:
@@ -173,6 +191,7 @@ def get_team_status_effects(team, moves_data=None):
                 status_effects.add(status_effect)
 
     return status_effects
+
 
 def calculate_boosted_body_press_score(attacker, defender, items, ability_rules=None, moves_data=None):
     move_names = [
@@ -205,6 +224,23 @@ def calculate_boosted_body_press_score(attacker, defender, items, ability_rules=
         items,
         ability_rules
     )
+
+
+def get_opponent_dmax_note(opponent):
+    move_names = [
+        opponent.get("Move1"),
+        opponent.get("Move2"),
+        opponent.get("Move3"),
+        opponent.get("Move4"),
+    ]
+
+    if any(move and str(move).startswith("G-Max") for move in move_names):
+        return "G-Max"
+
+    if any(move and str(move).startswith("Max ") for move in move_names):
+        return "Dmax"
+
+    return ""
 
 
 def get_best_move(attacker, defender, items, ability_rules=None, moves_data=None):
@@ -320,6 +356,10 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
     results = []
     team_status_effects = get_team_status_effects(team, moves_data)
     opponent_moves = get_moves(opponent, moves_data)
+    dmax_note = get_opponent_dmax_note(opponent)
+
+    opponent_hp = get_stat(opponent, "HP")
+    opponent_spe = get_stat(opponent, "SPE")
 
     for pokemon in team:
         best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
@@ -338,12 +378,26 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             moves_data
         )
 
+        best_hp_ratio = best_score / opponent_hp if opponent_hp else None
+        incoming_hp_ratio = worst_score / pokemon["HP"] if pokemon.get("HP") else None
+
+        team_moves_second = pokemon.get("SPE", 0) < opponent_spe
+
+        # Workbook intent: Survival OHKO only appears when the team member moves second
+        # and is not itself likely to be KO'd first.
+        likely_survives_first_hit = (
+            incoming_hp_ratio is None
+            or incoming_hp_ratio < 2
+        )
+
         results.append({
             "Pokemon": pokemon["Pokemon"],
             "Best Move": best_move["Move"],
             "Best MoveScore": round(best_score, 2),
+            "Best Move HP Ratio": round(best_hp_ratio, 2) if best_hp_ratio is not None else None,
             "Worst Incoming Move": worst_move["Move"],
             "Incoming Worst Score": round(worst_score, 2),
+            "Incoming HP Ratio": round(incoming_hp_ratio, 2) if incoming_hp_ratio is not None else None,
             "Ratio": round(ratio, 2),
             "Notes": build_notes(
                 pokemon,
@@ -356,7 +410,12 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 ability_rules,
                 boosted_body_press_score,
                 team_status_effects,
-                opponent_moves
+                opponent_moves,
+                best_hp_ratio,
+                incoming_hp_ratio,
+                team_moves_second,
+                likely_survives_first_hit,
+                dmax_note
             )
         })
 

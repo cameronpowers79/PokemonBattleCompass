@@ -39,24 +39,29 @@ def unique_text_list(values):
     return f"{', '.join(cleaned[:-1])} and {cleaned[-1]}"
 
 
+def dedupe_notes(notes):
+    return list(dict.fromkeys(note for note in notes if note))
+
+
 # ---------- Tactical ability notes ----------
 
-def build_tactical_note(rule, best_move, best_score, move_name):
+def build_tactical_note(rule, best_move, best_score, move_name, has_ohko_note):
     target_type = rule.get("TargetType")
     ability = rule.get("Ability")
 
-    if target_type == "OHKO":
-        if best_score >= 260:
-            return "Sturdy may prevent OHKO"
+    if target_type == "OHKO" and has_ohko_note:
+        return "Sturdy may prevent OHKO"
 
-    if target_type == "Contact":
-        if move_makes_contact(best_move):
-            return f"{move_name} will trigger {ability}"
+    if target_type == "Contact" and move_makes_contact(best_move):
+        return f"{move_name} will trigger {ability}"
+
+    if target_type == "Faint" and has_ohko_note:
+        return f"{ability} may trigger if the target faints"
 
     return None
 
 
-def get_tactical_ability_notes(attacker, defender, best_move, best_score, ability_rules):
+def get_tactical_ability_notes(attacker, defender, best_move, best_score, ability_rules, has_ohko_note):
     notes = []
 
     defender_ability = defender.get("Ability")
@@ -76,7 +81,8 @@ def get_tactical_ability_notes(attacker, defender, best_move, best_score, abilit
             rule,
             best_move,
             best_score,
-            move_name
+            move_name,
+            has_ohko_note
         )
 
         if note:
@@ -167,7 +173,7 @@ def get_move_mechanics_notes(attacker, defender, best_move, worst_move, opponent
         )
     )
 
-    return unique_text_list(notes).split("; ") if False else list(dict.fromkeys(notes))
+    return dedupe_notes(notes)
 
 
 # ---------- Incoming move helpers ----------
@@ -261,6 +267,64 @@ def get_status_boosted_move_notes(attacker, team_status_effects):
     return notes
 
 
+# ---------- OHKO notes ----------
+
+def build_offensive_ohko_note(
+    best_hp_ratio,
+    incoming_hp_ratio,
+    team_moves_second,
+    likely_survives_first_hit,
+    has_incoming_damage,
+    is_dmax
+):
+    if best_hp_ratio is None:
+        return ""
+
+    likely_threshold = 6.5 if is_dmax else 3
+    possible_threshold = 4.5 if is_dmax else 2
+
+    meets_likely_ohko = best_hp_ratio >= likely_threshold
+    meets_possible_ohko = best_hp_ratio >= possible_threshold
+
+    if (
+        team_moves_second
+        and has_incoming_damage
+        and likely_survives_first_hit
+        and meets_likely_ohko
+    ):
+        return "Likely Survival OHKO"
+
+    if (
+        team_moves_second
+        and has_incoming_damage
+        and likely_survives_first_hit
+        and meets_possible_ohko
+    ):
+        return "Possible Survival OHKO"
+
+    if (not team_moves_second) or (not has_incoming_damage):
+        if meets_likely_ohko:
+            return "Likely OHKO"
+
+        if meets_possible_ohko:
+            return "Possible OHKO"
+
+    return ""
+
+
+def build_incoming_ohko_note(is_immune, incoming_hp_ratio):
+    if is_immune or incoming_hp_ratio is None:
+        return ""
+
+    if incoming_hp_ratio >= 3:
+        return "Likely Incoming OHKO"
+
+    if incoming_hp_ratio >= 2:
+        return "Possible Incoming OHKO"
+
+    return ""
+
+
 # ---------- Notes ----------
 
 def build_notes(
@@ -274,7 +338,12 @@ def build_notes(
     ability_rules=None,
     boosted_body_press_score=None,
     team_status_effects=None,
-    opponent_moves=None
+    opponent_moves=None,
+    best_hp_ratio=None,
+    incoming_hp_ratio=None,
+    team_moves_second=False,
+    likely_survives_first_hit=False,
+    dmax_note=""
 ):
     if ability_rules is None:
         ability_rules = []
@@ -287,27 +356,53 @@ def build_notes(
 
     notes = []
 
-    if worst_score == 0:
+    is_immune = worst_score == 0
+    has_incoming_damage = worst_score > 0
+    is_dmax = dmax_note != ""
+
+    offensive_ohko_note = build_offensive_ohko_note(
+        best_hp_ratio,
+        incoming_hp_ratio,
+        team_moves_second,
+        likely_survives_first_hit,
+        has_incoming_damage,
+        is_dmax
+    )
+
+    incoming_ohko_note = build_incoming_ohko_note(
+        is_immune,
+        incoming_hp_ratio
+    )
+
+    has_ohko_note = offensive_ohko_note != ""
+
+    if dmax_note:
+        notes.append(dmax_note)
+
+    if is_immune:
         notes.append("Immune to opponent's attacks")
 
-    if best_score >= 260:
-        notes.append("Likely OHKO")
-    elif best_score >= 220:
-        notes.append("Possible OHKO")
+    if offensive_ohko_note:
+        notes.append(offensive_ohko_note)
+
+    if incoming_ohko_note:
+        notes.append(incoming_ohko_note)
 
     if (
-        boosted_body_press_score
+        not incoming_ohko_note.startswith("Likely")
+        and boosted_body_press_score
         and best_move.get("Move") != "Body Press"
         and boosted_body_press_score > best_score
     ):
         notes.append("One Iron Defense makes Body Press the strongest move")
 
-    notes.extend(
-        get_status_boosted_move_notes(
-            attacker,
-            team_status_effects
+    if not incoming_ohko_note.startswith("Likely"):
+        notes.extend(
+            get_status_boosted_move_notes(
+                attacker,
+                team_status_effects
+            )
         )
-    )
 
     notes.extend(
         get_tactical_ability_notes(
@@ -315,7 +410,8 @@ def build_notes(
             defender,
             best_move,
             best_score,
-            ability_rules
+            ability_rules,
+            has_ohko_note
         )
     )
 
@@ -329,12 +425,7 @@ def build_notes(
         )
     )
 
-    if worst_score >= 260:
-        notes.append("Likely Incoming OHKO")
-    elif worst_score >= 220:
-        notes.append("Possible Incoming OHKO")
-
-    return "; ".join(list(dict.fromkeys(notes)))
+    return "; ".join(dedupe_notes(notes))
 
 
 # ---------- Recommendation text ----------
