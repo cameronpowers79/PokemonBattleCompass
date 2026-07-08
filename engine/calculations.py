@@ -147,6 +147,33 @@ def get_moves(pokemon, moves_data=None):
 
     return moves
 
+def get_team_status_effects(team, moves_data=None):
+    if moves_data is None:
+        moves_data = []
+
+    move_lookup = {
+        move.get("Move"): move
+        for move in moves_data
+        if move.get("Move")
+    }
+
+    status_effects = set()
+
+    for pokemon in team:
+        for slot in range(1, 5):
+            move_name = pokemon.get(f"Move{slot}")
+
+            if not move_name:
+                continue
+
+            move_info = move_lookup.get(move_name, {})
+            status_effect = move_info.get("StatusEffect")
+
+            if status_effect:
+                status_effects.add(status_effect)
+
+    return status_effects
+
 def calculate_boosted_body_press_score(attacker, defender, items, ability_rules=None, moves_data=None):
     move_names = [
         attacker.get("Move1"),
@@ -291,6 +318,7 @@ def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=
 
 def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
+    team_status_effects = get_team_status_effects(team, moves_data)
 
     for pokemon in team:
         best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
@@ -325,7 +353,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 worst_score,
                 ratio,
                 ability_rules,
-                boosted_body_press_score
+                boosted_body_press_score,
+                team_status_effects
             )
         })
 

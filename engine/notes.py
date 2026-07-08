@@ -144,6 +144,28 @@ def has_type_immunity(pokemon, opponent):
 
     return False
 
+def pokemon_knows_move(pokemon, move_name):
+    return move_name in [
+        pokemon.get("Move1"),
+        pokemon.get("Move2"),
+        pokemon.get("Move3"),
+        pokemon.get("Move4"),
+    ]
+
+
+def get_status_boosted_move_notes(attacker, team_status_effects):
+    notes = []
+
+    if pokemon_knows_move(attacker, "Hex"):
+        if any(status in team_status_effects for status in ["Burn", "Paralysis", "Poison", "Sleep", "Freeze"]):
+            notes.append("Status-boosted Hex possible")
+
+    if pokemon_knows_move(attacker, "Venoshock"):
+        if "Poison" in team_status_effects:
+            notes.append("Poison-boosted Venoshock possible")
+
+    return notes
+
 
 # ---------- Notes ----------
 
@@ -156,10 +178,13 @@ def build_notes(
     worst_score,
     ratio,
     ability_rules=None,
-    boosted_body_press_score=None
+    boosted_body_press_score=None,
+    team_status_effects=None
 ):
     if ability_rules is None:
         ability_rules = []
+    if team_status_effects is None:
+        team_status_effects = set()
 
     notes = []
 
@@ -177,6 +202,13 @@ def build_notes(
     and boosted_body_press_score > best_score
 ):
         notes.append("One Iron Defense makes Body Press the strongest move.")
+
+    notes.extend(
+    get_status_boosted_move_notes(
+        attacker,
+        team_status_effects
+    )
+)
 
     notes.extend(
         get_tactical_ability_notes(
