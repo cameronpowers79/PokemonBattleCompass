@@ -1,5 +1,9 @@
 from engine.mechanics import get_ability_multiplier, get_type_multiplier
 
+NOTE_INFO = "info"
+NOTE_OPPORTUNITY = "opportunity"
+NOTE_CAUTION = "caution"
+NOTE_WARNING = "warning"
 
 # ---------- General helpers ----------
 
@@ -73,13 +77,13 @@ def build_tactical_note(rule, best_move, move_name, has_ohko_note):
     ability = rule.get("Ability")
 
     if target_type == "OHKO" and has_ohko_note:
-        return note("warning", "Sturdy may prevent OHKO")
+        return note(NOTE_WARNING, "Sturdy may prevent OHKO")
 
     if target_type == "Contact" and move_makes_contact(best_move):
-        return note("caution", f"{move_name} will trigger {ability}")
+        return note(NOTE_CAUTION, f"{move_name} will trigger {ability}")
 
     if target_type == "Faint" and has_ohko_note:
-        return note("caution", f"{ability} may trigger if the target faints")
+        return note(NOTE_CAUTION, f"{ability} may trigger if the target faints")
 
     return None
 
@@ -126,14 +130,14 @@ def get_priority_notes(best_move, worst_move, opponent):
     opponent_has_priority = move_has_priority(worst_move)
 
     if player_has_priority and opponent_has_priority:
-        notes.append(note("info", "Both sides have priority"))
+        notes.append(note(NOTE_INFO, "Both sides have priority"))
     elif player_has_priority:
-        notes.append(note("info", f"{best_move_name} has priority"))
+        notes.append(note(NOTE_INFO, f"{best_move_name} has priority"))
     elif opponent_has_priority:
         if worst_move.get("Power", 0) >= 70:
-            notes.append(note("warning", f"{opponent_name}'s {opponent_move_name} is powerful and has priority"))
+            notes.append(note(NOTE_WARNING, f"{opponent_name}'s {opponent_move_name} is powerful and has priority"))
         else:
-            notes.append(note("caution", f"{opponent_name}'s {opponent_move_name} has priority"))
+            notes.append(note(NOTE_CAUTION, f"{opponent_name}'s {opponent_move_name} has priority"))
 
     return notes
 
@@ -154,23 +158,23 @@ def get_activation_condition_notes(defender, best_move, opponent_moves):
             continue
 
         if condition == "RequiresTargetContactMove" and move_makes_contact(best_move):
-            notes.append(note("warning", f"{best_move_name} may trigger {opponent_name}'s {move_name}"))
+            notes.append(note(NOTE_WARNING, f"{best_move_name} may trigger {opponent_name}'s {move_name}"))
 
         if condition == "RequiresTargetPhysicalMove" and best_move_category == "Physical":
-            notes.append(note("warning", f"Physical attacks may trigger {opponent_name}'s {move_name}"))
+            notes.append(note(NOTE_WARNING, f"Physical attacks may trigger {opponent_name}'s {move_name}"))
 
         if condition == "RequiresTargetSpecialMove" and best_move_category == "Special":
-            notes.append(note("warning", f"Special attacks may trigger {opponent_name}'s {move_name}"))
+            notes.append(note(NOTE_WARNING, f"Special attacks may trigger {opponent_name}'s {move_name}"))
 
         if condition == "RequiresTargetDamagingMove" and best_move_power and best_move_power > 0:
-            notes.append(note("warning", f"{opponent_name}'s {move_name} can punish damaging attacks"))
+            notes.append(note(NOTE_WARNING, f"{opponent_name}'s {move_name} can punish damaging attacks"))
 
         if (
             condition == "RequiresFirstTurn"
             and opponent_move.get("Power", 0) >= 70
             and move_has_priority(opponent_move)
         ):
-            notes.append(note("warning", f"{opponent_name}'s {move_name} is powerful and has priority"))
+            notes.append(note(NOTE_WARNING, f"{opponent_name}'s {move_name} is powerful and has priority"))
 
     return notes
 
@@ -266,11 +270,11 @@ def get_status_boosted_move_notes(attacker, team_status_effects):
 
     if pokemon_knows_move(attacker, "Hex"):
         if any(status in team_status_effects for status in ["Burn", "Paralysis", "Poison", "Sleep", "Freeze"]):
-            notes.append(note("opportunity", "Status-boosted Hex possible"))
+            notes.append(note(NOTE_OPPORTUNITY, "Status-boosted Hex possible"))
 
     if pokemon_knows_move(attacker, "Venoshock"):
         if "Poison" in team_status_effects:
-            notes.append(note("opportunity", "Poison-boosted Venoshock possible"))
+            notes.append(note(NOTE_OPPORTUNITY, "Poison-boosted Venoshock possible"))
 
     return notes
 
@@ -299,7 +303,7 @@ def build_offensive_ohko_note(
         and likely_survives_first_hit
         and meets_likely_ohko
     ):
-        return note("info", "Likely Survival OHKO")
+        return note(NOTE_INFO, "Likely Survival OHKO")
 
     if (
         team_moves_second
@@ -307,14 +311,14 @@ def build_offensive_ohko_note(
         and likely_survives_first_hit
         and meets_possible_ohko
     ):
-        return note("info", "Possible Survival OHKO")
+        return note(NOTE_INFO, "Possible Survival OHKO")
 
     if (not team_moves_second) or (not has_incoming_damage):
         if meets_likely_ohko:
-            return note("info", "Likely OHKO")
+            return note(NOTE_INFO, "Likely OHKO")
 
         if meets_possible_ohko:
-            return note("info", "Possible OHKO")
+            return note(NOTE_INFO, "Possible OHKO")
 
     return None
 
@@ -324,10 +328,10 @@ def build_incoming_ohko_note(is_immune, incoming_hp_ratio):
         return None
 
     if incoming_hp_ratio >= 3:
-        return note("warning", "Likely Incoming OHKO")
+        return note(NOTE_WARNING, "Likely Incoming OHKO")
 
     if incoming_hp_ratio >= 2:
-        return note("caution", "Possible Incoming OHKO")
+        return note(NOTE_CAUTION, "Possible Incoming OHKO")
 
     return None
 
@@ -383,10 +387,10 @@ def build_battle_notes(
     has_ohko_note = offensive_ohko_note is not None
 
     if dmax_note:
-        notes.append(note("info", dmax_note))
+        notes.append(note(NOTE_INFO, dmax_note))
 
     if is_immune:
-        notes.append(note("info", "Immune to opponent's attacks"))
+        notes.append(note(NOTE_INFO, "Immune to opponent's attacks"))
 
     if offensive_ohko_note:
         notes.append(offensive_ohko_note)
@@ -400,7 +404,7 @@ def build_battle_notes(
         and best_move.get("Move") != "Body Press"
         and boosted_body_press_score > best_score
     ):
-        notes.append(note("opportunity", "One Iron Defense makes Body Press the strongest move"))
+        notes.append(note(NOTE_OPPORTUNITY, "One Iron Defense makes Body Press the strongest move"))
 
     if not (incoming_ohko_note and incoming_ohko_note["text"].startswith("Likely")):
         notes.extend(get_status_boosted_move_notes(attacker, team_status_effects))
