@@ -7,7 +7,7 @@ from engine.mechanics import (
     get_attack_reduction_multiplier,
     get_move_power_multiplier,
 )
-from engine.notes import build_notes, build_why_explanation
+from engine.notes import build_notes, build_battle_notes, build_why_explanation
 
 
 def is_opponent_record(pokemon):
@@ -390,6 +390,25 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             or incoming_hp_ratio < 2
         )
 
+        battle_notes = build_battle_notes(
+            pokemon,
+            opponent,
+            best_move,
+            best_score,
+            worst_move,
+            worst_score,
+            ratio,
+            ability_rules,
+            boosted_body_press_score,
+            team_status_effects,
+            opponent_moves,
+            best_hp_ratio,
+            incoming_hp_ratio,
+            team_moves_second,
+            likely_survives_first_hit,
+            dmax_note
+        )
+
         results.append({
             "Pokemon": pokemon["Pokemon"],
             "Best Move": best_move["Move"],
@@ -399,6 +418,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             "Incoming Worst Score": round(worst_score, 2),
             "Incoming HP Ratio": round(incoming_hp_ratio, 2) if incoming_hp_ratio is not None else None,
             "Ratio": round(ratio, 2),
+            "Battle Notes": battle_notes,
             "Notes": build_notes(
                 pokemon,
                 opponent,
