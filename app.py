@@ -95,25 +95,70 @@ matchup_results = evaluate_team_matchups(
     moves_data
 )
 
-top_three = matchup_results[:3]
-top_notes = top_three[0].get("Battle Notes", [])
+other_options = [
+    row
+    for row in matchup_results
+    if row["Pokemon"] != recommended_pokemon["Pokemon"]
+]
+
+top_three = other_options[:2]
+recommended_result = next(
+    row
+    for row in matchup_results
+    if row["Pokemon"] == recommended_pokemon["Pokemon"]
+)
+
+top_notes = recommended_result.get("Battle Notes", [])
 
 st.divider()
 
 left, right = st.columns([1.2, 1])
 
 with left:
-    st.subheader("⭐ Recommendation")
+
+    st.subheader("⭐ Recommended Pokémon")
+
     st.markdown(f"## {recommended_pokemon['Pokemon']}")
-    st.write(f"**Best move:** {best_move['Move']}")
-    st.write(f"**Why:** {why}")
+
+    type_line = " / ".join(
+        t for t in [
+            recommended_pokemon.get("Type1"),
+            recommended_pokemon.get("Type2")
+        ] if t
+    )
+
+    st.caption(type_line)
+
+    st.divider()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "Best Move",
+            best_move["Move"]
+        )
+
+    with col2:
+        st.metric(
+            "Matchup Ratio",
+            round(ratio, 2)
+        )
+
+    st.markdown("### Why this Pokémon?")
+
+    st.info(why)
 
     st.markdown("### Battle Notes")
+
     render_battle_notes(top_notes)
 
 with right:
     st.subheader("Battle Snapshot")
-    st.metric("Ratio", round(ratio, 2))
+    st.metric(
+    "Matchup Ratio",
+    round(ratio, 2)
+)
     st.metric("Best MoveScore", round(best_score, 2))
     st.metric("Incoming Worst", round(worst_score, 2))
     st.write(
@@ -123,22 +168,31 @@ with right:
 
 st.divider()
 
-st.subheader("Top Options")
+st.subheader("Other Strong Options")
 
 for index, row in enumerate(top_three, start=1):
     with st.container(border=True):
         st.markdown(f"### {index}. {row['Pokemon']}")
         st.write(f"**Best move:** {row['Best Move']}")
-        st.write(f"**Ratio:** {row['Ratio']}")
+        st.caption(f"Matchup Ratio: {row['Ratio']}")
 
         notes = row.get("Battle Notes", [])
         render_battle_notes(notes)
 
+analysis_columns = [
+    "Pokemon",
+    "Best Move",
+    "Best MoveScore",
+    "Worst Incoming Move",
+    "Incoming Worst Score",
+    "Ratio",
+    "Notes",
+]
+
 analysis_rows = [
     {
-        key: value
-        for key, value in row.items()
-        if key != "Battle Notes"
+        column: row.get(column)
+        for column in analysis_columns
     }
     for row in matchup_results
 ]

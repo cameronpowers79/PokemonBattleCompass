@@ -1,60 +1,66 @@
-# Battle Compass Parking Lot
+# Pokémon Battle Compass Parking Lot
+
+---
+
+## Design Principles
+
+- Advice first. Analysis second. Calculations third.
+- Explain the recommendation, not the game.
+- Battle Compass is a compass, not a GPS.
+- Write for experienced story-mode players.
+- Be transparent without being overwhelming.
+- Every calculation should answer a player question.
 
 ## Engine Parity
 
 ### Notes / Why
-- [ ] Replace placeholder OHKO Notes thresholds with workbook HP-aware logic.
-- [ ] Port remaining Notes ordering, conditions, and verbiage from Compass.
+- [x] Replace placeholder OHKO Notes thresholds with workbook HP-aware logic.
 - [x] Port workbook-derived Why? explanation logic.
-- [x] Refine Why? wording for the app (compose explanations from multiple factors using story-player tone).
-- [ ] Compose richer Why? explanations from multiple factors.
+- [x] Refine Why? durability wording for immunity/resistance matchups.
+- [x] Body Press opportunity notes.
+- [x] Status-boosted Hex / Venoshock notes.
+- [x] Structured Battle Notes framework.
+- [ ] Compose richer Why? explanations from multiple contributing factors.
 
 ### Mechanics
-- [x] Flash Fire immunity (Excel bug fixed; Python already correct).
+- [x] Flash Fire immunity.
 - [x] Body Press uses DEF.
 - [x] Psyshock / Psystrike / Secret Sword use target DEF.
 - [x] Technician / low-power move boost.
-- [x] Body Press + Iron Defense opportunity note.
-- [x] Status-boosted Hex / Venoshock notes.
-- [x] Priority move mechanics note framework.
 - [x] Contact-triggered tactical notes.
-- [ ] Add remaining special move mechanics (Shell Trap, etc.).
-- [ ] Verify all DamageMethod values from `moves.json` are implemented.
+- [x] Priority move framework.
+- [x] Tactical ability framework.
+- [ ] Validate remaining ActivationCondition mechanics.
+- [ ] Validate remaining DamageMethod mechanics.
 
 ---
 
-## Battle Notes
+## Alpha UI
 
-- [ ] Replace plain-text notes with structured Battle Notes.
-- [ ] Introduce note categories:
-  - 💡 Worth Considering
-  - ℹ️ Information
-  - ⚠️ Caution
-  - 🚨 Warning
-- [x] Refine priority warnings to be move-specific.
-- [x] Refine contact warnings with move-specific wording.
-- [x] Replace "Defense-boosted Body Press possible" with coaching-style wording.
-
----
-
-## Player Experience
-
-### Alpha UI
 - [x] Build Alpha prototype.
-- [ ] Promote Alpha into main application.
+- [x] Promote Alpha to main app.
 
 ### Layout
+
 - [ ] Recommendation card.
 - [ ] Battle Snapshot card.
-- [ ] Top 3 recommendations.
+- [ ] Other Strong Options (exclude recommended Pokémon).
 - [ ] Expandable Full Analysis.
 - [ ] Matchup Strength indicator.
 
+### Battle Notes
+
+- [x] Structured Battle Notes.
+- [ ] Render note categories with icons/colors.
+- [ ] Display Battle Notes as styled UI rather than plain text.
+
 ### Polish
+
 - [ ] Pokémon sprites.
 - [ ] Type badges.
+- [ ] Type colors.
 - [ ] Stat data bars with numeric values.
-- [ ] Worst Incoming Move displays move category (Physical/Special).
+- [ ] Worst Incoming Move displays category (Physical/Special).
 - [ ] Info link from Why? to Full Analysis.
 - [ ] Typography:
   - Exo 2 (headers)
@@ -77,18 +83,22 @@
 ## Architecture
 
 - [x] Split app.py before it became a crime scene.
+- [x] Centralize move metadata lookups.
+- [x] Structured Battle Notes.
 - [ ] Continue separating UI from engine.
 - [ ] Improve importer output.
-- [ ] Centralize move metadata lookups.
 - [ ] Implement sprite lookup layer.
+- [ ] Add UI theme/constants module.
 
 ---
 
-## Design Principles
+## Beta Readiness
 
-- Advice first. Analysis second. Calculations third.
-- Explain the recommendation, not the game.
-- Battle Compass is a compass, not a GPS.
-- Write for experienced story-mode players.
-- Be transparent without being overwhelming.
-- Every calculation should answer a player question.
+- [ ] Recommendation card complete.
+- [ ] Battle Snapshot complete.
+- [ ] Sprites integrated.
+- [ ] Type badges integrated.
+- [ ] Matchup Strength implemented.
+- [ ] About page complete.
+- [ ] Package executable build.
+
