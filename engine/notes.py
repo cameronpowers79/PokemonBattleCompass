@@ -1,4 +1,4 @@
-def build_notes(best_score, worst_score, ratio):
+def build_notes(attacker, defender, best_move, best_score, worst_move, worst_score, ratio):
     notes = []
 
     if worst_score == 0:
@@ -15,6 +15,7 @@ def build_notes(best_score, worst_score, ratio):
         notes.append("Possible Incoming OHKO")
 
     return "; ".join(notes)
+
 
 def build_why_explanation(team_size, recommended_pokemon, best_score, worst_score, ratio):
     if team_size == 1:
@@ -38,6 +39,6 @@ def build_why_explanation(team_size, recommended_pokemon, best_score, worst_scor
         return "Best durability against this opponent"
 
     if ratio >= 1:
-        return "Best overall matchup"
+        return "Best balance of damage and durability"
 
     return "Highest overall matchup rating"

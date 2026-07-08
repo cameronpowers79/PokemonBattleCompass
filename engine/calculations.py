@@ -212,7 +212,15 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None):
     "Worst Incoming Move": worst_move["Move"],
     "Incoming Worst Score": round(worst_score, 2),
     "Ratio": round(ratio, 2),
-    "Notes": build_notes(best_score, worst_score, ratio)
+    "Notes": build_notes(
+    pokemon,
+    opponent,
+    best_move,
+    best_score,
+    worst_move,
+    worst_score,
+    ratio
+)
 })
 
     return sorted(
