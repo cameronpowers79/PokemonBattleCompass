@@ -1,8 +1,13 @@
 # ---------- Tactical helpers ----------
 
+def move_makes_contact(move):
+    return move.get("MakesContact") in [True, "TRUE", "True", "Yes", "Y", 1]
+
+
 def get_tactical_ability_notes(attacker, defender, best_move, best_score, ability_rules):
     notes = []
     defender_ability = defender.get("Ability")
+    move_name = best_move.get("Move", "This move")
 
     if not defender_ability:
         return notes
@@ -19,8 +24,8 @@ def get_tactical_ability_notes(attacker, defender, best_move, best_score, abilit
         if target_type == "OHKO" and best_score >= 260:
             notes.append("Sturdy may prevent OHKO")
 
-        if target_type == "Contact" and best_move.get("MakesContact"):
-            notes.append(rule.get("Notes"))
+        if target_type == "Contact" and move_makes_contact(best_move):
+            notes.append(f"{move_name} will trigger {defender_ability}")
 
     return notes
 
