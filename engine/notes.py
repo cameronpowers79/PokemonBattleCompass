@@ -295,16 +295,21 @@ def build_durability_reason(pokemon, opponent, ability_rules):
         ability_rules
     )
 
+    pokemon_name = pokemon.get("Pokemon", "This Pokémon")
+
     if immune_types and resisted_types:
-        return f"Immune to {immune_types}; resists {resisted_types} attacks"
+        return (
+            f"{pokemon_name} is immune to {immune_types} attacks "
+            f"and resists {resisted_types} attacks"
+        )
 
     if immune_types:
-        return f"Immune to {immune_types} attacks"
+        return f"{pokemon_name} is immune to {immune_types} attacks"
 
     if resisted_types:
-        return f"Resists {resisted_types} attacks"
+        return f"{pokemon_name} resists {resisted_types} attacks"
 
-    return "Best durability against this opponent"
+    return f"{pokemon_name} has the best durability against this opponent"
 
 
 def build_why_explanation(all_results, selected_result, opponent, ability_rules=None):
@@ -324,10 +329,11 @@ def build_why_explanation(all_results, selected_result, opponent, ability_rules=
     )
 
     if worst_score == 0:
-        if ability_immunity:
-            return f"{selected_pokemon.get('Ability')} grants full immunity"
-
-        return "Immune to all opponent's attacks"
+        return build_durability_reason(
+        selected_pokemon,
+        opponent,
+        ability_rules
+    )
 
     why_code = get_why_code(
         selected_result,
@@ -343,12 +349,11 @@ def build_why_explanation(all_results, selected_result, opponent, ability_rules=
         return f"{selected_pokemon.get('Ability')} negates opponent's attacks"
 
     if why_code == 2:
-        immune_types, _ = get_immune_and_resisted_types(
-            selected_pokemon,
-            opponent,
-            ability_rules
-        )
-        return f"Immune to {immune_types}-type attacks"
+        return build_durability_reason(
+        selected_pokemon,
+        opponent,
+        ability_rules
+    )
 
     if why_code == 3:
         return "Best overall matchup"
