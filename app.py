@@ -1,16 +1,31 @@
+import base64
+from pathlib import Path
+from textwrap import dedent
 import streamlit as st
+
 from engine.data_loader import load_json
 from engine.calculations import find_best_team_member, evaluate_team_matchups
+
 
 st.set_page_config(
     page_title="Pokémon Battle Compass Alpha",
     layout="wide"
 )
 
+TYPE_BADGE_DIR = Path("assets/type_badges")
+
+NOTE_ICONS = {
+    "info": "ℹ️",
+    "opportunity": "💡",
+    "caution": "⚠️",
+    "warning": "🚨",
+}
+
+
 st.markdown(
     """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800&display=swap');
 
         html, body, [class*="css"] {
             font-family: "Aptos", "Segoe UI", sans-serif;
@@ -42,33 +57,407 @@ st.markdown(
         section[data-testid="stSidebar"] > div {
             width: 260px !important;
         }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
-st.markdown(
-    """
-    <style>
-        section[data-testid="stSidebar"] {
-            width: 260px !important;
+        .recommendation-card {
+            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 28px 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         }
 
-        section[data-testid="stSidebar"] > div {
-            width: 260px !important;
+        .card-kicker {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 24px;
         }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
-NOTE_ICONS = {
-    "info": "ℹ️",
-    "opportunity": "💡",
-    "caution": "⚠️",
-    "warning": "🚨",
+        .pokemon-name {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 2.9rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .type-badge-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .type-badge {
+            height: 28px;
+            width: auto;
+        }
+
+        .card-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.16);
+            margin: 20px 0 24px 0;
+        }
+
+        .move-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 18px;
+        }
+
+        .label {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.92rem;
+            margin-bottom: 6px;
+        }
+
+        .move-name,
+        .ratio-value {
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 2.35rem;
+            line-height: 1.1;
+            font-weight: 500;
+        }
+
+        .effectiveness-pill {
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 8px 0 28px 0;
+        }
+
+        .effectiveness-good {
+            background: rgba(34, 197, 94, 0.20);
+            color: #4ade80;
+        }
+
+        .effectiveness-neutral {
+            background: rgba(59, 130, 246, 0.18);
+            color: #93c5fd;
+        }
+
+        .effectiveness-caution {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+
+        .effectiveness-bad {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+        }
+
+        .section-title {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .why-box {
+            background: rgba(59, 130, 246, 0.14);
+            border: 1px solid rgba(59, 130, 246, 0.24);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #dbeafe;
+            margin-bottom: 22px;
+        }
+
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .battle-note {
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 0.98rem;
+        }
+
+        .note-info {
+            background: rgba(59, 130, 246, 0.12);
+            color: #bfdbfe;
+        }
+
+        .note-opportunity {
+            background: rgba(34, 197, 94, 0.12);
+            color: #bbf7d0;
+        }
+
+        .note-caution {
+            background: rgba(245, 158, 11, 0.14);
+            color: #fde68a;
+        }
+
+        .note-warning {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fecaca;
+        }
+
+        .note-icon {
+            min-width: 22px;
+        }
+
+        .side-card {
+            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.20);
+        }
+
+        .side-card-title {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .opponent-name {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 10px;
+        }   
+
+        .opponent-level {
+            color: rgba(255,255,255,0.72);
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 20px;
+        }
+
+        .snapshot-value {
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .snapshot-move-label {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .snapshot-move {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .move-name-line,
+        .snapshot-move-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
 }
 
+        .snapshot-move-line {
+            margin-bottom: 12px;
+}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+def image_to_base64(path):
+    with open(path, "rb") as file:
+        return base64.b64encode(file.read()).decode("utf-8")
+
+
+def get_badge_img_html(pokemon_type, height=28):
+    badge = TYPE_BADGE_DIR / f"{pokemon_type}.png"
+
+    if not badge.exists():
+        return f"<span>{pokemon_type}</span>"
+
+    encoded = image_to_base64(badge)
+
+    return (
+        f"<img "
+        f"src='data:image/png;base64,{encoded}' "
+        f"alt='{pokemon_type}' "
+        f"class='type-badge' "
+        f"style='height:{height}px;width:auto;' "
+        f"/>"
+    )
+
+def get_effectiveness_text(multiplier, mode):
+    if multiplier is None:
+        return "Effectiveness unavailable"
+
+    if mode == "offense":
+        if multiplier == 0:
+            return "🚫 No Effect (0×)"
+        if multiplier < 1:
+            return f"🟡 Not Very Effective ({multiplier:g}×)"
+        if multiplier == 1:
+            return "⚪ Neutral (1×)"
+        if multiplier < 4:
+            return f"🟢 Super Effective ({multiplier:g}×)"
+        return f"🔥 4× Weakness ({multiplier:g}×)"
+
+    if multiplier == 0:
+        return "🛡️ No Effect (0×)"
+    if multiplier < 1:
+        return f"🟢 Not Very Effective ({multiplier:g}×)"
+    if multiplier == 1:
+        return "⚪ Neutral (1×)"
+    if multiplier < 4:
+        return f"🔺 Super Effective ({multiplier:g}×)"
+    return f"🔥 4× Weakness ({multiplier:g}×)"
+
+
+def get_effectiveness_class(multiplier, mode):
+    if multiplier is None:
+        return "neutral"
+
+    if mode == "offense":
+        if multiplier == 0:
+            return "bad"
+        if multiplier < 1:
+            return "caution"
+        if multiplier == 1:
+            return "neutral"
+        return "good"
+
+    if multiplier == 0:
+        return "good"
+    if multiplier < 1:
+        return "good"
+    if multiplier == 1:
+        return "neutral"
+    if multiplier < 4:
+        return "caution"
+    return "bad"
+
+
+def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recommended_result):
+    type_badges = "".join(
+        get_badge_img_html(pokemon_type)
+        for pokemon_type in [
+            recommended_pokemon.get("Type1"),
+            recommended_pokemon.get("Type2"),
+        ]
+        if pokemon_type
+    )
+
+    offensive_multiplier = recommended_result.get("Best Move Multiplier")
+    effectiveness_text = get_effectiveness_text(offensive_multiplier, "offense")
+    effectiveness_class = get_effectiveness_class(offensive_multiplier, "offense")
+
+    notes_html = ""
+
+    for battle_note in recommended_result.get("Battle Notes", []):
+        category = battle_note.get("category", "info")
+        text = battle_note.get("text", "")
+        icon = NOTE_ICONS.get(category, "•")
+
+        notes_html += (
+            f"<div class='battle-note note-{category}'>"
+            f"<span class='note-icon'>{icon}</span>"
+            f"<span>{text}</span>"
+            f"</div>"
+        )
+
+    if not notes_html:
+        notes_html = "<div class='battle-note note-info'>No special notes.</div>"
+
+    html = (
+        "<div class='recommendation-card'>"
+        "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
+        f"<div class='pokemon-name'>{recommended_pokemon['Pokemon']}</div>"
+        f"<div class='type-badge-row'>{type_badges}</div>"
+        "<div class='card-divider'></div>"
+        "<div class='move-row'>"
+        "<div>"
+        "<div class='label'>Best Move</div>"
+        f"<div class='move-name-line'>"
+        f"<span class='move-name'>{best_move['Move']}</span>"
+        f"{get_badge_img_html(best_move.get('Type'), height=24)}"
+        f"</div>"
+        "</div>"
+        "<div>"
+        "<div class='label'>Matchup Ratio</div>"
+        f"<div class='ratio-value'>{ratio:.2f}</div>"
+        "</div>"
+        "</div>"
+        f"<div class='effectiveness-pill effectiveness-{effectiveness_class}'>{effectiveness_text}</div>"
+        "<div class='section-title'>Why this Pokémon?</div>"
+        f"<div class='why-box'>{why}</div>"
+        "<div class='section-title'>Battle Notes</div>"
+        f"<div class='notes-list'>{notes_html}</div>"
+        "</div>"
+    )
+
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_opponent_card(opponent):
+    type_badges = "".join(
+        get_badge_img_html(pokemon_type, height=24)
+        for pokemon_type in [
+            opponent.get("Type1"),
+            opponent.get("Type2"),
+        ]
+        if pokemon_type
+    )
+
+    st.markdown(
+        (
+            "<div class='side-card'>"
+            "<div class='side-card-title'>Opponent</div>"
+            f"<div class='opponent-name'>{opponent['Pokemon']}</div>"
+            f"<div class='type-badge-row'>{type_badges}</div>"
+            f"<div class='opponent-level'>Lv. {opponent.get('Level', '—')}</div>"
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+def render_battle_snapshot(best_score, worst_score, worst_move, recommended_result):
+    incoming_multiplier = recommended_result.get("Incoming Multiplier")
+
+    effectiveness_text = get_effectiveness_text(incoming_multiplier, "defense")
+    effectiveness_class = get_effectiveness_class(incoming_multiplier, "defense")
+
+    st.markdown(
+        (
+            "<div class='side-card'>"
+            "<div class='side-card-title'>Battle Snapshot</div>"
+            "<div class='snapshot-grid'>"
+            "<div><div class='label'>Move Score</div>"
+            f"<div class='snapshot-value'>{best_score:.2f}</div></div>"
+            "<div><div class='label'>Incoming Worst</div>"
+            f"<div class='snapshot-value'>{worst_score:.2f}</div></div>"
+            "</div>"
+            "<div class='snapshot-move-label'>Worst incoming move</div>"
+            f"<div class='snapshot-move-line'>"
+            f"<span class='snapshot-move'>{worst_move['Move']} ({worst_move.get('Category', 'Unknown')})</span>"
+            f"{get_badge_img_html(worst_move.get('Type'), height=22)}"
+            f"</div>"
+            f"<div class='effectiveness-pill effectiveness-{effectiveness_class}'>{effectiveness_text}</div>"
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
 
 def render_battle_notes(notes):
     if not notes:
@@ -79,22 +468,6 @@ def render_battle_notes(notes):
         icon = NOTE_ICONS.get(note.get("category"), "•")
         st.write(f"{icon} {note.get('text')}")
 
-def render_offensive_effectiveness(multiplier):
-    if multiplier is None:
-        st.caption("Effectiveness unavailable")
-        return
-
-    if multiplier == 0:
-        st.error("🚫 No effect (0×)")
-    elif multiplier < 1:
-        st.warning(f"🟡 Not Very Effective ({multiplier:g}×)")
-    elif multiplier == 1:
-        st.info("⚪ Neutral (1×)")
-    elif multiplier < 4:
-        st.success(f"🟢 Super Effective ({multiplier:g}×)")
-    else:
-        st.success(f"🔥 4× Weakness ({multiplier:g}×)")
-
 
 def render_defensive_effectiveness(multiplier):
     if multiplier is None:
@@ -102,7 +475,7 @@ def render_defensive_effectiveness(multiplier):
         return
 
     if multiplier == 0:
-        st.success("🛡️ No effect (0×)")
+        st.success("🛡️ No Effect (0×)")
     elif multiplier < 1:
         st.success(f"🟢 Not Very Effective ({multiplier:g}×)")
     elif multiplier == 1:
@@ -183,6 +556,12 @@ matchup_results = evaluate_team_matchups(
     moves_data
 )
 
+recommended_result = next(
+    row
+    for row in matchup_results
+    if row["Pokemon"] == recommended_pokemon["Pokemon"]
+)
+
 other_options = [
     row
     for row in matchup_results
@@ -190,77 +569,29 @@ other_options = [
 ]
 
 top_three = other_options[:2]
-recommended_result = next(
-    row
-    for row in matchup_results
-    if row["Pokemon"] == recommended_pokemon["Pokemon"]
-)
-
-top_notes = recommended_result.get("Battle Notes", [])
 
 st.divider()
 
 left, right = st.columns([1.2, 1])
 
 with left:
-
-    st.subheader("⭐ Recommended Pokémon")
-
-    st.markdown(f"## {recommended_pokemon['Pokemon']}")
-
-    type_line = " / ".join(
-        t for t in [
-            recommended_pokemon.get("Type1"),
-            recommended_pokemon.get("Type2")
-        ] if t
+    render_recommendation_card(
+        recommended_pokemon,
+        best_move,
+        ratio,
+        why,
+        recommended_result
     )
-
-    st.caption(type_line)
-
-    st.divider()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.metric(
-            "Best Move",
-            best_move["Move"]
-        )
-
-    render_offensive_effectiveness(
-        recommended_result.get("Best Move Multiplier")
-)
-
-    with col2:
-        st.metric(
-            "Matchup Ratio",
-            round(ratio, 2)
-        )
-
-    st.markdown("### Why this Pokémon?")
-
-    st.info(why)
-
-    st.markdown("### Battle Notes")
-
-    render_battle_notes(top_notes)
 
 with right:
-    st.subheader("Battle Snapshot")
-    st.metric(
-    "Matchup Ratio",
-    round(ratio, 2)
-)
-    st.metric("Best MoveScore", round(best_score, 2))
-    st.metric("Incoming Worst", round(worst_score, 2))
-    st.write(
-        f"**Worst incoming move:** {worst_move['Move']} "
-        f"({worst_move.get('Category', 'Unknown')})"
+    render_opponent_card(selected_opponent)
+
+    render_battle_snapshot(
+        best_score,
+        worst_score,
+        worst_move,
+        recommended_result
     )
-    
-    render_defensive_effectiveness(
-    recommended_result.get("Incoming Multiplier")
-)
 
 st.divider()
 
@@ -297,52 +628,44 @@ analysis_rows = [
 
 with st.expander("Full Analysis"):
     st.dataframe(
-    analysis_rows,
-    use_container_width=True,
-    column_config={
-        "Pokemon": st.column_config.TextColumn(
-            width="small"
-        ),
-
-        "Best Move": st.column_config.TextColumn(
-            width="small"
-        ),
-
-        "Best Move Multiplier": st.column_config.NumberColumn(
-            "Effectiveness",
-            format="%g×",
-            width="small"
-        ),
-
-        "Best MoveScore": st.column_config.NumberColumn(
-            "Move Score",
-            format="%.2f",
-            width="small"
-        ),
-
-        "Worst Incoming Move": st.column_config.TextColumn(
-            width="medium"
-        ),
-
-        "Incoming Multiplier": st.column_config.NumberColumn(
-            "Effectiveness",
-            format="%g×",
-            width="small"
-        ),
-
-        "Incoming Worst Score": st.column_config.NumberColumn(
-            "IWS",
-            format="%.2f",
-            width="small"
-        ),
-
-        "Ratio": st.column_config.NumberColumn(
-            format="%.2f",
-            width="small"
-        ),
-
-        "Notes": st.column_config.TextColumn(
-            width="large"
-        ),
-    },
-)
+        analysis_rows,
+        use_container_width=True,
+        column_config={
+            "Pokemon": st.column_config.TextColumn(
+                width="small"
+            ),
+            "Best Move": st.column_config.TextColumn(
+                width="small"
+            ),
+            "Best Move Multiplier": st.column_config.NumberColumn(
+                "Effectiveness",
+                format="%g×",
+                width="small"
+            ),
+            "Best MoveScore": st.column_config.NumberColumn(
+                "Move Score",
+                format="%.2f",
+                width="small"
+            ),
+            "Worst Incoming Move": st.column_config.TextColumn(
+                width="medium"
+            ),
+            "Incoming Multiplier": st.column_config.NumberColumn(
+                "Incoming Effectiveness",
+                format="%g×",
+                width="small"
+            ),
+            "Incoming Worst Score": st.column_config.NumberColumn(
+                "IWS",
+                format="%.2f",
+                width="small"
+            ),
+            "Ratio": st.column_config.NumberColumn(
+                format="%.2f",
+                width="small"
+            ),
+            "Notes": st.column_config.TextColumn(
+                width="large"
+            ),
+        },
+    )
