@@ -90,11 +90,12 @@ st.markdown(
             display: flex;
             gap: 8px;
             align-items: center;
+            justify-content: center;
             margin-bottom: 24px;
         }
 
         .type-badge {
-            height: 28px;
+            height: 24px;
             width: auto;
         }
 
@@ -259,9 +260,8 @@ st.markdown(
         }
 
         .snapshot-move {
-            font-size: 1.05rem;
-            font-weight: 600;
-            margin-bottom: 12px;
+            display: inline-block;
+            transform: translateY(1px);
         }
 
         .move-name-line,
@@ -278,14 +278,17 @@ st.markdown(
 
         .pokemon-header-row {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 18px;
+            gap: 10px;
             margin-bottom: 12px;
+            text-align: center;
         }
 
-        .pokemon-text-block {
+       .pokemon-text-block {
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .sprite-placeholder {
@@ -300,11 +303,21 @@ st.markdown(
             flex-shrink: 0;
         }
 
+        .sprite-frame {
+            width: 88px;
+            height: 88px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            flex-shrink: 0;
+        }
+
         .pokemon-sprite {
             image-rendering: pixelated;
             image-rendering: crisp-edges;
-            object-fit: contain;
-            flex-shrink: 0;
+            transform: scale(1.35);
+            transform-origin: center center;
             display: block;
         }
 
@@ -348,7 +361,7 @@ def image_to_base64(path, crop_transparency=False, output_size=None):
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
-def get_badge_img_html(pokemon_type, height=28):
+def get_badge_img_html(pokemon_type, height=22):
     badge = TYPE_BADGE_DIR / f"{pokemon_type}.png"
 
     if not badge.exists():
@@ -450,7 +463,7 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
         "<div class='recommendation-card'>"
         "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
         "<div class='pokemon-header-row'>"
-        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=64)}"
+        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=72)}"
         "<div class='pokemon-text-block'>"
         f"<div class='pokemon-name'>{recommended_pokemon['Pokemon']}</div>"
         f"<div class='type-badge-row'>{type_badges}</div>"
@@ -462,7 +475,7 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
         "<div class='label'>Best Move</div>"
         f"<div class='move-name-line'>"
         f"<span class='move-name'>{best_move['Move']}</span>"
-        f"{get_badge_img_html(best_move.get('Type'), height=24)}"
+        f"{get_badge_img_html(best_move.get('Type'), height=20)}"
         f"</div>"
         "</div>"
         "<div>"
@@ -483,7 +496,7 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
 
 def render_opponent_card(opponent):
     type_badges = "".join(
-        get_badge_img_html(pokemon_type, height=24)
+        get_badge_img_html(pokemon_type, height=20)
         for pokemon_type in [
             opponent.get("Type1"),
             opponent.get("Type2"),
@@ -496,7 +509,7 @@ def render_opponent_card(opponent):
             "<div class='side-card'>"
             "<div class='side-card-title'>Opponent</div>"
             "<div class='pokemon-header-row'>"
-            f"{get_sprite_img_html(opponent['Pokemon'], size=64)}"
+            f"{get_sprite_img_html(opponent['Pokemon'], size=70, use_gmax=opponent_uses_gmax(opponent))}"
             "<div class='pokemon-text-block'>"
             f"<div class='opponent-name'>{opponent['Pokemon']}</div>"
             f"<div class='type-badge-row'>{type_badges}</div>"
@@ -528,7 +541,7 @@ def render_battle_snapshot(best_score, worst_score, worst_move, recommended_resu
             "<div class='snapshot-move-label'>Worst incoming move</div>"
             f"<div class='snapshot-move-line'>"
             f"<span class='snapshot-move'>{worst_move['Move']} ({worst_move.get('Category', 'Unknown')})</span>"
-            f"{get_badge_img_html(worst_move.get('Type'), height=22)}"
+            f"{get_badge_img_html(worst_move.get('Type'), height=18)}"
             f"</div>"
             f"<div class='effectiveness-pill effectiveness-{effectiveness_class}'>{effectiveness_text}</div>"
             "</div>"
@@ -574,18 +587,27 @@ def slugify_pokemon_name(pokemon_name):
     )
 
 
-def get_sprite_path(pokemon_name):
+def get_sprite_path(pokemon_name, use_gmax=False):
     sprite_name = slugify_pokemon_name(pokemon_name)
-    sprite_path = SPRITE_DIR / f"{sprite_name}.png"
 
+    if use_gmax:
+        gmax_path = SPRITE_DIR / f"{sprite_name}-gmax.png"
+        if gmax_path.exists():
+            return gmax_path
+
+    galar_path = SPRITE_DIR / f"{sprite_name}-galar.png"
+    if galar_path.exists():
+        return galar_path
+
+    sprite_path = SPRITE_DIR / f"{sprite_name}.png"
     if sprite_path.exists():
         return sprite_path
 
     return None
 
 
-def get_sprite_img_html(pokemon_name, size=96):
-    sprite_path = get_sprite_path(pokemon_name)
+def get_sprite_img_html(pokemon_name, size=64, use_gmax=False):
+    sprite_path = get_sprite_path(pokemon_name, use_gmax)
 
     if sprite_path is None:
         return (
@@ -593,11 +615,7 @@ def get_sprite_img_html(pokemon_name, size=96):
             f"style='width:{size}px;height:{size}px;'>?</div>"
         )
 
-    encoded = image_to_base64(
-        sprite_path,
-        crop_transparency=True,
-        output_size=size
-    )
+    encoded = image_to_base64(sprite_path)
 
     return (
         f"<img "
@@ -606,6 +624,12 @@ def get_sprite_img_html(pokemon_name, size=96):
         f"class='pokemon-sprite' "
         f"style='max-width:{size}px;max-height:{size}px;' "
         f"/>"
+    )
+
+def opponent_uses_gmax(opponent):
+    return any(
+        str(opponent.get(f"Move{slot}", "")).startswith("G-Max")
+        for slot in range(1, 5)
     )
 
 st.title("Pokémon Battle Compass")
