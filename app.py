@@ -5,7 +5,7 @@ import streamlit as st
 from io import BytesIO
 from PIL import Image
 
-from engine.data_loader import load_json
+from engine.data_loader import load_json, save_json
 from engine.calculations import find_best_team_member, evaluate_team_matchups
 
 
@@ -493,6 +493,29 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
 
     st.markdown(html, unsafe_allow_html=True)
 
+def get_move_metadata(move_name):
+    for move in moves_data:
+        if move.get("Move") == move_name:
+            return move
+
+    return None
+
+
+def apply_move_metadata(pokemon):
+    for slot in range(1, 5):
+        move_name = pokemon.get(f"Move{slot}")
+        move = get_move_metadata(move_name)
+
+        if not move:
+            continue
+
+        pokemon[f"Move{slot}Type"] = move.get("Type")
+        pokemon[f"Move{slot}Power"] = move.get("Power")
+        pokemon[f"Move{slot}Category"] = move.get("Category")
+        pokemon[f"Move{slot}Accuracy"] = move.get("Accuracy")
+
+    return pokemon
+
 
 def render_opponent_card(opponent):
     type_badges = "".join(
@@ -548,6 +571,76 @@ def render_battle_snapshot(best_score, worst_score, worst_move, recommended_resu
         ),
         unsafe_allow_html=True,
     )
+
+def render_my_team_editor(team_data):
+    st.subheader("My Team")
+
+    editable_columns = [
+        "Pokemon",
+        "Type1",
+        "Type2",
+        "Level",
+        "HP",
+        "ATK",
+        "DEF",
+        "SPA",
+        "SPD",
+        "SPE",
+        "Move1",
+        "Move2",
+        "Move3",
+        "Move4",
+        "Ability",
+        "Held Item",
+    ]
+
+    editable_team = [
+        {
+            column: pokemon.get(column)
+            for column in editable_columns
+        }
+        for pokemon in team_data
+    ]
+
+    move_options = sorted({
+        move.get("Move")
+        for move in moves_data
+        if move.get("Move")
+    })
+
+    edited_team = st.data_editor(
+        editable_team,
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed",
+        key="team_editor",
+        column_config={
+            "Move1": st.column_config.SelectboxColumn("Move1", options=move_options),
+            "Move2": st.column_config.SelectboxColumn("Move2", options=move_options),
+            "Move3": st.column_config.SelectboxColumn("Move3", options=move_options),
+            "Move4": st.column_config.SelectboxColumn("Move4", options=move_options),
+        }
+    )
+
+    st.caption("Edit your current party. Changes are not saved until you click Save Team.")
+    st.caption(
+        "Note: only modeled held items affect scores. "
+        "If an item should improve scores but does not, check the spelling."
+    )
+
+    if st.button("💾 Save Team", type="primary"):
+        saved_team = []
+
+        for original_pokemon, edited_pokemon in zip(team_data, edited_team):
+            merged_pokemon = dict(original_pokemon)
+
+            for column in editable_columns:
+                merged_pokemon[column] = edited_pokemon.get(column)
+
+            saved_team.append(apply_move_metadata(merged_pokemon))
+
+        save_json("team_data", saved_team)
+        st.success("Team saved!")
 
 def render_battle_notes(notes):
     if not notes:
@@ -716,102 +809,109 @@ other_options = [
 
 top_three = other_options[:2]
 
-st.divider()
+battle_tab, team_tab = st.tabs(["Battle Compass", "My Team"])
 
-left, right = st.columns([1.2, 1])
+with battle_tab:
+    st.divider()
 
-with left:
-    render_recommendation_card(
-        recommended_pokemon,
-        best_move,
-        ratio,
-        why,
-        recommended_result
-    )
+    left, right = st.columns([1.2, 1])
 
-with right:
-    render_opponent_card(selected_opponent)
+    with left:
+        render_recommendation_card(
+            recommended_pokemon,
+            best_move,
+            ratio,
+            why,
+            recommended_result
+        )
 
-    render_battle_snapshot(
-        best_score,
-        worst_score,
-        worst_move,
-        recommended_result
-    )
+    with right:
+        render_opponent_card(selected_opponent)
 
-st.divider()
+        render_battle_snapshot(
+            best_score,
+            worst_score,
+            worst_move,
+            recommended_result
+        )
 
-st.subheader("Other Strong Options")
+    st.divider()
 
-for index, row in enumerate(top_three, start=1):
-    with st.container(border=True):
-        st.markdown(f"### {index}. {row['Pokemon']}")
-        st.write(f"**Best move:** {row['Best Move']}")
-        st.caption(f"Matchup Ratio: {row['Ratio']}")
+    st.subheader("Other Strong Options")
 
-        notes = row.get("Battle Notes", [])
-        render_battle_notes(notes)
+    for index, row in enumerate(top_three, start=1):
+        with st.container(border=True):
+            st.markdown(f"### {index}. {row['Pokemon']}")
+            st.write(f"**Best move:** {row['Best Move']}")
+            st.caption(f"Matchup Ratio: {row['Ratio']}")
 
-analysis_columns = [
-    "Pokemon",
-    "Best Move",
-    "Best Move Multiplier",
-    "Best MoveScore",
-    "Worst Incoming Move",
-    "Incoming Multiplier",
-    "Incoming Worst Score",
-    "Ratio",
-    "Notes",
-]
+            notes = row.get("Battle Notes", [])
+            render_battle_notes(notes)
 
-analysis_rows = [
-    {
-        column: row.get(column)
-        for column in analysis_columns
-    }
-    for row in matchup_results
-]
+    analysis_columns = [
+        "Pokemon",
+        "Best Move",
+        "Best Move Multiplier",
+        "Best MoveScore",
+        "Worst Incoming Move",
+        "Incoming Multiplier",
+        "Incoming Worst Score",
+        "Ratio",
+        "Notes",
+    ]
 
-with st.expander("Full Analysis"):
-    st.dataframe(
-        analysis_rows,
-        use_container_width=True,
-        column_config={
-            "Pokemon": st.column_config.TextColumn(
-                width="small"
-            ),
-            "Best Move": st.column_config.TextColumn(
-                width="small"
-            ),
-            "Best Move Multiplier": st.column_config.NumberColumn(
-                "Effectiveness",
-                format="%g×",
-                width="small"
-            ),
-            "Best MoveScore": st.column_config.NumberColumn(
-                "Move Score",
-                format="%.2f",
-                width="small"
-            ),
-            "Worst Incoming Move": st.column_config.TextColumn(
-                width="medium"
-            ),
-            "Incoming Multiplier": st.column_config.NumberColumn(
-                "Incoming Effectiveness",
-                format="%g×",
-                width="small"
-            ),
-            "Incoming Worst Score": st.column_config.NumberColumn(
-                "IWS",
-                format="%.2f",
-                width="small"
-            ),
-            "Ratio": st.column_config.NumberColumn(
-                format="%.2f",
-                width="small"
-            ),
-            "Notes": st.column_config.TextColumn(
-                width="large"
-            ),
-        },
-    )
+    analysis_rows = [
+        {
+            column: row.get(column)
+            for column in analysis_columns
+        }
+        for row in matchup_results
+    ]
+
+    with st.expander("Full Analysis"):
+        st.dataframe(
+            analysis_rows,
+            use_container_width=True,
+            column_config={
+                "Pokemon": st.column_config.TextColumn(
+                    width="small"
+                ),
+                "Best Move": st.column_config.TextColumn(
+                    width="small"
+                ),
+                "Best Move Multiplier": st.column_config.NumberColumn(
+                    "Effectiveness",
+                    format="%g×",
+                    width="small"
+                ),
+                "Best MoveScore": st.column_config.NumberColumn(
+                    "Move Score",
+                    format="%.2f",
+                    width="small"
+                ),
+                "Worst Incoming Move": st.column_config.TextColumn(
+                    width="medium"
+                ),
+                "Incoming Multiplier": st.column_config.NumberColumn(
+                    "Incoming Effectiveness",
+                    format="%g×",
+                    width="small"
+                ),
+                "Incoming Worst Score": st.column_config.NumberColumn(
+                    "IWS",
+                    format="%.2f",
+                    width="small"
+                ),
+                "Ratio": st.column_config.NumberColumn(
+                    format="%.2f",
+                    width="small"
+                ),
+                "Notes": st.column_config.TextColumn(
+                    width="large"
+                ),
+                
+            },
+        )
+
+with team_tab:
+    render_my_team_editor(team_data)
