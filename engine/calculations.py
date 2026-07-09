@@ -351,6 +351,45 @@ def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=
 
     return selected_result["pokemon"], best_result, why
 
+def calculate_offensive_multiplier(attacker, defender, move, ability_rules=None):
+    if ability_rules is None:
+        ability_rules = []
+
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2")
+    ]
+
+    type_multiplier = get_type_multiplier(move["Type"], defender_types)
+
+    ability_multiplier = get_ability_multiplier(
+        defender,
+        move,
+        ability_rules,
+        type_multiplier
+    )
+
+    return type_multiplier * ability_multiplier
+
+def calculate_incoming_multiplier(opponent, defender, move, ability_rules=None):
+    if ability_rules is None:
+        ability_rules = []
+
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2")
+    ]
+
+    type_multiplier = get_type_multiplier(move["Type"], defender_types)
+
+    ability_multiplier = get_ability_multiplier(
+        defender,
+        move,
+        ability_rules,
+        type_multiplier
+    )
+
+    return type_multiplier * ability_multiplier
 
 def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
@@ -409,14 +448,28 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             dmax_note
         )
 
+        incoming_multiplier = calculate_incoming_multiplier(
+            opponent,
+            pokemon,
+            worst_move,
+            ability_rules
+        )
+
+        offensive_multiplier = calculate_offensive_multiplier(
+            pokemon,
+            opponent,
+            best_move,
+            ability_rules
+        )
+
         results.append({
             "Pokemon": pokemon["Pokemon"],
             "Best Move": best_move["Move"],
             "Best MoveScore": round(best_score, 2),
-            "Best Move HP Ratio": round(best_hp_ratio, 2) if best_hp_ratio is not None else None,
+            "Best Move Multiplier": round(offensive_multiplier, 2),
             "Worst Incoming Move": worst_move["Move"],
+            "Incoming Multiplier": round(incoming_multiplier, 2),
             "Incoming Worst Score": round(worst_score, 2),
-            "Incoming HP Ratio": round(incoming_hp_ratio, 2) if incoming_hp_ratio is not None else None,
             "Ratio": round(ratio, 2),
             "Battle Notes": battle_notes,
             "Notes": build_notes(

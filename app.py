@@ -7,6 +7,21 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown(
+    """
+    <style>
+        section[data-testid="stSidebar"] {
+            width: 260px !important;
+        }
+
+        section[data-testid="stSidebar"] > div {
+            width: 260px !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 NOTE_ICONS = {
     "info": "ℹ️",
     "opportunity": "💡",
@@ -23,6 +38,39 @@ def render_battle_notes(notes):
     for note in notes:
         icon = NOTE_ICONS.get(note.get("category"), "•")
         st.write(f"{icon} {note.get('text')}")
+
+def render_offensive_effectiveness(multiplier):
+    if multiplier is None:
+        st.caption("Effectiveness unavailable")
+        return
+
+    if multiplier == 0:
+        st.error("🚫 No effect (0×)")
+    elif multiplier < 1:
+        st.warning(f"🟡 Not Very Effective ({multiplier:g}×)")
+    elif multiplier == 1:
+        st.info("⚪ Neutral (1×)")
+    elif multiplier < 4:
+        st.success(f"🟢 Super Effective ({multiplier:g}×)")
+    else:
+        st.success(f"🔥 4× Weakness ({multiplier:g}×)")
+
+
+def render_defensive_effectiveness(multiplier):
+    if multiplier is None:
+        st.caption("Effectiveness unavailable")
+        return
+
+    if multiplier == 0:
+        st.success("🛡️ No effect (0×)")
+    elif multiplier < 1:
+        st.success(f"🟢 Not Very Effective ({multiplier:g}×)")
+    elif multiplier == 1:
+        st.info("⚪ Neutral (1×)")
+    elif multiplier < 4:
+        st.warning(f"🔺 Super Effective ({multiplier:g}×)")
+    else:
+        st.error(f"🔥 4× Weakness ({multiplier:g}×)")
 
 
 st.title("Pokémon Battle Compass")
@@ -139,6 +187,10 @@ with left:
             best_move["Move"]
         )
 
+    render_offensive_effectiveness(
+        recommended_result.get("Best Move Multiplier")
+)
+
     with col2:
         st.metric(
             "Matchup Ratio",
@@ -165,6 +217,10 @@ with right:
         f"**Worst incoming move:** {worst_move['Move']} "
         f"({worst_move.get('Category', 'Unknown')})"
     )
+    
+    render_defensive_effectiveness(
+    recommended_result.get("Incoming Multiplier")
+)
 
 st.divider()
 
@@ -182,8 +238,10 @@ for index, row in enumerate(top_three, start=1):
 analysis_columns = [
     "Pokemon",
     "Best Move",
+    "Best Move Multiplier",
     "Best MoveScore",
     "Worst Incoming Move",
+    "Incoming Multiplier",
     "Incoming Worst Score",
     "Ratio",
     "Notes",
@@ -198,4 +256,53 @@ analysis_rows = [
 ]
 
 with st.expander("Full Analysis"):
-    st.dataframe(analysis_rows)
+    st.dataframe(
+    analysis_rows,
+    use_container_width=True,
+    column_config={
+        "Pokemon": st.column_config.TextColumn(
+            width="small"
+        ),
+
+        "Best Move": st.column_config.TextColumn(
+            width="small"
+        ),
+
+        "Best Move Multiplier": st.column_config.NumberColumn(
+            "Effectiveness",
+            format="%g×",
+            width="small"
+        ),
+
+        "Best MoveScore": st.column_config.NumberColumn(
+            "Move Score",
+            format="%.2f",
+            width="small"
+        ),
+
+        "Worst Incoming Move": st.column_config.TextColumn(
+            width="medium"
+        ),
+
+        "Incoming Multiplier": st.column_config.NumberColumn(
+            "Effectiveness",
+            format="%g×",
+            width="small"
+        ),
+
+        "Incoming Worst Score": st.column_config.NumberColumn(
+            "IWS",
+            format="%.2f",
+            width="small"
+        ),
+
+        "Ratio": st.column_config.NumberColumn(
+            format="%.2f",
+            width="small"
+        ),
+
+        "Notes": st.column_config.TextColumn(
+            width="large"
+        ),
+    },
+)
