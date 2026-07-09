@@ -10,6 +10,46 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&display=swap');
+
+        html, body, [class*="css"] {
+            font-family: "Aptos", "Segoe UI", sans-serif;
+        }
+
+        h1, h2, h3, h4,
+        .stMarkdown h1,
+        .stMarkdown h2,
+        .stMarkdown h3,
+        .stMarkdown h4 {
+            font-family: "Exo 2", "Bahnschrift", "Aptos", sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        [data-testid="stMetricValue"] {
+            font-family: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
+            font-weight: 500;
+        }
+
+        [data-testid="stMetricLabel"] {
+            font-family: "Aptos", "Segoe UI", sans-serif;
+        }
+
+        section[data-testid="stSidebar"] {
+            width: 260px !important;
+        }
+
+        section[data-testid="stSidebar"] > div {
+            width: 260px !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <style>
         section[data-testid="stSidebar"] {
             width: 260px !important;
         }
