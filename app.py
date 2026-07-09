@@ -2,6 +2,8 @@ import base64
 from pathlib import Path
 from textwrap import dedent
 import streamlit as st
+from io import BytesIO
+from PIL import Image
 
 from engine.data_loader import load_json
 from engine.calculations import find_best_team_member, evaluate_team_matchups
@@ -21,25 +23,9 @@ NOTE_ICONS = {
     "warning": "🚨",
 }
 
-SPRITE_DIR = Path("assets/sprites")
+SPRITE_DIR = Path("assets/raw/pokesprite/pokemon-gen8/regular")
 
-POKEMON_DEX_NUMBERS = {
-    "Raichu": 26,
-    "Roserade": 407,
-    "Liepard": 510,
-    "Chandelure": 609,
-    "Sylveon": 700,
-    "Corviknight": 823,
 
-    "Mawile": 303,
-    "Aegislash": 681,
-    "Haxorus": 612,
-    "Dragapult": 887,
-    "Mr. Rime": 866,
-    "Inteleon": 818,
-    "Charizard": 6,
-    "Eternatus": 890,
-}
 
 st.markdown(
     """
@@ -297,15 +283,10 @@ st.markdown(
             margin-bottom: 12px;
         }
 
-        .pokemon-sprite {
-            image-rendering: pixelated;
-            object-fit: contain;
-            flex-shrink: 0;
-        }
-
         .pokemon-text-block {
             display: flex;
             flex-direction: column;
+        }
 
         .sprite-placeholder {
             border: 1px dashed rgba(255,255,255,0.25);
@@ -317,7 +298,26 @@ st.markdown(
             font-size: 2rem;
             font-weight: 700;
             flex-shrink: 0;
-        }    
+        }
+
+        .pokemon-sprite {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        @media (max-width: 1350px) {
+
+        div[data-testid="stHorizontalBlock"] {
+            flex-direction: column;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div {
+            width: 100% !important;
+        }
+
 }
     </style>
     """,
@@ -325,9 +325,27 @@ st.markdown(
 )
 
 
-def image_to_base64(path):
-    with open(path, "rb") as file:
-        return base64.b64encode(file.read()).decode("utf-8")
+def image_to_base64(path, crop_transparency=False, output_size=None):
+    if not crop_transparency and output_size is None:
+        with open(path, "rb") as file:
+            return base64.b64encode(file.read()).decode("utf-8")
+
+    image = Image.open(path).convert("RGBA")
+
+    if crop_transparency:
+        alpha = image.getchannel("A")
+        bbox = alpha.getbbox()
+
+        if bbox:
+            image = image.crop(bbox)
+
+    if output_size:
+        image.thumbnail((output_size, output_size), Image.Resampling.NEAREST)
+
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+
+    return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
 def get_badge_img_html(pokemon_type, height=28):
@@ -432,7 +450,7 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
         "<div class='recommendation-card'>"
         "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
         "<div class='pokemon-header-row'>"
-        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=96)}"
+        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=64)}"
         "<div class='pokemon-text-block'>"
         f"<div class='pokemon-name'>{recommended_pokemon['Pokemon']}</div>"
         f"<div class='type-badge-row'>{type_badges}</div>"
@@ -478,7 +496,7 @@ def render_opponent_card(opponent):
             "<div class='side-card'>"
             "<div class='side-card-title'>Opponent</div>"
             "<div class='pokemon-header-row'>"
-            f"{get_sprite_img_html(opponent['Pokemon'], size=80)}"
+            f"{get_sprite_img_html(opponent['Pokemon'], size=64)}"
             "<div class='pokemon-text-block'>"
             f"<div class='opponent-name'>{opponent['Pokemon']}</div>"
             f"<div class='type-badge-row'>{type_badges}</div>"
@@ -544,13 +562,21 @@ def render_defensive_effectiveness(multiplier):
     else:
         st.error(f"🔥 4× Weakness ({multiplier:g}×)")
 
+def slugify_pokemon_name(pokemon_name):
+    return (
+        pokemon_name
+        .lower()
+        .replace("♀", "-f")
+        .replace("♂", "-m")
+        .replace(".", "")
+        .replace("'", "")
+        .replace(" ", "-")
+    )
+
+
 def get_sprite_path(pokemon_name):
-    dex_number = POKEMON_DEX_NUMBERS.get(pokemon_name)
-
-    if dex_number is None:
-        return None
-
-    sprite_path = SPRITE_DIR / f"{dex_number:04d}.png"
+    sprite_name = slugify_pokemon_name(pokemon_name)
+    sprite_path = SPRITE_DIR / f"{sprite_name}.png"
 
     if sprite_path.exists():
         return sprite_path
@@ -559,7 +585,28 @@ def get_sprite_path(pokemon_name):
 
 
 def get_sprite_img_html(pokemon_name, size=96):
-    return ""
+    sprite_path = get_sprite_path(pokemon_name)
+
+    if sprite_path is None:
+        return (
+            f"<div class='sprite-placeholder' "
+            f"style='width:{size}px;height:{size}px;'>?</div>"
+        )
+
+    encoded = image_to_base64(
+        sprite_path,
+        crop_transparency=True,
+        output_size=size
+    )
+
+    return (
+        f"<img "
+        f"src='data:image/png;base64,{encoded}' "
+        f"alt='{pokemon_name}' "
+        f"class='pokemon-sprite' "
+        f"style='max-width:{size}px;max-height:{size}px;' "
+        f"/>"
+    )
 
 st.title("Pokémon Battle Compass")
 st.caption("Alpha UI preview — advice first, spreadsheet goblins later.")
