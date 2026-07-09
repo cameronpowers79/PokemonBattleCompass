@@ -21,6 +21,25 @@ NOTE_ICONS = {
     "warning": "🚨",
 }
 
+SPRITE_DIR = Path("assets/sprites")
+
+POKEMON_DEX_NUMBERS = {
+    "Raichu": 26,
+    "Roserade": 407,
+    "Liepard": 510,
+    "Chandelure": 609,
+    "Sylveon": 700,
+    "Corviknight": 823,
+
+    "Mawile": 303,
+    "Aegislash": 681,
+    "Haxorus": 612,
+    "Dragapult": 887,
+    "Mr. Rime": 866,
+    "Inteleon": 818,
+    "Charizard": 6,
+    "Eternatus": 890,
+}
 
 st.markdown(
     """
@@ -265,10 +284,40 @@ st.markdown(
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-}
+        }
 
         .snapshot-move-line {
             margin-bottom: 12px;
+        }
+
+        .pokemon-header-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 12px;
+        }
+
+        .pokemon-sprite {
+            image-rendering: pixelated;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .pokemon-text-block {
+            display: flex;
+            flex-direction: column;
+
+        .sprite-placeholder {
+            border: 1px dashed rgba(255,255,255,0.25);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.45);
+            font-size: 2rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }    
 }
     </style>
     """,
@@ -382,8 +431,13 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
     html = (
         "<div class='recommendation-card'>"
         "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
+        "<div class='pokemon-header-row'>"
+        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=96)}"
+        "<div class='pokemon-text-block'>"
         f"<div class='pokemon-name'>{recommended_pokemon['Pokemon']}</div>"
         f"<div class='type-badge-row'>{type_badges}</div>"
+        "</div>"
+        "</div>"
         "<div class='card-divider'></div>"
         "<div class='move-row'>"
         "<div>"
@@ -423,9 +477,14 @@ def render_opponent_card(opponent):
         (
             "<div class='side-card'>"
             "<div class='side-card-title'>Opponent</div>"
+            "<div class='pokemon-header-row'>"
+            f"{get_sprite_img_html(opponent['Pokemon'], size=80)}"
+            "<div class='pokemon-text-block'>"
             f"<div class='opponent-name'>{opponent['Pokemon']}</div>"
             f"<div class='type-badge-row'>{type_badges}</div>"
             f"<div class='opponent-level'>Lv. {opponent.get('Level', '—')}</div>"
+            "</div>"
+            "</div>"
             "</div>"
         ),
         unsafe_allow_html=True,
@@ -485,6 +544,22 @@ def render_defensive_effectiveness(multiplier):
     else:
         st.error(f"🔥 4× Weakness ({multiplier:g}×)")
 
+def get_sprite_path(pokemon_name):
+    dex_number = POKEMON_DEX_NUMBERS.get(pokemon_name)
+
+    if dex_number is None:
+        return None
+
+    sprite_path = SPRITE_DIR / f"{dex_number:04d}.png"
+
+    if sprite_path.exists():
+        return sprite_path
+
+    return None
+
+
+def get_sprite_img_html(pokemon_name, size=96):
+    return ""
 
 st.title("Pokémon Battle Compass")
 st.caption("Alpha UI preview — advice first, spreadsheet goblins later.")
