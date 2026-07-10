@@ -14,11 +14,6 @@ st.set_page_config(
     layout="wide"
 )
 
-st.write({
-    "default_primary": st.get_option("theme.primaryColor"),
-    "dark_primary": st.get_option("theme.dark.primaryColor"),
-    "light_primary": st.get_option("theme.light.primaryColor"),
-})
 
 TYPE_BADGE_DIR = Path("assets/type_badges")
 
