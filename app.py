@@ -371,31 +371,94 @@ st.markdown(
             margin-bottom: 10px;
         }
 
-        .team-stat-grid {
-            display: grid;
-            grid-template-columns: repeat(6, minmax(70px, 1fr));
-            gap: 10px;
+        .team-stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
             margin-bottom: 24px;
         }
 
-        .team-stat {
-            background: rgba(255,255,255,0.055);
-            border-radius: 10px;
-            padding: 10px 8px;
-            text-align: center;
+        .team-stat-row {
+            display: grid;
+            grid-template-columns: 44px minmax(120px, 1fr) 48px;
+            align-items: center;
+            gap: 10px;
         }
 
         .team-stat-label {
-            color: rgba(255,255,255,0.62);
-            font-size: 0.78rem;
-            margin-bottom: 4px;
+            color: rgba(255,255,255,0.72);
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        .team-stat-track {
+            height: 12px;
+            background: rgba(255,255,255,0.09);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .team-stat-fill {
+            height: 100%;
+            min-width: 3px;
+            border-radius: 999px;
+        }
+
+        .team-stat-fill-hp {
+            background: linear-gradient(
+                90deg,
+                rgba(34, 197, 94, 0.70),
+                rgba(74, 222, 128, 0.98)
+            );
+        }
+
+        .team-stat-fill-atk {
+            background: linear-gradient(
+                90deg,
+                rgba(220, 38, 38, 0.72),
+                rgba(248, 113, 113, 0.98)
+            );
+        }
+
+        .team-stat-fill-def {
+            background: linear-gradient(
+                90deg,
+                rgba(217, 119, 6, 0.72),
+                rgba(251, 191, 36, 0.98)
+            );
+        }
+
+        .team-stat-fill-spa {
+            background: linear-gradient(
+                90deg,
+                rgba(37, 99, 235, 0.72),
+                rgba(96, 165, 250, 0.98)
+            );
+        }
+
+        .team-stat-fill-spd {
+            background: linear-gradient(
+                90deg,
+                rgba(124, 58, 237, 0.72),
+                rgba(167, 139, 250, 0.98)
+            );
+        }
+
+        .team-stat-fill-spe {
+            background: linear-gradient(
+                90deg,
+                rgba(219, 39, 119, 0.72),
+                rgba(244, 114, 182, 0.98)
+            );
         }
 
         .team-stat-value {
             font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 1.35rem;
+            font-size: 1rem;
             font-weight: 600;
-        }
+            text-align: right;
+       }   
 
         .team-move-grid {
             display: grid;
@@ -430,18 +493,12 @@ st.markdown(
         }
 
         @media (max-width: 900px) {
-            .team-stat-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
             .team-move-grid,
             .team-detail-footer {
                 grid-template-columns: 1fr;
-            }
+        }
 }
-
-}
-    </style>
+</style>
     """,
     unsafe_allow_html=True,
 )
@@ -828,14 +885,37 @@ def render_selected_pokemon_details(pokemon):
         if pokemon_type
     )
 
+    stat_names = ["HP", "ATK", "DEF", "SPA", "SPD", "SPE"]
+    stat_scale_max = 300
+
+    stat_values = {
+        stat: pokemon.get(stat) or 0
+        for stat in stat_names
+    }
+
+    stat_css_classes = {
+        "HP": "hp",
+        "ATK": "atk",
+        "DEF": "def",
+        "SPA": "spa",
+        "SPD": "spd",
+        "SPE": "spe",
+    }
+
     stats_html = "".join(
         (
-            "<div class='team-stat'>"
+            "<div class='team-stat-row'>"
             f"<div class='team-stat-label'>{stat}</div>"
-            f"<div class='team-stat-value'>{pokemon.get(stat, '—')}</div>"
+            "<div class='team-stat-track'>"
+            f"<div class='team-stat-fill "
+            f"team-stat-fill-{stat_css_classes[stat]}' "
+            f"style='width:{min(100, max(1, stat_values[stat] / stat_scale_max * 100)):.1f}%;'>"
+            "</div>"
+            "</div>"
+            f"<div class='team-stat-value'>{stat_values[stat]}</div>"
             "</div>"
         )
-        for stat in ["HP", "ATK", "DEF", "SPA", "SPD", "SPE"]
+        for stat in stat_names
     )
 
     moves_html = "".join(
@@ -858,7 +938,7 @@ def render_selected_pokemon_details(pokemon):
         "</div>"
 
         "<div class='team-detail-section-title'>Stats</div>"
-        f"<div class='team-stat-grid'>{stats_html}</div>"
+        f"<div class='team-stat-list'>{stats_html}</div>"
 
         "<div class='team-detail-section-title'>Moveset</div>"
         f"<div class='team-move-grid'>{moves_html}</div>"

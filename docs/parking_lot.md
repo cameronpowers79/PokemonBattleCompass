@@ -20,7 +20,6 @@
   - Exo 2 (headers)
   - Aptos (body)
   - Bahnschrift (metrics)
-- [ ] Stat data bars with numeric values.
 - [ ] Info link from Why? to Full Analysis.
 - [ ] Gender/form sprite support.
 
@@ -29,22 +28,25 @@
 - [x] Centralize move metadata lookups.
 - [x] Structured Battle Notes.
 - [x] Implement sprite lookup layer.
-- [ ] Player-editable Team Data.
+- [x] Player-editable Team Data.
 - [ ] Add UI theme/constants module.
 - [ ] Continue separating UI from engine.
 
 ## Team Editing
 
-- [ ] Add editable Team Data screen.
-- [ ] Load current `team_data.json`.
-- [ ] Allow editing levels, stats, moves, ability, and held item.
-- [ ] Save updates back to `data/team_data.json`.
+- [x] Add editable Team Data screen.
+- [x] Load current `team_data.json`.
+- [x] Allow editing levels, stats, moves, ability, and held item.
+- [x] Save updates back to `data/team_data.json`.
 - [ ] Add backup/export option.
-- [ ] Later: add validation/dropdowns from moves/items/abilities.
-- [ ] Selected Pokémon detail panel.
+- [x] Add move dropdown validation.
+- [ ] Add ability validation.
+- [ ] Add held-item validation after the modeled item list is expanded.
+- [x] Selected Pokémon detail panel.
 - [ ] Stat bars with numeric values.
-- [ ] Moveset display for selected Pokémon.
-- [ ] Type badges in My Team view.
+- [x] Moveset display for selected Pokémon.
+- [ ] Add type color to moves in moveset display
+- [x] Type badges in My Team view.
 - [ ] Pokémon name dropdown/validation.
 - [ ] Build Pokémon option list from available sprite assets.
 - [ ] Handle display-name cleanup for sprite slugs.
