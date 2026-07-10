@@ -78,24 +78,6 @@ st.markdown(
             margin-bottom: 0.5rem;
         }
 
-        /* Main page selector */
-
-       /* Main page selector */
-
-        div[data-testid="stSegmentedControl"]
-        button[data-testid="stBaseButton-segmented_controlActive"] {
-            background-color: #2563eb !important;
-            border-color: #3b82f6 !important;
-            color: white !important;
-        }
-
-        div[data-testid="stSegmentedControl"]
-        button[data-testid="stBaseButton-segmented_controlActive"]:hover {
-            background-color: #1d4ed8 !important;
-            border-color: #3b82f6 !important;
-            color: white !important;
-        }
-
         [data-testid="stMetricValue"] {
             font-family: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
             font-weight: 500;
@@ -695,6 +677,13 @@ st.markdown(
             margin-bottom: 3px;
         }
 
+        .team-detail-selector-title {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
         @media (max-width: 900px) {
 
             .team-move-grid,
@@ -1038,7 +1027,7 @@ def render_battle_snapshot(best_score, worst_score, worst_move, recommended_resu
     )
 
 def render_my_team_editor(team_data):
-    st.subheader("My Team")
+    st.subheader("Manage My Team")
 
     editable_columns = [
         "Pokemon",
@@ -1066,18 +1055,6 @@ def render_my_team_editor(team_data):
         }
         for pokemon in team_data
     ]
-
-    pokemon_names = [
-        pokemon.get("Pokemon")
-        for pokemon in editable_team
-        if pokemon.get("Pokemon")
-    ]
-
-    selected_pokemon_name = st.selectbox(
-        "View Pokémon Details",
-        pokemon_names,
-        key="team_detail_selector"
-    )
 
     move_options = sorted({
         move.get("Move")
@@ -1135,6 +1112,26 @@ def render_my_team_editor(team_data):
 
         save_json("team_data", saved_team)
         st.success("Team saved!")
+
+    st.divider()
+
+    st.markdown(
+        "<div class='team-detail-selector-title'>View Pokémon Details</div>",
+        unsafe_allow_html=True
+    )
+
+    pokemon_names = [
+        pokemon.get("Pokemon")
+        for pokemon in edited_team
+        if pokemon.get("Pokemon")
+    ]
+
+    selected_pokemon_name = st.selectbox(
+        "View Pokémon Details",
+        pokemon_names,
+        key="team_detail_selector",
+        label_visibility="collapsed"
+    )
 
     selected_pokemon = next(
         (
