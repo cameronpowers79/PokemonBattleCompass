@@ -3,7 +3,7 @@
 - [x] Battle Snapshot card.
 - [x] Other Strong Options (exclude recommended Pokémon).
 - [x] Expandable Full Analysis.
-- [ ] Matchup Strength indicator.
+- [x] Matchup Strength indicator.
 
 ### Battle Notes
 - [x] Structured Battle Notes.
