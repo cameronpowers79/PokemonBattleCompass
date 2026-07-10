@@ -67,6 +67,35 @@ st.markdown(
             letter-spacing: 0.01em;
         }
 
+        h1 {
+            text-align: center;
+        }
+
+        div[data-testid="stCaptionContainer"] {
+            text-align: center;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.72);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Main page selector */
+
+       /* Main page selector */
+
+        div[data-testid="stSegmentedControl"]
+        button[data-testid="stBaseButton-segmented_controlActive"] {
+            background-color: #2563eb !important;
+            border-color: #3b82f6 !important;
+            color: white !important;
+        }
+
+        div[data-testid="stSegmentedControl"]
+        button[data-testid="stBaseButton-segmented_controlActive"]:hover {
+            background-color: #1d4ed8 !important;
+            border-color: #3b82f6 !important;
+            color: white !important;
+        }
+
         [data-testid="stMetricValue"] {
             font-family: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
             font-weight: 500;
@@ -1314,7 +1343,7 @@ def opponent_uses_gmax(opponent):
     )
 
 st.title("Pokémon Battle Compass")
-st.caption("Alpha UI preview — advice first, spreadsheet goblins later.")
+st.caption("Navigate every matchup with confidence.")
 
 team_data = load_json("team_data")
 opponents = load_json("opponents")
