@@ -4,7 +4,7 @@
 - [x] Other Strong Options (exclude recommended Pokémon).
 - [x] Expandable Full Analysis.
 - [x] Matchup Strength indicator.
-- [ ] Center title header
+- [x] Center title header
 - [ ] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
 - [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
 
@@ -15,7 +15,6 @@
 
 ### Polish
 - [x] Pokémon sprites.
-- [ ] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
 - [x] Type badges.
 - [x] Type colors.
 - [x] Worst Incoming Move displays category (Physical/Special).
@@ -23,9 +22,8 @@
   - Exo 2 (headers)
   - Aptos (body)
   - Bahnschrift (metrics)
-- [ ] Change active page selector color from red to blue
+- [x] Change active page selector color from red to blue
 - [ ] Info link from Why? to Full Analysis.
-- [ ] Gender/form sprite support.
 
 ### Architecture
 - [x] Split app.py before it became a crime scene.
@@ -33,8 +31,8 @@
 - [x] Structured Battle Notes.
 - [x] Implement sprite lookup layer.
 - [x] Player-editable Team Data.
-- [ ] Add UI theme/constants module.
-- [ ] Continue separating UI from engine.
+- [x] Add UI theme/constants module.
+- [x] Continue separating UI from engine.
 
 ## Team Editing
 
@@ -52,7 +50,17 @@
 - [x] Add type color to moves in moveset display
 - [x] Type badges in My Team view.
 - [ ] Pokémon name dropdown/validation.
+- [x] Improve Pokémon Details section layout.
+- [ ] Create page section jumpto links and place them horizontally just below the header divider? 
+
+## Sprite Support
 - [ ] Build Pokémon option list from available sprite assets.
 - [ ] Handle display-name cleanup for sprite slugs.
-- [ ] Increase font size for "View Pokemon Details", maybe move it to below the edit table?
-- [ ] Create page section jumpto links and place them horizontally just below the header divider? 
+- [ ] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
+- [ ] Gender/form sprite support.
+
+## Battle Selection
+
+- [x] Order battles by BattleOrder.
+- [x] Order opponent Pokémon by Slot.
+- [x] Support starter-dependent trainer lineups.
