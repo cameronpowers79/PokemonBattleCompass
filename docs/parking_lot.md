@@ -4,6 +4,8 @@
 - [x] Other Strong Options (exclude recommended Pokémon).
 - [x] Expandable Full Analysis.
 - [x] Matchup Strength indicator.
+- [ ] Center title header
+- [ ] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
 
 ### Battle Notes
 - [x] Structured Battle Notes.

@@ -191,21 +191,30 @@ def get_move_mechanics_notes(defender, best_move, worst_move, opponent_moves):
 # ---------- Incoming move helpers ----------
 
 def get_move_type_list(pokemon):
-    move_types = []
+    moves = []
 
     for slot in range(1, 5):
         move_name = pokemon.get(f"Move{slot}")
         move_type = pokemon.get(f"Move{slot}Type")
+        move_power = pokemon.get(f"Move{slot}Power")
+        move_category = pokemon.get(f"Move{slot}Category")
 
-        if move_name and move_type:
-            move_types.append({
-                "Move": move_name,
-                "Type": move_type,
-                "Power": pokemon.get(f"Move{slot}Power"),
-                "Category": pokemon.get(f"Move{slot}Category"),
-            })
+        if not move_name or not move_type:
+            continue
 
-    return move_types
+        # Defensive resistance/immunity language should only consider
+        # moves that can actually deal damage.
+        if move_category not in {"Physical", "Special"}:
+            continue
+
+        moves.append({
+            "Move": move_name,
+            "Type": move_type,
+            "Power": move_power,
+            "Category": move_category,
+        })
+
+    return moves
 
 
 def get_immune_and_resisted_types(pokemon, opponent, ability_rules):

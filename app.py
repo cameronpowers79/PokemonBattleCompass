@@ -1297,11 +1297,17 @@ opponents = load_json("opponents")
 items = load_json("items")
 ability_rules = load_json("ability_rules")
 moves_data = load_json("moves")
+
 move_lookup = {
     move["Move"]: move
     for move in moves_data
     if move.get("Move")
 }
+
+
+# ---------------------------------------------------------
+# Sidebar: battle selection
+# ---------------------------------------------------------
 
 with st.sidebar:
     st.header("Battle Setup")
@@ -1312,21 +1318,37 @@ with st.sidebar:
         if row.get("Trainer")
     })
 
-    selected_trainer = st.selectbox("Trainer", trainer_names)
+    selected_trainer = st.selectbox(
+        "Trainer",
+        trainer_names
+    )
 
     battles = sorted({
         row["Battle"]
         for row in opponents
-        if row.get("Trainer") == selected_trainer and row.get("Battle")
+        if (
+            row.get("Trainer") == selected_trainer
+            and row.get("Battle")
+        )
     })
 
-    selected_battle = st.selectbox("Battle", battles)
+    selected_battle = st.selectbox(
+        "Battle",
+        battles
+    )
+
+
+# ---------------------------------------------------------
+# Available opponents for selected battle
+# ---------------------------------------------------------
 
 battle_opponents = [
     row
     for row in opponents
-    if row.get("Trainer") == selected_trainer
-    and row.get("Battle") == selected_battle
+    if (
+        row.get("Trainer") == selected_trainer
+        and row.get("Battle") == selected_battle
+    )
 ]
 
 opponent_names = [
@@ -1335,68 +1357,10 @@ opponent_names = [
     if row.get("Pokemon")
 ]
 
-selected_opponent_name = st.selectbox(
-    "Opponent Pokémon",
-    opponent_names
-)
 
-selected_opponent = next(
-    row
-    for row in battle_opponents
-    if row["Pokemon"] == selected_opponent_name
-)
-
-recommended_pokemon, recommendation_result, why = find_best_team_member(
-    team_data,
-    selected_opponent,
-    items,
-    ability_rules,
-    moves_data
-)
-
-best_move, best_score, worst_move, worst_score, ratio = recommendation_result
-
-matchup_results = evaluate_team_matchups(
-    team_data,
-    selected_opponent,
-    items,
-    ability_rules,
-    moves_data
-)
-
-recommended_result = next(
-    row
-    for row in matchup_results
-    if row["Pokemon"] == recommended_pokemon["Pokemon"]
-)
-
-other_options = [
-    row
-    for row in matchup_results
-    if row["Pokemon"] != recommended_pokemon["Pokemon"]
-]
-
-top_three = other_options[:2]
-
-analysis_columns = [
-    "Pokemon",
-    "Best Move",
-    "Best Move Multiplier",
-    "Best MoveScore",
-    "Worst Incoming Move",
-    "Incoming Multiplier",
-    "Incoming Worst Score",
-    "Ratio",
-    "Notes",
-]
-
-analysis_rows = [
-    {
-        column: row.get(column)
-        for column in analysis_columns
-    }
-    for row in matchup_results
-]
+# ---------------------------------------------------------
+# Main navigation
+# ---------------------------------------------------------
 
 active_view = st.segmented_control(
     "Main navigation",
@@ -1407,8 +1371,77 @@ active_view = st.segmented_control(
     width="stretch",
 )
 
+st.divider()
+
+
+# ---------------------------------------------------------
+# Battle Compass
+# ---------------------------------------------------------
+
 if active_view == "Battle Compass":
-    st.divider()
+
+    selected_opponent_name = st.selectbox(
+        "Opponent Pokémon",
+        opponent_names
+    )
+
+    selected_opponent = next(
+        row
+        for row in battle_opponents
+        if row["Pokemon"] == selected_opponent_name
+    )
+
+    recommended_pokemon, recommendation_result, why = find_best_team_member(
+        team_data,
+        selected_opponent,
+        items,
+        ability_rules,
+        moves_data
+    )
+
+    best_move, best_score, worst_move, worst_score, ratio = recommendation_result
+
+    matchup_results = evaluate_team_matchups(
+        team_data,
+        selected_opponent,
+        items,
+        ability_rules,
+        moves_data
+    )
+
+    recommended_result = next(
+        row
+        for row in matchup_results
+        if row["Pokemon"] == recommended_pokemon["Pokemon"]
+    )
+
+    other_options = [
+        row
+        for row in matchup_results
+        if row["Pokemon"] != recommended_pokemon["Pokemon"]
+    ]
+
+    top_three = other_options[:2]
+
+    analysis_columns = [
+        "Pokemon",
+        "Best Move",
+        "Best Move Multiplier",
+        "Best MoveScore",
+        "Worst Incoming Move",
+        "Incoming Multiplier",
+        "Incoming Worst Score",
+        "Ratio",
+        "Notes",
+    ]
+
+    analysis_rows = [
+        {
+            column: row.get(column)
+            for column in analysis_columns
+        }
+        for row in matchup_results
+    ]
 
     left, right = st.columns([1.2, 1])
 
@@ -1444,7 +1477,6 @@ if active_view == "Battle Compass":
             notes = row.get("Battle Notes", [])
             render_battle_notes(notes)
 
-    
     with st.expander("Full Analysis"):
         st.dataframe(
             analysis_rows,
@@ -1486,9 +1518,13 @@ if active_view == "Battle Compass":
                 "Notes": st.column_config.TextColumn(
                     width="large"
                 ),
-                
             },
         )
+
+
+# ---------------------------------------------------------
+# My Team
+# ---------------------------------------------------------
 
 elif active_view == "My Team":
     render_my_team_editor(team_data)
