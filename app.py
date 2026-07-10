@@ -110,6 +110,28 @@ st.markdown(
             margin-bottom: 24px;
         }
 
+        /* Main navigation segmented control */
+
+        button[data-testid="stBaseButton-segmented_controlActive"] {
+            background-color: rgba(37, 99, 235, 0.18) !important;
+            border-color: #2563eb !important;
+            box-shadow: inset 0 0 0 1px #2563eb !important;
+            color: #60a5fa !important;
+        }
+
+        button[data-testid="stBaseButton-segmented_controlActive"] p {
+            color: #60a5fa !important;
+        }
+
+        button[data-testid="stBaseButton-segmented_controlActive"]:hover,
+        button[data-testid="stBaseButton-segmented_controlActive"]:focus,
+        button[data-testid="stBaseButton-segmented_controlActive"]:focus-visible {
+            background-color: rgba(37, 99, 235, 0.24) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: inset 0 0 0 1px #3b82f6 !important;
+            color: #60a5fa !important;
+        }
+
         .pokemon-name {
             font-family: "Exo 2", "Bahnschrift", sans-serif;
             font-size: 2.9rem;
@@ -1416,6 +1438,7 @@ active_view = st.segmented_control(
     key="main_view",
     label_visibility="collapsed",
     width="stretch",
+    required=True,
 )
 
 st.divider()
