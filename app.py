@@ -132,6 +132,18 @@ st.markdown(
             gap: 32px;
             margin-bottom: 18px;
         }
+        
+        .best-move-column {
+            min-width: 0;
+        }
+
+        .best-move-effectiveness {
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+            margin: 16px 0 0 0;
+            padding: 10px 14px;
+        }
 
         .label {
             color: rgba(255,255,255,0.72);
@@ -678,6 +690,11 @@ st.markdown(
             .matchup-meter {
                 width: 100%;
             }
+
+            .best-move-effectiveness {
+                display: block;
+                width: auto;
+            }
 }
 
 </style>
@@ -876,16 +893,23 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
         "</div>"
         "<div class='card-divider'></div>"
         "<div class='move-row'>"
-        "<div>"
+
+        "<div class='best-move-column'>"
         "<div class='label'>Best Move</div>"
-        f"<div class='move-name-line'>"
+        "<div class='move-name-line'>"
         f"<span class='move-name'>{best_move['Move']}</span>"
         f"{get_badge_img_html(best_move.get('Type'), height=20)}"
-        f"</div>"
         "</div>"
+        f"<div class='effectiveness-pill "
+        f"effectiveness-{effectiveness_class} "
+        f"best-move-effectiveness'>"
+        f"{effectiveness_text}"
+        "</div>"
+        "</div>"
+
         f"<div>{matchup_strength_html}</div>"
+
         "</div>"
-        f"<div class='effectiveness-pill effectiveness-{effectiveness_class}'>{effectiveness_text}</div>"
         "<div class='section-title'>Why this Pokémon?</div>"
         f"<div class='why-box'>{why}</div>"
         "<div class='section-title'>Battle Notes</div>"
