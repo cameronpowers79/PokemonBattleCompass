@@ -470,6 +470,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             "Worst Incoming Move": worst_move["Move"],
             "Incoming Multiplier": round(incoming_multiplier, 2),
             "Incoming Worst Score": round(worst_score, 2),
+            "Is Immune": worst_score == 0,
             "Ratio": round(ratio, 2),
             "Battle Notes": battle_notes,
             "Notes": build_notes(

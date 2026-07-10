@@ -6,6 +6,7 @@ from engine.calculations import (
     evaluate_team_matchups,
 )
 from ui.cards import (
+    get_matchup_strength,
     render_battle_notes,
     render_battle_snapshot,
     render_opponent_card,
@@ -38,17 +39,41 @@ items = load_json("items")
 ability_rules = load_json("ability_rules")
 moves_data = load_json("moves")
 
+def opponent_row_matches_starter(row, selected_starter):
+    player_starter = row.get("PlayerStarter")
+
+    return (
+        not player_starter
+        or player_starter == selected_starter
+    )
+
 
 # ---------------------------------------------------------
-# Sidebar: battle selection
+# Sidebar: starter and battle selection
 # ---------------------------------------------------------
 
 with st.sidebar:
     st.header("Battle Setup")
 
+    selected_starter = st.selectbox(
+        "Choose Your Starter",
+        options=["Grookey", "Scorbunny", "Sobble"],
+        index=1,
+        key="player_starter"
+    )
+
+    starter_filtered_opponents = [
+        row
+        for row in opponents
+        if opponent_row_matches_starter(
+            row,
+            selected_starter
+        )
+    ]
+
     trainer_names = sorted({
         row["Trainer"]
-        for row in opponents
+        for row in starter_filtered_opponents
         if row.get("Trainer")
     })
 
@@ -57,14 +82,37 @@ with st.sidebar:
         trainer_names
     )
 
-    battles = sorted({
-        row["Battle"]
-        for row in opponents
-        if (
-            row.get("Trainer") == selected_trainer
-            and row.get("Battle")
+    trainer_rows = [
+        row
+        for row in starter_filtered_opponents
+        if row.get("Trainer") == selected_trainer
+    ]
+
+    battle_order_lookup = {}
+
+    for row in trainer_rows:
+        battle_name = row.get("Battle")
+
+        if not battle_name:
+            continue
+
+        battle_order = row.get("BattleOrder", 9999)
+
+        if battle_name not in battle_order_lookup:
+            battle_order_lookup[battle_name] = battle_order
+        else:
+            battle_order_lookup[battle_name] = min(
+                battle_order_lookup[battle_name],
+                battle_order
+            )
+
+    battles = sorted(
+        battle_order_lookup,
+        key=lambda battle_name: (
+            battle_order_lookup[battle_name],
+            battle_name
         )
-    })
+    )
 
     selected_battle = st.selectbox(
         "Battle",
@@ -76,14 +124,17 @@ with st.sidebar:
 # Available opponents for selected battle
 # ---------------------------------------------------------
 
-battle_opponents = [
-    row
-    for row in opponents
-    if (
-        row.get("Trainer") == selected_trainer
-        and row.get("Battle") == selected_battle
-    )
-]
+battle_opponents = sorted(
+    [
+        row
+        for row in starter_filtered_opponents
+        if (
+            row.get("Trainer") == selected_trainer
+            and row.get("Battle") == selected_battle
+        )
+    ],
+    key=lambda row: row.get("Slot", 9999)
+)
 
 opponent_names = [
     row["Pokemon"]
@@ -205,12 +256,41 @@ if active_view == "Battle Compass":
 
     for index, row in enumerate(top_three, start=1):
         with st.container(border=True):
+            is_immune = row.get("Is Immune", False)
+
+            strength_label, _, strength_class = get_matchup_strength(
+                row["Ratio"],
+                is_immune
+            )
+
             st.markdown(f"### {index}. {row['Pokemon']}")
             st.write(f"**Best move:** {row['Best Move']}")
-            st.caption(f"Matchup Ratio: {row['Ratio']}")
 
-            notes = row.get("Battle Notes", [])
-            render_battle_notes(notes)
+            ratio_html = (
+                ""
+                if is_immune
+                else (
+                    f"<span class='other-option-ratio'>"
+                    f"Matchup Ratio: {row['Ratio']}"
+                    "</span>"
+                )
+            )
+
+            st.markdown(
+                (
+                    "<div class='other-option-matchup-line'>"
+                    f"<span class='other-option-strength "
+                    f"matchup-label-{strength_class}'>"
+                    f"{strength_label}"
+                    "</span>"
+                    f"{ratio_html}"
+                    "</div>"
+                ),
+                unsafe_allow_html=True,
+            )
+
+        notes = row.get("Battle Notes", [])
+        render_battle_notes(notes)
 
     with st.expander("Full Analysis"):
         st.dataframe(

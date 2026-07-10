@@ -1,7 +1,7 @@
 import streamlit as st
 
 from engine.data_loader import save_json
-from engine.metadata import apply_move_metadata
+from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
 from ui.rendering import (
     get_badge_img_html,

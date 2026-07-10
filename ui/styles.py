@@ -224,6 +224,26 @@ def apply_app_styles():
             color: #60a5fa;
         }
 
+        .other-option-matchup-line {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin: 0.2rem 0 0.6rem 0;
+        }
+
+        .other-option-strength {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .other-option-ratio {
+            color: rgba(255,255,255,0.50);
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 0.82rem;
+        }
+
         .matchup-ratio-detail {
             color: rgba(255,255,255,0.50);
             font-family: "Bahnschrift", "Aptos", sans-serif;

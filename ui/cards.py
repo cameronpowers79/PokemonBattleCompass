@@ -58,16 +58,14 @@ def get_effectiveness_class(multiplier, mode):
     return "bad"
 
 
-def get_matchup_strength(ratio):
+def get_matchup_strength(ratio, is_immune=False):
     """
-    Classify a matchup ratio into a player-facing strength category.
+    Classify a matchup into a player-facing strength category.
 
-    Returns:
-        label: Display label
-        index: Segment position from 0 to 4
-        css_class: Styling class for the active category
+    Immunity is supplied explicitly by the engine and is not inferred
+    from the numeric matchup ratio.
     """
-    if ratio >= 99:
+    if is_immune:
         return "Immune", 4, "immune"
 
     if ratio >= 3:
@@ -82,8 +80,11 @@ def get_matchup_strength(ratio):
     return "Challenging", 0, "challenging"
 
 
-def get_matchup_strength_html(ratio):
-    label, active_index, css_class = get_matchup_strength(ratio)
+def get_matchup_strength_html(ratio, is_immune=False):
+    label, active_index, css_class = get_matchup_strength(
+        ratio,
+        is_immune
+    )
 
     segment_classes = [
         "challenging",
@@ -103,6 +104,12 @@ def get_matchup_strength_html(ratio):
         for index, segment_class in enumerate(segment_classes)
     )
 
+    ratio_html = (
+        ""
+        if is_immune
+        else f"<div class='matchup-ratio-detail'>Ratio {ratio:.2f}</div>"
+    )
+
     return (
         "<div class='matchup-strength'>"
         "<div class='matchup-strength-title'>Matchup Strength</div>"
@@ -110,7 +117,7 @@ def get_matchup_strength_html(ratio):
         f"<div class='matchup-strength-label matchup-label-{css_class}'>"
         f"{label}"
         "</div>"
-        f"<div class='matchup-ratio-detail'>Ratio {ratio:.2f}</div>"
+        f"{ratio_html}"
         "</div>"
     )
 
@@ -162,7 +169,10 @@ def render_recommendation_card(
             "</div>"
         )
 
-    matchup_strength_html = get_matchup_strength_html(ratio)
+    matchup_strength_html = get_matchup_strength_html(
+        ratio,
+        recommended_result.get("Is Immune", False)
+    )
 
     html = (
         "<div class='recommendation-card'>"
