@@ -23,6 +23,27 @@ NOTE_ICONS = {
     "warning": "🚨",
 }
 
+TYPE_COLORS = {
+    "Normal": "#A8A77A",
+    "Fire": "#EE8130",
+    "Water": "#6390F0",
+    "Electric": "#F7D02C",
+    "Grass": "#7AC74C",
+    "Ice": "#96D9D6",
+    "Fighting": "#C22E28",
+    "Poison": "#A33EA1",
+    "Ground": "#E2BF65",
+    "Flying": "#A98FF3",
+    "Psychic": "#F95587",
+    "Bug": "#A6B91A",
+    "Rock": "#B6A136",
+    "Ghost": "#735797",
+    "Dragon": "#6F35FC",
+    "Dark": "#705746",
+    "Steel": "#B7B7CE",
+    "Fairy": "#D685AD",
+}
+
 SPRITE_DIR = Path("assets/raw/pokesprite/pokemon-gen8/regular")
 
 
@@ -468,10 +489,45 @@ st.markdown(
         }
 
         .team-move {
-            background: rgba(255,255,255,0.055);
-            border-radius: 10px;
-            padding: 11px 12px;
-            font-weight: 600;
+
+            display:flex;
+
+            justify-content:space-between;
+
+            align-items:center;
+
+            gap:10px;
+
+            color:white;
+
+            border-radius:12px;
+
+            padding:10px 14px;
+
+            font-weight:700;
+
+            border:1px solid rgba(255,255,255,.18);
+
+            box-shadow:
+                inset 0 1px rgba(255,255,255,.18),
+                0 2px 6px rgba(0,0,0,.18);
+
+            text-shadow:0 1px 2px rgba(0,0,0,.35);
+        }
+
+        .team-move-name{
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+
+        .team-move-badge{
+
+            display:flex;
+
+            align-items:center;
+
+            flex-shrink:0;
         }
 
         .team-detail-footer {
@@ -681,6 +737,16 @@ def apply_move_metadata(pokemon):
         pokemon[f"Move{slot}Accuracy"] = move.get("Accuracy")
 
     return pokemon
+
+def get_move_type(move_name):
+    if not move_name:
+        return None
+
+    move = move_lookup.get(move_name)
+    if move:
+        return move.get("Type")
+
+    return None
 
 
 def render_opponent_card(opponent):
@@ -918,14 +984,40 @@ def render_selected_pokemon_details(pokemon):
         for stat in stat_names
     )
 
-    moves_html = "".join(
-        (
-            "<div class='team-move'>"
-            f"{pokemon.get(f'Move{slot}') or 'Empty move slot'}"
+    move_cards = []
+
+    for slot in range(1, 5):
+        move_name = pokemon.get(f"Move{slot}")
+
+        if not move_name:
+            move_cards.append(
+                "<div class='team-move' "
+                "style='background: rgba(255,255,255,0.055);'>"
+                "<span class='team-move-name'>Empty move slot</span>"
+                "</div>"
+            )
+            continue
+
+        move = move_lookup.get(move_name)
+        move_type = move.get("Type") if move else None
+        background = TYPE_COLORS.get(move_type, "#666666")
+
+        badge = (
+            get_badge_img_html(move_type, height=18)
+            if move_type
+            else ""
+        )
+
+        move_cards.append(
+            "<div class='team-move' "
+            f"style='background: linear-gradient("
+            f"180deg, {background} 0%, {background}DD 60%, {background}BB 100%);'>"
+            f"<span class='team-move-name'>{move_name}</span>"
+            f"<span class='team-move-badge'>{badge}</span>"
             "</div>"
         )
-        for slot in range(1, 5)
-    )
+
+    moves_html = "".join(move_cards)
 
     html = (
         "<div class='team-detail-card'>"
@@ -1025,6 +1117,11 @@ opponents = load_json("opponents")
 items = load_json("items")
 ability_rules = load_json("ability_rules")
 moves_data = load_json("moves")
+move_lookup = {
+    move["Move"]: move
+    for move in moves_data
+    if move.get("Move")
+}
 
 with st.sidebar:
     st.header("Battle Setup")
