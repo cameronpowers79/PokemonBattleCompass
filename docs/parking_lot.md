@@ -43,9 +43,9 @@
 - [ ] Add ability validation.
 - [ ] Add held-item validation after the modeled item list is expanded.
 - [x] Selected Pokémon detail panel.
-- [ ] Stat bars with numeric values.
+- [x] Stat bars with numeric values.
 - [x] Moveset display for selected Pokémon.
-- [ ] Add type color to moves in moveset display
+- [x] Add type color to moves in moveset display
 - [x] Type badges in My Team view.
 - [ ] Pokémon name dropdown/validation.
 - [ ] Build Pokémon option list from available sprite assets.

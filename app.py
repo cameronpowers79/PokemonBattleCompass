@@ -147,6 +147,112 @@ st.markdown(
             font-weight: 500;
         }
 
+        .matchup-strength {
+            min-width: 230px;
+        }
+
+        .matchup-strength-title {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.92rem;
+            margin-bottom: 12px;
+        }
+
+        .matchup-meter {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .matchup-segment {
+            position: relative;
+            height: 14px;
+            opacity: 0.38;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .matchup-segment:first-child {
+            border-radius: 999px 4px 4px 999px;
+        }
+
+        .matchup-segment:last-child {
+            border-radius: 4px 999px 999px 4px;
+        }
+
+        .matchup-challenging {
+            background: linear-gradient(180deg, #ef4444, #b91c1c);
+        }
+
+        .matchup-competitive {
+            background: linear-gradient(180deg, #fb923c, #ea580c);
+        }
+
+        .matchup-favorable {
+            background: linear-gradient(180deg, #d9f044, #a3c922);
+        }
+
+        .matchup-comfortable {
+            background: linear-gradient(180deg, #4ade80, #16a34a);
+        }
+
+        .matchup-immune {
+            background: linear-gradient(180deg, #60a5fa, #2563eb);
+        }
+
+        .matchup-segment-active {
+            opacity: 1;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.20),
+                0 0 10px rgba(255,255,255,0.12);
+        }
+
+        .matchup-pointer {
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 9px solid rgba(255,255,255,0.92);
+        }
+
+        .matchup-strength-label {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 3px;
+        }
+
+        .matchup-label-challenging {
+            color: #f87171;
+        }
+
+        .matchup-label-competitive {
+            color: #fb923c;
+        }
+
+        .matchup-label-favorable {
+            color: #d9f044;
+        }
+
+        .matchup-label-comfortable {
+            color: #4ade80;
+        }
+
+        .matchup-label-immune {
+            color: #60a5fa;
+        }
+
+        .matchup-ratio-detail {
+            color: rgba(255,255,255,0.50);
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 0.82rem;
+        }
+
         .effectiveness-pill {
             border-radius: 12px;
             padding: 14px 18px;
@@ -368,7 +474,7 @@ st.markdown(
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin-bottom: 22px;
+            margin-bottom: 10px;
         }
 
         .team-detail-name {
@@ -381,7 +487,7 @@ st.markdown(
 
         .team-detail-level {
             color: rgba(255,255,255,0.70);
-            font-size: 1rem;
+            font-size: 1.25rem;
             margin-top: 4px;
         }
 
@@ -409,12 +515,12 @@ st.markdown(
         .team-stat-label {
             color: rgba(255,255,255,0.72);
             font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 0.86rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
 
         .team-stat-track {
-            height: 12px;
+            height: 16px;
             background: rgba(255,255,255,0.09);
             border-radius: 999px;
             overflow: hidden;
@@ -476,7 +582,7 @@ st.markdown(
 
         .team-stat-value {
             font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             text-align: right;
        }   
@@ -649,6 +755,61 @@ def get_effectiveness_class(multiplier, mode):
         return "caution"
     return "bad"
 
+def get_matchup_strength(ratio):
+    """
+    Classify a matchup ratio into a player-facing strength category.
+
+    Returns:
+        label: Display label
+        index: Segment position from 0 to 4
+        css_class: Styling class for the active category
+    """
+    if ratio >= 99:
+        return "Immune", 4, "immune"
+
+    if ratio >= 3:
+        return "Comfortable", 3, "comfortable"
+
+    if ratio >= 2:
+        return "Favorable", 2, "favorable"
+
+    if ratio >= 1:
+        return "Competitive", 1, "competitive"
+
+    return "Challenging", 0, "challenging"
+
+def get_matchup_strength_html(ratio):
+    label, active_index, css_class = get_matchup_strength(ratio)
+
+    segment_classes = [
+        "challenging",
+        "competitive",
+        "favorable",
+        "comfortable",
+        "immune",
+    ]
+
+    segments_html = "".join(
+        (
+            f"<div class='matchup-segment matchup-{segment_class} "
+            f"{'matchup-segment-active' if index == active_index else ''}'>"
+            f"{'<div class=\"matchup-pointer\"></div>' if index == active_index else ''}"
+            "</div>"
+        )
+        for index, segment_class in enumerate(segment_classes)
+    )
+
+    return (
+        "<div class='matchup-strength'>"
+        "<div class='matchup-strength-title'>Matchup Strength</div>"
+        f"<div class='matchup-meter'>{segments_html}</div>"
+        f"<div class='matchup-strength-label matchup-label-{css_class}'>"
+        f"{label}"
+        "</div>"
+        f"<div class='matchup-ratio-detail'>Ratio {ratio:.2f}</div>"
+        "</div>"
+    )
+
 
 def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recommended_result):
     type_badges = "".join(
@@ -681,6 +842,8 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
     if not notes_html:
         notes_html = "<div class='battle-note note-info'>No special notes.</div>"
 
+    matchup_strength_html = get_matchup_strength_html(ratio)
+
     html = (
         "<div class='recommendation-card'>"
         "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
@@ -700,10 +863,7 @@ def render_recommendation_card(recommended_pokemon, best_move, ratio, why, recom
         f"{get_badge_img_html(best_move.get('Type'), height=20)}"
         f"</div>"
         "</div>"
-        "<div>"
-        "<div class='label'>Matchup Ratio</div>"
-        f"<div class='ratio-value'>{ratio:.2f}</div>"
-        "</div>"
+        f"<div>{matchup_strength_html}</div>"
         "</div>"
         f"<div class='effectiveness-pill effectiveness-{effectiveness_class}'>{effectiveness_text}</div>"
         "<div class='section-title'>Why this Pokémon?</div>"
