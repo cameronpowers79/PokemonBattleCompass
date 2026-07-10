@@ -322,14 +322,123 @@ st.markdown(
         }
 
         @media (max-width: 1350px) {
+            div[data-testid="stHorizontalBlock"] {
+                flex-direction: column;
+            }
 
-        div[data-testid="stHorizontalBlock"] {
+            div[data-testid="stHorizontalBlock"] > div {
+                width: 100% !important;
+            }
+        }
+
+        /* My Team detail panel */
+
+        .team-detail-card {
+            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 18px;
+            padding: 24px 28px;
+            margin-top: 22px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.20);
+        }
+
+        .team-detail-header {
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 22px;
         }
 
-        div[data-testid="stHorizontalBlock"] > div {
-            width: 100% !important;
+        .team-detail-name {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 10px 0 8px 0;
         }
+
+        .team-detail-level {
+            color: rgba(255,255,255,0.70);
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+
+        .team-detail-section-title {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .team-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(70px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .team-stat {
+            background: rgba(255,255,255,0.055);
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        .team-stat-label {
+            color: rgba(255,255,255,0.62);
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+        }
+
+        .team-stat-value {
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .team-move-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .team-move {
+            background: rgba(255,255,255,0.055);
+            border-radius: 10px;
+            padding: 11px 12px;
+            font-weight: 600;
+        }
+
+        .team-detail-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .team-detail-field {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .team-detail-field-label {
+            color: rgba(255,255,255,0.62);
+            font-size: 0.78rem;
+            margin-bottom: 3px;
+        }
+
+        @media (max-width: 900px) {
+            .team-stat-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .team-move-grid,
+            .team-detail-footer {
+                grid-template-columns: 1fr;
+            }
+}
 
 }
     </style>
@@ -602,6 +711,18 @@ def render_my_team_editor(team_data):
         for pokemon in team_data
     ]
 
+    pokemon_names = [
+        pokemon.get("Pokemon")
+        for pokemon in editable_team
+        if pokemon.get("Pokemon")
+    ]
+
+    selected_pokemon_name = st.selectbox(
+        "View Pokémon Details",
+        pokemon_names,
+        key="team_detail_selector"
+    )
+
     move_options = sorted({
         move.get("Move")
         for move in moves_data
@@ -615,17 +736,32 @@ def render_my_team_editor(team_data):
         num_rows="fixed",
         key="team_editor",
         column_config={
-            "Move1": st.column_config.SelectboxColumn("Move1", options=move_options),
-            "Move2": st.column_config.SelectboxColumn("Move2", options=move_options),
-            "Move3": st.column_config.SelectboxColumn("Move3", options=move_options),
-            "Move4": st.column_config.SelectboxColumn("Move4", options=move_options),
+            "Move1": st.column_config.SelectboxColumn(
+                "Move1",
+                options=move_options
+            ),
+            "Move2": st.column_config.SelectboxColumn(
+                "Move2",
+                options=move_options
+            ),
+            "Move3": st.column_config.SelectboxColumn(
+                "Move3",
+                options=move_options
+            ),
+            "Move4": st.column_config.SelectboxColumn(
+                "Move4",
+                options=move_options
+            ),
         }
     )
 
-    st.caption("Edit your current party. Changes are not saved until you click Save Team.")
     st.caption(
-        "Note: only modeled held items affect scores. "
-        "If an item should improve scores but does not, check the spelling."
+        "Edit your current party. Changes are not saved until you click Save Team."
+    )
+
+    st.caption(
+        "Only modeled held items affect scores. If an item should improve "
+        "scores but does not, check the spelling."
     )
 
     if st.button("💾 Save Team", type="primary"):
@@ -637,10 +773,24 @@ def render_my_team_editor(team_data):
             for column in editable_columns:
                 merged_pokemon[column] = edited_pokemon.get(column)
 
-            saved_team.append(apply_move_metadata(merged_pokemon))
+            saved_team.append(
+                apply_move_metadata(merged_pokemon)
+            )
 
         save_json("team_data", saved_team)
         st.success("Team saved!")
+
+    selected_pokemon = next(
+        (
+            pokemon
+            for pokemon in edited_team
+            if pokemon.get("Pokemon") == selected_pokemon_name
+        ),
+        None
+    )
+
+    if selected_pokemon:
+        render_selected_pokemon_details(selected_pokemon)
 
 def render_battle_notes(notes):
     if not notes:
@@ -667,6 +817,68 @@ def render_defensive_effectiveness(multiplier):
         st.warning(f"🔺 Super Effective ({multiplier:g}×)")
     else:
         st.error(f"🔥 4× Weakness ({multiplier:g}×)")
+
+def render_selected_pokemon_details(pokemon):
+    type_badges = "".join(
+        get_badge_img_html(pokemon_type, height=22)
+        for pokemon_type in [
+            pokemon.get("Type1"),
+            pokemon.get("Type2"),
+        ]
+        if pokemon_type
+    )
+
+    stats_html = "".join(
+        (
+            "<div class='team-stat'>"
+            f"<div class='team-stat-label'>{stat}</div>"
+            f"<div class='team-stat-value'>{pokemon.get(stat, '—')}</div>"
+            "</div>"
+        )
+        for stat in ["HP", "ATK", "DEF", "SPA", "SPD", "SPE"]
+    )
+
+    moves_html = "".join(
+        (
+            "<div class='team-move'>"
+            f"{pokemon.get(f'Move{slot}') or 'Empty move slot'}"
+            "</div>"
+        )
+        for slot in range(1, 5)
+    )
+
+    html = (
+        "<div class='team-detail-card'>"
+
+        "<div class='team-detail-header'>"
+        f"{get_sprite_img_html(pokemon.get('Pokemon'), size=72)}"
+        f"<div class='team-detail-name'>{pokemon.get('Pokemon', 'Unknown')}</div>"
+        f"<div class='type-badge-row'>{type_badges}</div>"
+        f"<div class='team-detail-level'>Lv. {pokemon.get('Level', '—')}</div>"
+        "</div>"
+
+        "<div class='team-detail-section-title'>Stats</div>"
+        f"<div class='team-stat-grid'>{stats_html}</div>"
+
+        "<div class='team-detail-section-title'>Moveset</div>"
+        f"<div class='team-move-grid'>{moves_html}</div>"
+
+        "<div class='team-detail-footer'>"
+        "<div class='team-detail-field'>"
+        "<div class='team-detail-field-label'>Ability</div>"
+        f"<div>{pokemon.get('Ability') or '—'}</div>"
+        "</div>"
+
+        "<div class='team-detail-field'>"
+        "<div class='team-detail-field-label'>Held Item</div>"
+        f"<div>{pokemon.get('Held Item') or '—'}</div>"
+        "</div>"
+        "</div>"
+
+        "</div>"
+    )
+
+    st.markdown(html, unsafe_allow_html=True)        
 
 def slugify_pokemon_name(pokemon_name):
     return (
@@ -809,9 +1021,36 @@ other_options = [
 
 top_three = other_options[:2]
 
-battle_tab, team_tab = st.tabs(["Battle Compass", "My Team"])
+analysis_columns = [
+    "Pokemon",
+    "Best Move",
+    "Best Move Multiplier",
+    "Best MoveScore",
+    "Worst Incoming Move",
+    "Incoming Multiplier",
+    "Incoming Worst Score",
+    "Ratio",
+    "Notes",
+]
 
-with battle_tab:
+analysis_rows = [
+    {
+        column: row.get(column)
+        for column in analysis_columns
+    }
+    for row in matchup_results
+]
+
+active_view = st.segmented_control(
+    "Main navigation",
+    options=["Battle Compass", "My Team"],
+    default="Battle Compass",
+    key="main_view",
+    label_visibility="collapsed",
+    width="stretch",
+)
+
+if active_view == "Battle Compass":
     st.divider()
 
     left, right = st.columns([1.2, 1])
@@ -848,26 +1087,7 @@ with battle_tab:
             notes = row.get("Battle Notes", [])
             render_battle_notes(notes)
 
-    analysis_columns = [
-        "Pokemon",
-        "Best Move",
-        "Best Move Multiplier",
-        "Best MoveScore",
-        "Worst Incoming Move",
-        "Incoming Multiplier",
-        "Incoming Worst Score",
-        "Ratio",
-        "Notes",
-    ]
-
-    analysis_rows = [
-        {
-            column: row.get(column)
-            for column in analysis_columns
-        }
-        for row in matchup_results
-    ]
-
+    
     with st.expander("Full Analysis"):
         st.dataframe(
             analysis_rows,
@@ -913,5 +1133,5 @@ with battle_tab:
             },
         )
 
-with team_tab:
+elif active_view == "My Team":
     render_my_team_editor(team_data)

@@ -1,104 +1,50 @@
-# Pokémon Battle Compass Parking Lot
-
----
-
-## Design Principles
-
-- Advice first. Analysis second. Calculations third.
-- Explain the recommendation, not the game.
-- Battle Compass is a compass, not a GPS.
-- Write for experienced story-mode players.
-- Be transparent without being overwhelming.
-- Every calculation should answer a player question.
-
-## Engine Parity
-
-### Notes / Why
-- [x] Replace placeholder OHKO Notes thresholds with workbook HP-aware logic.
-- [x] Port workbook-derived Why? explanation logic.
-- [x] Refine Why? durability wording for immunity/resistance matchups.
-- [x] Body Press opportunity notes.
-- [x] Status-boosted Hex / Venoshock notes.
-- [x] Structured Battle Notes framework.
-- [ ] Compose richer Why? explanations from multiple contributing factors.
-
-### Mechanics
-- [x] Flash Fire immunity.
-- [x] Body Press uses DEF.
-- [x] Psyshock / Psystrike / Secret Sword use target DEF.
-- [x] Technician / low-power move boost.
-- [x] Contact-triggered tactical notes.
-- [x] Priority move framework.
-- [x] Tactical ability framework.
-- [ ] Validate remaining ActivationCondition mechanics.
-- [ ] Validate remaining DamageMethod mechanics.
-
----
-
-## Alpha UI
-
-- [x] Build Alpha prototype.
-- [x] Promote Alpha to main app.
-
 ### Layout
-
-- [ ] Recommendation card.
-- [ ] Battle Snapshot card.
-- [ ] Other Strong Options (exclude recommended Pokémon).
-- [ ] Expandable Full Analysis.
+- [x] Recommendation card.
+- [x] Battle Snapshot card.
+- [x] Other Strong Options (exclude recommended Pokémon).
+- [x] Expandable Full Analysis.
 - [ ] Matchup Strength indicator.
 
 ### Battle Notes
-
 - [x] Structured Battle Notes.
-- [ ] Render note categories with icons/colors.
-- [ ] Display Battle Notes as styled UI rather than plain text.
+- [x] Render note categories with icons/colors.
+- [x] Display Battle Notes as styled UI rather than plain text.
 
 ### Polish
-
-- [ ] Pokémon sprites.
-- [ ] Type badges.
-- [ ] Type colors.
-- [ ] Stat data bars with numeric values.
-- [ ] Worst Incoming Move displays category (Physical/Special).
-- [ ] Info link from Why? to Full Analysis.
-- [ ] Typography:
+- [x] Pokémon sprites.
+- [ ] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
+- [x] Type badges.
+- [x] Type colors.
+- [x] Worst Incoming Move displays category (Physical/Special).
+- [x] Typography:
   - Exo 2 (headers)
   - Aptos (body)
   - Bahnschrift (metrics)
+- [ ] Stat data bars with numeric values.
+- [ ] Info link from Why? to Full Analysis.
+- [ ] Gender/form sprite support.
 
----
-
-## Documentation
-
-- [ ] About Battle Compass.
-- [ ] Explain recommendation methodology.
-- [ ] Explain Matchup Strength.
-- [ ] Explain Ratio.
-- [ ] Explain Battle Notes.
-- [ ] Update README.
-
----
-
-## Architecture
-
+### Architecture
 - [x] Split app.py before it became a crime scene.
 - [x] Centralize move metadata lookups.
 - [x] Structured Battle Notes.
-- [ ] Continue separating UI from engine.
-- [ ] Improve importer output.
-- [ ] Implement sprite lookup layer.
+- [x] Implement sprite lookup layer.
+- [ ] Player-editable Team Data.
 - [ ] Add UI theme/constants module.
+- [ ] Continue separating UI from engine.
 
----
+## Team Editing
 
-## Beta Readiness
-
-- [ ] Recommendation card complete.
-- [ ] Battle Snapshot complete.
-- [ ] Sprites integrated.
-- [ ] Type badges integrated.
-- [ ] Matchup Strength implemented.
-- [ ] About page complete.
-- [ ] Package executable build.
-
+- [ ] Add editable Team Data screen.
+- [ ] Load current `team_data.json`.
+- [ ] Allow editing levels, stats, moves, ability, and held item.
+- [ ] Save updates back to `data/team_data.json`.
+- [ ] Add backup/export option.
+- [ ] Later: add validation/dropdowns from moves/items/abilities.
+- [ ] Selected Pokémon detail panel.
+- [ ] Stat bars with numeric values.
+- [ ] Moveset display for selected Pokémon.
+- [ ] Type badges in My Team view.
+- [ ] Pokémon name dropdown/validation.
+- [ ] Build Pokémon option list from available sprite assets.
+- [ ] Handle display-name cleanup for sprite slugs.
