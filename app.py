@@ -110,26 +110,68 @@ st.markdown(
             margin-bottom: 24px;
         }
 
-        /* Main navigation segmented control */
+/* Main navigation segmented control */
 
-        button[data-testid="stBaseButton-segmented_controlActive"] {
-            background-color: rgba(37, 99, 235, 0.18) !important;
+        .st-key-main_view [data-baseweb="button-group"] {
+            width: 100%;
+        }
+
+        .st-key-main_view [data-baseweb="button-group"] button {
+            flex: 1;
+        }
+
+/* Selected page */
+
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"] {
+            background: rgba(37, 99, 235, 0.18) !important;
             border-color: #2563eb !important;
+            outline-color: #2563eb !important;
             box-shadow: inset 0 0 0 1px #2563eb !important;
             color: #60a5fa !important;
         }
 
-        button[data-testid="stBaseButton-segmented_controlActive"] p {
+/* Selected-page text */
+
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"] p,
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"] span {
             color: #60a5fa !important;
         }
 
-        button[data-testid="stBaseButton-segmented_controlActive"]:hover,
-        button[data-testid="stBaseButton-segmented_controlActive"]:focus,
-        button[data-testid="stBaseButton-segmented_controlActive"]:focus-visible {
-            background-color: rgba(37, 99, 235, 0.24) !important;
+/* Mobile Safari can retain focus after tapping */
+
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"]:focus,
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"]:focus-visible,
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_controlActive"]:active {
+            background: rgba(37, 99, 235, 0.24) !important;
             border-color: #3b82f6 !important;
+            outline: none !important;
             box-shadow: inset 0 0 0 1px #3b82f6 !important;
             color: #60a5fa !important;
+        }
+
+/* Prevent inactive segments from receiving Streamlit's red focus styling */
+
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_control"]:focus,
+        .st-key-main_view
+        [data-baseweb="button-group"]
+        button[kind="segmented_control"]:focus-visible {
+            background: transparent !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .pokemon-name {
