@@ -1,36 +1,12 @@
 import streamlit as st
 
 from engine.data_loader import save_json
+from engine.metadata import apply_move_metadata
 from ui.constants import TYPE_COLORS
 from ui.rendering import (
     get_badge_img_html,
     get_sprite_img_html,
 )
-
-
-def get_move_metadata(move_name, moves_data):
-    for move in moves_data:
-        if move.get("Move") == move_name:
-            return move
-
-    return None
-
-
-def apply_move_metadata(pokemon, moves_data):
-    for slot in range(1, 5):
-        move_name = pokemon.get(f"Move{slot}")
-        move = get_move_metadata(move_name, moves_data)
-
-        if not move:
-            continue
-
-        pokemon[f"Move{slot}Type"] = move.get("Type")
-        pokemon[f"Move{slot}Power"] = move.get("Power")
-        pokemon[f"Move{slot}Category"] = move.get("Category")
-        pokemon[f"Move{slot}Accuracy"] = move.get("Accuracy")
-
-    return pokemon
-
 
 def render_selected_pokemon_details(pokemon, move_lookup):
     type_badges = "".join(
