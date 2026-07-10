@@ -655,11 +655,31 @@ st.markdown(
         }
 
         @media (max-width: 900px) {
+
             .team-move-grid,
             .team-detail-footer {
                 grid-template-columns: 1fr;
+            }
         }
+
+        @media (max-width: 700px) {
+
+            .move-row {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .matchup-strength {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .matchup-meter {
+                width: 100%;
+            }
 }
+
 </style>
     """,
     unsafe_allow_html=True,
