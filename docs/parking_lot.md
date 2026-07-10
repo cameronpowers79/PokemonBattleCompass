@@ -6,6 +6,7 @@
 - [x] Matchup Strength indicator.
 - [ ] Center title header
 - [ ] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
+- [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
 
 ### Battle Notes
 - [x] Structured Battle Notes.
@@ -22,6 +23,7 @@
   - Exo 2 (headers)
   - Aptos (body)
   - Bahnschrift (metrics)
+- [ ] Change active page selector color from red to blue
 - [ ] Info link from Why? to Full Analysis.
 - [ ] Gender/form sprite support.
 
@@ -52,3 +54,5 @@
 - [ ] Pokémon name dropdown/validation.
 - [ ] Build Pokémon option list from available sprite assets.
 - [ ] Handle display-name cleanup for sprite slugs.
+- [ ] Increase font size for "View Pokemon Details", maybe move it to below the edit table?
+- [ ] Create page section jumpto links and place them horizontally just below the header divider? 

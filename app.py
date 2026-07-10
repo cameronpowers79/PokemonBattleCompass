@@ -677,13 +677,6 @@ st.markdown(
             margin-bottom: 3px;
         }
 
-        .team-detail-selector-title {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
         @media (max-width: 900px) {
 
             .team-move-grid,
@@ -1088,16 +1081,15 @@ def render_my_team_editor(team_data):
         }
     )
 
-    st.caption(
-        "Edit your current party. Changes are not saved until you click Save Team."
+    left1, left2, center, right2, right1 = st.columns([2, 2, 1, 2, 2])
+
+    with center:
+        save_clicked = st.button(
+        "💾 Save Team",
+        type="primary"
     )
 
-    st.caption(
-        "Only modeled held items affect scores. If an item should improve "
-        "scores but does not, check the spelling."
-    )
-
-    if st.button("💾 Save Team", type="primary"):
+    if save_clicked:
         saved_team = []
 
         for original_pokemon, edited_pokemon in zip(team_data, edited_team):
@@ -1113,12 +1105,18 @@ def render_my_team_editor(team_data):
         save_json("team_data", saved_team)
         st.success("Team saved!")
 
+    st.caption(
+        "Edit your current party. Changes are not saved until you click Save Team."
+    )
+
+    st.caption(
+        "Only modeled held items affect scores. If an item should improve "
+        "scores but does not, check the spelling."
+    )
+
     st.divider()
 
-    st.markdown(
-        "<div class='team-detail-selector-title'>View Pokémon Details</div>",
-        unsafe_allow_html=True
-    )
+    st.subheader("Pokémon Details")
 
     pokemon_names = [
         pokemon.get("Pokemon")
@@ -1127,10 +1125,9 @@ def render_my_team_editor(team_data):
     ]
 
     selected_pokemon_name = st.selectbox(
-        "View Pokémon Details",
+        "Select Pokémon",
         pokemon_names,
-        key="team_detail_selector",
-        label_visibility="collapsed"
+        key="team_detail_selector"
     )
 
     selected_pokemon = next(
