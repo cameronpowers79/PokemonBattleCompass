@@ -1,12 +1,21 @@
 import base64
-from pathlib import Path
-from textwrap import dedent
-import streamlit as st
 from io import BytesIO
+
+import streamlit as st
 from PIL import Image
 
 from engine.data_loader import load_json, save_json
-from engine.calculations import find_best_team_member, evaluate_team_matchups
+from engine.calculations import (
+    find_best_team_member,
+    evaluate_team_matchups,
+)
+from ui.constants import (
+    NOTE_ICONS,
+    SPRITE_DIR,
+    TYPE_BADGE_DIR,
+    TYPE_COLORS,
+)
+from ui.styles import apply_app_styles
 
 
 st.set_page_config(
@@ -14,766 +23,13 @@ st.set_page_config(
     layout="wide"
 )
 
-
-TYPE_BADGE_DIR = Path("assets/type_badges")
-
-NOTE_ICONS = {
-    "info": "ℹ️",
-    "opportunity": "💡",
-    "caution": "⚠️",
-    "warning": "🚨",
-}
-
-TYPE_COLORS = {
-    "Normal": "#A8A77A",
-    "Fire": "#EE8130",
-    "Water": "#6390F0",
-    "Electric": "#F7D02C",
-    "Grass": "#7AC74C",
-    "Ice": "#96D9D6",
-    "Fighting": "#C22E28",
-    "Poison": "#A33EA1",
-    "Ground": "#E2BF65",
-    "Flying": "#A98FF3",
-    "Psychic": "#F95587",
-    "Bug": "#A6B91A",
-    "Rock": "#B6A136",
-    "Ghost": "#735797",
-    "Dragon": "#6F35FC",
-    "Dark": "#705746",
-    "Steel": "#B7B7CE",
-    "Fairy": "#D685AD",
-}
-
-SPRITE_DIR = Path("assets/raw/pokesprite/pokemon-gen8/regular")
+apply_app_styles()
 
 
 
 st.markdown(
     """
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800&display=swap');
-
-        html, body, [class*="css"] {
-            font-family: "Aptos", "Segoe UI", sans-serif;
-        }
-
-        h1, h2, h3, h4,
-        .stMarkdown h1,
-        .stMarkdown h2,
-        .stMarkdown h3,
-        .stMarkdown h4 {
-            font-family: "Exo 2", "Bahnschrift", "Aptos", sans-serif;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        div[data-testid="stCaptionContainer"] {
-            text-align: center;
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.72);
-            margin-bottom: 0.5rem;
-        }
-
-        [data-testid="stMetricValue"] {
-            font-family: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
-            font-weight: 500;
-        }
-
-        [data-testid="stMetricLabel"] {
-            font-family: "Aptos", "Segoe UI", sans-serif;
-        }
-
-        section[data-testid="stSidebar"] {
-            width: 260px !important;
-        }
-
-        section[data-testid="stSidebar"] > div {
-            width: 260px !important;
-        }
-
-        .recommendation-card {
-            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 18px;
-            padding: 28px 32px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-        }
-
-        .card-kicker {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-        }
-
-/* Main navigation segmented control */
-
-        .st-key-main_view [data-baseweb="button-group"] {
-            width: 100%;
-        }
-
-        .st-key-main_view [data-baseweb="button-group"] button {
-            flex: 1;
-        }
-
-/* Selected page */
-
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"] {
-            background: rgba(37, 99, 235, 0.18) !important;
-            border-color: #2563eb !important;
-            outline-color: #2563eb !important;
-            box-shadow: inset 0 0 0 1px #2563eb !important;
-            color: #60a5fa !important;
-        }
-
-/* Selected-page text */
-
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"] p,
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"] span {
-            color: #60a5fa !important;
-        }
-
-/* Mobile Safari can retain focus after tapping */
-
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"]:focus,
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"]:focus-visible,
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_controlActive"]:active {
-            background: rgba(37, 99, 235, 0.24) !important;
-            border-color: #3b82f6 !important;
-            outline: none !important;
-            box-shadow: inset 0 0 0 1px #3b82f6 !important;
-            color: #60a5fa !important;
-        }
-
-/* Prevent inactive segments from receiving Streamlit's red focus styling */
-
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_control"]:focus,
-        .st-key-main_view
-        [data-baseweb="button-group"]
-        button[kind="segmented_control"]:focus-visible {
-            background: transparent !important;
-            outline: none !important;
-            box-shadow: none !important;
-        }
-
-        .pokemon-name {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 2.9rem;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 12px;
-        }
-
-        .type-badge-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-        }
-
-        .type-badge {
-            height: 24px;
-            width: auto;
-        }
-
-        .card-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.16);
-            margin: 20px 0 24px 0;
-        }
-
-        .move-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px;
-            margin-bottom: 18px;
-        }
-        
-        .best-move-column {
-            min-width: 0;
-        }
-
-        .best-move-effectiveness {
-            display: inline-block;
-            width: fit-content;
-            max-width: 100%;
-            margin: 16px 0 0 0;
-            padding: 10px 14px;
-        }
-
-        .label {
-            color: rgba(255,255,255,0.72);
-            font-size: 0.92rem;
-            margin-bottom: 6px;
-        }
-
-        .move-name,
-        .ratio-value {
-            font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 2.35rem;
-            line-height: 1.1;
-            font-weight: 500;
-        }
-
-        .matchup-strength {
-            min-width: 230px;
-        }
-
-        .matchup-strength-title {
-            color: rgba(255,255,255,0.72);
-            font-size: 0.92rem;
-            margin-bottom: 12px;
-        }
-
-        .matchup-meter {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 4px;
-            position: relative;
-            margin-bottom: 16px;
-        }
-
-        .matchup-segment {
-            position: relative;
-            height: 14px;
-            opacity: 0.38;
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .matchup-segment:first-child {
-            border-radius: 999px 4px 4px 999px;
-        }
-
-        .matchup-segment:last-child {
-            border-radius: 4px 999px 999px 4px;
-        }
-
-        .matchup-challenging {
-            background: linear-gradient(180deg, #ef4444, #b91c1c);
-        }
-
-        .matchup-competitive {
-            background: linear-gradient(180deg, #fb923c, #ea580c);
-        }
-
-        .matchup-favorable {
-            background: linear-gradient(180deg, #d9f044, #a3c922);
-        }
-
-        .matchup-comfortable {
-            background: linear-gradient(180deg, #4ade80, #16a34a);
-        }
-
-        .matchup-immune {
-            background: linear-gradient(180deg, #60a5fa, #2563eb);
-        }
-
-        .matchup-segment-active {
-            opacity: 1;
-            box-shadow:
-                0 0 0 1px rgba(255,255,255,0.20),
-                0 0 10px rgba(255,255,255,0.12);
-        }
-
-        .matchup-pointer {
-            position: absolute;
-            left: 50%;
-            bottom: -10px;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 7px solid transparent;
-            border-right: 7px solid transparent;
-            border-bottom: 9px solid rgba(255,255,255,0.92);
-        }
-
-        .matchup-strength-label {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 3px;
-        }
-
-        .matchup-label-challenging {
-            color: #f87171;
-        }
-
-        .matchup-label-competitive {
-            color: #fb923c;
-        }
-
-        .matchup-label-favorable {
-            color: #d9f044;
-        }
-
-        .matchup-label-comfortable {
-            color: #4ade80;
-        }
-
-        .matchup-label-immune {
-            color: #60a5fa;
-        }
-
-        .matchup-ratio-detail {
-            color: rgba(255,255,255,0.50);
-            font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 0.82rem;
-        }
-
-        .effectiveness-pill {
-            border-radius: 12px;
-            padding: 14px 18px;
-            font-size: 1rem;
-            font-weight: 600;
-            margin: 8px 0 28px 0;
-        }
-
-        .effectiveness-good {
-            background: rgba(34, 197, 94, 0.20);
-            color: #4ade80;
-        }
-
-        .effectiveness-neutral {
-            background: rgba(59, 130, 246, 0.18);
-            color: #93c5fd;
-        }
-
-        .effectiveness-caution {
-            background: rgba(245, 158, 11, 0.18);
-            color: #fbbf24;
-        }
-
-        .effectiveness-bad {
-            background: rgba(239, 68, 68, 0.18);
-            color: #f87171;
-        }
-
-        .section-title {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        .why-box {
-            background: rgba(59, 130, 246, 0.14);
-            border: 1px solid rgba(59, 130, 246, 0.24);
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: #dbeafe;
-            margin-bottom: 22px;
-        }
-
-        .notes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .battle-note {
-            border-radius: 10px;
-            padding: 10px 12px;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            font-size: 0.98rem;
-        }
-
-        .note-info {
-            background: rgba(59, 130, 246, 0.12);
-            color: #bfdbfe;
-        }
-
-        .note-opportunity {
-            background: rgba(34, 197, 94, 0.12);
-            color: #bbf7d0;
-        }
-
-        .note-caution {
-            background: rgba(245, 158, 11, 0.14);
-            color: #fde68a;
-        }
-
-        .note-warning {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fecaca;
-        }
-
-        .note-icon {
-            min-width: 22px;
-        }
-
-        .side-card {
-            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 18px;
-            padding: 24px 28px;
-            margin-bottom: 20px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.20);
-        }
-
-        .side-card-title {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .opponent-name {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 10px;
-        }   
-
-        .opponent-level {
-            color: rgba(255,255,255,0.72);
-            font-size: 1rem;
-            margin-top: 8px;
-        }
-
-        .snapshot-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 22px;
-            margin-bottom: 20px;
-        }
-
-        .snapshot-value {
-            font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 2rem;
-            font-weight: 600;
-        }
-
-        .snapshot-move-label {
-            color: rgba(255,255,255,0.72);
-            font-size: 0.9rem;
-            margin-bottom: 4px;
-        }
-
-        .snapshot-move {
-            display: inline-block;
-            transform: translateY(1px);
-        }
-
-        .move-name-line,
-        .snapshot-move-line {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .snapshot-move-line {
-            margin-bottom: 12px;
-        }
-
-        .pokemon-header-row {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-       .pokemon-text-block {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sprite-placeholder {
-            border: 1px dashed rgba(255,255,255,0.25);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255,255,255,0.45);
-            font-size: 2rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .sprite-frame {
-            width: 88px;
-            height: 88px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: visible;
-            flex-shrink: 0;
-        }
-
-        .pokemon-sprite {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            transform: scale(1.35);
-            transform-origin: center center;
-            display: block;
-        }
-
-        @media (max-width: 1350px) {
-            div[data-testid="stHorizontalBlock"] {
-                flex-direction: column;
-            }
-
-            div[data-testid="stHorizontalBlock"] > div {
-                width: 100% !important;
-            }
-        }
-
-        /* My Team detail panel */
-
-        .team-detail-card {
-            background: linear-gradient(180deg, #151923 0%, #10141c 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 18px;
-            padding: 24px 28px;
-            margin-top: 22px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.20);
-        }
-
-        .team-detail-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .team-detail-name {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            line-height: 1;
-            margin: 10px 0 8px 0;
-        }
-
-        .team-detail-level {
-            color: rgba(255,255,255,0.70);
-            font-size: 1.25rem;
-            margin-top: 4px;
-        }
-
-        .team-detail-section-title {
-            font-family: "Exo 2", "Bahnschrift", sans-serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .team-stat-list {
-            display: flex;
-            flex-direction: column;
-            gap: 9px;
-            margin-bottom: 24px;
-        }
-
-        .team-stat-row {
-            display: grid;
-            grid-template-columns: 44px minmax(120px, 1fr) 48px;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .team-stat-label {
-            color: rgba(255,255,255,0.72);
-            font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .team-stat-track {
-            height: 16px;
-            background: rgba(255,255,255,0.09);
-            border-radius: 999px;
-            overflow: hidden;
-        }
-
-        .team-stat-fill {
-            height: 100%;
-            min-width: 3px;
-            border-radius: 999px;
-        }
-
-        .team-stat-fill-hp {
-            background: linear-gradient(
-                90deg,
-                rgba(34, 197, 94, 0.70),
-                rgba(74, 222, 128, 0.98)
-            );
-        }
-
-        .team-stat-fill-atk {
-            background: linear-gradient(
-                90deg,
-                rgba(220, 38, 38, 0.72),
-                rgba(248, 113, 113, 0.98)
-            );
-        }
-
-        .team-stat-fill-def {
-            background: linear-gradient(
-                90deg,
-                rgba(217, 119, 6, 0.72),
-                rgba(251, 191, 36, 0.98)
-            );
-        }
-
-        .team-stat-fill-spa {
-            background: linear-gradient(
-                90deg,
-                rgba(37, 99, 235, 0.72),
-                rgba(96, 165, 250, 0.98)
-            );
-        }
-
-        .team-stat-fill-spd {
-            background: linear-gradient(
-                90deg,
-                rgba(124, 58, 237, 0.72),
-                rgba(167, 139, 250, 0.98)
-            );
-        }
-
-        .team-stat-fill-spe {
-            background: linear-gradient(
-                90deg,
-                rgba(219, 39, 119, 0.72),
-                rgba(244, 114, 182, 0.98)
-            );
-        }
-
-        .team-stat-value {
-            font-family: "Bahnschrift", "Aptos", sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-align: right;
-       }   
-
-        .team-move-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .team-move {
-
-            display:flex;
-
-            justify-content:space-between;
-
-            align-items:center;
-
-            gap:10px;
-
-            color:white;
-
-            border-radius:12px;
-
-            padding:10px 14px;
-
-            font-weight:700;
-
-            border:1px solid rgba(255,255,255,.18);
-
-            box-shadow:
-                inset 0 1px rgba(255,255,255,.18),
-                0 2px 6px rgba(0,0,0,.18);
-
-            text-shadow:0 1px 2px rgba(0,0,0,.35);
-        }
-
-        .team-move-name{
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
-        }
-
-        .team-move-badge{
-
-            display:flex;
-
-            align-items:center;
-
-            flex-shrink:0;
-        }
-
-        .team-detail-footer {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .team-detail-field {
-            background: rgba(255,255,255,0.04);
-            border-radius: 10px;
-            padding: 10px 12px;
-        }
-
-        .team-detail-field-label {
-            color: rgba(255,255,255,0.62);
-            font-size: 0.78rem;
-            margin-bottom: 3px;
-        }
-
-        @media (max-width: 900px) {
-
-            .team-move-grid,
-            .team-detail-footer {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 700px) {
-
-            .move-row {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 18px;
-            }
-
-            .matchup-strength {
-                width: 100%;
-                min-width: 0;
-            }
-
-            .matchup-meter {
-                width: 100%;
-            }
-
-            .best-move-effectiveness {
-                display: block;
-                width: auto;
-            }
-}
-
-</style>
+    
     """,
     unsafe_allow_html=True,
 )
@@ -1087,6 +343,11 @@ def render_battle_snapshot(best_score, worst_score, worst_move, recommended_resu
 def render_my_team_editor(team_data):
     st.subheader("Manage My Team")
 
+    st.caption(
+        "Edit your current party. Changes are not saved until "
+        "you click Save Team."
+    )
+
     editable_columns = [
         "Pokemon",
         "Type1",
@@ -1146,18 +407,19 @@ def render_my_team_editor(team_data):
         }
     )
 
-    left1, left2, center, right2, right1 = st.columns([2, 2, 1, 2, 2])
-
-    with center:
-        save_clicked = st.button(
+    save_clicked = st.button(
         "💾 Save Team",
-        type="primary"
+        type="primary",
+        key="save_team_button"
     )
 
     if save_clicked:
         saved_team = []
 
-        for original_pokemon, edited_pokemon in zip(team_data, edited_team):
+        for original_pokemon, edited_pokemon in zip(
+            team_data,
+            edited_team
+        ):
             merged_pokemon = dict(original_pokemon)
 
             for column in editable_columns:
@@ -1171,12 +433,8 @@ def render_my_team_editor(team_data):
         st.success("Team saved!")
 
     st.caption(
-        "Edit your current party. Changes are not saved until you click Save Team."
-    )
-
-    st.caption(
-        "Only modeled held items affect scores. If an item should improve "
-        "scores but does not, check the spelling."
+        "Only modeled held items affect scores. If an item "
+        "should improve scores but does not, check the spelling."
     )
 
     st.divider()
@@ -1402,7 +660,15 @@ def opponent_uses_gmax(opponent):
     )
 
 st.title("Pokémon Battle Compass")
-st.caption("Navigate every matchup with confidence.")
+
+st.markdown(
+    (
+        "<div class='app-tagline'>"
+        "Navigate every matchup with confidence."
+        "</div>"
+    ),
+    unsafe_allow_html=True,
+)
 
 team_data = load_json("team_data")
 opponents = load_json("opponents")
