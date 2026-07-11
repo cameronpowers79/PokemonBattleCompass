@@ -60,20 +60,51 @@ def opponent_row_matches_starter(row, selected_starter):
         or player_starter == selected_starter
     )
 
-
-# ---------------------------------------------------------
-# Sidebar: starter and battle selection
-# ---------------------------------------------------------
-
-with st.sidebar:
-    st.header("Battle Setup")
-
-    selected_starter = st.selectbox(
-        "Choose Your Starter",
-        options=["Grookey", "Scorbunny", "Sobble"],
-        index=1,
-        key="player_starter"
+def render_selectbox_label(label_text):
+    st.markdown(
+        f"<div class='battle-setting-label'>{label_text}</div>",
+        unsafe_allow_html=True,
     )
+
+# ---------------------------------------------------------
+# Main navigation
+# ---------------------------------------------------------
+
+active_view = st.segmented_control(
+    "Main navigation",
+    options=["Battle Compass", "My Team"],
+    default="Battle Compass",
+    key="main_view",
+    label_visibility="collapsed",
+    width="stretch",
+    required=True,
+)
+
+st.divider()
+
+
+# ---------------------------------------------------------
+# Battle Compass
+# ---------------------------------------------------------
+
+if active_view == "Battle Compass":
+
+    st.subheader("Battle Settings")
+
+    starter_filtered_opponents = []
+
+    starter_col, trainer_col, battle_col = st.columns(3)
+
+    with starter_col:
+        render_selectbox_label("Your Starter")
+
+        selected_starter = st.selectbox(
+            "Choose Your Starter",
+            options=["Grookey", "Scorbunny", "Sobble"],
+            index=1,
+            key="player_starter",
+            label_visibility="collapsed",
+        )
 
     starter_filtered_opponents = [
         row
@@ -90,10 +121,15 @@ with st.sidebar:
         if row.get("Trainer")
     })
 
-    selected_trainer = st.selectbox(
-        "Trainer",
-        trainer_names
-    )
+    with trainer_col:
+        render_selectbox_label("Trainer")
+
+        selected_trainer = st.selectbox(
+            "Trainer",
+            trainer_names,
+            key="selected_trainer",
+            label_visibility="collapsed",
+        )
 
     trainer_rows = [
         row
@@ -127,61 +163,41 @@ with st.sidebar:
         )
     )
 
-    selected_battle = st.selectbox(
-        "Battle",
-        battles
+    with battle_col:
+        render_selectbox_label("Battle")
+
+        selected_battle = st.selectbox(
+            "Battle",
+            battles,
+            key="selected_battle",
+            label_visibility="collapsed",
+        )
+
+    battle_opponents = sorted(
+        [
+            row
+            for row in starter_filtered_opponents
+            if (
+                row.get("Trainer") == selected_trainer
+                and row.get("Battle") == selected_battle
+            )
+        ],
+        key=lambda row: row.get("Slot", 9999)
     )
 
+    opponent_names = [
+        row["Pokemon"]
+        for row in battle_opponents
+        if row.get("Pokemon")
+    ]
 
-# ---------------------------------------------------------
-# Available opponents for selected battle
-# ---------------------------------------------------------
-
-battle_opponents = sorted(
-    [
-        row
-        for row in starter_filtered_opponents
-        if (
-            row.get("Trainer") == selected_trainer
-            and row.get("Battle") == selected_battle
-        )
-    ],
-    key=lambda row: row.get("Slot", 9999)
-)
-
-opponent_names = [
-    row["Pokemon"]
-    for row in battle_opponents
-    if row.get("Pokemon")
-]
-
-
-# ---------------------------------------------------------
-# Main navigation
-# ---------------------------------------------------------
-
-active_view = st.segmented_control(
-    "Main navigation",
-    options=["Battle Compass", "My Team"],
-    default="Battle Compass",
-    key="main_view",
-    label_visibility="collapsed",
-    width="stretch",
-    required=True,
-)
-
-st.divider()
-
-
-# ---------------------------------------------------------
-# Battle Compass
-# ---------------------------------------------------------
-
-if active_view == "Battle Compass":
+    render_selectbox_label("Opponent Pokémon")
 
     selected_opponent_name = st.selectbox(
         "Opponent Pokémon",
-        opponent_names
+        opponent_names,
+        key="selected_opponent",
+        label_visibility="collapsed",
     )
 
     selected_opponent = next(

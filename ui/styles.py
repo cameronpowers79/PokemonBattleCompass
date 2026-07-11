@@ -51,10 +51,12 @@ def apply_app_styles():
 
         .recommendation-card {
             background: linear-gradient(180deg, #151923 0%, #10141c 100%);
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(79, 156, 255, 0.30);
             border-radius: 18px;
             padding: 28px 32px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+            box-shadow: 
+                0 0 14px rgba(79, 156, 255, 0.12),
+                0 0 3px rgba(79, 156, 255, 0.25);
         }
 
         .card-kicker {
@@ -445,6 +447,16 @@ def apply_app_styles():
             display: block;
         }
 
+       /* Battle-setting selector labels */
+
+        .battle-setting-label {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.09rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.94);
+            margin: 0 0 0.2rem 0;
+        }
+
         @media (max-width: 1350px) {
             div[data-testid="stHorizontalBlock"] {
                 flex-direction: column;
@@ -472,6 +484,10 @@ def apply_app_styles():
             align-items: center;
             text-align: center;
             margin-bottom: 10px;
+        }
+
+        .team-detail-header .type-badge-row {
+            margin-bottom: 8px;
         }
 
         .team-detail-name {
@@ -668,14 +684,14 @@ def apply_app_styles():
 
         .brand-logo {
             display: block;
-            width: 145px;
+            width: 140px;
             height: auto;
-            margin: 0 auto 0.5rem auto;
+            margin: 0 auto 0.25rem auto;
         }
 
         .brand-wordmark {
             display: block;
-            width: min(760px, 92%);
+            width: min(840px, 95%);
             height: auto;
             margin: 0 auto 0.75rem auto;
         }
@@ -708,7 +724,7 @@ def apply_app_styles():
             .best-move-effectiveness {
                 display: block;
                 width: auto;
-    }
+            }
 }
 
 </style>

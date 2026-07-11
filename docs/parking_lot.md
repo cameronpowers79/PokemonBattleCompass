@@ -7,8 +7,8 @@
 - [x] Center title header
 - [x] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
 - [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
-- [ ] Adjust "Recommended Pokemon" font so it doesn't stack on Mobile
-- [ ] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
+- [x] Adjust "Recommended Pokemon" font so it doesn't stack on Mobile
+- [x] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
 - [x] Move Notes for "Other Strong Options" back inside the cards rather than floating below
 
 ### Battle Notes
@@ -28,6 +28,11 @@
 - [x] Change active page selector color from red to blue
 - [ ] Info link from Why? to Full Analysis.
 - [x] Application branding (logo & wordmark)
+- [x] Extend branding colors to Recommended Pokemon card
+- [ ] ♂/♀ icon immediately after the Pokémon name
+- [ ] Tap/click move cards for full move details.
+- [ ] Tap/click Ability and Held Item for descriptions.
+- [ ] Optional: tap on the type badges to show weaknesses/resistances.
 
 ### Architecture
 - [x] Split app.py before it became a crime scene.

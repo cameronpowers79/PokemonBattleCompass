@@ -231,6 +231,7 @@ def render_opponent_card(opponent):
     sprite_html = get_sprite_img_html(
         opponent["Pokemon"],
         size=70,
+        texture_size=112,
         use_gmax=opponent_uses_gmax(opponent)
     )
 
