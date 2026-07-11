@@ -656,6 +656,30 @@ def apply_app_styles():
             width: auto;
         }
 
+        /* ---------- Branding ---------- */
+
+        .app-branding {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        .brand-logo {
+            display: block;
+            width: 145px;
+            height: auto;
+            margin: 0 auto 0.5rem auto;
+        }
+
+        .brand-wordmark {
+            display: block;
+            width: min(760px, 92%);
+            height: auto;
+            margin: 0 auto 0.75rem auto;
+        }
+
         @media (max-width: 900px) {
 
             .team-move-grid,

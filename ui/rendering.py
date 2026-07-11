@@ -168,7 +168,8 @@ def get_sprite_img_html(
             f"width:{display_size}px;"
             f"height:{display_size}px;"
             "object-fit:contain;"
-            "margin-bottom:.75rem;"
+            "padding-top:0.5rem;"
+            "margin-bottom:1.0rem;"
         )
 
     else:

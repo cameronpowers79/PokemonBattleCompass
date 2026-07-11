@@ -1,5 +1,6 @@
 import streamlit as st
 
+from ui.rendering import image_to_base64
 from engine.data_loader import load_json
 from engine.calculations import (
     find_best_team_member,
@@ -22,12 +23,24 @@ st.set_page_config(
 
 apply_app_styles()        
 
-st.title("Pokémon Battle Compass")
+logo_encoded = image_to_base64(
+    "assets/raw/BattleCompassLogo.png"
+)
+
+wordmark_encoded = image_to_base64(
+    "assets/raw/WordMarkLogoBlock.png"
+)
 
 st.markdown(
     (
+        "<div class='app-branding'>"
+        f"<img src='data:image/png;base64,{logo_encoded}' "
+        "class='brand-logo' alt='Battle Compass logo'>"
+        f"<img src='data:image/png;base64,{wordmark_encoded}' "
+        "class='brand-wordmark' alt='Pokémon Battle Compass'>"
         "<div class='app-tagline'>"
         "Navigate every matchup with confidence."
+        "</div>"
         "</div>"
     ),
     unsafe_allow_html=True,
