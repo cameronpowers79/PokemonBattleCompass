@@ -7,6 +7,9 @@
 - [x] Center title header
 - [x] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
 - [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
+- [ ] Adjust "Recommended Pokemon" font so it doesn't stack on Mobile
+- [ ] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
+- [ ] Move Notes for "Other Strong Options" back inside the cards rather than floating below
 
 ### Battle Notes
 - [x] Structured Battle Notes.
@@ -24,6 +27,7 @@
   - Bahnschrift (metrics)
 - [x] Change active page selector color from red to blue
 - [ ] Info link from Why? to Full Analysis.
+- [x] Application branding (logo & wordmark)
 
 ### Architecture
 - [x] Split app.py before it became a crime scene.
@@ -56,8 +60,9 @@
 ## Sprite Support
 - [ ] Build Pokémon option list from available sprite assets.
 - [ ] Handle display-name cleanup for sprite slugs.
-- [ ] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
-- [ ] Gender/form sprite support.
+- [x] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
+- [x] Gender/form sprite support.
+- [ ] Texture artwork fallback hierarchy (future expansion)
 
 ## Battle Selection
 

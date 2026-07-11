@@ -302,8 +302,8 @@ if active_view == "Battle Compass":
                 unsafe_allow_html=True,
             )
 
-        notes = row.get("Battle Notes", [])
-        render_battle_notes(notes)
+            notes = row.get("Battle Notes", [])
+            render_battle_notes(notes)
 
     with st.expander("Full Analysis"):
         st.dataframe(
