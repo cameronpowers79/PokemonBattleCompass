@@ -9,7 +9,7 @@
 - [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
 - [ ] Adjust "Recommended Pokemon" font so it doesn't stack on Mobile
 - [ ] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
-- [ ] Move Notes for "Other Strong Options" back inside the cards rather than floating below
+- [x] Move Notes for "Other Strong Options" back inside the cards rather than floating below
 
 ### Battle Notes
 - [x] Structured Battle Notes.
