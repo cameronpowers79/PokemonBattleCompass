@@ -6,7 +6,12 @@ from PIL import Image
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
 
 
-def image_to_base64(path, crop_transparency=False, output_size=None):
+def image_to_base64(
+    path,
+    crop_transparency=False,
+    output_size=None,
+    resampling=Image.Resampling.NEAREST
+):
     if not crop_transparency and output_size is None:
         with open(path, "rb") as file:
             return base64.b64encode(file.read()).decode("utf-8")
@@ -23,7 +28,7 @@ def image_to_base64(path, crop_transparency=False, output_size=None):
     if output_size:
         image.thumbnail(
             (output_size, output_size),
-            Image.Resampling.NEAREST
+            resampling
         )
 
     buffer = BytesIO()
@@ -62,30 +67,84 @@ def slugify_pokemon_name(pokemon_name):
     )
 
 
-def get_sprite_path(pokemon_name, use_gmax=False):
+def get_sprite_path(
+    pokemon_name,
+    gender=None,
+    use_gmax=False
+):
     sprite_name = slugify_pokemon_name(pokemon_name)
 
+    is_female = (
+        str(gender).strip().lower() == "female"
+    )
+
+    candidates = []
+
+    if is_female:
+        female_dir = SPRITE_DIR / "female"
+
+        if use_gmax:
+            candidates.append(
+                female_dir / f"{sprite_name}-gmax-texture.png"
+            )
+
+        candidates.extend([
+            female_dir / f"{sprite_name}-galar-texture.png",
+            female_dir / f"{sprite_name}-texture.png",
+        ])
+
     if use_gmax:
-        gmax_path = SPRITE_DIR / f"{sprite_name}-gmax.png"
+        candidates.append(
+            SPRITE_DIR / f"{sprite_name}-gmax-texture.png"
+        )
 
-        if gmax_path.exists():
-            return gmax_path
+    candidates.extend([
+        SPRITE_DIR / f"{sprite_name}-galar-texture.png",
+        SPRITE_DIR / f"{sprite_name}-texture.png",
+    ])
 
-    galar_path = SPRITE_DIR / f"{sprite_name}-galar.png"
+    if is_female:
+        female_dir = SPRITE_DIR / "female"
 
-    if galar_path.exists():
-        return galar_path
+        if use_gmax:
+            candidates.append(
+                female_dir / f"{sprite_name}-gmax.png"
+            )
 
-    sprite_path = SPRITE_DIR / f"{sprite_name}.png"
+        candidates.extend([
+            female_dir / f"{sprite_name}-galar.png",
+            female_dir / f"{sprite_name}.png",
+        ])
 
-    if sprite_path.exists():
-        return sprite_path
+    if use_gmax:
+        candidates.append(
+            SPRITE_DIR / f"{sprite_name}-gmax.png"
+        )
+
+    candidates.extend([
+        SPRITE_DIR / f"{sprite_name}-galar.png",
+        SPRITE_DIR / f"{sprite_name}.png",
+    ])
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
 
     return None
 
 
-def get_sprite_img_html(pokemon_name, size=64, use_gmax=False):
-    sprite_path = get_sprite_path(pokemon_name, use_gmax)
+def get_sprite_img_html(
+    pokemon_name,
+    size=64,
+    texture_size=None,
+    gender=None,
+    use_gmax=False
+):
+    sprite_path = get_sprite_path(
+        pokemon_name,
+        gender=gender,
+        use_gmax=use_gmax
+    )
 
     if sprite_path is None:
         return (
@@ -93,14 +152,41 @@ def get_sprite_img_html(pokemon_name, size=64, use_gmax=False):
             f"style='width:{size}px;height:{size}px;'>?</div>"
         )
 
-    encoded = image_to_base64(sprite_path)
+    is_texture = "-texture" in sprite_path.stem
+
+    if is_texture:
+        display_size = texture_size or size
+
+        encoded = image_to_base64(
+            sprite_path,
+            crop_transparency=True,
+            output_size=display_size,
+            resampling=Image.Resampling.LANCZOS
+        )
+
+        image_style = (
+            f"width:{display_size}px;"
+            f"height:{display_size}px;"
+            "object-fit:contain;"
+            "margin-bottom:.75rem;"
+        )
+
+    else:
+        encoded = image_to_base64(sprite_path)
+
+        image_style = (
+            f"max-width:{size}px;"
+            f"max-height:{size}px;"
+            "width:auto;"
+            "height:auto;"
+        )
 
     return (
         f"<img "
         f"src='data:image/png;base64,{encoded}' "
         f"alt='{pokemon_name}' "
         f"class='pokemon-sprite' "
-        f"style='max-width:{size}px;max-height:{size}px;' "
+        f"style='{image_style}' "
         f"/>"
     )
 

@@ -178,7 +178,12 @@ def render_recommendation_card(
         "<div class='recommendation-card'>"
         "<div class='card-kicker'>⭐ Recommended Pokémon</div>"
         "<div class='pokemon-header-row'>"
-        f"{get_sprite_img_html(recommended_pokemon['Pokemon'], size=72)}"
+        f"{get_sprite_img_html(
+            recommended_pokemon["Pokemon"],
+            size=72,
+            texture_size=112,
+            gender=recommended_pokemon.get("Gender")
+        )}"
         "<div class='pokemon-text-block'>"
         f"<div class='pokemon-name'>{recommended_pokemon['Pokemon']}</div>"
         f"<div class='type-badge-row'>{type_badges}</div>"

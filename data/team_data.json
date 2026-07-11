@@ -1,6 +1,7 @@
 [
   {
     "Pokemon": "Chandelure",
+    "Gender": "Male",
     "Type1": "Ghost",
     "Type2": "Fire",
     "Level": 66,
@@ -37,6 +38,7 @@
   },
   {
     "Pokemon": "Corviknight",
+    "Gender": "Female",
     "Type1": "Flying",
     "Type2": "Steel",
     "Level": 66,
@@ -73,6 +75,7 @@
   },
   {
     "Pokemon": "Raichu",
+    "Gender": "Female",
     "Type1": "Electric",
     "Type2": null,
     "Level": 66,
@@ -109,6 +112,7 @@
   },
   {
     "Pokemon": "Liepard",
+    "Gender": "Male",
     "Type1": "Dark",
     "Type2": null,
     "Level": 66,
@@ -145,6 +149,7 @@
   },
   {
     "Pokemon": "Roserade",
+    "Gender": "Male",
     "Type1": "Grass",
     "Type2": "Poison",
     "Level": 66,
@@ -181,6 +186,7 @@
   },
   {
     "Pokemon": "Sylveon",
+    "Gender": "Male",
     "Type1": "Fairy",
     "Type2": null,
     "Level": 66,

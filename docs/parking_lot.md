@@ -5,7 +5,7 @@
 - [x] Expandable Full Analysis.
 - [x] Matchup Strength indicator.
 - [x] Center title header
-- [ ] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
+- [x] Move Best Move effectiveness banner so it stays near the move name rather than falling below the matchup strength indicator
 - [x] Move Opponent selector to below the header divider so it only appears on the Battle Compass page
 
 ### Battle Notes

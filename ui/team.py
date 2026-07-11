@@ -93,7 +93,12 @@ def render_selected_pokemon_details(pokemon, move_lookup):
         "<div class='team-detail-card'>"
 
         "<div class='team-detail-header'>"
-        f"{get_sprite_img_html(pokemon.get('Pokemon'), size=72)}"
+        f"{get_sprite_img_html(
+            pokemon.get("Pokemon"),
+            size=72,
+            texture_size=144,
+            gender=pokemon.get("Gender")
+        )}"
         f"<div class='team-detail-name'>"
         f"{pokemon.get('Pokemon', 'Unknown')}"
         "</div>"
@@ -137,6 +142,7 @@ def render_my_team_editor(team_data, moves_data):
 
     editable_columns = [
         "Pokemon",
+        "Gender",
         "Type1",
         "Type2",
         "Level",
