@@ -33,6 +33,7 @@
 - [ ] Tap/click move cards for full move details.
 - [ ] Tap/click Ability and Held Item for descriptions.
 - [ ] Optional: tap on the type badges to show weaknesses/resistances.
+- [ ] Add "Plus" icon to item-boosted Move Score readouts
 
 ### Architecture
 - [x] Split app.py before it became a crime scene.
@@ -74,3 +75,51 @@
 - [x] Order battles by BattleOrder.
 - [x] Order opponent Pokémon by Slot.
 - [x] Support starter-dependent trainer lineups.
+
+## Documentation
+
+- [ ] Refresh README with current screenshots.
+- [ ] Add mobile screenshots.
+- [ ] Document installation (local Python).
+- [ ] Document Streamlit Cloud deployment.
+- [ ] Add feature overview.
+- [ ] Add known limitations.
+- [ ] Add roadmap section.
+- [ ] Create release notes template.
+- [ ] Add animated GIF demonstrations of major features.
+
+## Journey Tracker (working title)
+
+  ### Team Planning
+  - [ ] Pokémon acquisition planner.
+  - [ ] Earliest obtainable route/area.
+  - [ ] Earliest obtainable level.
+  - [ ] Version-exclusive indicators.
+  - [ ] Planned team builder.
+
+  ### Shopping & Preparation
+  - [ ] TM/TR shopping checklist.
+  - [ ] Held item shopping checklist.
+  - [ ] Evolution item checklist.
+  - [ ] Berry checklist.
+  - [ ] Optional completion tracking.
+
+  ### Progress Tracking
+  - [ ] Gym progress tracker.
+  - [ ] Badge progress.
+  - [ ] Story milestone tracker.
+  - [ ] Optional route completion tracker.
+
+  ### Reference
+  - [ ] Location lookup.
+  - [ ] Evolution requirements.
+  - [ ] Held item locations.
+  - [ ] TM/TR locations.
+  - [ ] NPC gift Pokémon.
+  - [ ] Max Raid availability (optional).
+
+  ### Future Ideas
+  - [ ] Wild Area weather planner.
+  - [ ] Watt vendor rotation helper.
+  - [ ] Daily event tracker.
+  - [ ] Save multiple planned runs.
