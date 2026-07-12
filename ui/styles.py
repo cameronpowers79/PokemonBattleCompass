@@ -51,12 +51,12 @@ def apply_app_styles():
 
         .recommendation-card {
             background: linear-gradient(180deg, #151923 0%, #10141c 100%);
-            border: 1px solid rgba(79, 156, 255, 0.30);
+            border: 1px solid rgba(79, 156, 255, 0.45);
             border-radius: 18px;
             padding: 28px 32px;
             box-shadow: 
-                0 0 14px rgba(79, 156, 255, 0.12),
-                0 0 3px rgba(79, 156, 255, 0.25);
+                0 0 18px rgba(79, 156, 255, 0.18),
+                0 0 4px rgba(79, 156, 255, 0.35);
         }
 
         .card-kicker {

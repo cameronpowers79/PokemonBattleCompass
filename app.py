@@ -18,7 +18,8 @@ from ui.team import render_my_team_editor
 
 st.set_page_config(
     page_title="Pokémon Battle Compass Alpha",
-    layout="wide"
+    page_icon="assets/raw/BattleCompassLogo.png",
+    layout="wide",
 )
 
 apply_app_styles()        
