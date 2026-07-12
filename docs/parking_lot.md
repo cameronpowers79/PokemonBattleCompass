@@ -11,6 +11,10 @@
 - [x] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
 - [x] Move Notes for "Other Strong Options" back inside the cards rather than floating below
 
+### Layout
+- [x] Add box sprites to Other Strong Options.
+- [x] Preserve Battle Compass selections when switching between pages.
+
 ### Battle Notes
 - [x] Structured Battle Notes.
 - [x] Render note categories with icons/colors.
@@ -33,7 +37,10 @@
 - [ ] Tap/click move cards for full move details.
 - [ ] Tap/click Ability and Held Item for descriptions.
 - [ ] Optional: tap on the type badges to show weaknesses/resistances.
-- [ ] Add "Plus" icon to item-boosted Move Score readouts
+- [x] Add ⊕ indicator and interactive breakdown for item-boosted Move Scores.
+- [x] Add custom application favicon.
+- [x] Brighten Recommended Pokémon card accent/glow for mobile visibility.
+- [x] Add held-item boost breakdown popup to Move Score.
 
 ### Architecture
 - [x] Split app.py before it became a crime scene.
@@ -68,13 +75,23 @@
 - [ ] Handle display-name cleanup for sprite slugs.
 - [x] Evaluate larger sprite/icon source later; current Alpha uses lightweight PokéSprite box icons.
 - [x] Gender/form sprite support.
-- [ ] Texture artwork fallback hierarchy (future expansion)
+- [x] Texture artwork fallback hierarchy (future expansion)
+- [ ] Expand texture hierarchy for additional regional/forms as needed.
 
 ## Battle Selection
 
 - [x] Order battles by BattleOrder.
 - [x] Order opponent Pokémon by Slot.
 - [x] Support starter-dependent trainer lineups.
+
+## Texture Artwork
+
+- [x] Implement automatic texture-to-sprite fallback.
+- [x] Add Galar starter-line textures.
+- [x] Add textures for Hop's Pokémon.
+- [ ] Add textures for unique Pokémon in `opponents.json`.
+- [ ] Add trainer artwork for the 21 trainers represented in `opponents.json`.
+- [ ] Gradually expand texture coverage for player-selected Pokémon.
 
 ## Documentation
 
