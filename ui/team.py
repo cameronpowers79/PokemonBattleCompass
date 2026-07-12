@@ -231,8 +231,10 @@ def render_my_team_editor(team_data, moves_data):
         st.success("Team saved!")
 
     st.caption(
-        "Only modeled held items affect scores. If an item "
-        "should improve scores but does not, check the spelling."
+        "Only modeled held items affect Move Scores. If a held item "
+        "should improve a score but does not, verify the item name is "
+        "spelled correctly. A blue ⊕ beside the Move Score indicates "
+        "an active held item bonus. Tap it to see the bonus breakdown."
     )
 
     st.divider()

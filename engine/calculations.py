@@ -409,6 +409,22 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             moves_data
         )
 
+        item_multiplier = get_item_multiplier(
+            pokemon.get("Held Item"),
+            best_move,
+            items
+        )
+
+        item_boosted = item_multiplier > 1
+
+        base_move_score = (
+            best_score / item_multiplier
+            if item_boosted
+            else best_score
+        )
+
+        item_bonus_amount = best_score - base_move_score
+
         boosted_body_press_score = calculate_boosted_body_press_score(
             pokemon,
             opponent,
@@ -466,6 +482,11 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             "Pokemon": pokemon["Pokemon"],
             "Best Move": best_move["Move"],
             "Best MoveScore": round(best_score, 2),
+            "Base MoveScore": round(base_move_score, 2),
+            "Item Boosted": item_boosted,
+            "Item Multiplier": round(item_multiplier, 4),
+            "Item Bonus Amount": round(item_bonus_amount, 2),
+            "Held Item": pokemon.get("Held Item"),
             "Best Move Multiplier": round(offensive_multiplier, 2),
             "Worst Incoming Move": worst_move["Move"],
             "Incoming Multiplier": round(incoming_multiplier, 2),

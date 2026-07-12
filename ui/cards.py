@@ -209,7 +209,12 @@ def render_recommendation_card(
 
         "</div>"
         "<div class='section-title'>Why this Pokémon?</div>"
-        f"<div class='why-box'>{why}</div>"
+        f"<div class='why-box'>"
+        f"{why}"
+        "<div class='why-more-link'>"
+        "ℹ️ Compare the full team by opening <b>Full Analysis</b> below."
+        "</div>"
+        "</div>"
         "<div class='section-title'>Battle Notes</div>"
         f"<div class='notes-list'>{notes_html}</div>"
         "</div>"
@@ -272,19 +277,56 @@ def render_battle_snapshot(
         "defense"
     )
 
+    item_boost_html = ""
+
+    if recommended_result.get("Item Boosted", False):
+        held_item = recommended_result.get("Held Item") or "Held item"
+        item_multiplier = recommended_result.get("Item Multiplier", 1)
+        base_score = recommended_result.get("Base MoveScore", best_score)
+        bonus_amount = recommended_result.get("Item Bonus Amount", 0)
+
+        boost_percent = round(
+            (item_multiplier - 1) * 100
+        )
+
+        item_boost_html = (
+            "<details class='item-boost-details'>"
+            "<summary class='item-boost-icon' "
+            "aria-label='View held item bonus'>"
+            "⊕"
+            "</summary>"
+            "<div class='item-boost-popover'>"
+            "<div class='item-boost-title'>Held Item Bonus Active!</div>"
+            f"<div class='item-boost-name'>{held_item}</div>"
+            f"<div>Move bonus: +{boost_percent}%</div>"
+            "<div class='item-boost-divider'></div>"
+            f"<div>Base score: {base_score:.2f}</div>"
+            f"<div>Item boost: +{bonus_amount:.2f}</div>"
+            f"<div>Final score: <strong>{best_score:.2f}</strong></div>"
+            f"<div><i>Tap or click the</i> ⊕ <i>to dismiss.</i></div>"
+            "</div>"
+            "</details>"
+        )
+
     st.markdown(
         (
             "<div class='side-card'>"
             "<div class='side-card-title'>Battle Snapshot</div>"
             "<div class='snapshot-grid'>"
+
             "<div>"
             "<div class='label'>Move Score</div>"
+            "<div class='snapshot-score-line'>"
             f"<div class='snapshot-value'>{best_score:.2f}</div>"
+            f"{item_boost_html}"
             "</div>"
+            "</div>"
+
             "<div>"
             "<div class='label'>Incoming Worst</div>"
             f"<div class='snapshot-value'>{worst_score:.2f}</div>"
             "</div>"
+
             "</div>"
             "<div class='snapshot-move-label'>"
             "Worst incoming move"

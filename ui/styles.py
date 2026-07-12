@@ -390,6 +390,100 @@ def apply_app_styles():
             transform: translateY(1px);
         }
 
+        .snapshot-score-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-boost-name {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.12rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.97);
+            margin-bottom: 4px;
+        }
+
+        .item-boost-details {
+            position: relative;
+            display: inline-block;
+        }
+
+        .item-boost-details summary {
+            list-style: none;
+        }
+
+        .item-boost-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .item-boost-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 25px;
+            height: 25px;
+
+            border: 1px solid rgba(79, 156, 255, 0.60);
+            border-radius: 50%;
+
+            color: #60a5fa;
+            background: rgba(79, 156, 255, 0.14);
+
+            font-family: "Bahnschrift", "Aptos", sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1;
+
+            cursor: pointer;
+            user-select: none;
+
+            box-shadow:
+                0 0 8px rgba(79, 156, 255, 0.18);
+        }
+
+        .item-boost-icon:hover {
+            color: #93c5fd;
+            background: rgba(79, 156, 255, 0.22);
+        }
+
+        .item-boost-popover {
+            position: absolute;
+            z-index: 20;
+            top: 32px;
+            left: 0;
+
+            width: 220px;
+            padding: 12px 14px;
+
+            background: #151923;
+            border: 1px solid rgba(79, 156, 255, 0.38);
+            border-radius: 12px;
+
+            color: rgba(255,255,255,0.86);
+            font-size: 0.88rem;
+            line-height: 1.45;
+
+            box-shadow:
+                0 10px 30px rgba(0,0,0,0.45),
+                0 0 12px rgba(79, 156, 255, 0.12);
+        }
+
+        .item-boost-title {
+            color: #93c5fd;
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .item-boost-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.10);
+            margin: 8px 0;
+        }
+
         .move-name-line,
         .snapshot-move-line {
             display: flex;
@@ -670,6 +764,18 @@ def apply_app_styles():
 
         .st-key-save_team_button div[data-testid="stButton"] > button {
             width: auto;
+        }
+
+        .why-more-link {
+            margin-top: 0.75rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+
+            color: #69A8FF;
+            font-size: 0.92rem;
+            font-weight: 600;
+
+            opacity: 0.95;
         }
 
         /* ---------- Branding ---------- */

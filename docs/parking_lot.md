@@ -26,7 +26,7 @@
   - Aptos (body)
   - Bahnschrift (metrics)
 - [x] Change active page selector color from red to blue
-- [ ] Info link from Why? to Full Analysis.
+- [x] Info "link" from Why? to Full Analysis.
 - [x] Application branding (logo & wordmark)
 - [x] Extend branding colors to Recommended Pokemon card
 - [ ] ♂/♀ icon immediately after the Pokémon name
