@@ -70,7 +70,8 @@ def slugify_pokemon_name(pokemon_name):
 def get_sprite_path(
     pokemon_name,
     gender=None,
-    use_gmax=False
+    use_gmax=False,
+    use_texture=True
 ):
     sprite_name = slugify_pokemon_name(pokemon_name)
 
@@ -80,17 +81,28 @@ def get_sprite_path(
 
     candidates = []
 
-    if is_female:
-        female_dir = SPRITE_DIR / "female"
+    if use_texture:
+        if is_female:
+            female_dir = SPRITE_DIR / "female"
+
+            if use_gmax:
+                candidates.append(
+                    female_dir / f"{sprite_name}-gmax-texture.png"
+                )
+
+            candidates.extend([
+                female_dir / f"{sprite_name}-galar-texture.png",
+                female_dir / f"{sprite_name}-texture.png",
+            ])
 
         if use_gmax:
             candidates.append(
-                female_dir / f"{sprite_name}-gmax-texture.png"
+                SPRITE_DIR / f"{sprite_name}-gmax-texture.png"
             )
 
         candidates.extend([
-            female_dir / f"{sprite_name}-galar-texture.png",
-            female_dir / f"{sprite_name}-texture.png",
+            SPRITE_DIR / f"{sprite_name}-galar-texture.png",
+            SPRITE_DIR / f"{sprite_name}-texture.png",
         ])
 
     if use_gmax:
@@ -138,12 +150,15 @@ def get_sprite_img_html(
     size=64,
     texture_size=None,
     gender=None,
-    use_gmax=False
+    use_gmax=False,
+    use_texture=True
 ):
+
     sprite_path = get_sprite_path(
-        pokemon_name,
-        gender=gender,
-        use_gmax=use_gmax
+    pokemon_name,
+    gender=gender,
+    use_gmax=use_gmax,
+    use_texture=use_texture
     )
 
     if sprite_path is None:

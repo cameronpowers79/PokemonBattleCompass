@@ -246,6 +246,30 @@ def apply_app_styles():
             font-size: 0.82rem;
         }
 
+        .other-option-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0.25rem 0 0.85rem 0;
+        }
+
+        .other-option-heading .pokemon-sprite {
+            transform: none;
+            flex-shrink: 0;
+        }
+
+        .other-option-rank,
+        .other-option-name {
+            font-family: "Exo 2", "Bahnschrift", sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .other-option-rank {
+            margin-right: -4px;
+}
+
         .matchup-ratio-detail {
             color: rgba(255,255,255,0.50);
             font-family: "Bahnschrift", "Aptos", sans-serif;

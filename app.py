@@ -1,6 +1,9 @@
 import streamlit as st
 
-from ui.rendering import image_to_base64
+from ui.rendering import (
+    get_sprite_img_html,
+    image_to_base64,
+)
 from engine.data_loader import load_json
 from engine.calculations import (
     find_best_team_member,
@@ -80,6 +83,16 @@ active_view = st.segmented_control(
     width="stretch",
     required=True,
 )
+
+# Preserve Battle Compass selections while its widgets are not rendered.
+for state_key in [
+    "player_starter",
+    "selected_trainer",
+    "selected_battle",
+    "selected_opponent",
+]:
+    if state_key in st.session_state:
+        st.session_state[state_key] = st.session_state[state_key]
 
 st.divider()
 
@@ -293,7 +306,23 @@ if active_view == "Battle Compass":
                 is_immune
             )
 
-            st.markdown(f"### {index}. {row['Pokemon']}")
+            option_sprite_html = get_sprite_img_html(
+                row["Pokemon"],
+                size=40,
+                gender=row.get("Gender"),
+                use_texture=False,
+            )
+
+            st.markdown(
+                (
+                    "<div class='other-option-heading'>"
+                    f"<span class='other-option-rank'>{index}.</span>"
+                    f"{option_sprite_html}"
+                    f"<span class='other-option-name'>{row['Pokemon']}</span>"
+                    "</div>"
+                ),
+                unsafe_allow_html=True,
+            )
             st.write(f"**Best move:** {row['Best Move']}")
 
             ratio_html = (
