@@ -1,4 +1,3 @@
-import pandas as pd
 import streamlit as st
 
 from engine.moves import apply_move_metadata
@@ -183,40 +182,6 @@ def render_my_team_editor(team_data, moves_data):
         for pokemon in team_data
     ]
 
-    numeric_columns = [
-    "Level",
-    "HP",
-    "ATK",
-    "DEF",
-    "SPA",
-    "SPD",
-    "SPE",
-]
-
-    text_columns = [
-        column
-        for column in editable_columns
-        if column not in numeric_columns
-    ]
-
-    editable_dataframe = pd.DataFrame(
-        editable_team,
-        columns=editable_columns
-    )
-
-    for column in numeric_columns:
-        editable_dataframe[column] = pd.to_numeric(
-            editable_dataframe[column],
-            errors="coerce"
-        ).astype("Int64")
-
-    for column in text_columns:
-        editable_dataframe[column] = (
-            editable_dataframe[column]
-            .fillna("")
-            .astype("object")
-        )
-
     move_lookup = {
         move["Move"]: move
         for move in moves_data
@@ -225,77 +190,73 @@ def render_my_team_editor(team_data, moves_data):
 
     move_options = sorted(move_lookup)
 
-    edited_dataframe = st.data_editor(
-        editable_dataframe,
-        width="stretch",
-        hide_index=True,
-        num_rows="fixed",
-        key="team_editor",
-        column_config={
-            "Level": st.column_config.NumberColumn(
-                "Level",
-                min_value=1,
-                step=1,
-                format="%d"
-                ),
-            "HP": st.column_config.NumberColumn(
-                "HP",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "ATK": st.column_config.NumberColumn(
-                "ATK",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "DEF": st.column_config.NumberColumn(
-                "DEF",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "SPA": st.column_config.NumberColumn(
-                "SPA",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "SPD": st.column_config.NumberColumn(
-                "SPD",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "SPE": st.column_config.NumberColumn(
-                "SPE",
-                min_value=0,
-                step=1,
-                format="%d"
-            ),
-            "Move1": st.column_config.SelectboxColumn(
-                "Move1",
-                options=move_options
-            ),
-            "Move2": st.column_config.SelectboxColumn(
-                "Move2",
-                options=move_options
-            ),
-            "Move3": st.column_config.SelectboxColumn(
-                "Move3",
-                options=move_options
-            ),
-            "Move4": st.column_config.SelectboxColumn(
-                "Move4",
-                options=move_options
-            ),
-        }
-    )
-
-    edited_team = edited_dataframe.replace(
-        {pd.NA: None}
-    ).to_dict(orient="records")
+    edited_team = st.data_editor(
+    editable_team,
+    width="stretch",
+    hide_index=True,
+    num_rows="fixed",
+    key="team_editor",
+    column_config={
+        "Level": st.column_config.NumberColumn(
+            "Level",
+            min_value=1,
+            step=1,
+            format="%d"
+        ),
+        "HP": st.column_config.NumberColumn(
+            "HP",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "ATK": st.column_config.NumberColumn(
+            "ATK",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "DEF": st.column_config.NumberColumn(
+            "DEF",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "SPA": st.column_config.NumberColumn(
+            "SPA",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "SPD": st.column_config.NumberColumn(
+            "SPD",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "SPE": st.column_config.NumberColumn(
+            "SPE",
+            min_value=0,
+            step=1,
+            format="%d"
+        ),
+        "Move1": st.column_config.SelectboxColumn(
+            "Move1",
+            options=move_options
+        ),
+        "Move2": st.column_config.SelectboxColumn(
+            "Move2",
+            options=move_options
+        ),
+        "Move3": st.column_config.SelectboxColumn(
+            "Move3",
+            options=move_options
+        ),
+        "Move4": st.column_config.SelectboxColumn(
+            "Move4",
+            options=move_options
+        ),
+    }
+)
 
     save_clicked = st.button(
     "💾 Apply Team Changes",
