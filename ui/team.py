@@ -240,23 +240,37 @@ def render_my_team_editor(team_data, moves_data):
 
     st.subheader("Pokémon Details")
 
-    pokemon_names = [
-        pokemon.get("Pokemon")
+    valid_pokemon = [
+        pokemon
         for pokemon in edited_team
-        if pokemon.get("Pokemon")
+        if (
+            isinstance(pokemon.get("Pokemon"), str)
+            and pokemon.get("Pokemon").strip()
+        )
     ]
 
-    if not pokemon_names:
+    if not valid_pokemon:
         st.info(
-        "No Pokémon are currently loaded. Add your team above "
-        "or restore a save file."
+            "No Pokémon are currently loaded. Add your team above "
+            "or restore a save file."
         )
         return
+
+    pokemon_names = [
+        pokemon["Pokemon"]
+        for pokemon in valid_pokemon
+    ]
 
     selected_pokemon_name = st.selectbox(
         "Select Pokémon",
         pokemon_names,
         key="team_detail_selector"
+    )
+
+    selected_pokemon = next(
+        pokemon
+        for pokemon in valid_pokemon
+        if pokemon["Pokemon"] == selected_pokemon_name
     )
 
     selected_pokemon = next(
