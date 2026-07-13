@@ -1,6 +1,5 @@
 import streamlit as st
 
-from engine.data_loader import save_json
 from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
 from ui.rendering import (
@@ -136,9 +135,9 @@ def render_my_team_editor(team_data, moves_data):
     st.subheader("Manage My Team")
 
     st.caption(
-        "Edit your current party. Changes are not saved until "
-        "you click Save Team."
-    )
+    "Edit your current party. Click Save Team to apply changes "
+    "to your current browser session."
+)
 
     editable_columns = [
         "Pokemon",
@@ -203,10 +202,10 @@ def render_my_team_editor(team_data, moves_data):
     )
 
     save_clicked = st.button(
-        "💾 Save Team",
-        type="primary",
-        key="save_team_button"
-    )
+    "💾 Apply Team Changes",
+    type="primary",
+    key="save_team_button"
+)
 
     if save_clicked:
         saved_team = []
@@ -227,8 +226,8 @@ def render_my_team_editor(team_data, moves_data):
                 )
             )
 
-        save_json("team_data", saved_team)
-        st.success("Team saved!")
+        st.session_state["team_data"] = saved_team
+        st.success("Team saved for this session!")
 
     st.caption(
         "Only modeled held items affect Move Scores. If a held item "
@@ -246,6 +245,13 @@ def render_my_team_editor(team_data, moves_data):
         for pokemon in edited_team
         if pokemon.get("Pokemon")
     ]
+
+    if not pokemon_names:
+        st.info(
+        "No Pokémon are currently loaded. Add your team above "
+        "or restore a save file."
+        )
+        return
 
     selected_pokemon_name = st.selectbox(
         "Select Pokémon",

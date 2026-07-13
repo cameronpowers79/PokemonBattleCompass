@@ -50,7 +50,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-team_data = load_json("team_data")
+if "team_data" not in st.session_state:
+    st.session_state["team_data"] = load_json("team_data")
+
+team_data = st.session_state["team_data"]
+
 opponents = load_json("opponents")
 items = load_json("items")
 ability_rules = load_json("ability_rules")
@@ -102,6 +106,19 @@ st.divider()
 # ---------------------------------------------------------
 
 if active_view == "Battle Compass":
+
+    valid_team_members = [
+        pokemon
+        for pokemon in team_data
+        if pokemon.get("Pokemon")
+    ]
+
+    if not valid_team_members:
+        st.info(
+            "No team is currently loaded. Open My Team to build a team "
+            "or restore a save file."
+        )
+        st.stop()
 
     st.subheader("Battle Settings")
 
