@@ -11,8 +11,8 @@
 
 ## Desktop + PWA Migration
 
-- [ ] Select the replacement framework.
-- [ ] Build a proof-of-concept using My Team.
+- [x] Select the replacement framework (Flet).
+- [x] Build proof-of-concept.
 - [ ] Implement durable local storage.
 - [ ] Implement autosave.
 - [ ] Implement optional backup/export.
@@ -75,6 +75,7 @@
 - [x] Custom application favicon.
 - [x] Held-item boost indicator and score breakdown popover.
 - [ ] Add ♂/♀ immediately after Pokémon names.
+- [ ] Reduce the size of the ♂/♀ gender symbols slightly.
 - [ ] Tap or click move cards for full move details.
 - [ ] Tap or click Ability and Held Item for descriptions.
 - [ ] Optional: tap type badges to show weaknesses and resistances.
@@ -217,7 +218,7 @@
 
 ---
 
-# Trainer’s Guide
+# Trainer's Guide
 
 ## Team Planning
 
