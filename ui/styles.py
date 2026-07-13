@@ -814,9 +814,9 @@ def apply_app_styles():
 
         .brand-logo {
             display: block;
-            width: 140px;
+            width: 122px;
             height: auto;
-            margin: 0 auto 0.25rem auto;
+            margin: 0 auto 0.35rem auto;
         }
 
         .brand-wordmark {
