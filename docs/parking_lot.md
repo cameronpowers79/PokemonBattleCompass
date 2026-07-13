@@ -101,10 +101,11 @@
 - [ ] Add save-data validation and migration support.
 - [ ] Add automatic recovery from interrupted writes.
 - [ ] Add lightweight automated tests for core calculations.
+- [ ] Keep the battle engine UI-framework agnostic.
 
 ---
 
-## Team Editing and Persistence
+## Team Management
 
 - [x] Editable Team Data screen.
 - [x] Load current team data.
@@ -124,17 +125,16 @@
 - [ ] Add ability validation.
 - [ ] Add held-item validation after the modeled item list expands.
 - [ ] Add Pokémon name dropdown and validation.
-- [ ] Build Pokémon options from supported assets/data.
 - [ ] Add clear “new team” and “reset team” actions.
 - [ ] Add confirmation before destructive actions.
 - [ ] Add multiple teams or save slots.
 - [ ] Add page or section jump navigation where useful.
+- [ ] Build Pokémon option list from available sprite assets.
 
 ---
 
 ## Sprite Support
 
-- [ ] Build Pokémon option list from available sprite assets.
 - [ ] Handle display-name cleanup for sprite slugs.
 - [x] Use lightweight PokéSprite box icons for the Alpha.
 - [x] Gender and form sprite support.
@@ -213,6 +213,7 @@
 - [ ] Document the Streamlit Alpha as the original reference implementation.
 - [ ] Document the known iOS/Safari favicon limitation in the Alpha.
 - [ ] Add fan-project and intellectual-property disclaimer.
+- [ ] Architecture overview.
 
 ---
 
@@ -256,3 +257,4 @@
 - [ ] Wild Area weather planner.
 - [ ] Watt vendor rotation helper.
 - [ ] Daily event tracker.
+- [ ] Optional battle history / battle journal.

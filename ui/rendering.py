@@ -80,11 +80,10 @@ def get_sprite_path(
     )
 
     candidates = []
+    female_dir = SPRITE_DIR / "female"
 
     if use_texture:
         if is_female:
-            female_dir = SPRITE_DIR / "female"
-
             if use_gmax:
                 candidates.append(
                     female_dir / f"{sprite_name}-gmax-texture.png"
@@ -105,19 +104,7 @@ def get_sprite_path(
             SPRITE_DIR / f"{sprite_name}-texture.png",
         ])
 
-    if use_gmax:
-        candidates.append(
-            SPRITE_DIR / f"{sprite_name}-gmax-texture.png"
-        )
-
-    candidates.extend([
-        SPRITE_DIR / f"{sprite_name}-galar-texture.png",
-        SPRITE_DIR / f"{sprite_name}-texture.png",
-    ])
-
     if is_female:
-        female_dir = SPRITE_DIR / "female"
-
         if use_gmax:
             candidates.append(
                 female_dir / f"{sprite_name}-gmax.png"
