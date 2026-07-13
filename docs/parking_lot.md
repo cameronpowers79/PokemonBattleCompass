@@ -10,8 +10,6 @@
 - [x] Adjust "Recommended Pokemon" font so it doesn't stack on Mobile
 - [x] Add "Currently selected" information on the Compass screen, near "Opponent Pokemon" dropdown selector (above/beside)
 - [x] Move Notes for "Other Strong Options" back inside the cards rather than floating below
-
-### Layout
 - [x] Add box sprites to Other Strong Options.
 - [x] Preserve Battle Compass selections when switching between pages.
 
@@ -92,6 +90,9 @@
 - [ ] Add textures for unique Pokémon in `opponents.json`.
 - [ ] Add trainer artwork for the 21 trainers represented in `opponents.json`.
 - [ ] Gradually expand texture coverage for player-selected Pokémon.
+
+## Bugfixes
+- [x] Fix null `Slot` values for Bede’s Ballonlea/Wyndon postgame battle.
 
 ## Documentation
 
