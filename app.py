@@ -238,7 +238,7 @@ if active_view == "Battle Compass":
     )
 
     recommended_pokemon, recommendation_result, why = find_best_team_member(
-        team_data,
+        valid_team_members,
         selected_opponent,
         items,
         ability_rules,
@@ -248,7 +248,7 @@ if active_view == "Battle Compass":
     best_move, best_score, worst_move, worst_score, ratio = recommendation_result
 
     matchup_results = evaluate_team_matchups(
-        team_data,
+        valid_team_members,
         selected_opponent,
         items,
         ability_rules,

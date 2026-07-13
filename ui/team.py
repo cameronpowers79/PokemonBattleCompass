@@ -137,6 +137,14 @@ def render_selected_pokemon_details(pokemon, move_lookup):
 
     st.markdown(html, unsafe_allow_html=True)
 
+def parse_optional_int(value):
+    if value is None or value == "":
+        return None
+
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
 
 def render_my_team_editor(team_data, moves_data):
     st.subheader("Manage My Team")
@@ -189,6 +197,48 @@ def render_my_team_editor(team_data, moves_data):
         num_rows="fixed",
         key="team_editor",
         column_config={
+            "Level": st.column_config.NumberColumn(
+                "Level",
+                min_value=1,
+                step=1,
+                format="%d"
+                ),
+            "HP": st.column_config.NumberColumn(
+                "HP",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
+            "ATK": st.column_config.NumberColumn(
+                "ATK",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
+            "DEF": st.column_config.NumberColumn(
+                "DEF",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
+            "SPA": st.column_config.NumberColumn(
+                "SPA",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
+            "SPD": st.column_config.NumberColumn(
+                "SPD",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
+            "SPE": st.column_config.NumberColumn(
+                "SPE",
+                min_value=0,
+                step=1,
+                format="%d"
+            ),
             "Move1": st.column_config.SelectboxColumn(
                 "Move1",
                 options=move_options
@@ -223,8 +273,23 @@ def render_my_team_editor(team_data, moves_data):
         ):
             merged_pokemon = dict(original_pokemon)
 
+            numeric_columns = {
+                "Level",
+                "HP",
+                "ATK",
+                "DEF",
+                "SPA",
+                "SPD",
+                "SPE",
+            }
+
             for column in editable_columns:
-                merged_pokemon[column] = edited_pokemon.get(column)
+                value = edited_pokemon.get(column)
+
+                if column in numeric_columns:
+                    value = parse_optional_int(value)
+
+                merged_pokemon[column] = value
 
             saved_team.append(
                 apply_move_metadata(
