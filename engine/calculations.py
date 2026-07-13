@@ -409,6 +409,18 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             moves_data
         )
 
+        if best_move is None:
+            raise RuntimeError(
+                f"No valid offensive move found for "
+                f"{pokemon.get('Pokemon', 'Unknown Pokémon')}."
+            )
+
+        if worst_move is None:
+            raise RuntimeError(
+                f"No valid incoming move found for "
+                f"{opponent.get('Pokemon', 'Unknown opponent')}."
+            )
+
         item_multiplier = get_item_multiplier(
             pokemon.get("Held Item"),
             best_move,
@@ -484,12 +496,16 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             "Best Move": best_move["Move"],
             "Best MoveScore": round(best_score, 2),
             "Base MoveScore": round(base_move_score, 2),
+            "Best Move Type": best_move.get("Type"),
+            "Best Move Category": best_move.get("Category"),
             "Item Boosted": item_boosted,
             "Item Multiplier": round(item_multiplier, 4),
             "Item Bonus Amount": round(item_bonus_amount, 2),
             "Held Item": pokemon.get("Held Item"),
             "Best Move Multiplier": round(offensive_multiplier, 2),
             "Worst Incoming Move": worst_move["Move"],
+            "Worst Incoming Move Type": worst_move.get("Type"),
+            "Worst Incoming Move Category": worst_move.get("Category"),
             "Incoming Multiplier": round(incoming_multiplier, 2),
             "Incoming Worst Score": round(worst_score, 2),
             "Is Immune": worst_score == 0,
