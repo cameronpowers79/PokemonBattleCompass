@@ -1,4 +1,4 @@
-from pathlib import Path
+'''from pathlib import Path
 
 import flet as ft
 
@@ -110,3 +110,4 @@ if __name__ == "__main__":
         main,
         assets_dir=str(ASSETS_DIR),
     )
+    '''

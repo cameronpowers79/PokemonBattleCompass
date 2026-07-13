@@ -1,276 +1,456 @@
+"""
+Recommendation Card component.
+
+Displays the recommended Pokémon, best move, matchup strength,
+supporting explanation, and structured battle notes.
+"""
+
 from __future__ import annotations
+
+from typing import cast
 
 import flet as ft
 
-
-CARD_BACKGROUND = "#121722"
-CARD_BORDER = "#4F9CFF"
-TEXT_PRIMARY = "#F4F7FB"
-TEXT_SECONDARY = "#AEB8C7"
-BLUE_PANEL = "#182A43"
-GREEN_PANEL = "#173828"
-AMBER_PANEL = "#3B3017"
-
-
-def _type_badge(
-    badge_src: str,
-    pokemon_type: str,
-) -> ft.Image:
-    return ft.Image(
-        src=badge_src,
-        height=24,
-        fit=ft.BoxFit.CONTAIN,
-        semantics_label=f"{pokemon_type} type",
-    )
+from ui.theme import (
+    BORDER_ACCENT,
+    CARD_PADDING,
+    CARD_RADIUS,
+    PRIMARY_BLUE,
+    PRIMARY_BLUE_LIGHT,
+    PRIMARY_BLUE_SOFT,
+    SUCCESS,
+    SURFACE,
+    SURFACE_RAISED,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    WARNING,
+)
 
 
-def _matchup_segment(
-    color: str,
-    active: bool = False,
-) -> ft.Container:
-    return ft.Container(
-        height=14,
-        expand=True,
-        bgcolor=color,
-        opacity=1.0 if active else 0.35,
-        border=ft.Border.all(
-            1,
-            "#55FFFFFF" if active else "#22FFFFFF",
-        ),
-        border_radius=4,
-    )
+class RecommendationCard(ft.Container):
+    """Responsive card presenting the primary matchup recommendation."""
 
+    def __init__(
+        self,
+        *,
+        pokemon_name: str,
+        gender_symbol: str | None,
+        artwork_src: str,
+        type_badges: list[tuple[str, str]],
+        best_move: str,
+        effectiveness_label: str,
+        effectiveness_color: str,
+        matchup_label: str,
+        matchup_ratio: float,
+        matchup_level: int,
+        why_text: str,
+        battle_notes: list[tuple[str, str, str]],
+    ) -> None:
+        self.pokemon_name = pokemon_name
+        self.gender_symbol = gender_symbol
+        self.artwork_src = artwork_src
+        self.type_badges = type_badges
+        self.best_move = best_move
+        self.effectiveness_label = effectiveness_label
+        self.effectiveness_color = effectiveness_color
+        self.matchup_label = matchup_label
+        self.matchup_ratio = matchup_ratio
+        self.matchup_level = matchup_level
+        self.why_text = why_text
+        self.battle_notes = battle_notes
 
-def build_matchup_meter() -> ft.Control:
-    return ft.Column(
-        controls=[
-            ft.Text(
-                "Matchup Strength",
-                size=14,
-                color=TEXT_SECONDARY,
+        super().__init__(
+            content=self._build_content(),
+            width=940,
+            padding=CARD_PADDING,
+            bgcolor=SURFACE,
+            border=ft.Border.all(
+                1,
+                BORDER_ACCENT,
             ),
-            ft.Row(
-                controls=[
-                    _matchup_segment("#C13D3D"),
-                    _matchup_segment("#D87931"),
-                    _matchup_segment("#B9C936"),
-                    _matchup_segment("#37B866", active=True),
-                    _matchup_segment("#3D83D9"),
-                ],
-                spacing=4,
+            border_radius=CARD_RADIUS,
+            shadow=ft.BoxShadow(
+                blur_radius=22,
+                spread_radius=1,
+                color="#244F9CFF",
             ),
-            ft.Text(
-                "Comfortable",
-                size=20,
-                weight=ft.FontWeight.BOLD,
-                color="#4ADE80",
-            ),
-            ft.Text(
-                "Ratio 3.42",
-                size=13,
-                color=TEXT_SECONDARY,
-            ),
-        ],
-        spacing=7,
-    )
+        )
 
-
-def build_recommendation_card(
-    *,
-    pokemon_name: str,
-    sprite_src: str,
-    type_badges: list[tuple[str, str]],
-) -> ft.Container:
-    badge_row = ft.Row(
-        controls=[
-            _type_badge(badge_src, pokemon_type)
-            for pokemon_type, badge_src in type_badges
-        ],
-        spacing=8,
-        wrap=True,
-    )
-
-    pokemon_header = ft.ResponsiveRow(
-        controls=[
-            ft.Container(
-                content=ft.Image(
-                    src=sprite_src,
-                    width=150,
-                    height=150,
-                    fit=ft.BoxFit.CONTAIN,
-                    semantics_label=pokemon_name,
+    def _build_content(self) -> ft.Control:
+        controls = cast(
+            list[ft.Control],
+            [
+                self._build_title(),
+                self._build_identity_section(),
+                ft.Divider(
+                    color="#28FFFFFF",
+                    height=1,
                 ),
-                alignment=ft.Alignment.CENTER,
-                col={
-                    ft.ResponsiveRowBreakpoint.XS: 12,
-                    ft.ResponsiveRowBreakpoint.SM: 4,
-                },
+                self._build_metrics_section(),
+                self._build_why_section(),
+                self._build_notes_section(),
+            ],
+        )
+
+        return ft.Column(
+            controls=controls,
+            spacing=22,
+        )
+
+    @staticmethod
+    def _build_title() -> ft.Control:
+            return ft.ResponsiveRow(
+            columns=12,
+            controls=[
+                ft.Container(
+                    content=ft.Row(
+                        controls=[
+                            ft.Icon(
+                                ft.Icons.STAR_ROUNDED,
+                                color=PRIMARY_BLUE,
+                                size=26,
+                            ),
+                            ft.Text(
+                                "Recommended Pokémon",
+                                size=23,
+                                weight=ft.FontWeight.BOLD,
+                                color=TEXT_PRIMARY,
+                                no_wrap=False,
+                                overflow=ft.TextOverflow.VISIBLE,
+                                expand=True,
+                            ),
+                        ],
+                        spacing=8,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    col={"xs": 12},
+                ),
+            ],
+        )
+
+    def _build_identity_section(self) -> ft.Control:
+        name = self.pokemon_name
+
+        if self.gender_symbol:
+            name = f"{name} {self.gender_symbol}"
+
+        badge_controls = cast(
+            list[ft.Control],
+            [
+                ft.Image(
+                    src=badge_src,
+                    height=24,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=f"{pokemon_type} type",
+                )
+                for pokemon_type, badge_src in self.type_badges
+            ],
+        )
+
+        artwork_panel = ft.Container(
+            content=ft.Image(
+                src=self.artwork_src,
+                width=180,
+                height=180,
+                fit=ft.BoxFit.CONTAIN,
+                semantics_label=self.pokemon_name,
             ),
-            ft.Container(
-                content=ft.Column(
-                    controls=[
+            col={
+                "xs": 12,
+                "sm": 4,
+            },
+            alignment=ft.Alignment.CENTER,
+        )
+
+        identity_panel = ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
                         ft.Text(
-                            pokemon_name,
-                            size=42,
+                            name,
+                            size=40,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Row(
+                            controls=badge_controls,
+                            spacing=8,
+                            wrap=True,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                    ],
+                ),
+                spacing=12,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            col={
+                "xs": 12,
+                "sm": 8,
+            },
+            alignment=ft.Alignment.CENTER,
+        )
+
+        return ft.ResponsiveRow(
+            controls=cast(
+                list[ft.Control],
+                [
+                    artwork_panel,
+                    identity_panel,
+                ],
+            ),
+            columns=12,
+            spacing=16,
+            run_spacing=12,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def _build_metrics_section(self) -> ft.Control:
+        best_move_panel = ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Best Move",
+                            size=14,
+                            color=TEXT_SECONDARY,
+                        ),
+                        ft.Text(
+                            self.best_move,
+                            size=32,
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
                         ),
-                        badge_row,
+                        ft.Container(
+                            content=ft.Text(
+                                self.effectiveness_label,
+                                size=15,
+                                weight=ft.FontWeight.BOLD,
+                                color=self.effectiveness_color,
+                            ),
+                            padding=ft.Padding.symmetric(
+                                horizontal=14,
+                                vertical=9,
+                            ),
+                            bgcolor="#182A24",
+                            border_radius=10,
+                        ),
                     ],
-                    spacing=12,
-                    horizontal_alignment=(
-                        ft.CrossAxisAlignment.START
-                    ),
                 ),
-                alignment=ft.Alignment.CENTER_LEFT,
-                col={
-                    ft.ResponsiveRowBreakpoint.XS: 12,
-                    ft.ResponsiveRowBreakpoint.SM: 8,
-                },
+                spacing=9,
             ),
-        ],
-        spacing=16,
-        run_spacing=12,
-        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-    )
+            col={
+                "xs": 12,
+                "md": 7,
+            },
+            padding=16,
+            bgcolor=SURFACE_RAISED,
+            border_radius=12,
+        )
 
-    move_panel = ft.Container(
-        content=ft.Column(
-            controls=[
-                ft.Text(
-                    "Best Move",
-                    size=14,
-                    color=TEXT_SECONDARY,
-                ),
-                ft.Text(
-                    "Brave Bird",
-                    size=34,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                ),
+        matchup_panel = ft.Container(
+            content=self._build_matchup_meter(),
+            col={
+                "xs": 12,
+                "md": 5,
+            },
+            padding=16,
+            bgcolor=SURFACE_RAISED,
+            border_radius=12,
+        )
+
+        return ft.ResponsiveRow(
+            controls=cast(
+                list[ft.Control],
+                [
+                    best_move_panel,
+                    matchup_panel,
+                ],
+            ),
+            columns=12,
+            spacing=16,
+            run_spacing=16,
+        )
+
+    def _build_matchup_meter(self) -> ft.Control:
+        segment_colors = [
+            "#C84B4B",
+            "#D98235",
+            "#C9B936",
+            "#47B96B",
+            "#4F9CFF",
+        ]
+
+        segments = cast(
+            list[ft.Control],
+            [
                 ft.Container(
-                    content=ft.Text(
-                        "🟢 Super Effective (2×)",
-                        size=15,
+                    height=13,
+                    expand=True,
+                    bgcolor=color,
+                    opacity=1.0 if index == self.matchup_level else 0.28,
+                    border=ft.Border.all(
+                        1,
+                        "#66FFFFFF"
+                        if index == self.matchup_level
+                        else "#22FFFFFF",
+                    ),
+                    border_radius=4,
+                )
+                for index, color in enumerate(segment_colors)
+            ],
+        )
+
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Text(
+                        "Matchup Strength",
+                        size=14,
+                        color=TEXT_SECONDARY,
+                    ),
+                    ft.Row(
+                        controls=segments,
+                        spacing=4,
+                    ),
+                    ft.Text(
+                        self.matchup_label,
+                        size=21,
                         weight=ft.FontWeight.BOLD,
-                        color="#7EE2A1",
+                        color=SUCCESS,
                     ),
-                    padding=ft.Padding.symmetric(
-                        horizontal=14,
-                        vertical=10,
+                    ft.Text(
+                        f"Ratio {self.matchup_ratio:.2f}",
+                        size=13,
+                        color=TEXT_MUTED,
                     ),
-                    bgcolor=GREEN_PANEL,
-                    border_radius=10,
-                ),
-            ],
-            spacing=10,
-        ),
-        col={
-            ft.ResponsiveRowBreakpoint.XS: 12,
-            ft.ResponsiveRowBreakpoint.MD: 7,
-        },
-    )
-
-    matchup_panel = ft.Container(
-        content=build_matchup_meter(),
-        col={
-            ft.ResponsiveRowBreakpoint.XS: 12,
-            ft.ResponsiveRowBreakpoint.MD: 5,
-        },
-    )
-
-    why_panel = ft.Container(
-        content=ft.Column(
-            controls=[
-                ft.Text(
-                    "Why this Pokémon?",
-                    size=20,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                ),
-                ft.Text(
-                    "Corviknight combines strong defensive typing "
-                    "with a favorable offensive matchup. Brave Bird "
-                    "provides the best projected result while keeping "
-                    "incoming damage manageable.",
-                    size=15,
-                    color="#D7E8FF",
-                ),
-                ft.Text(
-                    "ℹ Compare the entire team in Full Analysis.",
-                    size=14,
-                    weight=ft.FontWeight.BOLD,
-                    color="#69A8FF",
-                ),
-            ],
-            spacing=9,
-        ),
-        padding=16,
-        bgcolor=BLUE_PANEL,
-        border=ft.Border.all(1, "#445F8BC4"),
-        border_radius=12,
-    )
-
-    battle_notes = ft.Column(
-        controls=[
-            ft.Text(
-                "Battle Notes",
-                size=20,
-                weight=ft.FontWeight.BOLD,
-                color=TEXT_PRIMARY,
+                ],
             ),
-            ft.Container(
-                content=ft.Text(
-                    "✅ Corviknight is expected to survive the "
-                    "opponent’s strongest projected attack.",
-                    size=15,
-                    color="#C9F7D7",
-                ),
-                padding=12,
-                bgcolor=GREEN_PANEL,
-                border_radius=10,
-            ),
-            ft.Container(
-                content=ft.Text(
-                    "⚠ Brave Bird causes recoil damage.",
-                    size=15,
-                    color="#FFE5A3",
-                ),
-                padding=12,
-                bgcolor=AMBER_PANEL,
-                border_radius=10,
-            ),
-        ],
-        spacing=9,
-    )
+            spacing=8,
+        )
 
-    return ft.Container(
-        content=ft.Column(
-            controls=[
-                ft.Text(
-                    "⭐ Recommended Pokémon",
-                    size=24,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                ),
-                pokemon_header,
-                ft.Divider(color="#28FFFFFF"),
-                ft.ResponsiveRow(
-                    controls=[
-                        move_panel,
-                        matchup_panel,
+    def _build_why_section(self) -> ft.Control:
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Why this Pokémon?",
+                            size=19,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        ft.Text(
+                            self.why_text,
+                            size=15,
+                            color="#D7E8FF",
+                        ),
+                        ft.Text(
+                            "ⓘ Compare the entire team in Full Analysis.",
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color=PRIMARY_BLUE_LIGHT,
+                        ),
                     ],
-                    spacing=28,
-                    run_spacing=20,
                 ),
-                why_panel,
-                battle_notes,
+                spacing=9,
+            ),
+            padding=16,
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border=ft.Border.all(
+                1,
+                "#445F8BC4",
+            ),
+            border_radius=12,
+        )
+
+    def _build_notes_section(self) -> ft.Control:
+        note_controls = cast(
+            list[ft.Control],
+            [
+                self._build_note(
+                    icon=icon,
+                    text=text,
+                    category=category,
+                )
+                for icon, text, category in self.battle_notes
             ],
-            spacing=22,
-        ),
-        width=900,
-        padding=28,
-        bgcolor=CARD_BACKGROUND,
-        border=ft.Border.all(1, CARD_BORDER),
-        border_radius=18,
-    )
+        )
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    "Battle Notes",
+                    size=19,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                *note_controls,
+            ],
+        )
+
+        return ft.Column(
+            controls=controls,
+            spacing=9,
+        )
+
+    @staticmethod
+    def _build_note(
+        *,
+        icon: str,
+        text: str,
+        category: str,
+    ) -> ft.Control:
+        category_styles = {
+            "success": (
+                "#173828",
+                "#C9F7D7",
+            ),
+            "warning": (
+                "#3B3017",
+                "#FFE5A3",
+            ),
+            "info": (
+                PRIMARY_BLUE_SOFT,
+                "#D7E8FF",
+            ),
+        }
+
+        background, foreground = category_styles.get(
+            category,
+            (
+                SURFACE_RAISED,
+                TEXT_SECONDARY,
+            ),
+        )
+
+        return ft.Container(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            icon,
+                            size=18,
+                        ),
+                        ft.Text(
+                            text,
+                            size=15,
+                            color=foreground,
+                            expand=True,
+                        ),
+                    ],
+                ),
+                spacing=10,
+                vertical_alignment=ft.CrossAxisAlignment.START,
+            ),
+            padding=12,
+            bgcolor=background,
+            border_radius=10,
+        )
