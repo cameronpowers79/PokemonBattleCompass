@@ -836,6 +836,11 @@ def apply_app_styles():
 
         @media (max-width: 700px) {
 
+            .card-kicker {
+                font-size: clamp(1.25rem, 5.2vw, 1.5rem);
+                white-space: nowrap;
+            }
+
             .move-row {
                 display: grid;
                 grid-template-columns: 1fr;
