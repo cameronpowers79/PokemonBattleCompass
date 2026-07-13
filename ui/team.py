@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 from engine.moves import apply_move_metadata
@@ -182,6 +183,40 @@ def render_my_team_editor(team_data, moves_data):
         for pokemon in team_data
     ]
 
+    numeric_columns = [
+    "Level",
+    "HP",
+    "ATK",
+    "DEF",
+    "SPA",
+    "SPD",
+    "SPE",
+]
+
+    text_columns = [
+        column
+        for column in editable_columns
+        if column not in numeric_columns
+    ]
+
+    editable_dataframe = pd.DataFrame(
+        editable_team,
+        columns=editable_columns
+    )
+
+    for column in numeric_columns:
+        editable_dataframe[column] = pd.to_numeric(
+            editable_dataframe[column],
+            errors="coerce"
+        ).astype("Int64")
+
+    for column in text_columns:
+        editable_dataframe[column] = (
+            editable_dataframe[column]
+            .fillna("")
+            .astype("object")
+        )
+
     move_lookup = {
         move["Move"]: move
         for move in moves_data
@@ -190,9 +225,9 @@ def render_my_team_editor(team_data, moves_data):
 
     move_options = sorted(move_lookup)
 
-    edited_team = st.data_editor(
-        editable_team,
-        use_container_width=True,
+    edited_dataframe = st.data_editor(
+        editable_dataframe,
+        width="stretch",
         hide_index=True,
         num_rows="fixed",
         key="team_editor",
@@ -257,6 +292,10 @@ def render_my_team_editor(team_data, moves_data):
             ),
         }
     )
+
+    edited_team = edited_dataframe.replace(
+        {pd.NA: None}
+    ).to_dict(orient="records")
 
     save_clicked = st.button(
     "💾 Apply Team Changes",
