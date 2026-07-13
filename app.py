@@ -351,50 +351,51 @@ if active_view == "Battle Compass":
             notes = row.get("Battle Notes", [])
             render_battle_notes(notes)
 
-    with st.expander("Full Analysis"):
-        st.dataframe(
-            analysis_rows,
-            use_container_width=True,
-            column_config={
-                "Pokemon": st.column_config.TextColumn(
-                    width="small"
-                ),
-                "Best Move": st.column_config.TextColumn(
-                    width="small"
-                ),
-                "Best Move Multiplier": st.column_config.NumberColumn(
-                    "Effectiveness",
-                    format="%g×",
-                    width="small"
-                ),
-                "Best MoveScore": st.column_config.NumberColumn(
-                    "Move Score",
-                    format="%.2f",
-                    width="small"
-                ),
-                "Worst Incoming Move": st.column_config.TextColumn(
-                    width="medium"
-                ),
-                "Incoming Multiplier": st.column_config.NumberColumn(
-                    "Incoming Effectiveness",
-                    format="%g×",
-                    width="small"
-                ),
-                "Incoming Worst Score": st.column_config.NumberColumn(
-                    "IWS",
-                    format="%.2f",
-                    width="small"
-                ),
-                "Ratio": st.column_config.NumberColumn(
-                    format="%.2f",
-                    width="small"
-                ),
-                "Notes": st.column_config.TextColumn(
-                    width="large"
-                ),
-            },
-        )
+    st.subheader("Full Analysis")
 
+    st.dataframe(
+        analysis_rows,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "Pokemon": st.column_config.TextColumn(
+                width=130
+            ),
+            "Best Move": st.column_config.TextColumn(
+                width=130
+            ),
+            "Best Move Multiplier": st.column_config.NumberColumn(
+                "Effectiveness",
+                format="%g×",
+                width=100
+            ),
+            "Best MoveScore": st.column_config.NumberColumn(
+                "Move Score",
+                format="%.2f",
+                width=95
+            ),
+            "Worst Incoming Move": st.column_config.TextColumn(
+                width=170
+            ),
+            "Incoming Multiplier": st.column_config.NumberColumn(
+                "Incoming Effectiveness",
+                format="%g×",
+                width=165
+            ),
+            "Incoming Worst Score": st.column_config.NumberColumn(
+                "IWS",
+                format="%.2f",
+                width=55
+            ),
+            "Ratio": st.column_config.NumberColumn(
+                format="%.2f",
+                width=55
+            ),
+            "Notes": st.column_config.TextColumn(
+                width=420
+            ),
+        },
+    )
 
 # ---------------------------------------------------------
 # My Team

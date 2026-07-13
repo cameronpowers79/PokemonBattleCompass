@@ -106,7 +106,7 @@
 - [ ] Create release notes template.
 - [ ] Add animated GIF demonstrations of major features.
 
-## Journey Tracker (working title)
+## Trainer's Guide
 
   ### Team Planning
   - [ ] Pokémon acquisition planner.
@@ -135,6 +135,13 @@
   - [ ] TM/TR locations.
   - [ ] NPC gift Pokémon.
   - [ ] Max Raid availability (optional).
+
+  ### Held Item Guidance
+- [ ] Recommend a modeled held item for the selected matchup.
+- [ ] Compare current held item vs recommended item.
+- [ ] Show estimated Move Score change from switching items.
+- [ ] Distinguish offensive, defensive, and sustain recommendations.
+- [ ] Explain why the item is being recommended.
 
   ### Future Ideas
   - [ ] Wild Area weather planner.
