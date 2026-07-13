@@ -1,8 +1,8 @@
 """
 Recommendation Card component.
 
-Displays the recommended Pokémon, best move, matchup strength,
-supporting explanation, and structured battle notes.
+Displays the recommended Pokémon, best move, Move Score, matchup
+strength, supporting explanation, and structured battle notes.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import flet as ft
 
 from ui.theme import (
     BORDER_ACCENT,
+    BORDER_DEFAULT,
     CARD_PADDING,
     CARD_RADIUS,
     PRIMARY_BLUE,
@@ -24,7 +25,6 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
-    WARNING,
 )
 
 
@@ -39,8 +39,15 @@ class RecommendationCard(ft.Container):
         artwork_src: str,
         type_badges: list[tuple[str, str]],
         best_move: str,
+        best_move_type_badge_src: str,
         effectiveness_label: str,
         effectiveness_color: str,
+        move_score: float,
+        item_boosted: bool,
+        held_item: str | None,
+        item_multiplier: float,
+        base_move_score: float | None,
+        item_bonus_amount: float,
         matchup_label: str,
         matchup_ratio: float,
         matchup_level: int,
@@ -51,12 +58,27 @@ class RecommendationCard(ft.Container):
         self.gender_symbol = gender_symbol
         self.artwork_src = artwork_src
         self.type_badges = type_badges
+
         self.best_move = best_move
+        self.best_move_type_badge_src = best_move_type_badge_src
         self.effectiveness_label = effectiveness_label
         self.effectiveness_color = effectiveness_color
+        self.move_score = move_score
+
+        self.item_boosted = item_boosted
+        self.held_item = held_item or "Held item"
+        self.item_multiplier = item_multiplier
+        self.base_move_score = (
+            base_move_score
+            if base_move_score is not None
+            else move_score
+        )
+        self.item_bonus_amount = item_bonus_amount
+
         self.matchup_label = matchup_label
         self.matchup_ratio = matchup_ratio
         self.matchup_level = matchup_level
+
         self.why_text = why_text
         self.battle_notes = battle_notes
 
@@ -100,40 +122,52 @@ class RecommendationCard(ft.Container):
 
     @staticmethod
     def _build_title() -> ft.Control:
-            return ft.ResponsiveRow(
-            columns=12,
-            controls=[
-                ft.Container(
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(
-                                ft.Icons.STAR_ROUNDED,
-                                color=PRIMARY_BLUE,
-                                size=26,
-                            ),
-                            ft.Text(
-                                "Recommended Pokémon",
-                                size=23,
-                                weight=ft.FontWeight.BOLD,
-                                color=TEXT_PRIMARY,
-                                no_wrap=False,
-                                overflow=ft.TextOverflow.VISIBLE,
-                                expand=True,
-                            ),
-                        ],
-                        spacing=8,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                    col={"xs": 12},
+        title_controls = cast(
+            list[ft.Control],
+            [
+                ft.Icon(
+                    ft.Icons.STAR_ROUNDED,
+                    color=PRIMARY_BLUE,
+                    size=26,
+                ),
+                ft.Text(
+                    "Recommended Pokémon",
+                    size=23,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                    no_wrap=False,
+                    overflow=ft.TextOverflow.VISIBLE,
+                    expand=True,
                 ),
             ],
         )
 
+        return ft.ResponsiveRow(
+            columns=12,
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Container(
+                        content=ft.Row(
+                            controls=title_controls,
+                            spacing=8,
+                            vertical_alignment=(
+                                ft.CrossAxisAlignment.CENTER
+                            ),
+                        ),
+                        col={"xs": 12},
+                    ),
+                ],
+            ),
+        )
+
     def _build_identity_section(self) -> ft.Control:
-        name = self.pokemon_name
+        display_name = self.pokemon_name
 
         if self.gender_symbol:
-            name = f"{name} {self.gender_symbol}"
+            display_name = (
+                f"{display_name} {self.gender_symbol}"
+            )
 
         badge_controls = cast(
             list[ft.Control],
@@ -169,7 +203,7 @@ class RecommendationCard(ft.Container):
                     list[ft.Control],
                     [
                         ft.Text(
-                            name,
+                            display_name,
                             size=40,
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
@@ -184,7 +218,9 @@ class RecommendationCard(ft.Container):
                     ],
                 ),
                 spacing=12,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                horizontal_alignment=(
+                    ft.CrossAxisAlignment.CENTER
+                ),
             ),
             col={
                 "xs": 12,
@@ -209,39 +245,7 @@ class RecommendationCard(ft.Container):
 
     def _build_metrics_section(self) -> ft.Control:
         best_move_panel = ft.Container(
-            content=ft.Column(
-                controls=cast(
-                    list[ft.Control],
-                    [
-                        ft.Text(
-                            "Best Move",
-                            size=14,
-                            color=TEXT_SECONDARY,
-                        ),
-                        ft.Text(
-                            self.best_move,
-                            size=32,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
-                        ),
-                        ft.Container(
-                            content=ft.Text(
-                                self.effectiveness_label,
-                                size=15,
-                                weight=ft.FontWeight.BOLD,
-                                color=self.effectiveness_color,
-                            ),
-                            padding=ft.Padding.symmetric(
-                                horizontal=14,
-                                vertical=9,
-                            ),
-                            bgcolor="#182A24",
-                            border_radius=10,
-                        ),
-                    ],
-                ),
-                spacing=9,
-            ),
+            content=self._build_best_move_panel(),
             col={
                 "xs": 12,
                 "md": 7,
@@ -275,6 +279,158 @@ class RecommendationCard(ft.Container):
             run_spacing=16,
         )
 
+    def _build_best_move_panel(self) -> ft.Control:
+        score_controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    f"{self.move_score:.2f}",
+                    size=30,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+            ],
+        )
+
+        if self.item_boosted:
+            score_controls.append(
+                self._build_item_boost_popup()
+            )
+
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Text(
+                        "Best Move",
+                        size=14,
+                        color=TEXT_SECONDARY,
+                    ),
+                    ft.Row(
+                        controls=cast(
+                            list[ft.Control],
+                            [
+                                ft.Text(
+                                    self.best_move,
+                                    size=32,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY,
+                                ),
+                                ft.Image(
+                                    src=self.best_move_type_badge_src,
+                                    height=22,
+                                    fit=ft.BoxFit.CONTAIN,
+                                    semantics_label=(
+                                        f"{self.best_move} type"
+                                    ),
+                                ),
+                            ],
+                        ),
+                        spacing=9,
+                        wrap=True,
+                        vertical_alignment=(
+                            ft.CrossAxisAlignment.CENTER
+                        ),
+                    ),
+                    ft.Container(
+                        content=ft.Text(
+                            self.effectiveness_label,
+                            size=15,
+                            weight=ft.FontWeight.BOLD,
+                            color=self.effectiveness_color,
+                        ),
+                        padding=ft.Padding.symmetric(
+                            horizontal=14,
+                            vertical=9,
+                        ),
+                        bgcolor="#182A24",
+                        border_radius=10,
+                    ),
+                    ft.Text(
+                        "Move Score",
+                        size=14,
+                        color=TEXT_SECONDARY,
+                    ),
+                    ft.Row(
+                        controls=score_controls,
+                        spacing=8,
+                        vertical_alignment=(
+                            ft.CrossAxisAlignment.CENTER
+                        ),
+                    ),
+                ],
+            ),
+            spacing=9,
+        )
+
+    def _build_item_boost_popup(self) -> ft.Control:
+        boost_percent = round(
+            (self.item_multiplier - 1) * 100
+        )
+
+        popup_controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    "Held Item Bonus Active!",
+                    size=15,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                ft.Text(
+                    self.held_item,
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=PRIMARY_BLUE,
+                ),
+                ft.Text(
+                    f"Move bonus: +{boost_percent}%",
+                    size=13,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Divider(
+                    color=BORDER_DEFAULT,
+                    height=1,
+                ),
+                ft.Text(
+                    f"Base score: {self.base_move_score:.2f}",
+                    size=13,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Text(
+                    f"Item boost: +{self.item_bonus_amount:.2f}",
+                    size=13,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Text(
+                    f"Final score: {self.move_score:.2f}",
+                    size=13,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+            ],
+        )
+
+        return ft.PopupMenuButton(
+            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+            icon_color=PRIMARY_BLUE,
+            tooltip="View held item bonus",
+            items=[
+                ft.PopupMenuItem(
+                    content=ft.Container(
+                        content=ft.Column(
+                            controls=popup_controls,
+                            spacing=7,
+                        ),
+                        width=230,
+                        padding=10,
+                        bgcolor=PRIMARY_BLUE_SOFT,
+                        border_radius=10,
+                    ),
+                ),
+            ],
+        )
+
     def _build_matchup_meter(self) -> ft.Control:
         segment_colors = [
             "#C84B4B",
@@ -288,17 +444,32 @@ class RecommendationCard(ft.Container):
             list[ft.Control],
             [
                 ft.Container(
-                    height=13,
+                    height=15 if index == self.matchup_level else 13,
                     expand=True,
                     bgcolor=color,
-                    opacity=1.0 if index == self.matchup_level else 0.28,
-                    border=ft.Border.all(
-                        1,
-                        "#66FFFFFF"
+                    opacity=(
+                        1.0
                         if index == self.matchup_level
-                        else "#22FFFFFF",
+                        else 0.16
                     ),
-                    border_radius=4,
+                    border=ft.Border.all(
+                        2 if index == self.matchup_level else 1,
+                        (
+                            "#FFFFFFFF"
+                            if index == self.matchup_level
+                            else "#18FFFFFF"
+                        ),
+                    ),
+                    border_radius=2,
+                    shadow=(
+                        ft.BoxShadow(
+                            blur_radius=8,
+                            spread_radius=1,
+                            color=color,
+                        )
+                        if index == self.matchup_level
+                        else None
+                    ),
                 )
                 for index, color in enumerate(segment_colors)
             ],
@@ -351,7 +522,10 @@ class RecommendationCard(ft.Container):
                             color="#D7E8FF",
                         ),
                         ft.Text(
-                            "ⓘ Compare the entire team in Full Analysis.",
+                            (
+                                "ⓘ Compare the entire team in "
+                                "Full Analysis."
+                            ),
                             size=14,
                             weight=ft.FontWeight.BOLD,
                             color=PRIMARY_BLUE_LIGHT,
