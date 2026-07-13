@@ -20,8 +20,15 @@ def render_selected_pokemon_details(pokemon, move_lookup):
     stat_names = ["HP", "ATK", "DEF", "SPA", "SPD", "SPE"]
     stat_scale_max = 300
 
+    def parse_stat_value(value):
+        try:
+            return int(float(value))
+        except (TypeError, ValueError):
+            return 0
+
+
     stat_values = {
-        stat: pokemon.get(stat) or 0
+        stat: parse_stat_value(pokemon.get(stat))
         for stat in stat_names
     }
 
