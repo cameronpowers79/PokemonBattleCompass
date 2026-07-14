@@ -35,14 +35,38 @@ async def main(page: ft.Page) -> None:
     )
 
     await app_state.initialize()
-    # TEMPORARY: Force onboarding during development.
-    await app_state.clear_current_journey()
+    
+
+    def show_onboarding() -> None:
+        """
+        Display onboarding without clearing or replacing the saved Journey.
+
+        The existing Journey remains persistent until the player completes
+        starter details and clicks Prepare My Journey.
+        """
+
+        page.on_resize = None
+
+        onboarding_view = OnboardingView(
+            page,
+            app_state=app_state,
+            on_complete=show_main_application,
+        )
+
+        page.controls.clear()
+        page.add(
+            onboarding_view.build()
+        )
+        page.update()
 
     def show_main_application() -> None:
+        """Display the normal Battle Compass application shell."""
+
         battle_compass_view = BattleCompassView(
             page,
             team_data=app_state.team_data,
             selected_starter=app_state.starter,
+            on_start_new_journey=show_onboarding,
         )
 
         my_team_view = MyTeamView(
@@ -75,19 +99,10 @@ async def main(page: ft.Page) -> None:
         )
         page.update()
 
-    if not app_state.is_ready:
-        onboarding_view = OnboardingView(
-            page,
-            app_state=app_state,
-            on_complete=show_main_application,
-        )
-
-        page.add(
-            onboarding_view.build()
-        )
-        return
-
-    show_main_application()
+    if app_state.is_ready:
+        show_main_application()
+    else:
+        show_onboarding()
 
 
 if __name__ == "__main__":

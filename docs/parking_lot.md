@@ -86,6 +86,7 @@
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
 - [ ] Ensure Matchup Strength text matches the highlighted color in the graphic
+- [ ] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
 
 ---
 
@@ -134,6 +135,7 @@
 - [ ] Add multiple teams or save slots.
 - [ ] Add page or section jump navigation where useful.
 - [ ] Build Pokémon option list from available sprite assets.
+- [ ] Add starter-change confirmation dialog with Explore and Start New Journey options.
 
 ---
 

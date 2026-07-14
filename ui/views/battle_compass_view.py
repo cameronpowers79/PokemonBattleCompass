@@ -7,6 +7,7 @@ Battle Compass ViewModel, and renders live recommendation components.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -28,7 +29,9 @@ from ui.theme import (
     CONTENT_MAX_WIDTH,
     PRIMARY_BLUE,
     SURFACE,
+    TEXT_MUTED,
     TEXT_PRIMARY,
+    TEXT_SECONDARY,
 )
 from ui.viewmodels.battle_compass_vm import (
     BattleCompassViewModel,
@@ -58,8 +61,10 @@ class BattleCompassView:
         *,
         team_data: list[dict] | None = None,
         selected_starter: str | None = None,
+        on_start_new_journey: Callable[[], None] | None = None,
     ) -> None:
         self.page = page
+        self.on_start_new_journey = on_start_new_journey
 
         reference_data = load_reference_data()
 
@@ -73,11 +78,14 @@ class BattleCompassView:
         self.ability_rules = reference_data["ability_rules"]
         self.moves_data = reference_data["moves_data"]
 
-        self.selected_starter = (
+        self.journey_starter = (
             selected_starter
             if selected_starter in STARTER_OPTIONS
             else STARTER_OPTIONS[0]
         )
+        self.selected_starter = self.journey_starter
+        self.pending_starter: str | None = None
+
         self.selected_trainer = ""
         self.selected_battle = ""
         self.selected_opponent_name = ""
@@ -88,7 +96,9 @@ class BattleCompassView:
         self.starter_dropdown = ft.Dropdown(
             label="Your Starter",
             value=self.selected_starter,
-            options=self._dropdown_options(STARTER_OPTIONS),
+            options=self._dropdown_options(
+                STARTER_OPTIONS
+            ),
             on_select=self._handle_starter_change,
             col={
                 "xs": 12,
@@ -133,7 +143,7 @@ class BattleCompassView:
         """Refresh recommendation results after the shared team is saved."""
 
         self.team_data = team_data
-        self._refresh_results()  
+        self._refresh_results()
 
     def build(self) -> ft.Control:
         """Return the complete interactive Battle Compass view."""
@@ -243,7 +253,8 @@ class BattleCompassView:
         trainer_rows = [
             row
             for row in self.filtered_opponents
-            if row.get("Trainer") == self.selected_trainer
+            if row.get("Trainer")
+            == self.selected_trainer
         ]
 
         battle_order_lookup: dict[str, int] = {}
@@ -254,23 +265,37 @@ class BattleCompassView:
             if not battle_name:
                 continue
 
-            battle_order = row.get("BattleOrder", 9999)
+            battle_order = row.get(
+                "BattleOrder",
+                9999,
+            )
 
-            if not isinstance(battle_order, int):
+            if not isinstance(
+                battle_order,
+                int,
+            ):
                 battle_order = 9999
 
             if battle_name not in battle_order_lookup:
-                battle_order_lookup[battle_name] = battle_order
+                battle_order_lookup[
+                    battle_name
+                ] = battle_order
             else:
-                battle_order_lookup[battle_name] = min(
-                    battle_order_lookup[battle_name],
+                battle_order_lookup[
+                    battle_name
+                ] = min(
+                    battle_order_lookup[
+                        battle_name
+                    ],
                     battle_order,
                 )
 
         return sorted(
             battle_order_lookup,
             key=lambda battle_name: (
-                battle_order_lookup[battle_name],
+                battle_order_lookup[
+                    battle_name
+                ],
                 battle_name,
             ),
         )
@@ -280,12 +305,16 @@ class BattleCompassView:
             row
             for row in self.filtered_opponents
             if (
-                row.get("Trainer") == self.selected_trainer
-                and row.get("Battle") == self.selected_battle
+                row.get("Trainer")
+                == self.selected_trainer
+                and row.get("Battle")
+                == self.selected_battle
             )
         ]
 
-        def slot_sort_key(row: dict) -> int:
+        def slot_sort_key(
+            row: dict,
+        ) -> int:
             slot = row.get("Slot")
 
             if isinstance(slot, int):
@@ -303,7 +332,8 @@ class BattleCompassView:
 
         if not trainers:
             raise RuntimeError(
-                "No trainers are available for the selected starter."
+                "No trainers are available "
+                "for the selected starter."
             )
 
         self.selected_trainer = trainers[0]
@@ -313,7 +343,8 @@ class BattleCompassView:
 
         if not battles:
             raise RuntimeError(
-                "No battles are available for the selected trainer."
+                "No battles are available "
+                "for the selected trainer."
             )
 
         self.selected_battle = battles[0]
@@ -323,51 +354,267 @@ class BattleCompassView:
 
         if not self.battle_opponents:
             raise RuntimeError(
-                "No opponents are available for the selected battle."
+                "No opponents are available "
+                "for the selected battle."
             )
 
-        self.selected_opponent_name = self.battle_opponents[0]["Pokemon"]
+        self.selected_opponent_name = (
+            self.battle_opponents[0][
+                "Pokemon"
+            ]
+        )
 
     def _sync_dropdowns(self) -> None:
         trainer_names = self._trainer_names()
         battle_names = self._battle_names()
+
         opponent_names = [
             row["Pokemon"]
             for row in self.battle_opponents
             if row.get("Pokemon")
         ]
 
-        self.starter_dropdown.value = self.selected_starter
-
-        self.trainer_dropdown.options = self._dropdown_options(
-            trainer_names
+        self.starter_dropdown.value = (
+            self.selected_starter
         )
-        self.trainer_dropdown.value = self.selected_trainer
 
-        self.battle_dropdown.options = self._dropdown_options(
-            battle_names
+        self.trainer_dropdown.options = (
+            self._dropdown_options(
+                trainer_names
+            )
         )
-        self.battle_dropdown.value = self.selected_battle
+        self.trainer_dropdown.value = (
+            self.selected_trainer
+        )
 
-        self.opponent_dropdown.options = self._dropdown_options(
-            opponent_names
+        self.battle_dropdown.options = (
+            self._dropdown_options(
+                battle_names
+            )
         )
-        self.opponent_dropdown.value = self.selected_opponent_name
+        self.battle_dropdown.value = (
+            self.selected_battle
+        )
+
+        self.opponent_dropdown.options = (
+            self._dropdown_options(
+                opponent_names
+            )
+        )
+        self.opponent_dropdown.value = (
+            self.selected_opponent_name
+        )
 
     def _selected_opponent(self) -> dict:
         return next(
             row
             for row in self.battle_opponents
-            if row.get("Pokemon") == self.selected_opponent_name
+            if (
+                row.get("Pokemon")
+                == self.selected_opponent_name
+            )
         )
 
     def _handle_starter_change(
         self,
         event: ft.Event[ft.Dropdown],
     ) -> None:
-        self.selected_starter = (
-            event.control.value or STARTER_OPTIONS[0]
+        """Handle a Battle Settings starter selection."""
+
+        requested_starter = event.control.value
+
+        if (
+            requested_starter
+            not in STARTER_OPTIONS
+        ):
+            self._sync_dropdowns()
+            self.page.update()
+            return
+
+        if (
+            requested_starter
+            == self.selected_starter
+        ):
+            return
+
+        if (
+            requested_starter
+            == self.journey_starter
+        ):
+            self._apply_starter_selection(
+                requested_starter
+            )
+            return
+
+        self.pending_starter = (
+            requested_starter
         )
+
+        # Keep the visible dropdown on the currently active
+        # selection until the player chooses an action.
+        self.starter_dropdown.value = (
+            self.selected_starter
+        )
+        self.page.update()
+
+        self.page.show_dialog(
+            self._build_starter_change_dialog(
+                requested_starter
+            )
+        )
+
+    def _build_starter_change_dialog(
+        self,
+        requested_starter: str,
+    ) -> ft.AlertDialog:
+        """Build the Explore / New Journey decision dialog."""
+
+        return ft.AlertDialog(
+            modal=True,
+            title=ft.Text(
+                "A second starter?",
+                color=TEXT_PRIMARY,
+                weight=ft.FontWeight.BOLD,
+            ),
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            (
+                                f"Wow, {requested_starter} too? "
+                                "Are you exploring another path, "
+                                "or thinking of beginning a new "
+                                "Journey?"
+                            ),
+                            color=TEXT_SECONDARY,
+                            size=15,
+                        ),
+                        ft.Text(
+                            (
+                                "Exploring changes only the Battle "
+                                "Compass matchup filter. Your saved "
+                                "Journey and team will stay exactly "
+                                "as they are."
+                            ),
+                            color=TEXT_MUTED,
+                            size=13,
+                        ),
+                        ft.Text(
+                            (
+                                "Starting a new Journey opens the "
+                                "Welcome screen. Your current Journey "
+                                "will remain safe unless you finish "
+                                "onboarding and click Prepare My "
+                                "Journey."
+                            ),
+                            color=TEXT_MUTED,
+                            size=13,
+                        ),
+                    ],
+                ),
+                spacing=12,
+                tight=True,
+            ),
+            actions=cast(
+                list[ft.Control],
+                [
+                    ft.Button(
+                        content="Cancel",
+                        on_click=(
+                            self._cancel_starter_change
+                        ),
+                    ),
+                    ft.Button(
+                        content="Just Exploring",
+                        icon=ft.Icons.EXPLORE_OUTLINED,
+                        on_click=(
+                            self._explore_pending_starter
+                        ),
+                    ),
+                    ft.Button(
+                        content="Start a New Journey",
+                        icon=ft.Icons.RESTART_ALT_ROUNDED,
+                        bgcolor=PRIMARY_BLUE,
+                        color=TEXT_PRIMARY,
+                        icon_color=TEXT_PRIMARY,
+                        on_click=(
+                            self._start_new_journey
+                        ),
+                    ),
+                ],
+            ),
+            actions_alignment=(
+                ft.MainAxisAlignment.END
+            ),
+        )
+
+    def _cancel_starter_change(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Cancel the pending starter change."""
+
+        del event
+
+        self.pending_starter = None
+        self.page.pop_dialog()
+
+        self._sync_dropdowns()
+        self.page.update()
+
+    def _explore_pending_starter(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Apply the alternate starter only to Battle Settings."""
+
+        del event
+
+        requested_starter = (
+            self.pending_starter
+        )
+        self.pending_starter = None
+
+        self.page.pop_dialog()
+
+        if (
+            requested_starter
+            in STARTER_OPTIONS
+        ):
+            self._apply_starter_selection(
+                requested_starter
+            )
+            return
+
+        self._sync_dropdowns()
+        self.page.update()
+
+    def _start_new_journey(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Open onboarding without changing persistent Journey data."""
+
+        del event
+
+        self.pending_starter = None
+        self.page.pop_dialog()
+
+        if self.on_start_new_journey is None:
+            self._sync_dropdowns()
+            self.page.update()
+            return
+
+        self.on_start_new_journey()
+
+    def _apply_starter_selection(
+        self,
+        starter_name: str,
+    ) -> None:
+        """Apply a starter to the current Battle Compass session."""
+
+        self.selected_starter = starter_name
 
         self._refresh_starter_filter()
         self._select_first_trainer()
@@ -375,6 +622,7 @@ class BattleCompassView:
         self._select_first_opponent()
         self._sync_dropdowns()
         self._refresh_results()
+
         self.page.update()
 
     def _handle_trainer_change(
@@ -382,7 +630,9 @@ class BattleCompassView:
         event: ft.Event[ft.Dropdown],
     ) -> None:
         if event.control.value:
-            self.selected_trainer = event.control.value
+            self.selected_trainer = (
+                event.control.value
+            )
 
         self._select_first_battle()
         self._select_first_opponent()
@@ -395,7 +645,9 @@ class BattleCompassView:
         event: ft.Event[ft.Dropdown],
     ) -> None:
         if event.control.value:
-            self.selected_battle = event.control.value
+            self.selected_battle = (
+                event.control.value
+            )
 
         self._select_first_opponent()
         self._sync_dropdowns()
@@ -407,92 +659,178 @@ class BattleCompassView:
         event: ft.Event[ft.Dropdown],
     ) -> None:
         if event.control.value:
-            self.selected_opponent_name = event.control.value
+            self.selected_opponent_name = (
+                event.control.value
+            )
 
         self._refresh_results()
         self.page.update()
 
     def _refresh_results(self) -> None:
-        view_model = build_battle_compass_view_model(
-            team_data=self.team_data,
-            opponent=self._selected_opponent(),
-            items=self.items,
-            ability_rules=self.ability_rules,
-            moves_data=self.moves_data,
+        view_model = (
+            build_battle_compass_view_model(
+                team_data=self.team_data,
+                opponent=(
+                    self._selected_opponent()
+                ),
+                items=self.items,
+                ability_rules=(
+                    self.ability_rules
+                ),
+                moves_data=self.moves_data,
+            )
         )
 
-        self.results_host.content = self._build_results(
-            view_model
+        self.results_host.content = (
+            self._build_results(
+                view_model
+            )
         )
 
     def _build_results(
         self,
         view_model: BattleCompassViewModel,
     ) -> ft.Control:
-        recommendation = view_model.recommendation
+        recommendation = (
+            view_model.recommendation
+        )
         opponent = view_model.opponent
 
-        recommendation_card = RecommendationCard(
-            pokemon_name=recommendation.pokemon["Pokemon"],
-            gender_symbol=self._gender_symbol(
-                recommendation.pokemon.get("Gender")
-            ),
-            artwork_src=self._pokemon_asset(
-                recommendation.pokemon["Pokemon"],
-                gender=recommendation.pokemon.get("Gender"),
-                use_texture=True,
-            ),
-            type_badges=self._pokemon_type_badges(
-                recommendation.pokemon
-            ),
-            best_move=recommendation.best_move["Move"],
-            best_move_type_badge_src=self._type_badge_asset(
-                recommendation.best_move.get("Type")
-            ),
-            effectiveness_label=get_effectiveness_label(
-                recommendation.best_move_multiplier,
-                mode="offense",
-            ),
-            effectiveness_color=self._effectiveness_color(
-                recommendation.best_move_multiplier,
-                mode="offense",
-            ),
-            move_score=recommendation.best_move_score,
-            item_boosted=recommendation.item_boosted,
-            held_item=recommendation.held_item,
-            item_multiplier=recommendation.item_multiplier,
-            base_move_score=recommendation.base_move_score,
-            item_bonus_amount=recommendation.item_bonus_amount,
-            matchup_label=recommendation.matchup_label,
-            matchup_ratio=recommendation.ratio,
-            matchup_level=recommendation.matchup_level,
-            why_text=view_model.why_text,
-            battle_notes=[
-                (
-                    note.icon,
-                    note.text,
-                    self._note_style(note.category),
-                )
-                for note in recommendation.battle_notes
-            ],
+        recommendation_card = (
+            RecommendationCard(
+                pokemon_name=(
+                    recommendation.pokemon[
+                        "Pokemon"
+                    ]
+                ),
+                gender_symbol=(
+                    self._gender_symbol(
+                        recommendation.pokemon.get(
+                            "Gender"
+                        )
+                    )
+                ),
+                artwork_src=(
+                    self._pokemon_asset(
+                        recommendation.pokemon[
+                            "Pokemon"
+                        ],
+                        gender=(
+                            recommendation.pokemon.get(
+                                "Gender"
+                            )
+                        ),
+                        use_texture=True,
+                    )
+                ),
+                type_badges=(
+                    self._pokemon_type_badges(
+                        recommendation.pokemon
+                    )
+                ),
+                best_move=(
+                    recommendation.best_move[
+                        "Move"
+                    ]
+                ),
+                best_move_type_badge_src=(
+                    self._type_badge_asset(
+                        recommendation.best_move.get(
+                            "Type"
+                        )
+                    )
+                ),
+                effectiveness_label=(
+                    get_effectiveness_label(
+                        (
+                            recommendation
+                            .best_move_multiplier
+                        ),
+                        mode="offense",
+                    )
+                ),
+                effectiveness_color=(
+                    self._effectiveness_color(
+                        (
+                            recommendation
+                            .best_move_multiplier
+                        ),
+                        mode="offense",
+                    )
+                ),
+                move_score=(
+                    recommendation.best_move_score
+                ),
+                item_boosted=(
+                    recommendation.item_boosted
+                ),
+                held_item=(
+                    recommendation.held_item
+                ),
+                item_multiplier=(
+                    recommendation.item_multiplier
+                ),
+                base_move_score=(
+                    recommendation.base_move_score
+                ),
+                item_bonus_amount=(
+                    recommendation.item_bonus_amount
+                ),
+                matchup_label=(
+                    recommendation.matchup_label
+                ),
+                matchup_ratio=(
+                    recommendation.ratio
+                ),
+                matchup_level=(
+                    recommendation.matchup_level
+                ),
+                why_text=view_model.why_text,
+                battle_notes=[
+                    (
+                        note.icon,
+                        note.text,
+                        self._note_style(
+                            note.category
+                        ),
+                    )
+                    for note
+                    in recommendation.battle_notes
+                ],
+            )
         )
 
-        worst_move_type = recommendation.worst_move.get("Type")
+        worst_move_type = (
+            recommendation.worst_move.get(
+                "Type"
+            )
+        )
 
         opponent_card = OpponentCard(
             pokemon_name=opponent["Pokemon"],
             artwork_src=self._pokemon_asset(
                 opponent["Pokemon"],
-                use_gmax=opponent_uses_gmax(opponent),
+                use_gmax=(
+                    opponent_uses_gmax(
+                        opponent
+                    )
+                ),
                 use_texture=True,
             ),
             level=opponent.get("Level"),
-            type_badges=self._pokemon_type_badges(opponent),
+            type_badges=(
+                self._pokemon_type_badges(
+                    opponent
+                )
+            ),
             incoming_worst_score=(
-                recommendation.incoming_worst_score
+                recommendation
+                .incoming_worst_score
             ),
             worst_incoming_move=(
-                recommendation.worst_move["Move"]
+                recommendation.worst_move[
+                    "Move"
+                ]
             ),
             incoming_category=(
                 recommendation.worst_move.get(
@@ -500,24 +838,35 @@ class BattleCompassView:
                     "Unknown",
                 )
             ),
-            incoming_type_badge_src=self._type_badge_asset(
-                worst_move_type
+            incoming_type_badge_src=(
+                self._type_badge_asset(
+                    worst_move_type
+                )
             ),
             defensive_effectiveness_label=(
                 get_effectiveness_label(
-                    recommendation.incoming_multiplier,
+                    (
+                        recommendation
+                        .incoming_multiplier
+                    ),
                     mode="defense",
                 )
             ),
             defensive_effectiveness_color=(
                 self._effectiveness_color(
-                    recommendation.incoming_multiplier,
+                    (
+                        recommendation
+                        .incoming_multiplier
+                    ),
                     mode="defense",
                 )
             ),
             defensive_effectiveness_background=(
                 self._effectiveness_background(
-                    recommendation.incoming_multiplier,
+                    (
+                        recommendation
+                        .incoming_multiplier
+                    ),
                     mode="defense",
                 )
             ),
@@ -546,7 +895,9 @@ class BattleCompassView:
                 ],
             ),
             spacing=28,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            horizontal_alignment=(
+                ft.CrossAxisAlignment.CENTER
+            ),
         )
 
     def _build_strong_option(
@@ -565,20 +916,35 @@ class BattleCompassView:
                 gender=pokemon.get("Gender"),
                 use_texture=False,
             ),
-            type_badges=self._pokemon_type_badges(pokemon),
-            matchup_label=matchup.matchup_label,
+            type_badges=(
+                self._pokemon_type_badges(
+                    pokemon
+                )
+            ),
+            matchup_label=(
+                matchup.matchup_label
+            ),
             matchup_ratio=matchup.ratio,
-            best_move=matchup.best_move["Move"],
-            best_move_type_badge_src=self._type_badge_asset(
-                matchup.best_move.get("Type")
+            best_move=(
+                matchup.best_move["Move"]
+            ),
+            best_move_type_badge_src=(
+                self._type_badge_asset(
+                    matchup.best_move.get(
+                        "Type"
+                    )
+                )
             ),
             notes=[
                 StrongOptionNote(
                     icon=note.icon,
                     text=note.text,
-                    category=self._note_style(note.category),
+                    category=self._note_style(
+                        note.category
+                    ),
                 )
-                for note in matchup.battle_notes
+                for note
+                in matchup.battle_notes
             ],
         )
 
@@ -594,10 +960,18 @@ class BattleCompassView:
         return [
             (
                 pokemon_type,
-                self._type_badge_asset(pokemon_type),
+                self._type_badge_asset(
+                    pokemon_type
+                ),
             )
             for pokemon_type in types
-            if isinstance(pokemon_type, str) and pokemon_type
+            if (
+                isinstance(
+                    pokemon_type,
+                    str,
+                )
+                and pokemon_type
+            )
         ]
 
     def _pokemon_asset(
@@ -617,17 +991,28 @@ class BattleCompassView:
 
         if asset_path is None:
             raise FileNotFoundError(
-                f"No sprite asset found for {pokemon_name}."
+                "No sprite asset found for "
+                f"{pokemon_name}."
             )
 
-        return self._asset_src(asset_path)
+        return self._asset_src(
+            asset_path
+        )
 
     def _type_badge_asset(
         self,
         pokemon_type: object,
     ) -> str:
-        if not isinstance(pokemon_type, str) or not pokemon_type:
-            raise ValueError("Move or Pokémon type is missing.")
+        if (
+            not isinstance(
+                pokemon_type,
+                str,
+            )
+            or not pokemon_type
+        ):
+            raise ValueError(
+                "Move or Pokémon type is missing."
+            )
 
         return self._asset_src(
             ASSETS_DIR
@@ -655,7 +1040,9 @@ class BattleCompassView:
         if not isinstance(gender, str):
             return None
 
-        normalized_gender = gender.strip().lower()
+        normalized_gender = (
+            gender.strip().lower()
+        )
 
         if normalized_gender == "male":
             return "♂︎"
@@ -666,7 +1053,9 @@ class BattleCompassView:
         return None
 
     @staticmethod
-    def _note_style(category: str) -> str:
+    def _note_style(
+        category: str,
+    ) -> str:
         styles = {
             "info": "info",
             "opportunity": "info",
@@ -674,7 +1063,10 @@ class BattleCompassView:
             "warning": "warning",
         }
 
-        return styles.get(category, "info")
+        return styles.get(
+            category,
+            "info",
+        )
 
     @staticmethod
     def _effectiveness_color(
@@ -685,18 +1077,24 @@ class BattleCompassView:
         if mode == "offense":
             if multiplier > 1:
                 return "#7EE2A1"
+
             if multiplier == 1:
                 return "#D1D5DB"
+
             if multiplier == 0:
                 return "#F87171"
+
             return "#FACC15"
 
         if multiplier < 1:
             return "#4ADE80"
+
         if multiplier == 1:
             return "#D1D5DB"
+
         if multiplier < 4:
             return "#FACC15"
+
         return "#F87171"
 
     @staticmethod
@@ -708,10 +1106,13 @@ class BattleCompassView:
         if mode == "defense":
             if multiplier < 1:
                 return "#174B35"
+
             if multiplier == 1:
                 return "#303640"
+
             if multiplier < 4:
                 return "#4A3A17"
+
             return "#4B2025"
 
         return "#182A24"

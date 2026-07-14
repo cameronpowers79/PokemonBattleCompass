@@ -137,12 +137,11 @@ class AppState:
         ):
             self.journey = result.journey
 
-            if self.has_team_member:
-                self.startup_state = "ready"
-            else:
-                self.startup_state = (
-                    "needs_onboarding"
-                )
+            self.startup_state = (
+                "ready"
+                if self.has_team_member
+                else "needs_onboarding"
+            )
 
             return
 
@@ -164,8 +163,7 @@ class AppState:
         """
         Load bundled example data for the current session.
 
-        This temporary bridge keeps the application usable until onboarding
-        replaces the example-team fallback. It does not write to storage.
+        This temporary bridge does not write to persistent storage.
         """
 
         self.journey = create_journey(
@@ -181,30 +179,57 @@ class AppState:
 
         self.load_error = None
 
-    async def begin_journey(
+    async def replace_journey(
         self,
+        *,
         starter: str,
+        team_data: list[dict],
     ) -> bool:
-        """Create and persist a new empty Journey."""
+        """
+        Persist a complete replacement Journey.
 
-        new_journey = create_journey(
+        The current Journey remains active unless the replacement is
+        saved successfully.
+        """
+
+        replacement_journey = create_journey(
             starter=starter,
-            team=[],
+            team=deepcopy(team_data),
         )
 
         save_succeeded = await save_journey(
             self.page,
-            new_journey,
+            replacement_journey,
         )
 
         if not save_succeeded:
             return False
 
-        self.journey = new_journey
-        self.startup_state = "needs_onboarding"
+        self.journey = replacement_journey
+        self.startup_state = (
+            "ready"
+            if self.has_team_member
+            else "needs_onboarding"
+        )
         self.load_error = None
 
         return True
+
+    async def begin_journey(
+        self,
+        starter: str,
+    ) -> bool:
+        """
+        Create and persist a new empty Journey.
+
+        Retained for compatibility. Onboarding should prefer
+        replace_journey() after starter details have been completed.
+        """
+
+        return await self.replace_journey(
+            starter=starter,
+            team_data=[],
+        )
 
     async def save_team(
         self,
@@ -217,7 +242,14 @@ class AppState:
                 "A Journey must exist before a team can be saved."
             )
 
-        updated_team = deepcopy(team_data)
+        previous_team = deepcopy(
+            self.team_data
+        )
+
+        updated_team = deepcopy(
+            team_data
+        )
+
         self.journey["team"] = updated_team
 
         save_succeeded = await save_journey(
@@ -226,14 +258,14 @@ class AppState:
         )
 
         if not save_succeeded:
+            self.journey["team"] = previous_team
             return False
 
-        if self.has_team_member:
-            self.startup_state = "ready"
-        else:
-            self.startup_state = (
-                "needs_onboarding"
-            )
+        self.startup_state = (
+            "ready"
+            if self.has_team_member
+            else "needs_onboarding"
+        )
 
         return True
 
@@ -251,6 +283,7 @@ class AppState:
         previous_starter = self.journey.get(
             "starter"
         )
+
         self.journey["starter"] = starter
 
         try:
@@ -275,23 +308,16 @@ class AppState:
         self,
         starter: str,
     ) -> bool:
-        """Replace the current Journey with a new empty one."""
+        """
+        Replace the current Journey with a new empty Journey.
 
-        clear_succeeded = await clear_journey(
-            self.page
-        )
+        Call this only after the player has confirmed that the existing
+        Journey should be replaced.
+        """
 
-        if not clear_succeeded:
-            return False
-
-        self.journey = None
-        self.startup_state = (
-            "needs_onboarding"
-        )
-        self.load_error = None
-
-        return await self.begin_journey(
-            starter
+        return await self.replace_journey(
+            starter=starter,
+            team_data=[],
         )
 
     async def clear_current_journey(self) -> bool:
