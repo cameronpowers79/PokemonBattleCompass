@@ -14,6 +14,7 @@
 - [x] Select the replacement framework (Flet).
 - [x] Build proof-of-concept.
 - [x] Implement durable local storage.
+- [x] Add first-use Journey onboarding.
 - [ ] Implement autosave.
 - [ ] Implement optional backup/export.
 - [ ] Implement restore/import.
@@ -25,6 +26,7 @@
 - [ ] Migrate Trainer's Guide.
 - [ ] Retire the Streamlit implementation.
 
+
 ---
 
 ## Layout
@@ -32,7 +34,7 @@
 - [x] Recommendation card.
 - [x] Battle Snapshot card.
 - [x] Other Strong Options, excluding the recommended Pokémon.
-- [x] Permanently visible Full Analysis.
+- [ ] Permanently visible Full Analysis.
 - [x] Matchup Strength indicator.
 - [x] Center title header.
 - [x] Keep Best Move effectiveness near the move name.
@@ -42,7 +44,7 @@
 - [x] Keep Other Strong Options notes inside their cards.
 - [x] Add box sprites to Other Strong Options.
 - [x] Preserve Battle Compass selections while switching views.
-- [x] Add jump link from Why? to Full Analysis.
+- [ ] Add jump link from Why? to Full Analysis.
 - [ ] Recreate responsive desktop and PWA layouts in the new UI.
 - [ ] Review Full Analysis behavior on narrow mobile screens.
 - [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
@@ -78,6 +80,7 @@
 - [x] Held-item boost indicator and score breakdown popover.
 - [x] Add ♂/♀ immediately after Pokémon names.
 - [x] Reduce the size of the ♂/♀ gender symbols slightly.
+- [x] Reuse My Team’s move-card visual language during onboarding.
 - [ ] Tap or click move cards for full move details.
 - [ ] Tap or click Ability and Held Item for descriptions.
 - [ ] Optional: tap type badges to show weaknesses and resistances.
@@ -100,9 +103,9 @@
 - [x] Add UI theme/constants module.
 - [x] Continue separating UI from engine.
 - [ ] Keep `engine/` framework-independent.
-- [ ] Separate persistent user data from bundled reference data.
+- [x] Separate persistent user data from bundled reference data.
 - [ ] Create a shared storage interface for desktop and PWA.
-- [ ] Add save-data schema versioning.
+- [x] Add save-data schema versioning.
 - [ ] Add save-data validation and migration support.
 - [ ] Add automatic recovery from interrupted writes.
 - [ ] Add lightweight automated tests for core calculations.
@@ -123,8 +126,12 @@
 - [x] Type badges in My Team.
 - [x] Improved Pokémon Details layout.
 - [x] Replace shared `team_data.json` writes with durable per-user local storage.
+- [x] Create a starter Journey with game-accurate Level 5 defaults, Ability, and starting moves.
+- [x] Preserve the current Journey while previewing or abandoning new-Journey onboarding.
+- [x] Replace the current Journey only after onboarding is completed and confirmed.
+- [x] Resume the last-used team automatically.
+- [x] Add starter-change confirmation dialog with Explore and Start New Journey options.
 - [ ] Add automatic saving after confirmed edits.
-- [ ] Resume the last-used team automatically.
 - [ ] Add optional manual backup/export.
 - [ ] Add restore/import.
 - [ ] Add ability validation.
@@ -135,16 +142,15 @@
 - [ ] Add multiple teams or save slots.
 - [ ] Add page or section jump navigation where useful.
 - [ ] Build Pokémon option list from available sprite assets.
-- [ ] Add starter-change confirmation dialog with Explore and Start New Journey options.
 
 ---
 
 ## Sprite Support
 
-- [ ] Handle display-name cleanup for sprite slugs.
 - [x] Use lightweight PokéSprite box icons for the Alpha.
 - [x] Gender and form sprite support.
 - [x] Texture artwork fallback hierarchy.
+- [ ] Handle display-name cleanup for sprite slugs.
 - [ ] Expand the texture hierarchy for regional forms and other variants.
 - [ ] Preserve sprite lookup as framework-independent logic.
 - [ ] Verify sprite packaging in the desktop build.
