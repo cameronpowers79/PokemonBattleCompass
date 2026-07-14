@@ -2,7 +2,7 @@
 Pokémon Battle Compass Flet application entry point.
 
 Configures application state, loads the player's Journey, and supplies
-the primary views.
+either onboarding or the primary application shell.
 """
 
 from __future__ import annotations
@@ -17,12 +17,11 @@ from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import load_reference_data
 from ui.views.battle_compass_view import BattleCompassView
 from ui.views.my_team_view import MyTeamView
+from ui.views.onboarding_view import OnboardingView
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 ASSETS_DIR = PROJECT_ROOT / "assets"
-
-TEMPORARY_EXAMPLE_STARTER = "Grookey"
 
 
 async def main(page: ft.Page) -> None:
@@ -38,19 +37,15 @@ async def main(page: ft.Page) -> None:
     await app_state.initialize()
 
     if not app_state.has_journey:
-        if app_state.load_error:
-            print(
-                "Unable to load the saved Journey: "
-                f"{app_state.load_error}"
-            )
-            print(
-                "Using the bundled example team for this session."
-            )
-
-        app_state.use_example_journey(
-            starter=TEMPORARY_EXAMPLE_STARTER,
-            team_data=reference_data["team_data"],
+        onboarding_view = OnboardingView(
+            page,
+            app_state=app_state,
         )
+
+        page.add(
+            onboarding_view.build()
+        )
+        return
 
     battle_compass_view = BattleCompassView(
         page,
@@ -78,7 +73,9 @@ async def main(page: ft.Page) -> None:
         )
     )
 
-    page.add(app_shell.build())
+    page.add(
+        app_shell.build()
+    )
 
 
 if __name__ == "__main__":

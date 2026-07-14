@@ -47,6 +47,27 @@ def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _get_preferences(
+    page: ft.Page,
+) -> ft.SharedPreferences:
+    """
+    Return the SharedPreferences service registered to this page.
+
+    The service must be created during the active Flet session and added
+    to the page before its methods can be invoked.
+    """
+
+    for service in page.services:
+        if isinstance(service, ft.SharedPreferences):
+            return service
+
+    preferences = ft.SharedPreferences()
+    page.services.append(preferences)
+    page.update()
+
+    return preferences
+
+
 def create_journey(
     *,
     starter: str,
@@ -90,11 +111,14 @@ def _validate_journey(
     starter = journey.get("starter")
 
     if not isinstance(starter, str):
-        return "Stored Journey starter is missing or invalid."
+        return (
+            "Stored Journey starter is missing "
+            "or invalid."
+        )
 
     if starter not in VALID_STARTERS:
         return (
-            f"Stored Journey starter is unsupported: "
+            "Stored Journey starter is unsupported: "
             f"{starter}"
         )
 
@@ -116,10 +140,14 @@ def _validate_journey(
     updated_at = journey.get("updated_at")
 
     if not isinstance(created_at, str):
-        return "Stored Journey creation date is invalid."
+        return (
+            "Stored Journey creation date is invalid."
+        )
 
     if not isinstance(updated_at, str):
-        return "Stored Journey update date is invalid."
+        return (
+            "Stored Journey update date is invalid."
+        )
 
     return None
 
@@ -129,7 +157,9 @@ async def load_journey(
 ) -> JourneyLoadResult:
     """Load and validate the locally saved Journey."""
 
-    stored_value = await page.shared_preferences.get(
+    preferences = _get_preferences(page)
+
+    stored_value = await preferences.get(
         JOURNEY_STORAGE_KEY
     )
 
@@ -180,12 +210,15 @@ async def save_journey(
 ) -> bool:
     """Save a valid Journey to persistent local storage."""
 
+    preferences = _get_preferences(page)
     journey_to_save = deepcopy(journey)
 
     journey_to_save["schema_version"] = (
         JOURNEY_SCHEMA_VERSION
     )
-    journey_to_save["updated_at"] = _utc_timestamp()
+    journey_to_save["updated_at"] = (
+        _utc_timestamp()
+    )
 
     if not journey_to_save.get("created_at"):
         journey_to_save["created_at"] = (
@@ -205,7 +238,7 @@ async def save_journey(
         separators=(",", ":"),
     )
 
-    save_succeeded = await page.shared_preferences.set(
+    save_succeeded = await preferences.set(
         JOURNEY_STORAGE_KEY,
         serialized_journey,
     )
@@ -222,15 +255,15 @@ async def clear_journey(
 ) -> bool:
     """Remove the locally saved Journey."""
 
-    journey_exists = (
-        await page.shared_preferences.contains_key(
-            JOURNEY_STORAGE_KEY
-        )
+    preferences = _get_preferences(page)
+
+    journey_exists = await preferences.contains_key(
+        JOURNEY_STORAGE_KEY
     )
 
     if not journey_exists:
         return True
 
-    return await page.shared_preferences.remove(
+    return await preferences.remove(
         JOURNEY_STORAGE_KEY
     )

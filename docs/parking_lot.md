@@ -13,7 +13,7 @@
 
 - [x] Select the replacement framework (Flet).
 - [x] Build proof-of-concept.
-- [ ] Implement durable local storage.
+- [x] Implement durable local storage.
 - [ ] Implement autosave.
 - [ ] Implement optional backup/export.
 - [ ] Implement restore/import.
@@ -121,7 +121,7 @@
 - [x] Type-colored move cards.
 - [x] Type badges in My Team.
 - [x] Improved Pokémon Details layout.
-- [ ] Replace shared `team_data.json` writes with durable per-user local storage.
+- [x] Replace shared `team_data.json` writes with durable per-user local storage.
 - [ ] Add automatic saving after confirmed edits.
 - [ ] Resume the last-used team automatically.
 - [ ] Add optional manual backup/export.
