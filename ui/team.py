@@ -9,13 +9,21 @@ from ui.rendering import (
 )
 
 def render_selected_pokemon_details(pokemon, move_lookup):
-    type_badges = "".join(
-        get_badge_img_html(pokemon_type, height=22)
+    pokemon_types = [
+        pokemon_type
         for pokemon_type in [
             pokemon.get("Type1"),
             pokemon.get("Type2"),
         ]
-        if pokemon_type
+        if isinstance(pokemon_type, str) and pokemon_type
+    ]
+
+    type_badges = "".join(
+        get_badge_img_html(
+            pokemon_type,
+            height=22,
+        )
+        for pokemon_type in pokemon_types
     )
 
     stat_names = ["HP", "ATK", "DEF", "SPA", "SPD", "SPE"]
@@ -67,11 +75,25 @@ def render_selected_pokemon_details(pokemon, move_lookup):
             continue
 
         move = move_lookup.get(move_name)
-        move_type = move.get("Type") if move else None
-        background = TYPE_COLORS.get(move_type, "#666666")
+        move_type_value = move.get("Type") if move else None
+
+        move_type = (
+            move_type_value
+            if isinstance(move_type_value, str)
+            else None
+        )
+
+        background = (
+            TYPE_COLORS.get(move_type, "#666666")
+            if move_type
+            else "#666666"
+        )
 
         badge = (
-            get_badge_img_html(move_type, height=18)
+            get_badge_img_html(
+                move_type,
+                height=18,
+            )
             if move_type
             else ""
         )

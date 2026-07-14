@@ -74,8 +74,8 @@
 - [x] Brighten Recommendation card accent/glow for mobile.
 - [x] Custom application favicon.
 - [x] Held-item boost indicator and score breakdown popover.
-- [ ] Add ♂/♀ immediately after Pokémon names.
-- [ ] Reduce the size of the ♂/♀ gender symbols slightly.
+- [x] Add ♂/♀ immediately after Pokémon names.
+- [x] Reduce the size of the ♂/♀ gender symbols slightly.
 - [ ] Tap or click move cards for full move details.
 - [ ] Tap or click Ability and Held Item for descriptions.
 - [ ] Optional: tap type badges to show weaknesses and resistances.

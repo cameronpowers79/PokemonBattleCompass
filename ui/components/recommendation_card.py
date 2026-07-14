@@ -162,11 +162,32 @@ class RecommendationCard(ft.Container):
         )
 
     def _build_identity_section(self) -> ft.Control:
-        display_name = self.pokemon_name
+        name_controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    self.pokemon_name,
+                    size=40,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+            ],
+        )
 
         if self.gender_symbol:
-            display_name = (
-                f"{display_name} {self.gender_symbol}"
+            if self.gender_symbol.startswith("♀"):
+                gender_icon = ft.Icons.FEMALE
+                gender_color = "#FF5BA7"
+            else:
+                gender_icon = ft.Icons.MALE
+                gender_color = PRIMARY_BLUE
+
+            name_controls.append(
+                ft.Icon(
+                    gender_icon,
+                    size=24,
+                    color=gender_color,
+                )
             )
 
         badge_controls = cast(
@@ -202,12 +223,11 @@ class RecommendationCard(ft.Container):
                 controls=cast(
                     list[ft.Control],
                     [
-                        ft.Text(
-                            display_name,
-                            size=40,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
-                            text_align=ft.TextAlign.CENTER,
+                        ft.Row(
+                            controls=name_controls,
+                            spacing=6,
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Row(
                             controls=badge_controls,
@@ -415,8 +435,15 @@ class RecommendationCard(ft.Container):
             icon=ft.Icons.ADD_CIRCLE_OUTLINE,
             icon_color=PRIMARY_BLUE,
             tooltip="View held item bonus",
+            bgcolor=SURFACE_RAISED,
+            menu_padding=6,
+            size_constraints=ft.BoxConstraints(
+                min_width=242,
+                max_width=242,
+            ),
             items=[
                 ft.PopupMenuItem(
+                    padding=0,
                     content=ft.Container(
                         content=ft.Column(
                             controls=popup_controls,

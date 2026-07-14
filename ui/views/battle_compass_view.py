@@ -52,12 +52,21 @@ STARTER_OPTIONS = [
 class BattleCompassView:
     """Interactive Battle Compass view backed by the existing engine."""
 
-    def __init__(self, page: ft.Page) -> None:
+    def __init__(
+        self,
+        page: ft.Page,
+        *,
+        team_data: list[dict] | None = None,
+    ) -> None:
         self.page = page
 
         reference_data = load_reference_data()
 
-        self.team_data = reference_data["team_data"]
+        self.team_data = (
+            team_data
+            if team_data is not None
+            else reference_data["team_data"]
+        )
         self.opponents = reference_data["opponents"]
         self.items = reference_data["items"]
         self.ability_rules = reference_data["ability_rules"]
@@ -111,6 +120,15 @@ class BattleCompassView:
 
         self._initialize_selections()
         self._refresh_results()
+
+    def refresh_team_data(
+        self,
+        team_data: list[dict],
+    ) -> None:
+        """Refresh recommendation results after the shared team is saved."""
+
+        self.team_data = team_data
+        self._refresh_results()  
 
     def build(self) -> ft.Control:
         """Return the complete interactive Battle Compass view."""
@@ -635,10 +653,10 @@ class BattleCompassView:
         normalized_gender = gender.strip().lower()
 
         if normalized_gender == "male":
-            return "♂"
+            return "♂︎"
 
         if normalized_gender == "female":
-            return "♀"
+            return "♀︎"
 
         return None
 
