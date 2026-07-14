@@ -7,7 +7,7 @@ file.
 """
 
 from __future__ import annotations
-
+from ui.viewmodels.app_state import AppState
 from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
@@ -15,7 +15,6 @@ from typing import cast
 
 import flet as ft
 
-from engine.data_loader import save_json
 from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
 from ui.rendering import get_sprite_path
@@ -99,14 +98,17 @@ class MyTeamView:
         self,
         page: ft.Page,
         *,
-        team_data: list[dict],
+        app_state: AppState,
         moves_data: list[dict],
-        on_team_saved: Callable[[list[dict]], None] | None = None,
+        on_team_updated: (
+            Callable[[list[dict]], None] | None
+        ) = None,
     ) -> None:
         self.page = page
-        self.team_data = team_data
+        self.app_state = app_state
+        self.team_data = app_state.team_data
         self.moves_data = moves_data
-        self.on_team_saved = on_team_saved
+        self.on_team_updated = on_team_updated
 
         self.move_lookup = {
             move["Move"]: move
@@ -122,7 +124,7 @@ class MyTeamView:
             )
             for move_name in self.move_options
         ]
-        self.working_team = deepcopy(team_data)
+        self.working_team = deepcopy(self.team_data)
         self.editor_controls: dict[
             tuple[int, str],
             ft.TextField | ft.Dropdown | ft.AutoComplete,
@@ -1007,7 +1009,7 @@ class MyTeamView:
             run_spacing=12,
         )
 
-    def _save_team(
+    async def _save_team(
         self,
         event: ft.Event[ft.Button],
     ) -> None:
@@ -1020,7 +1022,11 @@ class MyTeamView:
                 move_name = str(
                     pokemon.get(f"Move{slot}") or ""
                 ).strip()
-                if move_name and move_name not in self.move_lookup:
+
+                if (
+                    move_name
+                    and move_name not in self.move_lookup
+                ):
                     invalid_moves.append(move_name)
 
         if invalid_moves:
@@ -1043,22 +1049,40 @@ class MyTeamView:
             for pokemon in self.working_team
         ]
 
-        self.team_data[:] = saved_team
-        self.working_team = deepcopy(saved_team)
+        try:
+            save_succeeded = await self.app_state.save_team(
+                saved_team
+            )
+        except (RuntimeError, ValueError) as error:
+            self.save_status.value = (
+                f"Team could not be saved: {error}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
 
-        save_json(
-            "team_data",
-            saved_team,
+        if not save_succeeded:
+            self.save_status.value = (
+                "Team could not be saved."
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
+        self.team_data = self.app_state.team_data
+        self.working_team = deepcopy(
+            self.app_state.team_data
         )
 
-        if self.on_team_saved:
-            self.on_team_saved(saved_team)
+        if self.on_team_updated:
+            self.on_team_updated(
+                self.app_state.team_data
+            )
 
         self.save_status.value = "Team saved!"
         self.save_status.color = SUCCESS
         self._refresh_detail()
         self.page.update()
-
     @staticmethod
     def _asset_src(
         file_path: str | Path,
