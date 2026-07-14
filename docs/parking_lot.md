@@ -45,6 +45,8 @@
 - [x] Add jump link from Why? to Full Analysis.
 - [ ] Recreate responsive desktop and PWA layouts in the new UI.
 - [ ] Review Full Analysis behavior on narrow mobile screens.
+- [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
+- [ ] Freeze "Pokemon" column in My Team editor?
 
 ---
 
@@ -83,6 +85,7 @@
 - [ ] Recreate branding, typography, cards, and interactions in the new UI.
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
+- [ ] Ensure Matchup Strength text matches the highlighted color in the graphic
 
 ---
 
