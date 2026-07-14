@@ -35,11 +35,51 @@ async def main(page: ft.Page) -> None:
     )
 
     await app_state.initialize()
+    # TEMPORARY: Force onboarding during development.
+    await app_state.clear_current_journey()
 
-    if not app_state.has_journey:
+    def show_main_application() -> None:
+        battle_compass_view = BattleCompassView(
+            page,
+            team_data=app_state.team_data,
+            selected_starter=app_state.starter,
+        )
+
+        my_team_view = MyTeamView(
+            page,
+            app_state=app_state,
+            moves_data=app_state.moves_data,
+            on_team_updated=(
+                battle_compass_view.refresh_team_data
+            ),
+        )
+
+        app_shell = AppShell(
+            page=page,
+            battle_compass_view=(
+                battle_compass_view.build
+            ),
+            my_team_view=my_team_view.build,
+        )
+
+        page.on_resize = (
+            lambda event:
+            app_shell.apply_responsive_layout(
+                event.width,
+            )
+        )
+
+        page.controls.clear()
+        page.add(
+            app_shell.build()
+        )
+        page.update()
+
+    if not app_state.is_ready:
         onboarding_view = OnboardingView(
             page,
             app_state=app_state,
+            on_complete=show_main_application,
         )
 
         page.add(
@@ -47,35 +87,7 @@ async def main(page: ft.Page) -> None:
         )
         return
 
-    battle_compass_view = BattleCompassView(
-        page,
-        team_data=app_state.team_data,
-    )
-
-    my_team_view = MyTeamView(
-        page,
-        app_state=app_state,
-        moves_data=app_state.moves_data,
-        on_team_updated=(
-            battle_compass_view.refresh_team_data
-        ),
-    )
-
-    app_shell = AppShell(
-        page=page,
-        battle_compass_view=battle_compass_view.build,
-        my_team_view=my_team_view.build,
-    )
-
-    page.on_resize = (
-        lambda event: app_shell.apply_responsive_layout(
-            event.width,
-        )
-    )
-
-    page.add(
-        app_shell.build()
-    )
+    show_main_application()
 
 
 if __name__ == "__main__":

@@ -57,6 +57,7 @@ class BattleCompassView:
         page: ft.Page,
         *,
         team_data: list[dict] | None = None,
+        selected_starter: str | None = None,
     ) -> None:
         self.page = page
 
@@ -72,7 +73,11 @@ class BattleCompassView:
         self.ability_rules = reference_data["ability_rules"]
         self.moves_data = reference_data["moves_data"]
 
-        self.selected_starter = STARTER_OPTIONS[0]
+        self.selected_starter = (
+            selected_starter
+            if selected_starter in STARTER_OPTIONS
+            else STARTER_OPTIONS[0]
+        )
         self.selected_trainer = ""
         self.selected_battle = ""
         self.selected_opponent_name = ""
