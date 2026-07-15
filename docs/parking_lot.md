@@ -49,6 +49,7 @@
 - [ ] Review Full Analysis behavior on narrow mobile screens.
 - [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
 - [ ] Freeze "Pokemon" column in My Team editor?
+- [ ] Add move effectiveness to Other Strong Options cards
 
 ---
 

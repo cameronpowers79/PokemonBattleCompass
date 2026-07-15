@@ -87,7 +87,7 @@ Status marks reflect textures already known to be collected: the Galar starter l
 | ✓        | #0831          | Wooloo      | Standard      | wooloo-texture.png           | Hop                      |                                                                                                 |
 | ✓        | #0832          | Dubwool     | Standard      | dubwool-texture.png          | Hop                      |                                                                                                 |
 | ✓        | #0834          | Drednaw     | Gigantamax    | drednaw-gmax-texture.png     | Nessa                    |                                                                                                 |
-| not used        | #0834          | Drednaw     | Standard      | drednaw-texture.png          | Nessa                    |                                                                                                 |
+| ✓        | #0834          | Drednaw     | Standard      | drednaw-texture.png          | Nessa                    |                                                                                                 |
 | ✓        | #0836          | Boltund     | Standard      | boltund-texture.png          | Hop                      |                                                                                                 |
 | ✓        | #0839          | Coalossal   | Gigantamax    | coalossal-gmax-texture.png   | Gordie                   |                                                                                                 |
 | not used        | #0839          | Coalossal   | Standard      | coalossal-texture.png        | Gordie                   |                                                                                                 |
@@ -99,30 +99,30 @@ Status marks reflect textures already known to be collected: the Galar starter l
 | ✓        | #0848          | Toxel       | Standard      | toxel-texture.png            | Hop                      |                                                                                                 |
 | ✓       | #0851          | Centiskorch | Gigantamax    | centiskorch-gmax-texture.png | Kabu                     |                                                                                                 |
 | not used        | #0851          | Centiskorch | Standard      | centiskorch-texture.png      | Kabu                     |                                                                                                 |
-| ☐        | #0853          | Grapploct   | Standard      | grapploct-texture.png        | Bea                      |                                                                                                 |
-| ☐        | #0856          | Hatenna     | Standard      | hatenna-texture.png          | Bede                     |                                                                                                 |
-| ☐        | #0857          | Hattrem     | Standard      | hattrem-texture.png          | Bede                     |                                                                                                 |
-| ☐        | #0858          | Hatterene   | Gigantamax    | hatterene-gmax-texture.png   | Bede                     |                                                                                                 |
-| ☐        | #0858          | Hatterene   | Standard      | hatterene-texture.png        | Bede                     |                                                                                                 |
-| ☐        | #0860          | Morgrem     | Standard      | morgrem-texture.png          | BT Theodora              |                                                                                                 |
-| ☐        | #0861          | Grimmsnarl  | Gigantamax    | grimmsnarl-gmax-texture.png  | Marnie                   |                                                                                                 |
-| ☐        | #0861          | Grimmsnarl  | Standard      | grimmsnarl-texture.png       | Marnie                   |                                                                                                 |
-| ☐        | #0862          | Obstagoon   | Standard      | obstagoon-texture.png        | Piers                    |                                                                                                 |
-| ☐        | #0863          | Perrserker  | Standard      | perrserker-texture.png       | Rose                     |                                                                                                 |
-| ☐        | #0865          | Sirfetch'd  | Standard      | sirfetchd-texture.png        | Bea, Sordward            |                                                                                                 |
-| ☐        | #0866          | Mr. Rime    | Standard      | mr-rime-texture.png          | Leon                     |                                                                                                 |
-| ☐        | #0869          | Alcremie    | Gigantamax    | alcremie-gmax-texture.png    | Opal                     |                                                                                                 |
-| ☐        | #0869          | Alcremie    | Standard      | alcremie-texture.png         | Opal                     |                                                                                                 |
-| ☐        | #0870          | Falinks     | Standard      | falinks-texture.png          | Bea                      |                                                                                                 |
+| ✓        | #0853          | Grapploct   | Standard      | grapploct-texture.png        | Bea                      |                                                                                                 |
+| ✓        | #0856          | Hatenna     | Standard      | hatenna-texture.png          | Bede                     |                                                                                                 |
+| ✓        | #0857          | Hattrem     | Standard      | hattrem-texture.png          | Bede                     |                                                                                                 |
+| v        | #0858          | Hatterene   | Gigantamax    | hatterene-gmax-texture.png   | Bede                     |                                                                                                 |
+| not used        | #0858          | Hatterene   | Standard      | hatterene-texture.png        | Bede                     |                                                                                                 |
+| ✓        | #0860          | Morgrem     | Standard      | morgrem-texture.png          | BT Theodora              |                                                                                                 |
+| ✓        | #0861          | Grimmsnarl  | Gigantamax    | grimmsnarl-gmax-texture.png  | Marnie                   |                                                                                                 |
+| ✓        | #0861          | Grimmsnarl  | Standard      | grimmsnarl-texture.png       | Marnie                   |                                                                                                 |
+| ✓        | #0862          | Obstagoon   | Standard      | obstagoon-texture.png        | Piers                    |                                                                                                 |
+| ✓        | #0863          | Perrserker  | Standard      | perrserker-texture.png       | Rose                     |                                                                                                 |
+| ✓        | #0865          | Sirfetch'd  | Standard      | sirfetchd-texture.png        | Bea, Sordward            |                                                                                                 |
+| ✓        | #0866          | Mr. Rime    | Standard      | mr-rime-texture.png          | Leon                     |                                                                                                 |
+| ✓        | #0869          | Alcremie    | Gigantamax    | alcremie-gmax-texture.png    | Opal                     |                                                                                                 |
+| not used        | #0869          | Alcremie    | Standard      | alcremie-texture.png         | Opal                     |                                                                                                 |
+| ✓        | #0870          | Falinks     | Standard      | falinks-texture.png          | Bea                      |                                                                                                 |
 | ✓        | #0871          | Pincurchin  | Standard      | pincurchin-texture.png       | Hop                      |                                                                                                 |
-| ☐        | #0874          | Stonjourner | Standard      | stonjourner-texture.png      | Gordie                   |                                                                                                 |
-| ☐        | #0877          | Morpeko     | Standard      | morpeko-texture.png          | Marnie                   |                                                                                                 |
-| ☐        | #0879          | Copperajah  | Gigantamax    | copperajah-gmax-texture.png  | Rose                     |                                                                                                 |
-| ☐        | #0879          | Copperajah  | Standard      | copperajah-texture.png       | Rose                     |                                                                                                 |
-| ☐        | #0884          | Duraludon   | Gigantamax    | duraludon-gmax-texture.png   | Raihan                   |                                                                                                 |
-| ☐        | #0884          | Duraludon   | Standard      | duraludon-texture.png        | Raihan                   |                                                                                                 |
-| ☐        | #0887          | Dragapult   | Standard      | dragapult-texture.png        | Leon                     |                                                                                                 |
-| ☐        | #0888          | Zacian      | Standard      | zacian-texture.png           | Legendary encounter      | Form handling needs review: opponents.json includes Crowned/Hero typing under one species name. |
+| ✓        | #0874          | Stonjourner | Standard      | stonjourner-texture.png      | Gordie                   |                                                                                                 |
+| ✓        | #0877          | Morpeko     | Standard      | morpeko-texture.png          | Marnie                   |                                                                                                 |
+| ✓        | #0879          | Copperajah  | Gigantamax    | copperajah-gmax-texture.png  | Rose                     |                                                                                                 |
+| not used        | #0879          | Copperajah  | Standard      | copperajah-texture.png       | Rose                     |                                                                                                 |
+| ✓        | #0884          | Duraludon   | Gigantamax    | duraludon-gmax-texture.png   | Raihan                   |                                                                                                 |
+| not used       | #0884          | Duraludon   | Standard      | duraludon-texture.png        | Raihan                   |                                                                                                 |
+| ✓       | #0887          | Dragapult   | Standard      | dragapult-texture.png        | Leon                     |                                                                                                 |
+| ✓        | #0888          | Zacian      | Standard      | zacian-texture.png           | Legendary encounter      | Form handling needs review: opponents.json includes Crowned/Hero typing under one species name. |
 | ✓        | #0889          | Zamazenta   | Standard      | zamazenta-texture.png        | Hop, Legendary encounter | Form handling needs review: opponents.json includes Crowned/Hero typing under one species name. |
 | ✓        | #0890          | Eternatus   | Standard      | eternatus-texture.png        | Legendary encounter      |                                                                                                 |
 
@@ -140,14 +140,14 @@ Status marks reflect textures already known to be collected: the Galar starter l
 |     8 | Nessa        | nessa-texture.png        |
 |     9 | Kabu         | kabu-texture.png         |
 |    10 | Bea          | bea-texture.png          |
-|    11 | BT Annette   | bt-annette-texture.png   |
-|    12 | BT Teresa    | bt-teresa-texture.png    |
-|    13 | BT Theodora  | bt-theodora-texture.png  |
+|    11 | BT Annette   | bt-texture.png   |
+|    12 | BT Teresa    | bt-texture.png    |
+|    13 | BT Theodora  | bt-texture.png  |
 |    14 | Opal         | opal-texture.png         |
 |    15 | Gordie       | gordie-texture.png       |
 |    16 | Piers        | piers-texture.png        |
-|    17 | HT Aria      | ht-aria-texture.png      |
-|    18 | HT Camilla   | ht-camilla-texture.png   |
+|    17 | HT Aria      | ht-aria-camilla-texture.png   |
+|    18 | HT Camilla   | ht-aria-camilla-texture.png   |
 |    19 | HT Sebastian | ht-sebastian-texture.png |
 |    20 | Raihan       | raihan-texture.png       |
 |    21 | Sordward     | sordward-texture.png     |

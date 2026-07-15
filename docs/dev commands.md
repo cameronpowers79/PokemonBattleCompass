@@ -15,5 +15,5 @@
     )
 
 # Normalize Textures
-    python tools/normalize_textures.py 
+    python tools/normalize_texture_artwork.py --apply 
 
