@@ -22,7 +22,7 @@
 - [ ] Verify installable PWA.
 - [ ] Verify offline behavior.
 - [ ] Verify iPhone PWA behavior.
-- [ ] Migrate Battle Compass.
+- [x] Migrate Battle Compass.
 - [ ] Migrate Trainer's Guide.
 - [ ] Retire the Streamlit implementation.
 
@@ -43,9 +43,9 @@
 - [x] Keep Other Strong Options notes inside their cards.
 - [x] Add box sprites to Other Strong Options.
 - [x] Preserve Battle Compass selections while switching views.
-- [ ] Permanently visible Full Analysis.
-- [ ] Add jump link from Why? to Full Analysis.
-- [ ] Recreate responsive desktop and PWA layouts in the new UI.
+- [x] Permanently visible Full Analysis.
+- [x] Add jump link from Why? to Full Analysis.
+- [x] Recreate responsive desktop and PWA layouts in the new UI.
 - [ ] Review Full Analysis behavior on narrow mobile screens.
 - [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
 - [ ] Freeze "Pokemon" column in My Team editor?
@@ -58,8 +58,8 @@
 - [x] Structured Battle Notes.
 - [x] Render note categories with icons and colors.
 - [x] Display Battle Notes as styled UI rather than plain text.
-- [ ] Preserve structured notes as framework-independent engine output.
-- [ ] Recreate note presentation in the new desktop/PWA UI.
+- [x] Preserve structured notes as framework-independent engine output.
+- [x] Recreate note presentation in the new desktop/PWA UI.
 
 ---
 
@@ -82,7 +82,7 @@
 - [x] Add ♂/♀ immediately after Pokémon names.
 - [x] Reduce the size of the ♂/♀ gender symbols slightly.
 - [x] Reuse My Team’s move-card visual language during onboarding.
-- [ ] Tap or click move cards for full move details.
+- [x] Tap or click move cards for full move details.
 - [/] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
 - [ ] Optional: tap type badges to show weaknesses and resistances.
 - [ ] Add held-item sprites to the boosted-attack popover.
@@ -103,14 +103,14 @@
 - [x] Player-editable Team Data.
 - [x] Add UI theme/constants module.
 - [x] Continue separating UI from engine.
-- [ ] Keep `engine/` framework-independent.
+- [x] Keep `engine/` framework-independent.
 - [x] Separate persistent user data from bundled reference data.
 - [ ] Create a shared storage interface for desktop and PWA.
 - [x] Add save-data schema versioning.
 - [ ] Add save-data validation and migration support.
 - [ ] Add automatic recovery from interrupted writes.
 - [ ] Add lightweight automated tests for core calculations.
-- [ ] Keep the battle engine UI-framework agnostic.
+- [x] Keep the battle engine UI-framework agnostic.
 
 ---
 

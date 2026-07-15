@@ -37,7 +37,6 @@ from ui.theme import (
 )
 
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
@@ -190,26 +189,6 @@ ACTIVATION_CONDITION_DESCRIPTIONS = {
     "previousmovefailedagainsttarget": (
         "if the user's previous move against the target failed"
     ),
-    "targetanystatus": (
-        "if the target has a status condition"
-    ),
-    "targetanystatus": (
-        "if the target has a status condition"
-    ),
-    "targetpoisoned": (
-        "if the target is poisoned"
-    ),
-    "userburnpoisonparalysis": (
-        "while the user is burned, poisoned, or paralyzed"
-    ),
-    "requiresuserhit": (
-        "if the user was hit earlier in the turn"
-    ),
-    "UserMovesAfterTarget":(
-        "if the user moves after the target"
-    )
-
-
 }
 
 
@@ -271,6 +250,21 @@ class MyTeamView:
             color=SUCCESS,
         )
 
+        self.add_pokemon_button = ft.Button(
+            content="Add Pokémon",
+            icon=ft.Icons.ADD_ROUNDED,
+            disabled=(
+                len(self.working_team) >= 6
+            ),
+            on_click=self._add_pokemon,
+            style=ft.ButtonStyle(
+                bgcolor=SUCCESS_SOFT,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                elevation=1,
+            ),
+        )
+
         self.save_button = ft.Button(
             content="Save Team",
             icon=ft.Icons.SAVE_OUTLINED,
@@ -328,6 +322,73 @@ class MyTeamView:
         self._refresh_selector()
         self._refresh_detail()
 
+    def _add_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Add a blank Pokémon slot to the working team."""
+
+        del event
+
+        if len(self.working_team) >= 6:
+            self._sync_add_pokemon_button()
+            self.page.update()
+            return
+
+        self.working_team.append(
+            self._blank_pokemon_record()
+        )
+
+        self.selected_index = (
+            len(self.working_team) - 1
+        )
+
+        self.editor_controls.clear()
+
+        self.table_host.content = (
+            self._build_editor_table()
+        )
+
+        self._refresh_selector()
+        self._refresh_detail()
+        self._update_dirty_state()
+        self._sync_add_pokemon_button()
+
+        self.page.update()
+
+    @staticmethod
+    def _blank_pokemon_record() -> dict:
+        """Return a new editable Pokémon team record."""
+
+        return {
+            "Pokemon": "",
+            "Gender": "",
+            "Type1": "",
+            "Type2": "",
+            "Level": 1,
+            "HP": 0,
+            "ATK": 0,
+            "DEF": 0,
+            "SPA": 0,
+            "SPD": 0,
+            "SPE": 0,
+            "Move1": "",
+            "Move2": "",
+            "Move3": "",
+            "Move4": "",
+            "Ability": "",
+            "Held Item": "",
+        }
+
+    def _sync_add_pokemon_button(
+        self,
+    ) -> None:
+        """Disable adding Pokémon once the team reaches six."""
+
+        self.add_pokemon_button.disabled = (
+            len(self.working_team) >= 6
+        )
+
     def _update_dirty_state(self) -> None:
         """Synchronize save controls with the current dirty state."""
 
@@ -371,11 +432,13 @@ class MyTeamView:
                             controls=cast(
                                 list[ft.Control],
                                 [
+                                    self.add_pokemon_button,
                                     self.save_button,
                                     self.save_status,
                                 ],
                             ),
                             spacing=14,
+                            wrap=True,
                             vertical_alignment=(
                                 ft.CrossAxisAlignment.CENTER
                             ),
@@ -868,7 +931,7 @@ class MyTeamView:
                             color=TEXT_PRIMARY,
                         ),
                         self._build_stats(pokemon),
-                        ft.Column(
+                        ft.Row(
                             controls=cast(
                                 list[ft.Control],
                                 [
@@ -879,17 +942,19 @@ class MyTeamView:
                                         color=TEXT_PRIMARY,
                                     ),
                                     ft.Text(
-                                        "Select a move to view its details.",
+                                        "ACTIVE FILE TEST — CLICK A MOVE",
                                         size=13,
                                         color=TEXT_MUTED,
+                                        expand=True,
                                     ),
                                 ],
                             ),
-                            spacing=3,
-                            tight=True,
+                            spacing=10,
+                            wrap=True,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         self._build_moves(pokemon),
-self._build_footer(pokemon),
+                        self._build_footer(pokemon),
                     ],
                 ),
                 spacing=16,
@@ -1125,40 +1190,51 @@ self._build_footer(pokemon),
                     )
                 )
 
-        return ft.Container(
+        card = ft.Container(
             content=ft.Row(
                 controls=card_controls,
                 spacing=8,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                vertical_alignment=(
+                    ft.CrossAxisAlignment.CENTER
+                ),
             ),
-            col={
-                "xs": 12,
-                "sm": 6,
-            },
-            height=52,
             padding=14,
-            alignment=ft.Alignment.CENTER_LEFT,
             bgcolor=background,
             opacity=1.0 if move else 0.55,
             border_radius=10,
-            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            
-            on_click=(
-                (
-                    lambda event, selected_move=move:
-                    self._show_move_details(
-                        event,
-                        selected_move,
-                    )
-                )
+            tooltip=(
+                f"View details for {move_name}"
                 if move
                 else None
             ),
         )
 
+        clickable_card: ft.Control = card
+
+        if move is not None:
+            clickable_card = ft.GestureDetector(
+                content=card,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                on_tap=(
+                    lambda event, selected_move=move:
+                    self._show_move_details(
+                        event,
+                        selected_move,
+                    )
+                ),
+            )
+
+        return ft.Container(
+            content=clickable_card,
+            col={
+                "xs": 12,
+                "sm": 6,
+            },
+        )
+
     def _show_move_details(
         self,
-        event: ft.Event[ft.Container],
+        event: ft.TapEvent[ft.GestureDetector],
         move: dict,
     ) -> None:
         """Show player-facing details for a selected move."""
@@ -1184,6 +1260,7 @@ self._build_footer(pokemon),
                         move
                     ),
                     width=540,
+                    height=500,
                 ),
                 actions=cast(
                     list[ft.Control],
@@ -1569,201 +1646,15 @@ self._build_footer(pokemon),
                 status_description
             )
 
-        descriptions.extend(
-            self._stat_stage_effect_descriptions(
-                move
-            )
-        )
-
         if not descriptions:
             descriptions.append(
                 (
-                    "Additional effects for this move "
-                    "are still being added to the "
-                    "Battle Compass."
+                    "This move's full effect is not yet "
+                    "modeled in the Battle Compass."
                 )
             )
 
         return descriptions
-
-
-    def _stat_stage_effect_descriptions(
-        self,
-        move: dict,
-    ) -> list[str]:
-        """Translate modeled stat-stage changes into plain English."""
-
-        stat_fields = [
-            (
-                "AtkStageChange",
-                "Attack",
-            ),
-            (
-                "DefStageChange",
-                "Defense",
-            ),
-            (
-                "SpAStageChange",
-                "Special Attack",
-            ),
-            (
-                "SpDStageChange",
-                "Special Defense",
-            ),
-            (
-                "SpeStageChange",
-                "Speed",
-            ),
-        ]
-
-        changes: list[tuple[str, int]] = []
-
-        for field_name, stat_name in stat_fields:
-            raw_change = self._numeric_move_value(
-                move.get(field_name)
-            )
-
-            if raw_change is None:
-                continue
-
-            stage_change = int(raw_change)
-
-            if stage_change == 0:
-                continue
-
-            changes.append(
-                (
-                    stat_name,
-                    stage_change,
-                )
-            )
-
-        if not changes:
-            return []
-
-        raw_tags = move.get(
-            "MechanicsTags"
-        )
-
-        tags = (
-            {
-                tag
-                for tag in raw_tags
-                if isinstance(tag, str)
-            }
-            if isinstance(raw_tags, list)
-            else set()
-        )
-
-        is_setup_move = any(
-            tag.endswith("Setup")
-            for tag in tags
-        )
-
-        grouped_changes: dict[
-            tuple[str, int, str],
-            list[str],
-        ] = {}
-
-        for stat_name, stage_change in changes:
-            if is_setup_move:
-                subject = "user"
-            elif stage_change > 0:
-                subject = "user"
-            else:
-                subject = "target"
-
-            direction = (
-                "raises"
-                if stage_change > 0
-                else "lowers"
-            )
-
-            magnitude = abs(
-                stage_change
-            )
-
-            group_key = (
-                direction,
-                magnitude,
-                subject,
-            )
-
-            grouped_changes.setdefault(
-                group_key,
-                [],
-            ).append(
-                stat_name
-            )
-
-        descriptions: list[str] = []
-
-        for (
-            direction,
-            magnitude,
-            subject,
-        ), stat_names in grouped_changes.items():
-            subject_text = (
-                "the user's"
-                if subject == "user"
-                else "the target's"
-            )
-
-            combined_stats = (
-                self._combine_stat_names(
-                    stat_names
-                )
-            )
-
-            stage_word = (
-                "stage"
-                if magnitude == 1
-                else "stages"
-            )
-
-            each_text = (
-                " each"
-                if len(stat_names) > 1
-                else ""
-            )
-
-            descriptions.append(
-                (
-                    f"{direction.capitalize()} "
-                    f"{subject_text} "
-                    f"{combined_stats} by "
-                    f"{magnitude} {stage_word}"
-                    f"{each_text}."
-                )
-            )
-
-        return descriptions
-
-
-    @staticmethod
-    def _combine_stat_names(
-        stat_names: list[str],
-    ) -> str:
-        """Join stat names using natural English punctuation."""
-
-        if not stat_names:
-            return ""
-
-        if len(stat_names) == 1:
-            return stat_names[0]
-
-        if len(stat_names) == 2:
-            return (
-                f"{stat_names[0]} and "
-                f"{stat_names[1]}"
-            )
-
-        return (
-            ", ".join(
-                stat_names[:-1]
-            )
-            + f", and {stat_names[-1]}"
-        )
 
 
     def _move_navigation_aids(
@@ -2574,7 +2465,11 @@ self._build_footer(pokemon),
 
         self.save_status.value = "Team saved."
         self.save_status.color = SUCCESS
+
+        self._refresh_selector()
         self._refresh_detail()
+        self._sync_add_pokemon_button()
+
         self.page.update()
 
     @staticmethod
