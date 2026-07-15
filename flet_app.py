@@ -26,6 +26,10 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 
 async def main(page: ft.Page) -> None:
     configure_page(page)
+    
+    page.window.icon = str(
+        ASSETS_DIR / "icon_windows.ico"
+    )
 
     reference_data = load_reference_data()
 
@@ -84,6 +88,13 @@ async def main(page: ft.Page) -> None:
                 battle_compass_view.build
             ),
             my_team_view=my_team_view.build,
+            my_team_has_unsaved_changes=(
+                lambda:
+                my_team_view.has_unsaved_changes
+            ),
+            discard_my_team_changes=(
+                my_team_view.discard_unsaved_changes
+            ),
         )
 
         page.on_resize = (

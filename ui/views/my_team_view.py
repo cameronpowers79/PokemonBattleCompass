@@ -2,8 +2,7 @@
 My Team view.
 
 Provides a bulk-editable team table and a selected Pokémon detail panel.
-Saved changes update the shared in-memory team and the bundled Alpha JSON
-file.
+Saved changes update the active persistent Journey.
 """
 
 from __future__ import annotations
@@ -15,6 +14,10 @@ from typing import cast
 
 import flet as ft
 
+from engine.item_recommendations import (
+    ItemRecommendation,
+    recommend_held_items,
+)
 from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
 from ui.rendering import get_sprite_path
@@ -25,6 +28,7 @@ from ui.theme import (
     PRIMARY_BLUE,
     PRIMARY_BLUE_SOFT,
     SUCCESS,
+    SUCCESS_SOFT,
     SURFACE,
     SURFACE_RAISED,
     TEXT_MUTED,
@@ -108,6 +112,7 @@ class MyTeamView:
         self.app_state = app_state
         self.team_data = app_state.team_data
         self.moves_data = moves_data
+        self.items_data = app_state.reference_data["items"]
         self.on_team_updated = on_team_updated
 
         self.move_lookup = {
@@ -125,6 +130,8 @@ class MyTeamView:
             for move_name in self.move_options
         ]
         self.working_team = deepcopy(self.team_data)
+        self.saved_team_snapshot = deepcopy(self.team_data)
+
         self.editor_controls: dict[
             tuple[int, str],
             ft.TextField | ft.Dropdown | ft.AutoComplete,
@@ -146,12 +153,73 @@ class MyTeamView:
             color=SUCCESS,
         )
 
+        self.save_button = ft.Button(
+            content="Save Team",
+            icon=ft.Icons.SAVE_OUTLINED,
+            disabled=True,
+            on_click=self._save_team,
+            style=ft.ButtonStyle(
+                bgcolor={
+                    ft.ControlState.DEFAULT: PRIMARY_BLUE,
+                    ft.ControlState.DISABLED: "#334155",
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: TEXT_MUTED,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: TEXT_MUTED,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
+            ),
+        )
+
         self.table_host = ft.Container(
             content=self._build_editor_table(),
         )
 
         self._refresh_selector()
         self._refresh_detail()
+
+    @property
+    def has_unsaved_changes(self) -> bool:
+        """Return whether the working editor differs from the saved team."""
+
+        return self.working_team != self.saved_team_snapshot
+
+    def discard_unsaved_changes(self) -> None:
+        """Restore the editor to the most recently saved team."""
+
+        self.working_team = deepcopy(
+            self.saved_team_snapshot
+        )
+        self.editor_controls.clear()
+
+        self.table_host.content = (
+            self._build_editor_table()
+        )
+
+        self.save_status.value = ""
+        self.save_status.color = SUCCESS
+        self.save_button.disabled = True
+
+        self._refresh_selector()
+        self._refresh_detail()
+
+    def _update_dirty_state(self) -> None:
+        """Synchronize save controls with the current dirty state."""
+
+        is_dirty = self.has_unsaved_changes
+
+        self.save_button.disabled = not is_dirty
+
+        if is_dirty:
+            self.save_status.value = ""
+            self.save_status.color = SUCCESS
 
     def build(self) -> ft.Control:
         """Return the complete My Team view."""
@@ -169,8 +237,13 @@ class MyTeamView:
                         ),
                         ft.Text(
                             (
-                                "Edit your current party. Changes are not "
-                                "saved until you click Save Team."
+                                "Did someone level up? Learn a new move? "
+                                "Get a new item? Tell the Battle Compass "
+                                "about it here. Then, take a quick moment "
+                                "to ensure your team's information is "
+                                "accurate before saving. The Battle Compass "
+                                "relies on these details to recommend your "
+                                "strongest matchups."
                             ),
                             size=14,
                             color=TEXT_SECONDARY,
@@ -180,14 +253,7 @@ class MyTeamView:
                             controls=cast(
                                 list[ft.Control],
                                 [
-                                    ft.Button(
-                                        content="Save Team",
-                                        icon=ft.Icons.SAVE_OUTLINED,
-                                        bgcolor=PRIMARY_BLUE,
-                                        color=TEXT_PRIMARY,
-                                        icon_color=TEXT_PRIMARY,
-                                        on_click=self._save_team,
-                                    ),
+                                    self.save_button,
                                     self.save_status,
                                 ],
                             ),
@@ -449,7 +515,7 @@ class MyTeamView:
             value = raw_value.strip()
 
         self.working_team[row_index][column] = value
-        self.save_status.value = ""
+        self._update_dirty_state()
 
         if column == "Pokemon":
             self._refresh_selector()
@@ -468,7 +534,7 @@ class MyTeamView:
         self.working_team[row_index][column] = (
             event.control.value
         )
-        self.save_status.value = ""
+        self._update_dirty_state()
 
         if row_index == self.selected_index:
             self._refresh_detail()
@@ -486,7 +552,7 @@ class MyTeamView:
         ).strip()
 
         self.working_team[row_index][column] = move_name
-        self.save_status.value = ""
+        self._update_dirty_state()
 
         if row_index == self.selected_index:
             self._refresh_detail()
@@ -932,10 +998,12 @@ class MyTeamView:
             border_radius=10,
         )
 
-    @staticmethod
     def _build_footer(
+        self,
         pokemon: dict,
     ) -> ft.Control:
+        """Build Ability and Held Item cards."""
+
         return ft.ResponsiveRow(
             controls=cast(
                 list[ft.Control],
@@ -955,7 +1023,7 @@ class MyTeamView:
                                             pokemon.get("Ability")
                                             or "—"
                                         ),
-                                        size=16,
+                                        size=18,
                                         weight=ft.FontWeight.BOLD,
                                         color=TEXT_PRIMARY,
                                     ),
@@ -967,6 +1035,7 @@ class MyTeamView:
                             "xs": 12,
                             "sm": 6,
                         },
+                        height=80,
                         padding=14,
                         bgcolor=PRIMARY_BLUE_SOFT,
                         border_radius=10,
@@ -976,17 +1045,47 @@ class MyTeamView:
                             controls=cast(
                                 list[ft.Control],
                                 [
-                                    ft.Text(
-                                        "Held Item",
-                                        size=13,
-                                        color=TEXT_MUTED,
+                                    ft.Row(
+                                        controls=cast(
+                                            list[ft.Control],
+                                            [
+                                                ft.Text(
+                                                    "Held Item",
+                                                    size=13,
+                                                    color=TEXT_MUTED,
+                                                    expand=True,
+                                                ),
+                                                ft.IconButton(
+                                                    icon=ft.Icons.HELP_OUTLINE_ROUNDED,
+                                                    icon_size=18,
+                                                    icon_color=SUCCESS_SOFT,
+                                                    tooltip="View held item recommendations",
+                                                    width=20,
+                                                    height=20,
+                                                    style=ft.ButtonStyle(
+                                                        padding=0,
+                                                        shape=ft.RoundedRectangleBorder(radius=4),
+                                                    ),
+                                                    on_click=lambda event: (
+                                                        self._show_item_recommendations(
+                                                            event,
+                                                            pokemon,
+                                                        )
+                                                    ),
+                                                ),
+                                            ],
+                                        ),
+                                        spacing=6,
+                                        vertical_alignment=(
+                                            ft.CrossAxisAlignment.CENTER
+                                        ),
                                     ),
                                     ft.Text(
                                         str(
                                             pokemon.get("Held Item")
                                             or "—"
                                         ),
-                                        size=16,
+                                        size=18,
                                         weight=ft.FontWeight.BOLD,
                                         color=TEXT_PRIMARY,
                                     ),
@@ -998,6 +1097,7 @@ class MyTeamView:
                             "xs": 12,
                             "sm": 6,
                         },
+                        height=80,
                         padding=14,
                         bgcolor=PRIMARY_BLUE_SOFT,
                         border_radius=10,
@@ -1008,6 +1108,189 @@ class MyTeamView:
             spacing=12,
             run_spacing=12,
         )
+
+    def _show_item_recommendations(
+        self,
+        event: ft.Event[ft.IconButton],
+        pokemon: dict,
+    ) -> None:
+        """Show modeled held items that fit the selected Pokémon."""
+
+        del event
+
+        recommendations = recommend_held_items(
+            pokemon=pokemon,
+            moves_data=self.moves_data,
+            items_data=self.items_data,
+        )
+
+        pokemon_name = str(
+            pokemon.get("Pokemon")
+            or "this Pokémon"
+        )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Suggested Held Items",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=self._build_item_recommendation_content(
+                        pokemon_name,
+                        recommendations,
+                    ),
+                    width=560,
+                    height=480,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Close",
+                            on_click=self._close_item_recommendations,
+                        ),
+                    ],
+                ),
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _build_item_recommendation_content(
+        self,
+        pokemon_name: str,
+        recommendations: list[ItemRecommendation],
+    ) -> ft.Control:
+        """Build the scrollable recommendation-dialog content."""
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    (
+                        "These modeled items fit "
+                        f"{pokemon_name}'s current build. "
+                        "They are presented as options, not ranked "
+                        "from best to worst."
+                    ),
+                    size=14,
+                    color=TEXT_SECONDARY,
+                ),
+            ],
+        )
+
+        if not recommendations:
+            controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        (
+                            "No currently modeled held items match "
+                            "this build yet."
+                        ),
+                        size=15,
+                        color=TEXT_SECONDARY,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    padding=24,
+                    bgcolor=SURFACE_RAISED,
+                    border_radius=12,
+                    alignment=ft.Alignment.CENTER,
+                )
+            )
+        else:
+            controls.extend(
+                self._build_item_recommendation_card(
+                    recommendation
+                )
+                for recommendation in recommendations
+            )
+
+        return ft.Column(
+            controls=controls,
+            spacing=14,
+            scroll=ft.ScrollMode.AUTO,
+        )
+
+    @staticmethod
+    def _build_item_recommendation_card(
+        recommendation: ItemRecommendation,
+    ) -> ft.Control:
+        """Build one unranked held-item recommendation card."""
+
+        reason_controls = cast(
+            list[ft.Control],
+            [
+                ft.Row(
+                    controls=cast(
+                        list[ft.Control],
+                        [
+                            ft.Icon(
+                                ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED,
+                                size=17,
+                                color=SUCCESS,
+                            ),
+                            ft.Text(
+                                reason,
+                                size=14,
+                                color=TEXT_SECONDARY,
+                                expand=True,
+                            ),
+                        ],
+                    ),
+                    spacing=8,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
+                )
+                for reason in recommendation.reasons
+            ],
+        )
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            recommendation.item,
+                            size=19,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        ft.Text(
+                            recommendation.description,
+                            size=14,
+                            color=TEXT_SECONDARY,
+                        ),
+                        ft.Text(
+                            "Why this item?",
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        *reason_controls,
+                    ],
+                ),
+                spacing=9,
+            ),
+            padding=16,
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border=ft.Border.all(
+                1,
+                BORDER_DEFAULT,
+            ),
+            border_radius=12,
+        )
+
+    def _close_item_recommendations(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the held-item recommendation dialog."""
+
+        del event
+        self.page.pop_dialog()
+        self.page.update()
 
     async def _save_team(
         self,
@@ -1073,16 +1356,21 @@ class MyTeamView:
         self.working_team = deepcopy(
             self.app_state.team_data
         )
+        self.saved_team_snapshot = deepcopy(
+            self.app_state.team_data
+        )
+        self.save_button.disabled = True
 
         if self.on_team_updated:
             self.on_team_updated(
                 self.app_state.team_data
             )
 
-        self.save_status.value = "Team saved!"
+        self.save_status.value = "Team saved."
         self.save_status.color = SUCCESS
         self._refresh_detail()
         self.page.update()
+
     @staticmethod
     def _asset_src(
         file_path: str | Path,

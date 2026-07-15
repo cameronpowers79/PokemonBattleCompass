@@ -7,7 +7,9 @@
     "MoveTypeAffected": "None",
     "MoveCategoryAffected": "None",
     "Multiplier": 1,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "No held item is currently equipped.",
+    "RecommendationRule": "None"
   },
   {
     "Item": "Eviolite",
@@ -17,7 +19,9 @@
     "MoveTypeAffected": "None",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.5,
-    "Condition": "CanEvolve"
+    "Condition": "CanEvolve",
+    "Description": "Raises Defense and Special Defense by 50% when held by a Pokémon that can still evolve.",
+    "RecommendationRule": "CanEvolve"
   },
   {
     "Item": "Charcoal",
@@ -27,7 +31,9 @@
     "MoveTypeAffected": "Fire",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Fire-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Miracle Seed",
@@ -37,7 +43,9 @@
     "MoveTypeAffected": "Grass",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Grass-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Magnet",
@@ -47,7 +55,9 @@
     "MoveTypeAffected": "Electric",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Electric-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Mystic Water",
@@ -57,7 +67,9 @@
     "MoveTypeAffected": "Water",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Water-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Sharp Beak",
@@ -67,7 +79,9 @@
     "MoveTypeAffected": "Flying",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Flying-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Spell Tag",
@@ -77,7 +91,9 @@
     "MoveTypeAffected": "Ghost",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Ghost-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Black Glasses",
@@ -87,7 +103,9 @@
     "MoveTypeAffected": "Dark",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Dark-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Pixie Plate",
@@ -97,7 +115,9 @@
     "MoveTypeAffected": "Fairy",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Fairy-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Wise Glasses",
@@ -107,7 +127,9 @@
     "MoveTypeAffected": "None",
     "MoveCategoryAffected": "Special",
     "Multiplier": 1.1,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Special attacks by 10%.",
+    "RecommendationRule": "SpecialFocus"
   },
   {
     "Item": "Expert Belt",
@@ -117,7 +139,9 @@
     "MoveTypeAffected": "None",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "SuperEffective"
+    "Condition": "SuperEffective",
+    "Description": "Boosts the power of super-effective attacks by 20%.",
+    "RecommendationRule": "Coverage"
   },
   {
     "Item": "Metal Coat",
@@ -127,7 +151,9 @@
     "MoveTypeAffected": "Steel",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Steel-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   },
   {
     "Item": "Leftovers",
@@ -137,7 +163,9 @@
     "MoveTypeAffected": "None",
     "MoveCategoryAffected": "None",
     "Multiplier": 1,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Restores 1/16 of the holder's maximum HP at the end of each turn.",
+    "RecommendationRule": "FieldLongevity"
   },
   {
     "Item": "Soft Sand",
@@ -147,6 +175,8 @@
     "MoveTypeAffected": "Ground",
     "MoveCategoryAffected": "None",
     "Multiplier": 1.2,
-    "Condition": "None"
+    "Condition": "None",
+    "Description": "Boosts the power of Ground-type attacks by 20%.",
+    "RecommendationRule": "TypeFocus"
   }
 ]

@@ -15,7 +15,7 @@
 - [x] Build proof-of-concept.
 - [x] Implement durable local storage.
 - [x] Add first-use Journey onboarding.
-- [ ] Implement autosave.
+- [x] Retain explicit team saving as a proofreading checkpoint.
 - [ ] Implement optional backup/export.
 - [ ] Implement restore/import.
 - [ ] Verify desktop packaging.
@@ -34,7 +34,6 @@
 - [x] Recommendation card.
 - [x] Battle Snapshot card.
 - [x] Other Strong Options, excluding the recommended Pokémon.
-- [ ] Permanently visible Full Analysis.
 - [x] Matchup Strength indicator.
 - [x] Center title header.
 - [x] Keep Best Move effectiveness near the move name.
@@ -44,6 +43,7 @@
 - [x] Keep Other Strong Options notes inside their cards.
 - [x] Add box sprites to Other Strong Options.
 - [x] Preserve Battle Compass selections while switching views.
+- [ ] Permanently visible Full Analysis.
 - [ ] Add jump link from Why? to Full Analysis.
 - [ ] Recreate responsive desktop and PWA layouts in the new UI.
 - [ ] Review Full Analysis behavior on narrow mobile screens.
@@ -132,7 +132,7 @@
 - [x] Replace the current Journey only after onboarding is completed and confirmed.
 - [x] Resume the last-used team automatically.
 - [x] Add starter-change confirmation dialog with Explore and Start New Journey options.
-- [ ] Add automatic saving after confirmed edits.
+- [ ] Add unsaved-change awareness and confirmation before leaving My Team.
 - [ ] Add optional manual backup/export.
 - [ ] Add restore/import.
 - [ ] Add ability validation.
@@ -174,8 +174,8 @@
 - [x] Automatic texture-to-sprite fallback.
 - [x] Galar starter-line textures.
 - [x] Textures for Hop’s Pokémon.
-- [ ] Add textures for unique Pokémon in `opponents.json`.
-- [ ] Add trainer artwork for the 21 represented trainers.
+- [x] Add textures for unique Pokémon in `opponents.json`.
+- [x] Add trainer artwork for the 21 represented trainers.
 - [ ] Gradually expand texture coverage for player-selected Pokémon.
 - [ ] Package artwork efficiently for desktop.
 - [ ] Cache artwork for offline PWA use.
