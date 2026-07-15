@@ -69,7 +69,7 @@
 - [x] Type badges.
 - [x] Type colors.
 - [x] Worst Incoming Move displays category.
-- [x] Typography:
+- [ ] Typography:
   - Exo 2 for headers.
   - Aptos for body text.
   - Bahnschrift for metrics.
@@ -132,7 +132,7 @@
 - [x] Replace the current Journey only after onboarding is completed and confirmed.
 - [x] Resume the last-used team automatically.
 - [x] Add starter-change confirmation dialog with Explore and Start New Journey options.
-- [ ] Add unsaved-change awareness and confirmation before leaving My Team.
+- [x]Add unsaved-change awareness and confirmation before leaving My Team.
 - [ ] Add optional manual backup/export.
 - [ ] Add restore/import.
 - [ ] Add ability validation.

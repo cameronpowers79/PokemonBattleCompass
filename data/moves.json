@@ -6920,7 +6920,7 @@
     "MakesContact": true,
     "Priority": 0,
     "DamageMethod": "Variable",
-    "ActivationCondition": "RequiresUserHit",
+    "ActivationCondition": "UserMovesAfterTarget",
     "StatusEffect": null,
     "ActivationPowerMultiplier": 1,
     "AtkStageChange": 0,

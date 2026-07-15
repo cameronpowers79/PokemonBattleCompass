@@ -37,6 +37,7 @@ from ui.theme import (
 )
 
 
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
@@ -93,6 +94,123 @@ GENDER_OPTIONS = [
     "Female",
     "Genderless",
 ]
+
+MOVE_TAG_DESCRIPTIONS = {
+    "Pivot": (
+        "Switches the user out after the move succeeds."
+    ),
+    "Protection": (
+        "Protects the user from most attacks for one turn."
+    ),
+    "Recovery": (
+        "Restores some of the user's HP."
+    ),
+    "Drain": (
+        "Restores HP based on the damage dealt."
+    ),
+    "Recoil": (
+        "The user takes recoil damage after attacking."
+    ),
+    "ContactPunisher": (
+        "Can punish an opponent for making contact."
+    ),
+    "Screen": (
+        "Reduces damage received by the user's side of the field."
+    ),
+    "Weather": (
+        "Creates or interacts with a weather condition."
+    ),
+    "Terrain": (
+        "Creates or interacts with battlefield terrain."
+    ),
+}
+
+
+ACTIVATION_CONDITION_DESCRIPTIONS = {
+    "targethasstatus": (
+        "if the target has a status condition"
+    ),
+    "targetstatused": (
+        "if the target has a status condition"
+    ),
+    "targetstatuscondition": (
+        "if the target has a status condition"
+    ),
+    "targetpoisoned": (
+        "if the target is poisoned"
+    ),
+    "targetbadlypoisoned": (
+        "if the target is poisoned"
+    ),
+    "targetburned": (
+        "if the target is burned"
+    ),
+    "targetparalyzed": (
+        "if the target is paralyzed"
+    ),
+    "targetasleep": (
+        "if the target is asleep"
+    ),
+    "targetfrozen": (
+        "if the target is frozen"
+    ),
+    "targetathalfhporless": (
+        "if the target is at half HP or less"
+    ),
+    "targethalfhorless": (
+        "if the target is at half HP or less"
+    ),
+    "targetbelowhalfhealth": (
+        "if the target is at half HP or less"
+    ),
+    "userhasstatus": (
+        "while the user is burned, poisoned, or paralyzed"
+    ),
+    "userstatused": (
+        "while the user is burned, poisoned, or paralyzed"
+    ),
+    "userburnedpoisonedorparalyzed": (
+        "while the user is burned, poisoned, or paralyzed"
+    ),
+    "targetalreadyacted": (
+        "if the target has already acted this turn"
+    ),
+    "usermovesaftertarget": (
+        "if the user moves after the target"
+    ),
+    "userwashit": (
+        "if the user was hit earlier in the turn"
+    ),
+    "userhitbeforemove": (
+        "if the user was hit before using the move"
+    ),
+    "previousmovefailed": (
+        "if the user's previous move failed"
+    ),
+    "previousmovefailedagainsttarget": (
+        "if the user's previous move against the target failed"
+    ),
+    "targetanystatus": (
+        "if the target has a status condition"
+    ),
+    "targetanystatus": (
+        "if the target has a status condition"
+    ),
+    "targetpoisoned": (
+        "if the target is poisoned"
+    ),
+    "userburnpoisonparalysis": (
+        "while the user is burned, poisoned, or paralyzed"
+    ),
+    "requiresuserhit": (
+        "if the user was hit earlier in the turn"
+    ),
+    "UserMovesAfterTarget":(
+        "if the user moves after the target"
+    )
+
+
+}
 
 
 class MyTeamView:
@@ -750,14 +868,28 @@ class MyTeamView:
                             color=TEXT_PRIMARY,
                         ),
                         self._build_stats(pokemon),
-                        ft.Text(
-                            "Moveset",
-                            size=19,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
+                        ft.Column(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Text(
+                                        "Moves",
+                                        size=19,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=TEXT_PRIMARY,
+                                    ),
+                                    ft.Text(
+                                        "Select a move to view its details.",
+                                        size=13,
+                                        color=TEXT_MUTED,
+                                    ),
+                                ],
+                            ),
+                            spacing=3,
+                            tight=True,
                         ),
                         self._build_moves(pokemon),
-                        self._build_footer(pokemon),
+self._build_footer(pokemon),
                     ],
                 ),
                 spacing=16,
@@ -933,11 +1065,13 @@ class MyTeamView:
         )
 
         move = self.move_lookup.get(move_name)
+
         move_type_value = (
             move.get("Type")
             if move
             else None
         )
+
         move_type = (
             move_type_value
             if isinstance(move_type_value, str)
@@ -960,7 +1094,11 @@ class MyTeamView:
                     move_name or "Empty move slot",
                     size=16,
                     weight=ft.FontWeight.BOLD,
-                    color="#FFFFFFFF",
+                    color=(
+                        "#FFFFFFFF"
+                        if move
+                        else TEXT_SECONDARY
+                    ),
                     expand=True,
                 ),
             ],
@@ -976,10 +1114,14 @@ class MyTeamView:
             if badge_path.exists():
                 card_controls.append(
                     ft.Image(
-                        src=self._asset_src(badge_path),
+                        src=self._asset_src(
+                            badge_path
+                        ),
                         height=18,
                         fit=ft.BoxFit.CONTAIN,
-                        semantics_label=f"{move_type} type",
+                        semantics_label=(
+                            f"{move_type} type"
+                        ),
                     )
                 )
 
@@ -993,10 +1135,1074 @@ class MyTeamView:
                 "xs": 12,
                 "sm": 6,
             },
+            height=52,
             padding=14,
+            alignment=ft.Alignment.CENTER_LEFT,
             bgcolor=background,
+            opacity=1.0 if move else 0.55,
+            border_radius=10,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            
+            on_click=(
+                (
+                    lambda event, selected_move=move:
+                    self._show_move_details(
+                        event,
+                        selected_move,
+                    )
+                )
+                if move
+                else None
+            ),
+        )
+
+    def _show_move_details(
+        self,
+        event: ft.Event[ft.Container],
+        move: dict,
+    ) -> None:
+        """Show player-facing details for a selected move."""
+
+        del event
+
+        move_name = str(
+            move.get("Move")
+            or "Unknown Move"
+        )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    move_name,
+                    size=23,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=self._build_move_detail_content(
+                        move
+                    ),
+                    width=540,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Close",
+                            on_click=(
+                                self._close_move_details
+                            ),
+                        ),
+                    ],
+                ),
+                actions_alignment=(
+                    ft.MainAxisAlignment.END
+                ),
+            )
+        )
+
+
+    def _build_move_detail_content(
+        self,
+        move: dict,
+    ) -> ft.Control:
+        """Build the scrollable move-detail dialog."""
+
+        move_type = self._clean_text(
+            move.get("Type")
+        ) or "Unknown"
+
+        category = self._clean_text(
+            move.get("Category")
+        ) or "Unknown"
+
+        type_category_controls = cast(
+            list[ft.Control],
+            [],
+        )
+
+        badge_path = (
+            ASSETS_DIR
+            / "type_badges"
+            / f"{move_type}.png"
+        )
+
+        if badge_path.exists():
+            type_category_controls.append(
+                ft.Image(
+                    src=self._asset_src(
+                        badge_path
+                    ),
+                    height=24,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=(
+                        f"{move_type} type"
+                    ),
+                )
+            )
+        else:
+            type_category_controls.append(
+                ft.Text(
+                    move_type,
+                    size=15,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                )
+            )
+
+        type_category_controls.append(
+            ft.Container(
+                content=ft.Text(
+                    category,
+                    size=13,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                padding=ft.Padding.symmetric(
+                    horizontal=11,
+                    vertical=6,
+                ),
+                bgcolor=PRIMARY_BLUE_SOFT,
+                border_radius=8,
+            )
+        )
+
+        effect_lines = (
+            self._move_effect_descriptions(
+                move
+            )
+        )
+
+        navigation_aids = (
+            self._move_navigation_aids(
+                move
+            )
+        )
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Row(
+                    controls=type_category_controls,
+                    spacing=10,
+                    wrap=True,
+                    vertical_alignment=(
+                        ft.CrossAxisAlignment.CENTER
+                    ),
+                ),
+                self._build_move_stat_summary(
+                    move
+                ),
+                ft.Divider(
+                    color=BORDER_DEFAULT,
+                    height=1,
+                ),
+                ft.Text(
+                    "Effect",
+                    size=17,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                *[
+                    ft.Text(
+                        line,
+                        size=15,
+                        color=TEXT_SECONDARY,
+                    )
+                    for line in effect_lines
+                ],
+            ],
+        )
+
+        if navigation_aids:
+            controls.extend(
+                [
+                    ft.Divider(
+                        color=BORDER_DEFAULT,
+                        height=1,
+                    ),
+                    ft.Text(
+                        "Additional Navigation Aids",
+                        size=17,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    *[
+                        self._build_navigation_aid(
+                            aid
+                        )
+                        for aid in navigation_aids
+                    ],
+                ]
+            )
+
+        return ft.Column(
+            controls=controls,
+            spacing=13,
+            tight=True,
+        )
+
+
+    def _build_move_stat_summary(
+        self,
+        move: dict,
+    ) -> ft.Control:
+        """Build the Power, Accuracy, and Priority summary."""
+
+        category = self._clean_text(
+            move.get("Category")
+        )
+
+        power_value = self._numeric_move_value(
+            move.get("Power")
+        )
+
+        power = (
+            "—"
+            if (
+                category
+                and category.lower() == "status"
+            )
+            or power_value is None
+            or power_value <= 0
+            else self._format_number(
+                power_value
+            )
+        )
+
+        accuracy_value = (
+            self._numeric_move_value(
+                move.get("Accuracy")
+            )
+        )
+
+        accuracy = (
+            f"{self._format_number(accuracy_value)}%"
+            if accuracy_value is not None
+            else "—"
+        )
+
+        priority_value = (
+            self._numeric_move_value(
+                move.get("Priority")
+            )
+        )
+
+        priority = self._priority_label(
+            priority_value
+        )
+
+        return ft.ResponsiveRow(
+            controls=cast(
+                list[ft.Control],
+                [
+                    self._build_move_stat_box(
+                        "Power",
+                        power,
+                    ),
+                    self._build_move_stat_box(
+                        "Accuracy",
+                        accuracy,
+                    ),
+                    self._build_move_stat_box(
+                        "Priority",
+                        priority,
+                    ),
+                ],
+            ),
+            columns=12,
+            spacing=10,
+            run_spacing=10,
+        )
+
+
+    @staticmethod
+    def _build_move_stat_box(
+        label: str,
+        value: str,
+    ) -> ft.Control:
+        """Build one compact move-stat box."""
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            label,
+                            size=12,
+                            color=TEXT_MUTED,
+                        ),
+                        ft.Text(
+                            value,
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                    ],
+                ),
+                spacing=3,
+            ),
+            col={
+                "xs": 12,
+                "sm": 4,
+            },
+            padding=12,
+            bgcolor=SURFACE_RAISED,
             border_radius=10,
         )
+
+
+    @staticmethod
+    def _build_navigation_aid(
+        text: str,
+    ) -> ft.Control:
+        """Build one player-facing navigation aid."""
+
+        return ft.Row(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Icon(
+                        ft.Icons.EXPLORE_OUTLINED,
+                        size=17,
+                        color=PRIMARY_BLUE,
+                    ),
+                    ft.Text(
+                        text,
+                        size=14,
+                        color=TEXT_SECONDARY,
+                        expand=True,
+                    ),
+                ],
+            ),
+            spacing=8,
+            vertical_alignment=(
+                ft.CrossAxisAlignment.START
+            ),
+        )
+
+
+    def _move_effect_descriptions(
+        self,
+        move: dict,
+    ) -> list[str]:
+        """Translate structured move data into concise effect text."""
+
+        descriptions: list[str] = []
+
+        category = self._clean_text(
+            move.get("Category")
+        )
+
+        power = self._numeric_move_value(
+            move.get("Power")
+        )
+
+        damage_method = self._clean_text(
+            move.get("DamageMethod")
+        )
+
+        if (
+            damage_method
+            and damage_method.lower() == "ohko"
+        ):
+            descriptions.append(
+                (
+                    "Knocks out the target in one hit "
+                    "when the move succeeds."
+                )
+            )
+        elif (
+            damage_method
+            and damage_method.lower() == "fixed"
+        ):
+            descriptions.append(
+                "Deals a fixed amount of damage."
+            )
+        elif power is not None and power > 0:
+            descriptions.append(
+                "Deals damage."
+            )
+
+        multiplier = self._numeric_move_value(
+            move.get(
+                "ActivationPowerMultiplier"
+            )
+        )
+
+        condition = self._clean_text(
+            move.get("ActivationCondition")
+        )
+
+        condition_description = (
+            self._activation_condition_description(
+                condition
+            )
+        )
+
+        if (
+            multiplier is not None
+            and multiplier > 1
+            and condition_description
+        ):
+            descriptions.append(
+                self._multiplier_description(
+                    multiplier,
+                    condition_description,
+                )
+            )
+
+        status_description = (
+            self._status_effect_description(
+                move.get("StatusEffect"),
+                is_status_move=(
+                    category is not None
+                    and category.lower() == "status"
+                ),
+            )
+        )
+
+        if status_description:
+            descriptions.append(
+                status_description
+            )
+
+        descriptions.extend(
+            self._stat_stage_effect_descriptions(
+                move
+            )
+        )
+
+        if not descriptions:
+            descriptions.append(
+                (
+                    "Additional effects for this move "
+                    "are still being added to the "
+                    "Battle Compass."
+                )
+            )
+
+        return descriptions
+
+
+    def _stat_stage_effect_descriptions(
+        self,
+        move: dict,
+    ) -> list[str]:
+        """Translate modeled stat-stage changes into plain English."""
+
+        stat_fields = [
+            (
+                "AtkStageChange",
+                "Attack",
+            ),
+            (
+                "DefStageChange",
+                "Defense",
+            ),
+            (
+                "SpAStageChange",
+                "Special Attack",
+            ),
+            (
+                "SpDStageChange",
+                "Special Defense",
+            ),
+            (
+                "SpeStageChange",
+                "Speed",
+            ),
+        ]
+
+        changes: list[tuple[str, int]] = []
+
+        for field_name, stat_name in stat_fields:
+            raw_change = self._numeric_move_value(
+                move.get(field_name)
+            )
+
+            if raw_change is None:
+                continue
+
+            stage_change = int(raw_change)
+
+            if stage_change == 0:
+                continue
+
+            changes.append(
+                (
+                    stat_name,
+                    stage_change,
+                )
+            )
+
+        if not changes:
+            return []
+
+        raw_tags = move.get(
+            "MechanicsTags"
+        )
+
+        tags = (
+            {
+                tag
+                for tag in raw_tags
+                if isinstance(tag, str)
+            }
+            if isinstance(raw_tags, list)
+            else set()
+        )
+
+        is_setup_move = any(
+            tag.endswith("Setup")
+            for tag in tags
+        )
+
+        grouped_changes: dict[
+            tuple[str, int, str],
+            list[str],
+        ] = {}
+
+        for stat_name, stage_change in changes:
+            if is_setup_move:
+                subject = "user"
+            elif stage_change > 0:
+                subject = "user"
+            else:
+                subject = "target"
+
+            direction = (
+                "raises"
+                if stage_change > 0
+                else "lowers"
+            )
+
+            magnitude = abs(
+                stage_change
+            )
+
+            group_key = (
+                direction,
+                magnitude,
+                subject,
+            )
+
+            grouped_changes.setdefault(
+                group_key,
+                [],
+            ).append(
+                stat_name
+            )
+
+        descriptions: list[str] = []
+
+        for (
+            direction,
+            magnitude,
+            subject,
+        ), stat_names in grouped_changes.items():
+            subject_text = (
+                "the user's"
+                if subject == "user"
+                else "the target's"
+            )
+
+            combined_stats = (
+                self._combine_stat_names(
+                    stat_names
+                )
+            )
+
+            stage_word = (
+                "stage"
+                if magnitude == 1
+                else "stages"
+            )
+
+            each_text = (
+                " each"
+                if len(stat_names) > 1
+                else ""
+            )
+
+            descriptions.append(
+                (
+                    f"{direction.capitalize()} "
+                    f"{subject_text} "
+                    f"{combined_stats} by "
+                    f"{magnitude} {stage_word}"
+                    f"{each_text}."
+                )
+            )
+
+        return descriptions
+
+
+    @staticmethod
+    def _combine_stat_names(
+        stat_names: list[str],
+    ) -> str:
+        """Join stat names using natural English punctuation."""
+
+        if not stat_names:
+            return ""
+
+        if len(stat_names) == 1:
+            return stat_names[0]
+
+        if len(stat_names) == 2:
+            return (
+                f"{stat_names[0]} and "
+                f"{stat_names[1]}"
+            )
+
+        return (
+            ", ".join(
+                stat_names[:-1]
+            )
+            + f", and {stat_names[-1]}"
+        )
+
+
+    def _move_navigation_aids(
+        self,
+        move: dict,
+    ) -> list[str]:
+        """Translate relevant mechanics into player-facing notes."""
+
+        aids: list[str] = []
+
+        if bool(move.get("UseDEF")):
+            aids.append(
+                (
+                    "Uses the user's Defense instead of "
+                    "Attack when calculating damage."
+                )
+            )
+
+        if bool(move.get("TargetDEFasSPD")):
+            aids.append(
+                (
+                    "Targets the opponent's Defense instead "
+                    "of Special Defense."
+                )
+            )
+
+        if bool(move.get("TargetATK")):
+            aids.append(
+                (
+                    "Uses the target's Attack instead of "
+                    "the user's Attack when calculating damage."
+                )
+            )
+
+        if bool(move.get("MakesContact")):
+            aids.append(
+                (
+                    "Makes contact, so it can trigger "
+                    "contact-based abilities and effects."
+                )
+            )
+
+        hits = self._numeric_move_value(
+            move.get("Hits")
+        )
+
+        if hits is not None and hits > 1:
+            hit_count = self._format_number(
+                hits
+            )
+
+            aids.append(
+                f"Hits {hit_count} times."
+            )
+
+        priority = self._numeric_move_value(
+            move.get("Priority")
+        )
+
+        if priority is not None:
+            if priority > 0:
+                priority_text = (
+                    f"+{self._format_number(priority)}"
+                )
+
+                aids.append(
+                    (
+                        f"Has {priority_text} priority, so it "
+                        "usually moves before standard-priority moves."
+                    )
+                )
+            elif priority < 0:
+                aids.append(
+                    (
+                        f"Has {self._format_number(priority)} priority, "
+                        "so it usually moves after standard-priority moves."
+                    )
+                )
+
+        raw_tags = move.get(
+            "MechanicsTags"
+        )
+
+        tags = (
+            raw_tags
+            if isinstance(raw_tags, list)
+            else []
+        )
+
+        for tag in tags:
+            if not isinstance(tag, str):
+                continue
+
+            description = (
+                MOVE_TAG_DESCRIPTIONS.get(
+                    tag
+                )
+            )
+
+            if (
+                description
+                and description not in aids
+            ):
+                aids.append(
+                    description
+                )
+
+        return aids
+
+
+    @staticmethod
+    def _activation_condition_description(
+        condition: str | None,
+    ) -> str | None:
+        """Translate a modeled activation condition."""
+
+        if not condition:
+            return None
+
+        normalized = "".join(
+            character
+            for character in condition.lower()
+            if character.isalnum()
+        )
+
+        if normalized == "always":
+            return None
+
+        return (
+            ACTIVATION_CONDITION_DESCRIPTIONS.get(
+                normalized
+            )
+        )
+
+
+    @classmethod
+    def _multiplier_description(
+        cls,
+        multiplier: float,
+        condition_description: str,
+    ) -> str:
+        """Describe an exact conditional damage multiplier."""
+
+        if multiplier == 2:
+            return (
+                "Damage is doubled "
+                f"{condition_description}."
+            )
+
+        if multiplier == 3:
+            return (
+                "Damage is tripled "
+                f"{condition_description}."
+            )
+
+        increase_percent = round(
+            (multiplier - 1) * 100
+        )
+
+        if increase_percent > 0:
+            return (
+                f"Damage increases by {increase_percent}% "
+                f"{condition_description}."
+            )
+
+        return (
+            "Damage is multiplied by "
+            f"{cls._format_number(multiplier)}× "
+            f"{condition_description}."
+        )
+
+
+    @classmethod
+    def _status_effect_description(
+        cls,
+        status_effect: object,
+        *,
+        is_status_move: bool,
+    ) -> str | None:
+        """Translate available status-effect metadata."""
+
+        if not status_effect:
+            return None
+
+        if isinstance(status_effect, str):
+            normalized_status = (
+                status_effect.strip().lower()
+            )
+
+            if not normalized_status:
+                return None
+
+            guaranteed_effects = {
+                "burn": "Burns the target.",
+                "burned": "Burns the target.",
+                "paralysis": "Paralyzes the target.",
+                "paralyze": "Paralyzes the target.",
+                "paralyzed": "Paralyzes the target.",
+                "poison": "Poisons the target.",
+                "poisoned": "Poisons the target.",
+                "badly poison": (
+                    "Badly poisons the target."
+                ),
+                "badly poisoned": (
+                    "Badly poisons the target."
+                ),
+                "sleep": (
+                    "Puts the target to sleep."
+                ),
+                "asleep": (
+                    "Puts the target to sleep."
+                ),
+                "freeze": "Freezes the target.",
+                "frozen": "Freezes the target.",
+                "confusion": "Confuses the target.",
+                "confused": "Confuses the target.",
+                "flinch": (
+                    "Makes the target flinch."
+                ),
+            }
+
+            guaranteed_description = (
+                guaranteed_effects.get(
+                    normalized_status
+                )
+            )
+
+            if (
+                is_status_move
+                and guaranteed_description
+            ):
+                return guaranteed_description
+
+            possible_effects = {
+                "burn": (
+                    "Can burn the target."
+                ),
+                "burned": (
+                    "Can burn the target."
+                ),
+                "paralysis": (
+                    "Can paralyze the target."
+                ),
+                "paralyze": (
+                    "Can paralyze the target."
+                ),
+                "paralyzed": (
+                    "Can paralyze the target."
+                ),
+                "poison": (
+                    "Can poison the target."
+                ),
+                "poisoned": (
+                    "Can poison the target."
+                ),
+                "badly poison": (
+                    "Can badly poison the target."
+                ),
+                "badly poisoned": (
+                    "Can badly poison the target."
+                ),
+                "sleep": (
+                    "Can put the target to sleep."
+                ),
+                "asleep": (
+                    "Can put the target to sleep."
+                ),
+                "freeze": (
+                    "Can freeze the target."
+                ),
+                "frozen": (
+                    "Can freeze the target."
+                ),
+                "confusion": (
+                    "Can confuse the target."
+                ),
+                "confused": (
+                    "Can confuse the target."
+                ),
+                "flinch": (
+                    "Can make the target flinch."
+                ),
+            }
+
+            return possible_effects.get(
+                normalized_status,
+                (
+                    "Can apply "
+                    f"{normalized_status} to the target."
+                ),
+            )
+
+        if not isinstance(
+            status_effect,
+            dict,
+        ):
+            return None
+
+        status_name = cls._clean_text(
+            status_effect.get("Status")
+            or status_effect.get("Effect")
+            or status_effect.get("Name")
+        )
+
+        if not status_name:
+            return None
+
+        chance = cls._numeric_move_value(
+            status_effect.get("Chance")
+            or status_effect.get("Percent")
+        )
+
+        if chance is not None:
+            return (
+                f"Has a {cls._format_number(chance)}% chance "
+                f"to apply {status_name.lower()} "
+                "to the target."
+            )
+
+        if is_status_move:
+            return (
+                f"Applies {status_name.lower()} "
+                "to the target."
+            )
+
+        return (
+            f"Can apply {status_name.lower()} "
+            "to the target."
+        )
+
+
+    @staticmethod
+    def _priority_label(
+        priority: float | None,
+    ) -> str:
+        """Return a concise player-facing priority label."""
+
+        if priority is None or priority == 0:
+            return "Normal"
+
+        if priority > 0:
+            return (
+                f"+{MyTeamView._format_number(priority)}"
+            )
+
+        return MyTeamView._format_number(
+            priority
+        )
+
+
+    @classmethod
+    def _display_move_value(
+        cls,
+        value: object,
+    ) -> str:
+        """Format Power or a similar move value."""
+
+        numeric_value = (
+            cls._numeric_move_value(
+                value
+            )
+        )
+
+        if numeric_value is None:
+            return "—"
+
+        return cls._format_number(
+            numeric_value
+        )
+
+
+    @staticmethod
+    def _numeric_move_value(
+        value: object,
+    ) -> float | None:
+        """Safely convert a move metadata value to a number."""
+
+        if isinstance(value, bool):
+            return float(
+                int(value)
+            )
+
+        if isinstance(value, int | float):
+            return float(value)
+
+        if isinstance(value, str):
+            normalized = value.strip()
+
+            if not normalized:
+                return None
+
+            try:
+                return float(
+                    normalized
+                )
+            except ValueError:
+                return None
+
+        return None
+
+
+    @staticmethod
+    def _format_number(
+        value: float,
+    ) -> str:
+        """Display whole numbers without a trailing decimal."""
+
+        if value.is_integer():
+            return str(
+                int(value)
+            )
+
+        return f"{value:g}"
+
+
+    @staticmethod
+    def _clean_text(
+        value: object,
+    ) -> str | None:
+        """Return a stripped string or None."""
+
+        if not isinstance(value, str):
+            return None
+
+        cleaned = value.strip()
+
+        return cleaned or None
+
+
+    def _close_move_details(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the move-detail dialog."""
+
+        del event
+        self.page.pop_dialog()
+        self.page.update()
+        
 
     def _build_footer(
         self,
