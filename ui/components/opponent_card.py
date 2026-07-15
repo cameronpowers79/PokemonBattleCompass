@@ -69,7 +69,7 @@ class OpponentCard(ft.Container):
 
         super().__init__(
             content=self._build_content(),
-            width=940,
+            expand=True,
             padding=24,
             bgcolor=SURFACE,
             border=ft.Border.all(

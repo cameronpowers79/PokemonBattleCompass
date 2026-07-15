@@ -13,6 +13,10 @@ from typing import cast
 
 import flet as ft
 
+from ui.components.full_analysis import (
+    FULL_ANALYSIS_SCROLL_KEY,
+    FullAnalysis,
+)
 from ui.components.opponent_card import OpponentCard
 from ui.components.other_strong_options import (
     OtherStrongOptions,
@@ -804,6 +808,9 @@ class BattleCompassView:
                     for note
                     in recommendation.battle_notes
                 ],
+                on_full_analysis_click=(
+                    self._scroll_to_full_analysis
+                ),
             )
         )
 
@@ -914,19 +921,56 @@ class BattleCompassView:
             ],
         )
 
+        full_analysis = FullAnalysis(
+            matchups=view_model.all_matchups,
+        )
+
         return ft.Column(
             controls=cast(
                 list[ft.Control],
                 [
-                    recommendation_card,
-                    opponent_card,
+                    ft.ResponsiveRow(
+                        controls=[
+                            ft.Container(
+                                content=recommendation_card,
+                                col={
+                                    "xs": 12,
+                                    "xl": 6,
+                                },
+                            ),
+                            ft.Container(
+                                content=opponent_card,
+                                col={
+                                    "xs": 12,
+                                    "xl": 6,
+                                },
+                            ),
+                        ],
+                        columns=12,
+                        spacing=20,
+                        run_spacing=20,
+                        vertical_alignment=ft.CrossAxisAlignment.START,
+                    ),
                     other_options,
+                    full_analysis,
                 ],
             ),
-            spacing=28,
-            horizontal_alignment=(
-                ft.CrossAxisAlignment.CENTER
-            ),
+    spacing=28,
+    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+)
+
+    async def _scroll_to_full_analysis(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Scroll smoothly to the Full Analysis section."""
+
+        del event
+
+        await self.page.scroll_to(
+            scroll_key=FULL_ANALYSIS_SCROLL_KEY,
+            duration=600,
+            curve=ft.AnimationCurve.EASE_IN_OUT,
         )
 
     def _build_strong_option(

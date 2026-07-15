@@ -7,7 +7,8 @@ strength, supporting explanation, and structured battle notes.
 
 from __future__ import annotations
 
-from typing import cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import flet as ft
 
@@ -53,6 +54,9 @@ class RecommendationCard(ft.Container):
         matchup_level: int,
         why_text: str,
         battle_notes: list[tuple[str, str, str]],
+        on_full_analysis_click: (
+            Callable[[ft.Event[ft.Button]], Any]
+        ),
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -81,10 +85,13 @@ class RecommendationCard(ft.Container):
 
         self.why_text = why_text
         self.battle_notes = battle_notes
+        self.on_full_analysis_click = (
+            on_full_analysis_click
+        )
 
         super().__init__(
             content=self._build_content(),
-            width=940,
+            expand=True,
             padding=CARD_PADDING,
             bgcolor=SURFACE,
             border=ft.Border.all(
@@ -466,8 +473,10 @@ class RecommendationCard(ft.Container):
             "#47B96B",
             "#4F9CFF",
         ]
-        
-        active_color = segment_colors[self.matchup_level]
+
+        active_color = segment_colors[
+            self.matchup_level
+        ]
 
         segments = cast(
             list[ft.Control],
@@ -534,6 +543,45 @@ class RecommendationCard(ft.Container):
         )
 
     def _build_why_section(self) -> ft.Control:
+        full_analysis_prompt = ft.Button(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Icon(
+                            ft.Icons.ARROW_DOWNWARD_ROUNDED,
+                            size=20,
+                            color=PRIMARY_BLUE_LIGHT,
+                        ),
+                        ft.Icon(
+                            ft.Icons.INFO_OUTLINE_ROUNDED,
+                            size=18,
+                            color=PRIMARY_BLUE_LIGHT,
+                        ),
+                        ft.Text(
+                            "Compare the entire team in Full Analysis",
+                            size=15,
+                            weight=ft.FontWeight.W_500,
+                            color=PRIMARY_BLUE_LIGHT,
+                            expand=True,
+                        ),
+                    ],
+                ),
+                spacing=7,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            style=ft.ButtonStyle(
+                padding=ft.Padding.symmetric(
+                    horizontal=4,
+                    vertical=6,
+                ),
+                bgcolor="#00000000",
+                elevation=0,
+                alignment=ft.Alignment.CENTER_LEFT,
+            ),
+            on_click=self.on_full_analysis_click,
+        )
+
         return ft.Container(
             content=ft.Column(
                 controls=cast(
@@ -550,18 +598,11 @@ class RecommendationCard(ft.Container):
                             size=15,
                             color="#D7E8FF",
                         ),
-                        ft.Text(
-                            (
-                                "ⓘ Compare the entire team in "
-                                "Full Analysis."
-                            ),
-                            size=14,
-                            weight=ft.FontWeight.BOLD,
-                            color=PRIMARY_BLUE_LIGHT,
-                        ),
+                        full_analysis_prompt,
                     ],
                 ),
                 spacing=9,
+                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
             ),
             padding=16,
             bgcolor=PRIMARY_BLUE_SOFT,

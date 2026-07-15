@@ -89,7 +89,7 @@
 - [ ] Recreate branding, typography, cards, and interactions in the new UI.
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
-- [ ] Ensure Matchup Strength text matches the highlighted color in the graphic
+- [x] Ensure Matchup Strength text matches the highlighted color in the graphic
 - [ ] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
 
 ---
@@ -186,7 +186,7 @@
 
 - [ ] Expand the modeled held-item list.
 - [ ] Add held-item data validation.
-- [ ] Recommend a modeled held item for the selected matchup.
+- [x] Recommend a modeled held item for the selected matchup.
 - [ ] Compare the current item with the recommended item.
 - [ ] Show estimated Move Score change from switching.
 - [ ] Distinguish offensive, defensive, and sustain recommendations.
