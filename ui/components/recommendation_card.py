@@ -466,6 +466,8 @@ class RecommendationCard(ft.Container):
             "#47B96B",
             "#4F9CFF",
         ]
+        
+        active_color = segment_colors[self.matchup_level]
 
         segments = cast(
             list[ft.Control],
@@ -519,7 +521,7 @@ class RecommendationCard(ft.Container):
                         self.matchup_label,
                         size=21,
                         weight=ft.FontWeight.BOLD,
-                        color=SUCCESS,
+                        color=active_color,
                     ),
                     ft.Text(
                         f"Ratio {self.matchup_ratio:.2f}",

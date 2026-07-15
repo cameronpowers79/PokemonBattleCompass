@@ -83,7 +83,7 @@
 - [x] Reduce the size of the ♂/♀ gender symbols slightly.
 - [x] Reuse My Team’s move-card visual language during onboarding.
 - [ ] Tap or click move cards for full move details.
-- [ ] Tap or click Ability and Held Item for descriptions.
+- [/] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
 - [ ] Optional: tap type badges to show weaknesses and resistances.
 - [ ] Add held-item sprites to the boosted-attack popover.
 - [ ] Recreate branding, typography, cards, and interactions in the new UI.
@@ -190,8 +190,8 @@
 - [ ] Compare the current item with the recommended item.
 - [ ] Show estimated Move Score change from switching.
 - [ ] Distinguish offensive, defensive, and sustain recommendations.
-- [ ] Explain why the item is recommended.
-- [ ] Add held-item sprites and descriptions.
+- [x] Explain why the item is recommended.
+- [/] Add held-item sprites and descriptions. (Need sprites 7/15)
 
 ---
 

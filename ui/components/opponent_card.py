@@ -1,8 +1,9 @@
 """
 Opponent Card component.
 
-Displays the selected opponent and summarizes its most dangerous
-projected incoming move against the recommended Pokémon.
+Displays the selected trainer and opponent Pokémon, then summarizes the
+opponent's most dangerous projected incoming move against the
+recommended Pokémon.
 """
 
 from __future__ import annotations
@@ -22,11 +23,13 @@ from ui.theme import (
 
 
 class OpponentCard(ft.Container):
-    """Responsive opponent identity and incoming-threat card."""
+    """Responsive trainer, opponent, and incoming-threat card."""
 
     def __init__(
         self,
         *,
+        trainer_name: str | None,
+        trainer_artwork_src: str | None,
         pokemon_name: str,
         artwork_src: str,
         level: int | None,
@@ -39,6 +42,9 @@ class OpponentCard(ft.Container):
         defensive_effectiveness_color: str,
         defensive_effectiveness_background: str,
     ) -> None:
+        self.trainer_name = trainer_name
+        self.trainer_artwork_src = trainer_artwork_src
+
         self.pokemon_name = pokemon_name
         self.artwork_src = artwork_src
         self.level = level
@@ -73,7 +79,18 @@ class OpponentCard(ft.Container):
             border_radius=18,
         )
 
+    @property
+    def has_trainer(self) -> bool:
+        """Return whether this encounter has a displayed trainer."""
+
+        return bool(
+            self.trainer_name
+            and self.trainer_artwork_src
+        )
+
     def _build_content(self) -> ft.Control:
+        """Build the complete opponent card."""
+
         return ft.Column(
             controls=cast(
                 list[ft.Control],
@@ -95,7 +112,99 @@ class OpponentCard(ft.Container):
             spacing=20,
         )
 
-    def _build_identity_section(self) -> ft.Control:
+    def _build_identity_section(
+        self,
+    ) -> ft.Control:
+        """Build a responsive trainer and opponent identity area."""
+
+        if not self.has_trainer:
+            return ft.Container(
+                content=self._build_pokemon_identity(),
+                alignment=ft.Alignment.CENTER,
+                width=float("inf"),
+            )
+
+        return ft.ResponsiveRow(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Container(
+                        content=self._build_trainer_identity(),
+                        col={
+                            "xs": 12,
+                            "md": 3,
+                        },
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                    ft.Container(
+                        content=self._build_pokemon_identity(),
+                        col={
+                            "xs": 12,
+                            "md": 6,
+                        },
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                    ft.Container(
+                        col={
+                            "xs": 0,
+                            "md": 3,
+                        },
+                    ),
+                ],
+            ),
+            columns=12,
+            spacing=18,
+            run_spacing=18,
+            vertical_alignment=(
+                ft.CrossAxisAlignment.CENTER
+            ),
+        )
+
+    def _build_trainer_identity(
+        self,
+    ) -> ft.Control:
+        """Build the smaller trainer portrait and name block."""
+
+        if (
+            self.trainer_name is None
+            or self.trainer_artwork_src is None
+        ):
+            return ft.Container()
+
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Image(
+                        src=self.trainer_artwork_src,
+                        width=108,
+                        height=108,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=(
+                            f"Trainer {self.trainer_name}"
+                        ),
+                    ),
+                    ft.Text(
+                        self.trainer_name,
+                        size=17,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_SECONDARY,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
+            ),
+            spacing=8,
+            horizontal_alignment=(
+                ft.CrossAxisAlignment.CENTER
+            ),
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
+
+    def _build_pokemon_identity(
+        self,
+    ) -> ft.Control:
+        """Build the visually dominant opponent Pokémon block."""
+
         badge_controls = cast(
             list[ft.Control],
             [
@@ -103,58 +212,65 @@ class OpponentCard(ft.Container):
                     src=badge_src,
                     height=22,
                     fit=ft.BoxFit.CONTAIN,
-                    semantics_label=f"{pokemon_type} type",
+                    semantics_label=(
+                        f"{pokemon_type} type"
+                    ),
                 )
-                for pokemon_type, badge_src in self.type_badges
+                for pokemon_type, badge_src
+                in self.type_badges
             ],
         )
 
-        return ft.Container(
-            content=ft.Column(
-                controls=cast(
-                    list[ft.Control],
-                    [
-                        ft.Image(
-                            src=self.artwork_src,
-                            width=150,
-                            height=150,
-                            fit=ft.BoxFit.CONTAIN,
-                            semantics_label=self.pokemon_name,
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Image(
+                        src=self.artwork_src,
+                        width=150,
+                        height=150,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=self.pokemon_name,
+                    ),
+                    ft.Text(
+                        self.pokemon_name,
+                        size=34,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Row(
+                        controls=badge_controls,
+                        spacing=8,
+                        wrap=True,
+                        alignment=(
+                            ft.MainAxisAlignment.CENTER
                         ),
-                        ft.Text(
-                            self.pokemon_name,
-                            size=34,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
-                            text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Text(
+                        (
+                            f"Lv. {self.level}"
+                            if self.level is not None
+                            else "Lv. —"
                         ),
-                        ft.Row(
-                            controls=badge_controls,
-                            spacing=8,
-                            wrap=True,
-                            alignment=ft.MainAxisAlignment.CENTER,
-                        ),
-                        ft.Text(
-                            (
-                                f"Lv. {self.level}"
-                                if self.level is not None
-                                else "Lv. —"
-                            ),
-                            size=15,
-                            color=TEXT_MUTED,
-                            text_align=ft.TextAlign.CENTER,
-                        ),
-                    ],
-                ),
-                spacing=12,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER,
+                        size=15,
+                        color=TEXT_MUTED,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
             ),
-            alignment=ft.Alignment.CENTER,
-            width=float("inf"),
+            spacing=12,
+            horizontal_alignment=(
+                ft.CrossAxisAlignment.CENTER
+            ),
+            alignment=ft.MainAxisAlignment.CENTER,
         )
 
-    def _build_threat_section(self) -> ft.Control:
+    def _build_threat_section(
+        self,
+    ) -> ft.Control:
+        """Build incoming score and move panels."""
+
         score_panel = ft.Container(
             content=ft.Column(
                 controls=cast(
@@ -208,10 +324,7 @@ class OpponentCard(ft.Container):
                                         color=TEXT_PRIMARY,
                                     ),
                                     ft.Image(
-                                        src=(
-                                            self
-                                            .incoming_type_badge_src
-                                        ),
+                                        src=self.incoming_type_badge_src,
                                         height=20,
                                         fit=ft.BoxFit.CONTAIN,
                                         semantics_label=(
@@ -228,16 +341,10 @@ class OpponentCard(ft.Container):
                         ),
                         ft.Container(
                             content=ft.Text(
-                                (
-                                    self
-                                    .defensive_effectiveness_label
-                                ),
+                                self.defensive_effectiveness_label,
                                 size=15,
                                 weight=ft.FontWeight.BOLD,
-                                color=(
-                                    self
-                                    .defensive_effectiveness_color
-                                ),
+                                color=self.defensive_effectiveness_color,
                             ),
                             padding=ft.Padding.symmetric(
                                 horizontal=16,
@@ -262,15 +369,24 @@ class OpponentCard(ft.Container):
             border_radius=12,
         )
 
-        return ft.ResponsiveRow(
-            controls=cast(
-                list[ft.Control],
-                [
-                    score_panel,
-                    move_panel,
-                ],
+        centered_threat_row = ft.Container(
+            content=ft.ResponsiveRow(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        score_panel,
+                        move_panel,
+                    ],
+                ),
+                columns=12,
+                spacing=16,
+                run_spacing=16,
             ),
-            columns=12,
-            spacing=16,
-            run_spacing=16,
+            width=780,
+        )
+
+        return ft.Container(
+            content=centered_threat_row,
+            width=float("inf"),
+            alignment=ft.Alignment.CENTER,
         )

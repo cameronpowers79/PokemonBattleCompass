@@ -44,6 +44,13 @@ from ui.viewmodels.battle_compass_vm import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
+TRAINER_TEXTURE_DIR = (
+    ASSETS_DIR
+    / "raw"
+    / "pokesprite"
+    / "pokemon-gen8"
+    / "regular"
+)
 
 STARTER_OPTIONS = [
     "Grookey",
@@ -806,7 +813,29 @@ class BattleCompassView:
             )
         )
 
+        has_trainer = (
+            self.selected_trainer.strip()
+            != str(
+                opponent.get("Pokemon")
+                or ""
+            ).strip()
+        )
+
         opponent_card = OpponentCard(
+            trainer_name=(
+                self._display_trainer_name(
+                    self.selected_trainer
+                )
+                if has_trainer
+                else None
+            ),
+            trainer_artwork_src=(
+                self._trainer_asset(
+                    self.selected_trainer
+                )
+                if has_trainer
+                else None
+            ),
             pokemon_name=opponent["Pokemon"],
             artwork_src=self._pokemon_asset(
                 opponent["Pokemon"],
@@ -998,6 +1027,65 @@ class BattleCompassView:
         return self._asset_src(
             asset_path
         )
+
+    def _trainer_asset(
+        self,
+        trainer_name: str,
+    ) -> str:
+        """Return the trainer texture for the selected opponent."""
+
+        normalized_name = trainer_name.strip()
+
+        if normalized_name.startswith("BT "):
+            filename = "bt-texture.png"
+        elif normalized_name == "HT Sebastian":
+            filename = "ht-sebastian-texture.png"
+        elif normalized_name in {
+            "HT Aria",
+            "HT Camilla",
+        }:
+            filename = (
+                "ht-aria-camilla-texture.png"
+            )
+        else:
+            trainer_slug = (
+                normalized_name
+                .lower()
+                .replace(" ", "-")
+            )
+            filename = (
+                f"{trainer_slug}-texture.png"
+            )
+
+        trainer_path = (
+            TRAINER_TEXTURE_DIR
+            / filename
+        )
+
+        if not trainer_path.exists():
+            raise FileNotFoundError(
+                "No trainer texture found for "
+                f"{trainer_name}: {trainer_path}"
+            )
+
+        return self._asset_src(
+            trainer_path
+        )
+
+    @staticmethod
+    def _display_trainer_name(
+        trainer_name: str,
+    ) -> str:
+        """Remove stadium-trainer prefixes from the displayed name."""
+
+        normalized_name = trainer_name.strip()
+
+        if normalized_name.startswith(
+            ("BT ", "HT ")
+        ):
+            return normalized_name[3:]
+
+        return normalized_name
 
     def _type_badge_asset(
         self,
