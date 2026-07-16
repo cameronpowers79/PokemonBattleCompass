@@ -17,6 +17,7 @@ from engine.calculations import (
 from engine.data_loader import load_json
 from ui.constants import NOTE_ICONS
 
+
 class ReferenceData(TypedDict):
     """Bundled application reference datasets."""
 
@@ -31,8 +32,8 @@ class ReferenceData(TypedDict):
     moves_data: list[dict]
     type_chart: dict[str, dict[str, float]]
 
-@dataclass(frozen=True)
 
+@dataclass(frozen=True)
 class BattleNoteViewModel:
     """Display-ready battle note."""
 
@@ -69,10 +70,11 @@ class BattleCompassViewModel:
     """Complete display model for one selected opponent."""
 
     opponent: dict
-    recommendation: MatchupViewModel
+    recommendation: MatchupViewModel | None
     why_text: str
     other_options: list[MatchupViewModel]
     all_matchups: list[MatchupViewModel]
+    empty_state_message: str | None = None
 
 
 def get_matchup_strength(
@@ -281,8 +283,17 @@ def build_battle_compass_view_model(
     )
 
     if recommended_pokemon is None:
-        raise RuntimeError(
-            "No team members currently have a damaging move."
+        return BattleCompassViewModel(
+            opponent=opponent,
+            recommendation=None,
+            why_text="",
+            other_options=[],
+            all_matchups=[],
+            empty_state_message=(
+                "No battle recommendation is available yet. "
+                "Add at least one damaging move to your team, save the team, "
+                "and return to the Battle Compass."
+            ),
         )
 
     matchup_results = evaluate_team_matchups(
@@ -308,16 +319,34 @@ def build_battle_compass_view_model(
             move_lookup=move_lookup,
         )
         for result in matchup_results
+        if result.get("Pokemon") in pokemon_lookup
     ]
 
     recommendation = next(
-        matchup
-        for matchup in all_matchups
-        if (
-            matchup.pokemon["Pokemon"]
-            == recommended_pokemon["Pokemon"]
-        )
+        (
+            matchup
+            for matchup in all_matchups
+            if (
+                matchup.pokemon["Pokemon"]
+                == recommended_pokemon["Pokemon"]
+            )
+        ),
+        None,
     )
+
+    if recommendation is None:
+        return BattleCompassViewModel(
+            opponent=opponent,
+            recommendation=None,
+            why_text="",
+            other_options=[],
+            all_matchups=all_matchups,
+            empty_state_message=(
+                "The team could not produce a usable recommendation for "
+                "this opponent. Check that at least one saved team member "
+                "has a valid damaging move."
+            ),
+        )
 
     other_options = [
         matchup
@@ -331,6 +360,7 @@ def build_battle_compass_view_model(
         why_text=why_text,
         other_options=other_options[:2],
         all_matchups=all_matchups,
+        empty_state_message=None,
     )
 
 

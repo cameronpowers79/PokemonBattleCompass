@@ -705,10 +705,71 @@ class BattleCompassView:
             )
         )
 
+        if view_model.recommendation is None:
+            self.results_host.content = (
+                self._build_no_recommendation_state(
+                    view_model.empty_state_message
+                )
+            )
+            return
+
         self.results_host.content = (
             self._build_results(
                 view_model
             )
+        )
+
+    @staticmethod
+    def _build_no_recommendation_state(
+        message: str | None,
+    ) -> ft.Control:
+        """Build a friendly empty state when no damaging move is available."""
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Icon(
+                            ft.Icons.INFO_OUTLINE_ROUNDED,
+                            size=34,
+                            color=PRIMARY_BLUE,
+                        ),
+                        ft.Text(
+                            "No Battle Recommendation Yet",
+                            size=22,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Text(
+                            (
+                                message
+                                or (
+                                    "Add at least one damaging move to "
+                                    "your team, save it, and return here."
+                                )
+                            ),
+                            size=15,
+                            color=TEXT_SECONDARY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                    ],
+                ),
+                spacing=12,
+                horizontal_alignment=(
+                    ft.CrossAxisAlignment.CENTER
+                ),
+            ),
+            width=940,
+            padding=28,
+            bgcolor=SURFACE,
+            border=ft.Border.all(
+                1,
+                BORDER_DEFAULT,
+            ),
+            border_radius=16,
+            alignment=ft.Alignment.CENTER,
         )
 
     def _build_results(
@@ -718,6 +779,12 @@ class BattleCompassView:
         recommendation = (
             view_model.recommendation
         )
+
+        if recommendation is None:
+            return self._build_no_recommendation_state(
+                view_model.empty_state_message
+            )
+
         opponent = view_model.opponent
 
         recommendation_card = (
