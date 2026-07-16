@@ -189,6 +189,15 @@ ACTIVATION_CONDITION_DESCRIPTIONS = {
     "previousmovefailedagainsttarget": (
         "if the user's previous move against the target failed"
     ),
+    "targetanystatus": (
+    "if the target has a status condition"
+    ),
+    "requiresuserhit": (
+        "if the user was hit earlier in the turn"
+    ),
+    "userburnpoisonparalysis": (
+        "while the user is burned, poisoned, or paralyzed"
+    ),
 }
 
 

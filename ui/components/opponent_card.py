@@ -12,6 +12,7 @@ from typing import cast
 
 import flet as ft
 
+from ui.constants import TYPE_COLORS
 from ui.theme import (
     BORDER_DEFAULT,
     SURFACE,
@@ -34,6 +35,7 @@ class OpponentCard(ft.Container):
         artwork_src: str,
         level: int | None,
         type_badges: list[tuple[str, str]],
+        opponent_moves: list[tuple[str, str, str]],
         incoming_worst_score: float,
         worst_incoming_move: str,
         incoming_category: str,
@@ -49,6 +51,7 @@ class OpponentCard(ft.Container):
         self.artwork_src = artwork_src
         self.level = level
         self.type_badges = type_badges
+        self.opponent_moves = opponent_moves
 
         self.incoming_worst_score = incoming_worst_score
         self.worst_incoming_move = worst_incoming_move
@@ -115,43 +118,59 @@ class OpponentCard(ft.Container):
     def _build_identity_section(
         self,
     ) -> ft.Control:
-        """Build a responsive trainer and opponent identity area."""
+        """Build the trainer, opponent, and compact moveset area."""
 
-        if not self.has_trainer:
-            return ft.Container(
-                content=self._build_pokemon_identity(),
-                alignment=ft.Alignment.CENTER,
-                width=float("inf"),
+        controls = cast(
+            list[ft.Control],
+            [],
+        )
+
+        if self.has_trainer:
+            controls.append(
+                ft.Container(
+                    content=self._build_trainer_identity(),
+                    col={
+                        "xs": 12,
+                        "md": 3,
+                    },
+                    alignment=ft.Alignment.CENTER,
+                )
             )
 
-        return ft.ResponsiveRow(
-            controls=cast(
+        controls.extend(
+            cast(
                 list[ft.Control],
                 [
-                    ft.Container(
-                        content=self._build_trainer_identity(),
-                        col={
-                            "xs": 12,
-                            "md": 3,
-                        },
-                        alignment=ft.Alignment.CENTER,
-                    ),
                     ft.Container(
                         content=self._build_pokemon_identity(),
                         col={
                             "xs": 12,
-                            "md": 6,
+                            "md": (
+                                6
+                                if self.has_trainer
+                                else 7
+                            ),
                         },
                         alignment=ft.Alignment.CENTER,
                     ),
                     ft.Container(
+                        content=self._build_moveset(),
                         col={
-                            "xs": 0,
-                            "md": 3,
+                            "xs": 12,
+                            "md": (
+                                3
+                                if self.has_trainer
+                                else 5
+                            ),
                         },
+                        alignment=ft.Alignment.CENTER,
                     ),
                 ],
-            ),
+            )
+        )
+
+        return ft.ResponsiveRow(
+            controls=controls,
             columns=12,
             spacing=18,
             run_spacing=18,
@@ -266,6 +285,119 @@ class OpponentCard(ft.Container):
             alignment=ft.MainAxisAlignment.CENTER,
         )
 
+    def _build_moveset(
+        self,
+    ) -> ft.Control:
+        """Build compact type-colored opponent move cards."""
+
+        if not self.opponent_moves:
+            return ft.Container()
+
+        move_cards = cast(
+            list[ft.Control],
+            [
+                self._build_move_card(
+                    move_name,
+                    move_type,
+                    badge_src,
+                )
+                for (
+                    move_name,
+                    move_type,
+                    badge_src,
+                ) in self.opponent_moves
+            ],
+        )
+
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Text(
+                        "Moves",
+                        size=16,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    ft.ResponsiveRow(
+                        controls=move_cards,
+                        columns=12,
+                        spacing=8,
+                        run_spacing=8,
+                    ),
+                ],
+            ),
+            spacing=9,
+            horizontal_alignment=(
+                ft.CrossAxisAlignment.STRETCH
+            ),
+        )
+
+    @staticmethod
+    def _build_move_card(
+        move_name: str,
+        move_type: str,
+        badge_src: str,
+    ) -> ft.Control:
+        """Build one compact opponent move card."""
+
+        background = TYPE_COLORS.get(
+            move_type,
+            "#4B5563",
+        )
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            move_name,
+                            size=12,
+                            weight=ft.FontWeight.BOLD,
+                            color="#FFFFFFFF",
+                            max_lines=2,
+                            overflow=ft.TextOverflow.ELLIPSIS,
+                        ),
+                        ft.Row(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Image(
+                                        src=badge_src,
+                                        height=12,
+                                        fit=ft.BoxFit.CONTAIN,
+                                        semantics_label=(
+                                            f"{move_type} type"
+                                        ),
+                                    ),
+                                ],
+                            ),
+                            alignment=ft.MainAxisAlignment.END,
+                        ),
+                    ],
+                ),
+                spacing=2,
+                tight=True,
+            ),
+            col={
+                "xs": 12,
+                "sm": 6,
+                "md": 12,
+            },
+            height=42,
+            padding=ft.Padding.symmetric(
+                horizontal=8,
+                vertical=6,
+            ),
+            bgcolor=background,
+            border=ft.Border.all(
+                1,
+                "#40FFFFFF",
+            ),
+            border_radius=10,
+        )
+    
     def _build_threat_section(
         self,
     ) -> ft.Control:

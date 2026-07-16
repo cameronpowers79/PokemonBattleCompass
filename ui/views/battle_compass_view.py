@@ -828,6 +828,37 @@ class BattleCompassView:
             ).strip()
         )
 
+        opponent_moves = [
+            (
+                move_name,
+                move_type,
+                self._type_badge_asset(
+                    move_type
+                ),
+            )
+            for slot in range(1, 5)
+            if (
+                isinstance(
+                    (
+                        move_name := opponent.get(
+                            f"Move{slot}"
+                        )
+                    ),
+                    str,
+                )
+                and move_name
+                and isinstance(
+                    (
+                        move_type := opponent.get(
+                            f"Move{slot}Type"
+                        )
+                    ),
+                    str,
+                )
+                and move_type
+            )
+        ]
+
         opponent_card = OpponentCard(
             trainer_name=(
                 self._display_trainer_name(
@@ -859,6 +890,7 @@ class BattleCompassView:
                     opponent
                 )
             ),
+            opponent_moves=opponent_moves,
             incoming_worst_score=(
                 recommendation
                 .incoming_worst_score
