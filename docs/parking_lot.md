@@ -9,6 +9,10 @@
 - [x] Create migration branch.
 - [x] Restore `main` to the stable Streamlit Alpha.
 
+## Data Quality
+
+- [ ] Audit move metadata for missing or incorrect mechanics.
+
 ## Desktop + PWA Migration
 
 - [x] Select the replacement framework (Flet).
@@ -84,13 +88,23 @@
 - [x] Reuse My Team’s move-card visual language during onboarding.
 - [x] Tap or click move cards for full move details.
 - [/] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
+- [x] Add compact opponent moveset to the Opponent card.
+- [x] Improve move details popup with plain-language effect descriptions.
+- [x] Add Additional Navigation Aids section to move details.
+- [x] Ensure Matchup Strength text matches the highlighted color in the graphic
+- [x] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
+- [x] Reuse My Team's move-card visual language for opponent movesets.
 - [ ] Optional: tap type badges to show weaknesses and resistances.
 - [ ] Add held-item sprites to the boosted-attack popover.
 - [ ] Recreate branding, typography, cards, and interactions in the new UI.
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
-- [x] Ensure Matchup Strength text matches the highlighted color in the graphic
-- [ ] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
+- [ ] Complete plain-language move effect         translations.
+    - Healing (Giga Drain, Drain Punch, etc.)
+    - Alternate damage calculations (Psyshock, Body Press, Foul Play, etc.)
+    - Stat stage changes
+    - Remaining activation conditions
+
 
 ---
 
@@ -133,6 +147,9 @@
 - [x] Resume the last-used team automatically.
 - [x] Add starter-change confirmation dialog with Explore and Start New Journey options.
 - [x]Add unsaved-change awareness and confirmation before leaving My Team.
+- [x] Allow adding Pokémon during an active Journey.
+- [x] Add Box / Release Pokémon workflow.
+- [ ] Add guidance beside starter selector explaining how to begin a new Journey.
 - [ ] Add optional manual backup/export.
 - [ ] Add restore/import.
 - [ ] Add ability validation.
@@ -198,6 +215,7 @@
 ## Bugfixes and Stability
 
 - [x] Fix null `Slot` values for Bede’s Ballonlea/Wyndon postgame battle.
+- [x] Prevent incomplete or status-only Pokémon from bricking the Battle Compass.
 - [ ] Add validation for incomplete Pokémon records.
 - [ ] Add graceful handling for empty teams.
 - [ ] Add graceful handling for missing assets.
