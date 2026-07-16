@@ -33,6 +33,7 @@ class AppShell:
         page: ft.Page,
         battle_compass_view: ViewBuilder,
         my_team_view: ViewBuilder,
+        about_view: ViewBuilder,
         *,
         my_team_has_unsaved_changes: (
             DirtyStateCheck | None
@@ -46,6 +47,7 @@ class AppShell:
         self.view_builders = {
             "battle_compass": battle_compass_view,
             "my_team": my_team_view,
+            "about": about_view,
         }
 
         self.my_team_has_unsaved_changes = (
@@ -90,10 +92,23 @@ class AppShell:
             ),
         )
 
+        self.about_button = ft.Button(
+            content="About",
+            icon=ft.Icons.INFO_OUTLINE_ROUNDED,
+            on_click=(
+                lambda event:
+                self._request_view_change(
+                    event,
+                    "about",
+                )
+            ),
+        )
+
         self.navigation = ft.Row(
             controls=[
                 self.battle_compass_button,
                 self.my_team_button,
+                self.about_button,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=12,
@@ -312,6 +327,7 @@ class AppShell:
                 self.battle_compass_button
             ),
             "my_team": self.my_team_button,
+            "about": self.about_button,
         }
 
         for view_name, button in buttons.items():

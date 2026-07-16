@@ -7,6 +7,7 @@ types, matchup strength, best moves, and relevant battle notes.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
@@ -54,8 +55,12 @@ class OtherStrongOptions(ft.Container):
         self,
         *,
         options: list[StrongOptionData],
+        on_type_badge_click: Callable[[str], None],
     ) -> None:
         self.options = options
+        self.on_type_badge_click = (
+            on_type_badge_click
+        )
 
         super().__init__(
             content=self._build_content(),
@@ -180,13 +185,26 @@ class OtherStrongOptions(ft.Container):
         badge_controls = cast(
             list[ft.Control],
             [
-                ft.Image(
-                    src=badge_src,
-                    height=20,
-                    fit=ft.BoxFit.CONTAIN,
-                    semantics_label=f"{pokemon_type} type",
+                ft.GestureDetector(
+                    content=ft.Image(
+                        src=badge_src,
+                        height=20,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=(
+                            f"{pokemon_type} type"
+                        ),
+                    ),
+                    mouse_cursor=ft.MouseCursor.CLICK,
+                    on_tap=(
+                        lambda event,
+                        selected_type=pokemon_type:
+                        self.on_type_badge_click(
+                            selected_type
+                        )
+                    ),
                 )
-                for pokemon_type, badge_src in option.type_badges
+                for pokemon_type, badge_src
+                in option.type_badges
             ],
         )
 

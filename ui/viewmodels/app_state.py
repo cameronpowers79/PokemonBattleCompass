@@ -6,6 +6,9 @@ placing application lifecycle responsibilities inside individual views.
 """
 
 from __future__ import annotations
+from ui.viewmodels.battle_compass_vm import (
+    ReferenceData,
+)
 
 from copy import deepcopy
 from typing import Literal
@@ -35,7 +38,7 @@ class AppState:
         self,
         page: ft.Page,
         *,
-        reference_data: dict[str, list],
+        reference_data: ReferenceData,
     ) -> None:
         self.page = page
         self.reference_data = reference_data

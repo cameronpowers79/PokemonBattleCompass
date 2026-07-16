@@ -1,3 +1,5 @@
+'''ui/constants.py'''
+
 from pathlib import Path
 
 
@@ -34,3 +36,24 @@ TYPE_COLORS = {
     "Steel": "#B7B7CE",
     "Fairy": "#D685AD",
 }
+
+POKEMON_TYPES = [
+    "Normal",
+    "Fire",
+    "Water",
+    "Electric",
+    "Grass",
+    "Ice",
+    "Fighting",
+    "Poison",
+    "Ground",
+    "Flying",
+    "Psychic",
+    "Bug",
+    "Rock",
+    "Ghost",
+    "Dragon",
+    "Dark",
+    "Steel",
+    "Fairy",
+]

@@ -142,8 +142,57 @@ def _evaluate_rule(
             damaging_moves=damaging_moves,
         )
 
+    if rule == "PhysicalFocus":
+        return _physical_focus_reasons(
+            pokemon=pokemon,
+            damaging_moves=damaging_moves,
+        )
+
+    if rule == "GeneralOffense":
+        return _general_offense_reasons(
+            damaging_moves
+        )
+
+    if rule == "SpecialDefenseFocus":
+        return _special_defense_reasons(
+            pokemon=pokemon,
+            moves=moves,
+        )
+
+    if rule == "SpeedFocus":
+        return _speed_focus_reasons(
+            pokemon=pokemon,
+            damaging_moves=damaging_moves,
+        )
+
     if rule == "Coverage":
         return _coverage_reasons(
+            damaging_moves
+        )
+
+    if rule == "GroundImmunity":
+        return _ground_immunity_reasons(
+            pokemon
+        )
+
+    if rule == "Survival":
+        return _survival_reasons(
+            pokemon
+        )
+
+    if rule == "ContactPunisher":
+        return _contact_punisher_reasons(
+            pokemon
+        )
+
+    if rule == "PoisonLongevity":
+        return _poison_longevity_reasons(
+            pokemon=pokemon,
+            moves=moves,
+        )
+
+    if rule == "DamageSustain":
+        return _damage_sustain_reasons(
             damaging_moves
         )
 
@@ -153,10 +202,10 @@ def _evaluate_rule(
             moves=moves,
         )
 
-    # Eviolite remains inactive until team records contain reliable
-    # evolution-eligibility metadata.
     if rule == "CanEvolve":
-        return []
+        return _eviolite_reasons(
+            pokemon
+        )
 
     return []
 
@@ -290,6 +339,255 @@ def _special_focus_reasons(
         )
 
     return reasons
+
+
+def _physical_focus_reasons(
+    *,
+    pokemon: dict,
+    damaging_moves: list[dict],
+) -> list[str]:
+    """Recommend Physical offense items for a Physical-focused moveset."""
+
+    physical_count = sum(
+        1
+        for move in damaging_moves
+        if move.get("Category") == "Physical"
+    )
+
+    if physical_count < 3:
+        return []
+
+    attack = _numeric_value(
+        pokemon.get("ATK")
+    )
+
+    reasons = [
+        f"Knows {physical_count} Physical attacks."
+    ]
+
+    if attack > 0:
+        reasons.append(
+            f"Attack: {attack}."
+        )
+
+    return reasons
+
+
+def _general_offense_reasons(
+    damaging_moves: list[dict],
+) -> list[str]:
+    """Recommend Life Orb for heavily offensive movesets."""
+
+    damaging_count = len(
+        damaging_moves
+    )
+
+    if damaging_count < 3:
+        return []
+
+    return [
+        f"Knows {damaging_count} damaging moves.",
+        "Supports broad offense without favoring one type or category.",
+    ]
+
+
+def _special_defense_reasons(
+    *,
+    pokemon: dict,
+    moves: list[dict],
+) -> list[str]:
+    """Recommend Assault Vest for attacking builds without status moves."""
+
+    if not moves:
+        return []
+
+    if any(
+        move.get("Category") == "Status"
+        for move in moves
+    ):
+        return []
+
+    special_defense = _numeric_value(
+        pokemon.get("SPD")
+    )
+
+    reasons = [
+        "All current moves are damaging attacks.",
+    ]
+
+    if special_defense > 0:
+        reasons.append(
+            f"Special Defense: {special_defense}."
+        )
+
+    return reasons
+
+
+def _speed_focus_reasons(
+    *,
+    pokemon: dict,
+    damaging_moves: list[dict],
+) -> list[str]:
+    """Recommend Choice Scarf for offensive Pokémon with modest Speed."""
+
+    if len(damaging_moves) < 3:
+        return []
+
+    speed = _numeric_value(
+        pokemon.get("SPE")
+    )
+
+    if speed <= 0:
+        return []
+
+    return [
+        f"Speed: {speed}.",
+        "A Speed boost may help it move before more opponents.",
+    ]
+
+
+def _ground_immunity_reasons(
+    pokemon: dict,
+) -> list[str]:
+    """Recommend Air Balloon when Ground is a meaningful defensive concern."""
+
+    pokemon_types = {
+        _string_value(
+            pokemon.get("Type1")
+        ),
+        _string_value(
+            pokemon.get("Type2")
+        ),
+    }
+
+    if "Flying" in pokemon_types:
+        return []
+
+    return [
+        "Temporarily removes Ground-type damage as a defensive concern.",
+    ]
+
+
+def _survival_reasons(
+    pokemon: dict,
+) -> list[str]:
+    """Recommend Focus Sash as an explicit survival option."""
+
+    hp = _numeric_value(
+        pokemon.get("HP")
+    )
+
+    reasons = [
+        "Can preserve 1 HP from a lethal hit when starting at full HP.",
+    ]
+
+    if hp > 0:
+        reasons.append(
+            f"Current HP stat: {hp}."
+        )
+
+    return reasons
+
+
+def _contact_punisher_reasons(
+    pokemon: dict,
+) -> list[str]:
+    """Recommend Rocky Helmet for defensively inclined builds."""
+
+    defense = _numeric_value(
+        pokemon.get("DEF")
+    )
+    hp = _numeric_value(
+        pokemon.get("HP")
+    )
+
+    if defense <= 0:
+        return []
+
+    reasons = [
+        "Punishes opponents that use contact moves.",
+    ]
+
+    if hp > 0:
+        reasons.append(
+            f"HP: {hp}; Defense: {defense}."
+        )
+
+    return reasons
+
+
+def _poison_longevity_reasons(
+    *,
+    pokemon: dict,
+    moves: list[dict],
+) -> list[str]:
+    """Recommend Black Sludge only to Poison-type longevity builds."""
+
+    pokemon_types = {
+        _string_value(
+            pokemon.get("Type1")
+        ),
+        _string_value(
+            pokemon.get("Type2")
+        ),
+    }
+
+    if "Poison" not in pokemon_types:
+        return []
+
+    reasons = _field_longevity_reasons(
+        pokemon=pokemon,
+        moves=moves,
+    )
+
+    if not reasons:
+        return []
+
+    return [
+        "Poison typing allows Black Sludge to restore HP.",
+        *reasons,
+    ]
+
+
+def _damage_sustain_reasons(
+    damaging_moves: list[dict],
+) -> list[str]:
+    """Recommend Shell Bell for builds expected to deal damage repeatedly."""
+
+    damaging_count = len(
+        damaging_moves
+    )
+
+    if damaging_count < 3:
+        return []
+
+    return [
+        f"Knows {damaging_count} damaging moves.",
+        "Restores HP based on damage dealt.",
+    ]
+
+
+def _eviolite_reasons(
+    pokemon: dict,
+) -> list[str]:
+    """Recommend Eviolite when the team record explicitly marks eligibility."""
+
+    can_evolve = pokemon.get("CanEvolve")
+
+    if can_evolve in {
+        True,
+        "TRUE",
+        "True",
+        "Yes",
+        "Y",
+        1,
+    }:
+        return [
+            "This Pokémon can still evolve.",
+            "Raises both Defense and Special Defense by 50%.",
+        ]
+
+    return []
 
 
 def _coverage_reasons(

@@ -24,6 +24,9 @@ from ui.components.other_strong_options import (
     StrongOptionNote,
 )
 from ui.components.recommendation_card import RecommendationCard
+from ui.components.reference_dialogs import (
+    show_type_matchup_dialog,
+)
 from ui.rendering import (
     get_sprite_path,
     opponent_uses_gmax,
@@ -88,6 +91,16 @@ class BattleCompassView:
         self.items = reference_data["items"]
         self.ability_rules = reference_data["ability_rules"]
         self.moves_data = reference_data["moves_data"]
+        self.move_lookup = {
+            move["Move"]: move
+            for move in self.moves_data
+            if isinstance(
+                move.get("Move"),
+                str,
+            )
+            and move.get("Move")
+        }
+        self.type_chart = reference_data["type_chart"]
 
         self.journey_starter = (
             selected_starter
@@ -811,6 +824,9 @@ class BattleCompassView:
                 on_full_analysis_click=(
                     self._scroll_to_full_analysis
                 ),
+                on_type_badge_click=(
+                    self._show_type_matchups
+                ),
             )
         )
 
@@ -828,38 +844,54 @@ class BattleCompassView:
             ).strip()
         )
 
-        opponent_moves = [
-            (
+        opponent_moves: list[dict] = []
+
+        for slot in range(1, 5):
+            move_name = opponent.get(
+                f"Move{slot}"
+            )
+
+            if (
+                not isinstance(move_name, str)
+                or not move_name
+            ):
+                continue
+
+            move = dict(
+                self.move_lookup.get(
+                    move_name,
+                    {},
+                )
+            )
+
+            move.setdefault(
+                "Move",
                 move_name,
-                move_type,
-                self._type_badge_asset(
-                    move_type
+            )
+            move.setdefault(
+                "Type",
+                opponent.get(
+                    f"Move{slot}Type"
                 ),
             )
-            for slot in range(1, 5)
-            if (
-                isinstance(
-                    (
-                        move_name := opponent.get(
-                            f"Move{slot}"
-                        )
-                    ),
-                    str,
-                )
-                and move_name
-                and isinstance(
-                    (
-                        move_type := opponent.get(
-                            f"Move{slot}Type"
-                        )
-                    ),
-                    str,
-                )
-                and move_type
+            move.setdefault(
+                "Category",
+                opponent.get(
+                    f"Move{slot}Category"
+                ),
             )
-        ]
+            move["BadgeSrc"] = (
+                self._type_badge_asset(
+                    move.get("Type")
+                )
+            )
+
+            opponent_moves.append(
+                move
+            )
 
         opponent_card = OpponentCard(
+            page=self.page,
             trainer_name=(
                 self._display_trainer_name(
                     self.selected_trainer
@@ -938,6 +970,9 @@ class BattleCompassView:
                     mode="defense",
                 )
             ),
+            on_type_badge_click=(
+                self._show_type_matchups
+            ),
         )
 
         other_options = OtherStrongOptions(
@@ -951,6 +986,9 @@ class BattleCompassView:
                     start=1,
                 )
             ],
+            on_type_badge_click=(
+                self._show_type_matchups
+            ),
         )
 
         full_analysis = FullAnalysis(
@@ -990,6 +1028,18 @@ class BattleCompassView:
     spacing=28,
     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
 )
+
+    def _show_type_matchups(
+        self,
+        pokemon_type: str,
+    ) -> None:
+        """Show defensive single-type matchup information."""
+
+        show_type_matchup_dialog(
+            page=self.page,
+            pokemon_type=pokemon_type,
+            type_chart=self.type_chart,
+        )
 
     async def _scroll_to_full_analysis(
         self,

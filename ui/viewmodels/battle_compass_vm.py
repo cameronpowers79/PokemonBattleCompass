@@ -8,6 +8,7 @@ engine output into UI-friendly objects without depending on Streamlit.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypedDict
 
 from engine.calculations import (
     evaluate_team_matchups,
@@ -16,8 +17,22 @@ from engine.calculations import (
 from engine.data_loader import load_json
 from ui.constants import NOTE_ICONS
 
+class ReferenceData(TypedDict):
+    """Bundled application reference datasets."""
+
+    team_data: list[dict]
+    opponents: list[dict]
+    items: list[dict]
+    item_validation: list[str]
+    ability_rules: list[dict]
+    abilities: list[str]
+    ability_descriptions: list[dict]
+    pokemon_validation: list[str]
+    moves_data: list[dict]
+    type_chart: dict[str, dict[str, float]]
 
 @dataclass(frozen=True)
+
 class BattleNoteViewModel:
     """Display-ready battle note."""
 
@@ -319,14 +334,24 @@ def build_battle_compass_view_model(
     )
 
 
-def load_reference_data() -> dict[str, list]:
+def load_reference_data() -> ReferenceData:
     """Load the bundled reference and default team data."""
 
     return {
         "team_data": load_json("team_data"),
         "opponents": load_json("opponents"),
         "items": load_json("items"),
+        "item_validation": load_json(
+            "item_validation_swsh"
+        ),
         "ability_rules": load_json("ability_rules"),
         "abilities": load_json("abilities_swsh"),
+        "ability_descriptions": load_json(
+            "ability_descriptions_swsh"
+        ),
+        "type_chart": load_json("type_chart"),
+        "pokemon_validation": load_json(
+            "pokemon_validation_swsh"
+        ),
         "moves_data": load_json("moves"),
     }

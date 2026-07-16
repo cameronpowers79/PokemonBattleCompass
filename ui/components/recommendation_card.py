@@ -59,6 +59,7 @@ class RecommendationCard(ft.Container):
         on_full_analysis_click: (
             Callable[[ft.Event[ft.Button]], Any]
         ),
+        on_type_badge_click: Callable[[str], None],
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -89,6 +90,9 @@ class RecommendationCard(ft.Container):
         self.battle_notes = battle_notes
         self.on_full_analysis_click = (
             on_full_analysis_click
+        )
+        self.on_type_badge_click = (
+            on_type_badge_click
         )
 
         super().__init__(
@@ -202,13 +206,26 @@ class RecommendationCard(ft.Container):
         badge_controls = cast(
             list[ft.Control],
             [
-                ft.Image(
-                    src=badge_src,
-                    height=24,
-                    fit=ft.BoxFit.CONTAIN,
-                    semantics_label=f"{pokemon_type} type",
+                ft.GestureDetector(
+                    content=ft.Image(
+                        src=badge_src,
+                        height=24,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=(
+                            f"{pokemon_type} type"
+                        ),
+                    ),
+                    mouse_cursor=ft.MouseCursor.CLICK,
+                    on_tap=(
+                        lambda event,
+                        selected_type=pokemon_type:
+                        self.on_type_badge_click(
+                            selected_type
+                        )
+                    ),
                 )
-                for pokemon_type, badge_src in self.type_badges
+                for pokemon_type, badge_src
+                in self.type_badges
             ],
         )
 

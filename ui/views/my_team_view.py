@@ -19,10 +19,15 @@ from engine.item_recommendations import (
     recommend_held_items,
 )
 from engine.moves import apply_move_metadata
-from ui.constants import TYPE_COLORS
+from ui.constants import POKEMON_TYPES, TYPE_COLORS
 from ui.rendering import (
     get_item_sprite_src,
     get_sprite_path,
+)
+from ui.components.reference_dialogs import (
+    show_ability_dialog,
+    show_item_dialog,
+    show_type_matchup_dialog,
 )
 from ui.theme import (
     BORDER_DEFAULT,
@@ -107,10 +112,19 @@ MOVE_TAG_DESCRIPTIONS = {
     "Recovery": (
         "Restores some of the user's HP."
     ),
+    "RecoveryMove": (
+        "Restores some of the user's HP."
+    ),
     "Drain": (
         "Restores HP based on the damage dealt."
     ),
+    "HPStealingMove": (
+        "Restores HP based on the damage dealt."
+    ),
     "Recoil": (
+        "The user takes recoil damage after attacking."
+    ),
+    "RecoilMove": (
         "The user takes recoil damage after attacking."
     ),
     "ContactPunisher": (
@@ -222,6 +236,87 @@ class MyTeamView:
         self.team_data = app_state.team_data
         self.moves_data = moves_data
         self.items_data = app_state.reference_data["items"]
+        self.type_chart = cast(
+            dict,
+            app_state.reference_data["type_chart"],
+        )
+        self.ability_rules = (
+            app_state.reference_data["ability_rules"]
+        )
+        self.ability_descriptions = {
+            row["Ability"]: row["Description"]
+            for row in app_state.reference_data.get(
+                "ability_descriptions",
+                [],
+            )
+            if isinstance(row, dict)
+            and isinstance(row.get("Ability"), str)
+            and isinstance(row.get("Description"), str)
+        }
+
+        raw_pokemon_validation = (
+            app_state.reference_data.get(
+                "pokemon_validation",
+                [],
+            )
+        )
+
+        self.pokemon_options = sorted(
+            {
+                pokemon_name.strip()
+                for pokemon_name in raw_pokemon_validation
+                if isinstance(pokemon_name, str)
+                and pokemon_name.strip()
+            }
+        )
+
+        self.pokemon_lookup = set(
+            self.pokemon_options
+        )
+
+        self.pokemon_suggestions = [
+            ft.AutoCompleteSuggestion(
+                key=pokemon_name,
+                value=pokemon_name,
+            )
+            for pokemon_name in self.pokemon_options
+        ]
+
+        self.type_options = list(
+            POKEMON_TYPES
+        )
+        self.type_lookup = set(
+            self.type_options
+        )
+
+        raw_item_validation = (
+            app_state.reference_data.get(
+                "item_validation",
+                [],
+            )
+        )
+
+        self.item_options = sorted(
+            {
+                item_name.strip()
+                for item_name in raw_item_validation
+                if isinstance(item_name, str)
+                and item_name.strip()
+            }
+            | {"None"}
+        )
+
+        self.item_lookup = set(
+            self.item_options
+        )
+
+        self.item_suggestions = [
+            ft.AutoCompleteSuggestion(
+                key=item_name,
+                value=item_name,
+            )
+            for item_name in self.item_options
+        ]
         raw_abilities = app_state.reference_data.get(
             "abilities",
             [],
@@ -1065,7 +1160,28 @@ class MyTeamView:
         column: str,
         value: object,
     ) -> ft.TextField | ft.Dropdown | ft.AutoComplete:
-        if column == "Gender":
+        if column == "Pokemon":
+            control = ft.AutoComplete(
+                value=(
+                    str(value)
+                    if value
+                    else ""
+                ),
+                suggestions=self.pokemon_suggestions,
+                suggestions_max_height=240,
+                width=165,
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_pokemon_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+            )
+        elif column == "Gender":
             control = ft.Dropdown(
                 value=(
                     str(value)
@@ -1090,6 +1206,33 @@ class MyTeamView:
                     )
                 ),
             )
+        elif column in {"Type1", "Type2"}:
+            control = ft.AutoComplete(
+                value=(
+                    str(value)
+                    if value
+                    else ""
+                ),
+                suggestions=[
+                    ft.AutoCompleteSuggestion(
+                        key=pokemon_type,
+                        value=pokemon_type,
+                    )
+                    for pokemon_type in self.type_options
+                ],
+                suggestions_max_height=240,
+                width=125,
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_type_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+            )
         elif column == "Ability":
             control = ft.AutoComplete(
                 value=(
@@ -1105,6 +1248,27 @@ class MyTeamView:
                     row=row_index,
                     field=column:
                     self._handle_ability_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+            )
+        elif column == "Held Item":
+            control = ft.AutoComplete(
+                value=(
+                    str(value)
+                    if value
+                    else ""
+                ),
+                suggestions=self.item_suggestions,
+                suggestions_max_height=240,
+                width=165,
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_item_change(
                         event,
                         row,
                         field,
@@ -1218,6 +1382,30 @@ class MyTeamView:
 
         self.page.update()
 
+    def _handle_pokemon_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Update an edited Pokémon name."""
+
+        pokemon_name = (
+            event.control.value or ""
+        ).strip()
+
+        self.working_team[
+            row_index
+        ][column] = pokemon_name
+
+        self._update_dirty_state()
+        self._refresh_selector()
+
+        if row_index == self.selected_index:
+            self._refresh_detail()
+
+        self.page.update()
+
     def _handle_dropdown_change(
         self,
         event: ft.Event[ft.Dropdown],
@@ -1267,6 +1455,52 @@ class MyTeamView:
         self.working_team[
             row_index
         ][column] = ability_name
+
+        self._update_dirty_state()
+
+        if row_index == self.selected_index:
+            self._refresh_detail()
+
+        self.page.update()
+
+    def _handle_item_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Update an edited held-item value."""
+
+        item_name = (
+        event.control.value or ""
+        ).strip()
+
+        self.working_team[
+            row_index
+        ][column] = item_name
+
+        self._update_dirty_state()
+
+        if row_index == self.selected_index:
+            self._refresh_detail()
+
+        self.page.update()
+
+    def _handle_type_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Update an edited Pokémon type."""
+
+        pokemon_type = (
+            event.control.value or ""
+        ).strip()
+
+        self.working_team[
+            row_index
+        ][column] = pokemon_type
 
         self._update_dirty_state()
 
@@ -1525,21 +1759,32 @@ class MyTeamView:
             )
 
             if badge_path.exists():
-                badges.append(
-                    ft.Image(
-                        src=self._asset_src(badge_path),
-                        height=24,
-                        fit=ft.BoxFit.CONTAIN,
-                        semantics_label=f"{pokemon_type} type",
-                    )
+                badge_control: ft.Control = ft.Image(
+                    src=self._asset_src(badge_path),
+                    height=24,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=f"{pokemon_type} type",
                 )
             else:
-                badges.append(
-                    ft.Text(
-                        pokemon_type,
-                        color=TEXT_SECONDARY,
-                    )
+                badge_control = ft.Text(
+                    pokemon_type,
+                    color=TEXT_SECONDARY,
                 )
+
+            badges.append(
+                ft.GestureDetector(
+                    content=badge_control,
+                    mouse_cursor=ft.MouseCursor.CLICK,
+                    on_tap=(
+                        lambda event,
+                        selected_type=pokemon_type:
+                        self._show_type_matchups(
+                            event,
+                            selected_type,
+                        )
+                    ),
+                )
+            )
 
         return ft.Row(
             controls=badges,
@@ -2098,94 +2343,79 @@ class MyTeamView:
         self,
         move: dict,
     ) -> list[str]:
-        """Translate structured move data into concise effect text."""
+        """Return the audited player-facing move description."""
+
+        effect_description = self._clean_text(
+            move.get("EffectDescription")
+        )
+
+        if effect_description:
+            return [
+                line.strip()
+                for line in effect_description.splitlines()
+                if line.strip()
+            ]
+
+        return [
+            (
+                "This move's full effect is not yet "
+                "documented in the Battle Compass."
+            )
+        ]
+
+
+    @classmethod
+    def _stage_change_descriptions(
+        cls,
+        move: dict,
+    ) -> list[str]:
+        """Translate available stat-stage metadata for Status moves."""
+
+        stat_fields = (
+            ("AtkStageChange", "Attack"),
+            ("DefStageChange", "Defense"),
+            ("SpAStageChange", "Special Attack"),
+            ("SpDStageChange", "Special Defense"),
+            ("SpeStageChange", "Speed"),
+        )
 
         descriptions: list[str] = []
 
-        category = self._clean_text(
-            move.get("Category")
-        )
+        for field_name, stat_name in stat_fields:
+            stage_change = cls._numeric_move_value(
+                move.get(field_name)
+            )
 
-        power = self._numeric_move_value(
-            move.get("Power")
-        )
+            if (
+                stage_change is None
+                or stage_change == 0
+            ):
+                continue
 
-        damage_method = self._clean_text(
-            move.get("DamageMethod")
-        )
+            stage_count = abs(
+                int(stage_change)
+            )
 
-        if (
-            damage_method
-            and damage_method.lower() == "ohko"
-        ):
-            descriptions.append(
-                (
-                    "Knocks out the target in one hit "
-                    "when the move succeeds."
+            stage_text = (
+                "one stage"
+                if stage_count == 1
+                else f"{stage_count} stages"
+            )
+
+            if stage_change > 0:
+                descriptions.append(
+                    (
+                        f"Raises the user's {stat_name} "
+                        f"by {stage_text}."
+                    )
                 )
-            )
-        elif (
-            damage_method
-            and damage_method.lower() == "fixed"
-        ):
-            descriptions.append(
-                "Deals a fixed amount of damage."
-            )
-        elif power is not None and power > 0:
-            descriptions.append(
-                "Deals damage."
-            )
-
-        multiplier = self._numeric_move_value(
-            move.get(
-                "ActivationPowerMultiplier"
-            )
-        )
-
-        condition = self._clean_text(
-            move.get("ActivationCondition")
-        )
-
-        condition_description = (
-            self._activation_condition_description(
-                condition
-            )
-        )
-
-        if (
-            multiplier is not None
-            and multiplier > 1
-            and condition_description
-        ):
-            descriptions.append(
-                self._multiplier_description(
-                    multiplier,
-                    condition_description,
+            else:
+                descriptions.append(
+                    (
+                        f"Lowers the target's {stat_name} "
+                        f"by {stage_text}."
+                    )
                 )
-            )
-
-        status_description = (
-            self._status_effect_description(
-                move.get("StatusEffect"),
-                is_status_move=(
-                    category is not None
-                    and category.lower() == "status"
-                ),
-            )
-        )
-
-        if status_description:
-            descriptions.append(
-                status_description
-            )
-
-        if not descriptions:
-            descriptions.append(
-                (
-                    "This move's full effect is not yet "
-                    "modeled in the Battle Compass."
-                )
-            )
 
         return descriptions
 
@@ -2197,30 +2427,6 @@ class MyTeamView:
         """Translate relevant mechanics into player-facing notes."""
 
         aids: list[str] = []
-
-        if bool(move.get("UseDEF")):
-            aids.append(
-                (
-                    "Uses the user's Defense instead of "
-                    "Attack when calculating damage."
-                )
-            )
-
-        if bool(move.get("TargetDEFasSPD")):
-            aids.append(
-                (
-                    "Targets the opponent's Defense instead "
-                    "of Special Defense."
-                )
-            )
-
-        if bool(move.get("TargetATK")):
-            aids.append(
-                (
-                    "Uses the target's Attack instead of "
-                    "the user's Attack when calculating damage."
-                )
-            )
 
         if bool(move.get("MakesContact")):
             aids.append(
@@ -2685,12 +2891,17 @@ class MyTeamView:
     ) -> ft.Control:
         """Build Ability and Held Item cards."""
 
-        return ft.ResponsiveRow(
-            controls=cast(
-                list[ft.Control],
-                [
-                    ft.Container(
-                        content=ft.Column(
+        ability_name = str(
+            pokemon.get("Ability")
+            or "—"
+        )
+
+        ability_card = ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Row(
                             controls=cast(
                                 list[ft.Control],
                                 [
@@ -2698,28 +2909,58 @@ class MyTeamView:
                                         "Ability",
                                         size=13,
                                         color=TEXT_MUTED,
+                                        expand=True,
                                     ),
-                                    ft.Text(
-                                        str(
-                                            pokemon.get("Ability")
-                                            or "—"
-                                        ),
+                                    ft.Icon(
+                                        ft.Icons.HELP_OUTLINE_ROUNDED,
                                         size=18,
-                                        weight=ft.FontWeight.BOLD,
-                                        color=TEXT_PRIMARY,
+                                        color=PRIMARY_BLUE,
                                     ),
                                 ],
                             ),
-                            spacing=4,
+                            spacing=6,
                         ),
+                        ft.Text(
+                            ability_name,
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                    ],
+                ),
+                spacing=4,
+            ),
+            height=80,
+            padding=14,
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border_radius=10,
+        )
+
+        clickable_ability: ft.Control = ability_card
+
+        if ability_name != "—":
+            clickable_ability = ft.GestureDetector(
+                content=ability_card,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                on_tap=(
+                    lambda event:
+                    self._show_ability_details(
+                        event,
+                        ability_name,
+                    )
+                ),
+            )
+
+        return ft.ResponsiveRow(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Container(
+                        content=clickable_ability,
                         col={
                             "xs": 12,
                             "sm": 6,
                         },
-                        height=80,
-                        padding=14,
-                        bgcolor=PRIMARY_BLUE_SOFT,
-                        border_radius=10,
                     ),
                     ft.Container(
                         content=ft.Column(
@@ -2738,14 +2979,16 @@ class MyTeamView:
                                                 ),
                                                 ft.IconButton(
                                                     icon=ft.Icons.HELP_OUTLINE_ROUNDED,
-                                                    icon_size=18,
+                                                    icon_size=22,
                                                     icon_color=SUCCESS_SOFT,
                                                     tooltip="View held item recommendations",
                                                     width=20,
                                                     height=20,
                                                     style=ft.ButtonStyle(
                                                         padding=0,
-                                                        shape=ft.RoundedRectangleBorder(radius=4),
+                                                        shape=ft.RoundedRectangleBorder(
+                                                            radius=4
+                                                        ),
                                                     ),
                                                     on_click=lambda event: (
                                                         self._show_item_recommendations(
@@ -2761,7 +3004,7 @@ class MyTeamView:
                                             ft.CrossAxisAlignment.CENTER
                                         ),
                                     ),
-                                    self._build_item_identity(
+                                    self._build_clickable_item_identity(
                                         pokemon.get(
                                             "Held Item"
                                         ),
@@ -2784,6 +3027,93 @@ class MyTeamView:
             columns=12,
             spacing=12,
             run_spacing=12,
+        )
+
+    def _build_clickable_item_identity(
+        self,
+        item_name_value: object,
+    ) -> ft.Control:
+        """Build the current-item identity with an information action."""
+
+        item_name = (
+            str(item_name_value).strip()
+            if item_name_value
+            else ""
+        )
+
+        identity = self._build_item_identity(
+            item_name_value
+        )
+
+        if (
+            not item_name
+            or item_name == "None"
+        ):
+            return identity
+
+        return ft.GestureDetector(
+            content=identity,
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=(
+                lambda event:
+                self._show_current_item_details(
+                    event,
+                    item_name,
+                )
+            ),
+        )
+
+    def _show_current_item_details(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        item_name: str,
+    ) -> None:
+        """Show details for the Pokémon's currently held item."""
+
+        del event
+
+        show_item_dialog(
+            page=self.page,
+            item_name=item_name,
+            items=self.items_data,
+            item_sprite_src=(
+                get_item_sprite_src(
+                    item_name
+                )
+            ),
+        )
+
+    def _show_type_matchups(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        pokemon_type: str,
+    ) -> None:
+        """Show defensive single-type matchup information."""
+
+        del event
+
+        show_type_matchup_dialog(
+            page=self.page,
+            pokemon_type=pokemon_type,
+            type_chart=self.type_chart,
+        )
+
+    def _show_ability_details(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        ability_name: str,
+    ) -> None:
+        """Show player-facing details for one Ability."""
+
+        del event
+
+        show_ability_dialog(
+            page=self.page,
+            ability_name=ability_name,
+            ability_descriptions=(
+                self.ability_descriptions
+            ),
+            ability_rules=self.ability_rules,
         )
 
     def _show_item_recommendations(
@@ -2974,10 +3304,50 @@ class MyTeamView:
     ) -> None:
         del event
 
+        invalid_pokemon: list[str] = []
+        invalid_types: list[str] = []
         invalid_moves: list[str] = []
         invalid_abilities: list[str] = []
+        invalid_items: list[str] = []
 
         for pokemon in self.working_team:
+            pokemon_name = str(
+                pokemon.get("Pokemon") or ""
+            ).strip()
+
+            if (
+                not pokemon_name
+                or pokemon_name
+                not in self.pokemon_lookup
+            ):
+                invalid_pokemon.append(
+                    pokemon_name or "(blank)"
+                )
+
+            type1 = str(
+                pokemon.get("Type1") or ""
+            ).strip()
+
+            type2 = str(
+                pokemon.get("Type2") or ""
+            ).strip()
+
+            if (
+                not type1
+                or type1 not in self.type_lookup
+            ):
+                invalid_types.append(
+                    type1 or "(blank Type1)"
+                )
+
+            if (
+                type2
+                and type2 not in self.type_lookup
+            ):
+                invalid_types.append(
+                    type2
+                )
+
             ability_name = str(
                 pokemon.get("Ability") or ""
             ).strip()
@@ -2990,6 +3360,18 @@ class MyTeamView:
                 invalid_abilities.append(
                     ability_name
                 )
+
+            item_name = str(
+                pokemon.get("Held Item") or ""
+            ).strip()
+
+            if (
+                item_name
+                and item_name not in self.item_lookup
+            ):
+                invalid_items.append(
+                    item_name
+                )
             for slot in range(1, 5):
                 move_name = str(
                     pokemon.get(f"Move{slot}") or ""
@@ -3001,6 +3383,40 @@ class MyTeamView:
                 ):
                     invalid_moves.append(move_name)
 
+        if invalid_pokemon:
+            invalid_list = ", ".join(
+                sorted(
+                    set(
+                        invalid_pokemon
+                    )
+                )
+            )
+
+            self.save_status.value = (
+                "Invalid Pokémon selection: "
+                f"{invalid_list}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
+        if invalid_types:
+            invalid_list = ", ".join(
+                sorted(
+                    set(
+                        invalid_types
+                    )
+                )
+            )
+
+            self.save_status.value = (
+                "Invalid type selection: "
+                f"{invalid_list}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
         if invalid_moves:
             invalid_list = ", ".join(
                 sorted(set(invalid_moves))
@@ -3008,6 +3424,23 @@ class MyTeamView:
 
             self.save_status.value = (
                 f"Invalid move selection: {invalid_list}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+        
+        if invalid_items:
+            invalid_list = ", ".join(
+                sorted(
+                    set(
+                        invalid_items
+                    )
+                )
+            )
+
+            self.save_status.value = (
+                "Invalid held-item selection: "
+                f"{invalid_list}"
             )
             self.save_status.color = "#F87171"
             self.page.update()

@@ -8,10 +8,14 @@ recommended Pokémon.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import cast
 
 import flet as ft
 
+from ui.components.reference_dialogs import (
+    show_move_dialog,
+)
 from ui.constants import TYPE_COLORS
 from ui.theme import (
     BORDER_DEFAULT,
@@ -29,13 +33,14 @@ class OpponentCard(ft.Container):
     def __init__(
         self,
         *,
+        page: ft.Page,
         trainer_name: str | None,
         trainer_artwork_src: str | None,
         pokemon_name: str,
         artwork_src: str,
         level: int | None,
         type_badges: list[tuple[str, str]],
-        opponent_moves: list[tuple[str, str, str]],
+        opponent_moves: list[dict],
         incoming_worst_score: float,
         worst_incoming_move: str,
         incoming_category: str,
@@ -43,7 +48,9 @@ class OpponentCard(ft.Container):
         defensive_effectiveness_label: str,
         defensive_effectiveness_color: str,
         defensive_effectiveness_background: str,
+        on_type_badge_click: Callable[[str], None],
     ) -> None:
+        self.app_page = page
         self.trainer_name = trainer_name
         self.trainer_artwork_src = trainer_artwork_src
 
@@ -68,6 +75,9 @@ class OpponentCard(ft.Container):
         )
         self.defensive_effectiveness_background = (
             defensive_effectiveness_background
+        )
+        self.on_type_badge_click = (
+            on_type_badge_click
         )
 
         super().__init__(
@@ -227,12 +237,22 @@ class OpponentCard(ft.Container):
         badge_controls = cast(
             list[ft.Control],
             [
-                ft.Image(
-                    src=badge_src,
-                    height=22,
-                    fit=ft.BoxFit.CONTAIN,
-                    semantics_label=(
-                        f"{pokemon_type} type"
+                ft.GestureDetector(
+                    content=ft.Image(
+                        src=badge_src,
+                        height=22,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=(
+                            f"{pokemon_type} type"
+                        ),
+                    ),
+                    mouse_cursor=ft.MouseCursor.CLICK,
+                    on_tap=(
+                        lambda event,
+                        selected_type=pokemon_type:
+                        self.on_type_badge_click(
+                            selected_type
+                        )
                     ),
                 )
                 for pokemon_type, badge_src
@@ -297,15 +317,9 @@ class OpponentCard(ft.Container):
             list[ft.Control],
             [
                 self._build_move_card(
-                    move_name,
-                    move_type,
-                    badge_src,
+                    move
                 )
-                for (
-                    move_name,
-                    move_type,
-                    badge_src,
-                ) in self.opponent_moves
+                for move in self.opponent_moves
             ],
         )
 
@@ -333,20 +347,31 @@ class OpponentCard(ft.Container):
             ),
         )
 
-    @staticmethod
     def _build_move_card(
-        move_name: str,
-        move_type: str,
-        badge_src: str,
+        self,
+        move: dict,
     ) -> ft.Control:
-        """Build one compact opponent move card."""
+        """Build one tappable compact opponent move card."""
+
+        move_name = str(
+            move.get("Move")
+            or "Unknown Move"
+        )
+        move_type = str(
+            move.get("Type")
+            or "Unknown"
+        )
+        badge_src = str(
+            move.get("BadgeSrc")
+            or ""
+        )
 
         background = TYPE_COLORS.get(
             move_type,
             "#4B5563",
         )
 
-        return ft.Container(
+        card = ft.Container(
             content=ft.Column(
                 controls=cast(
                     list[ft.Control],
@@ -380,11 +405,6 @@ class OpponentCard(ft.Container):
                 spacing=2,
                 tight=True,
             ),
-            col={
-                "xs": 12,
-                "sm": 6,
-                "md": 12,
-            },
             height=42,
             padding=ft.Padding.symmetric(
                 horizontal=8,
@@ -396,8 +416,43 @@ class OpponentCard(ft.Container):
                 "#40FFFFFF",
             ),
             border_radius=10,
+            tooltip=f"View details for {move_name}",
         )
-    
+
+        return ft.Container(
+            content=ft.GestureDetector(
+                content=card,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                on_tap=(
+                    lambda event:
+                    self._show_move_details(
+                        event,
+                        move,
+                    )
+                ),
+            ),
+            col={
+                "xs": 12,
+                "sm": 6,
+                "md": 12,
+            },
+        )
+
+    def _show_move_details(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        move: dict,
+    ) -> None:
+        """Show details for an opponent move."""
+
+        del event
+
+        show_move_dialog(
+            page=self.app_page,
+            move=move,
+        )
+
+
     def _build_threat_section(
         self,
     ) -> ft.Control:

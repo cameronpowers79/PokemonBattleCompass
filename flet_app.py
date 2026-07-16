@@ -15,6 +15,7 @@ from ui.components.app_shell import AppShell
 from ui.theme import configure_page
 from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import load_reference_data
+from ui.views.about_view import AboutView
 from ui.views.battle_compass_view import BattleCompassView
 from ui.views.my_team_view import MyTeamView
 from ui.views.onboarding_view import OnboardingView
@@ -26,7 +27,7 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 
 async def main(page: ft.Page) -> None:
     configure_page(page)
-    
+
     page.window.icon = str(
         ASSETS_DIR / "icon_windows.ico"
     )
@@ -39,7 +40,6 @@ async def main(page: ft.Page) -> None:
     )
 
     await app_state.initialize()
-    
 
     def show_onboarding() -> None:
         """
@@ -82,12 +82,17 @@ async def main(page: ft.Page) -> None:
             ),
         )
 
+        about_view = AboutView(
+            page
+        )
+
         app_shell = AppShell(
             page=page,
             battle_compass_view=(
                 battle_compass_view.build
             ),
             my_team_view=my_team_view.build,
+            about_view=about_view.build,
             my_team_has_unsaved_changes=(
                 lambda:
                 my_team_view.has_unsaved_changes

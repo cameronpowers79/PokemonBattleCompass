@@ -2,6 +2,11 @@ from engine.mechanics import (
     get_stab_multiplier,
     get_type_multiplier,
     get_item_multiplier,
+    get_item_damage_multiplier,
+    get_item_attack_stat_multiplier,
+    get_item_defense_stat_multiplier,
+    get_item_speed_multiplier,
+    get_item_immunity_multiplier,
     get_ability_multiplier,
     get_attack_stat_multiplier,
     get_attack_reduction_multiplier,
@@ -68,7 +73,13 @@ def get_relevant_defense_stat(defender, move):
     return 1
 
 
-def calculate_move_score(attacker, defender, move, items=None, ability_rules=None):
+def calculate_move_score(
+    attacker,
+    defender,
+    move,
+    items=None,
+    ability_rules=None,
+):
     if move["Category"] == "Status" or not move["Power"]:
         return 0
 
@@ -78,46 +89,106 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
     if ability_rules is None:
         ability_rules = []
 
-    attacker_types = [attacker.get("Type1"), attacker.get("Type2")]
-    defender_types = [defender.get("Type1"), defender.get("Type2")]
+    attacker_types = [
+        attacker.get("Type1"),
+        attacker.get("Type2"),
+    ]
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
 
-    effectiveness = get_type_multiplier(move["Type"], defender_types)
+    type_effectiveness = get_type_multiplier(
+        move["Type"],
+        defender_types,
+    )
+
     ability_multiplier = get_ability_multiplier(
         defender,
         move,
         ability_rules,
-        effectiveness,
+        type_effectiveness,
         attacker,
     )
-    effectiveness *= ability_multiplier
+
+    item_immunity_multiplier = (
+        get_item_immunity_multiplier(
+            defender,
+            move,
+            items,
+        )
+    )
+
+    effectiveness = (
+        type_effectiveness
+        * ability_multiplier
+        * item_immunity_multiplier
+    )
 
     stab = get_stab_multiplier(
         move["Type"],
         attacker_types,
         attacker,
-        ability_rules
+        ability_rules,
     )
 
-    item_multiplier = get_item_multiplier(attacker.get("Held Item"), move, items)
-    power_multiplier = get_move_power_multiplier(attacker, move, ability_rules)
+    item_damage_multiplier = (
+        get_item_damage_multiplier(
+            attacker,
+            defender,
+            move,
+            items,
+            type_effectiveness,
+        )
+    )
 
-    attack_stat = get_relevant_attack_stat(attacker, move)
-    attack_stat *= get_attack_stat_multiplier(attacker, move, ability_rules)
+    power_multiplier = get_move_power_multiplier(
+        attacker,
+        move,
+        ability_rules,
+    )
+
+    attack_stat = get_relevant_attack_stat(
+        attacker,
+        move,
+    )
+
+    attack_stat *= get_attack_stat_multiplier(
+        attacker,
+        move,
+        ability_rules,
+    )
+
     attack_stat *= get_attack_reduction_multiplier(
         attacker,
         defender,
         move,
-        ability_rules
+        ability_rules,
     )
 
-    defense_stat = get_relevant_defense_stat(defender, move)
+    attack_stat *= get_item_attack_stat_multiplier(
+        attacker,
+        move,
+        items,
+    )
+
+    defense_stat = get_relevant_defense_stat(
+        defender,
+        move,
+    )
+
+    defense_stat *= get_item_defense_stat_multiplier(
+        defender,
+        move,
+        items,
+    )
 
     return (
         move["Power"]
         * power_multiplier
         * effectiveness
         * stab
-        * item_multiplier
+        * item_damage_multiplier
         * attack_stat
         / defense_stat
     )
@@ -414,7 +485,16 @@ def find_best_team_member(
         why,
     )
 
-def calculate_offensive_multiplier(attacker, defender, move, ability_rules=None):
+def calculate_offensive_multiplier(
+    attacker,
+    defender,
+    move,
+    items=None,
+    ability_rules=None,
+):
+    if items is None:
+        items = []
+
     if ability_rules is None:
         ability_rules = []
 
@@ -433,9 +513,28 @@ def calculate_offensive_multiplier(attacker, defender, move, ability_rules=None)
         attacker,
     )
 
-    return type_multiplier * ability_multiplier
+    item_multiplier = get_item_immunity_multiplier(
+        defender,
+        move,
+        items,
+    )
 
-def calculate_incoming_multiplier(opponent, defender, move, ability_rules=None):
+    return (
+        type_multiplier
+        * ability_multiplier
+        * item_multiplier
+    )
+
+def calculate_incoming_multiplier(
+    opponent,
+    defender,
+    move,
+    items=None,
+    ability_rules=None,
+):
+    if items is None:
+        items = []
+
     if ability_rules is None:
         ability_rules = []
 
@@ -454,7 +553,17 @@ def calculate_incoming_multiplier(opponent, defender, move, ability_rules=None):
         opponent,
     )
 
-    return type_multiplier * ability_multiplier
+    item_multiplier = get_item_immunity_multiplier(
+        defender,
+        move,
+        items,
+    )
+
+    return (
+        type_multiplier
+        * ability_multiplier
+        * item_multiplier
+    )
 
 def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
@@ -484,10 +593,35 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 f"{opponent.get('Pokemon', 'Unknown opponent')}."
             )
 
-        item_multiplier = get_item_multiplier(
-            pokemon.get("Held Item"),
-            best_move,
-            items
+        type_effectiveness = get_type_multiplier(
+            best_move["Type"],
+            [
+                opponent.get("Type1"),
+                opponent.get("Type2"),
+            ],
+        )
+
+        item_damage_multiplier = (
+            get_item_damage_multiplier(
+                pokemon,
+                opponent,
+                best_move,
+                items,
+                type_effectiveness,
+            )
+        )
+
+        item_attack_multiplier = (
+            get_item_attack_stat_multiplier(
+                pokemon,
+                best_move,
+                items,
+            )
+        )
+
+        item_multiplier = (
+            item_damage_multiplier
+            * item_attack_multiplier
         )
 
         item_boosted = item_multiplier > 1
@@ -511,7 +645,18 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         best_hp_ratio = best_score / opponent_hp if opponent_hp else None
         incoming_hp_ratio = worst_score / pokemon["HP"] if pokemon.get("HP") else None
 
-        team_moves_second = pokemon.get("SPE", 0) < opponent_spe
+        effective_team_speed = (
+            pokemon.get("SPE", 0)
+            * get_item_speed_multiplier(
+                pokemon,
+                items,
+            )
+        )
+
+        team_moves_second = (
+            effective_team_speed
+            < opponent_spe
+        )
 
         # Workbook intent: Survival OHKO only appears when the team member moves second
         # and is not itself likely to be KO'd first.
@@ -536,21 +681,24 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             incoming_hp_ratio,
             team_moves_second,
             likely_survives_first_hit,
-            dmax_note
+            dmax_note,
+            items,
         )
 
         incoming_multiplier = calculate_incoming_multiplier(
             opponent,
             pokemon,
             worst_move,
-            ability_rules
+            items,
+            ability_rules,
         )
 
         offensive_multiplier = calculate_offensive_multiplier(
             pokemon,
             opponent,
             best_move,
-            ability_rules
+            items,
+            ability_rules,
         )
 
         results.append({
@@ -590,7 +738,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 incoming_hp_ratio,
                 team_moves_second,
                 likely_survives_first_hit,
-                dmax_note
+                dmax_note,
+                items,
             )
         })
 

@@ -165,56 +165,276 @@ def get_stab_multiplier(
     return 1.5
 
 
+def get_item_record(item_name, items):
+    if not item_name:
+        return None
+
+    for item in items:
+        if item.get("Item") == item_name:
+            return item
+
+    return None
+
+
+def item_move_filters_match(item, move):
+    move_type_affected = item.get(
+        "MoveTypeAffected"
+    )
+    move_category_affected = item.get(
+        "MoveCategoryAffected"
+    )
+
+    type_matches = (
+        move_type_affected
+        in [
+            None,
+            "None",
+            move.get("Type"),
+        ]
+    )
+
+    category_matches = (
+        move_category_affected
+        in [
+            None,
+            "None",
+            move.get("Category"),
+        ]
+    )
+
+    return (
+        type_matches
+        and category_matches
+    )
+
+
+def get_item_damage_multiplier(
+    attacker,
+    defender,
+    move,
+    items,
+    effectiveness=1,
+):
+    item = get_item_record(
+        attacker.get("Held Item"),
+        items,
+    )
+
+    if item is None:
+        return 1
+
+    if item.get("EffectType") != "DamageMultiplier":
+        return 1
+
+    if item.get("AppliesTo") != "Offense":
+        return 1
+
+    if not item_move_filters_match(
+        item,
+        move,
+    ):
+        return 1
+
+    condition = item.get("Condition")
+
+    if (
+        condition == "SuperEffective"
+        and effectiveness <= 1
+    ):
+        return 1
+
+    if (
+        condition == "DamagingMove"
+        and (
+            move.get("Category") == "Status"
+            or not move.get("Power")
+        )
+    ):
+        return 1
+
+    return item.get(
+        "Multiplier",
+        1,
+    )
+
+
+def get_item_attack_stat_multiplier(
+    attacker,
+    move,
+    items,
+):
+    item = get_item_record(
+        attacker.get("Held Item"),
+        items,
+    )
+
+    if item is None:
+        return 1
+
+    if item.get("EffectType") != "StatMultiplier":
+        return 1
+
+    if item.get("AppliesTo") != "Offense":
+        return 1
+
+    if not item_move_filters_match(
+        item,
+        move,
+    ):
+        return 1
+
+    stat_affected = item.get("StatAffected")
+    move_category = move.get("Category")
+
+    if (
+        stat_affected == "ATK"
+        and move_category != "Physical"
+    ):
+        return 1
+
+    if (
+        stat_affected == "SPA"
+        and move_category != "Special"
+    ):
+        return 1
+
+    return item.get(
+        "Multiplier",
+        1,
+    )
+
+
+def get_item_defense_stat_multiplier(
+    defender,
+    move,
+    items,
+):
+    item = get_item_record(
+        defender.get("Held Item"),
+        items,
+    )
+
+    if item is None:
+        return 1
+
+    if item.get("EffectType") != "StatMultiplier":
+        return 1
+
+    if item.get("AppliesTo") != "Defense":
+        return 1
+
+    stat_affected = item.get("StatAffected")
+    damage_method = move.get("DamageMethod")
+    move_category = move.get("Category")
+
+    targets_defense = (
+        move_category == "Physical"
+        or damage_method == "TargetDEFasSPD"
+    )
+
+    targets_special_defense = (
+        move_category == "Special"
+        and damage_method != "TargetDEFasSPD"
+    )
+
+    if stat_affected == "DEF/SPD":
+        return item.get(
+            "Multiplier",
+            1,
+        )
+
+    if (
+        stat_affected == "DEF"
+        and targets_defense
+    ):
+        return item.get(
+            "Multiplier",
+            1,
+        )
+
+    if (
+        stat_affected == "SPD"
+        and targets_special_defense
+    ):
+        return item.get(
+            "Multiplier",
+            1,
+        )
+
+    return 1
+
+
+def get_item_speed_multiplier(
+    pokemon,
+    items,
+):
+    item = get_item_record(
+        pokemon.get("Held Item"),
+        items,
+    )
+
+    if item is None:
+        return 1
+
+    if (
+        item.get("EffectType") == "StatMultiplier"
+        and item.get("AppliesTo") == "Speed"
+        and item.get("StatAffected") == "SPE"
+    ):
+        return item.get(
+            "Multiplier",
+            1,
+        )
+
+    return 1
+
+
+def get_item_immunity_multiplier(
+    defender,
+    move,
+    items,
+):
+    item = get_item_record(
+        defender.get("Held Item"),
+        items,
+    )
+
+    if item is None:
+        return 1
+
+    if item.get("EffectType") != "Immunity":
+        return 1
+
+    if item.get("AppliesTo") != "Defense":
+        return 1
+
+    if item.get("MoveTypeAffected") == move.get("Type"):
+        return item.get(
+            "Multiplier",
+            0,
+        )
+
+    return 1
+
+
 def get_item_multiplier(
     item_name,
     move,
     items,
 ):
-    if not item_name:
-        return 1
+    """Backward-compatible alias for simple offensive item boosts."""
 
-    for item in items:
-        if item.get("Item") != item_name:
-            continue
+    attacker = {
+        "Held Item": item_name,
+    }
 
-        if item.get("EffectType") != "DamageMultiplier":
-            continue
-
-        if item.get("AppliesTo") != "Offense":
-            continue
-
-        move_type_affected = item.get(
-            "MoveTypeAffected"
-        )
-        move_category_affected = item.get(
-            "MoveCategoryAffected"
-        )
-
-        type_matches = (
-            move_type_affected
-            in [
-                None,
-                "None",
-                move.get("Type"),
-            ]
-        )
-
-        category_matches = (
-            move_category_affected
-            in [
-                None,
-                "None",
-                move.get("Category"),
-            ]
-        )
-
-        if type_matches and category_matches:
-            return item.get(
-                "Multiplier",
-                1,
-            )
-
-    return 1
+    return get_item_damage_multiplier(
+        attacker,
+        {},
+        move,
+        items,
+        effectiveness=1,
+    )
 
 
 def ability_rule_applies(

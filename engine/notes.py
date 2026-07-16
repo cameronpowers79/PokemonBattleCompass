@@ -117,6 +117,98 @@ def get_tactical_ability_notes(defender, best_move, ability_rules, has_ohko_note
     return notes
 
 
+# ---------- Tactical item notes ----------
+
+def pokemon_has_status_move(pokemon):
+    return any(
+        pokemon.get(f"Move{slot}Category") == "Status"
+        for slot in range(1, 5)
+    )
+
+
+def get_tactical_item_notes(
+    attacker,
+    defender,
+    best_move,
+    worst_move,
+    has_ohko_note,
+):
+    notes = []
+
+    attacker_item = attacker.get("Held Item")
+    defender_item = defender.get("Held Item")
+    best_move_name = best_move.get(
+        "Move",
+        "This move",
+    )
+
+    if attacker_item == "Life Orb":
+        notes.append(
+            note(
+                NOTE_CAUTION,
+                "Life Orb recoil follows successful damaging attacks",
+            )
+        )
+
+    if attacker_item in {
+        "Choice Band",
+        "Choice Specs",
+        "Choice Scarf",
+    }:
+        notes.append(
+            note(
+                NOTE_INFO,
+                f"{attacker_item} locks the user into its first selected move",
+            )
+        )
+
+    if (
+        attacker_item == "Assault Vest"
+        and pokemon_has_status_move(attacker)
+    ):
+        notes.append(
+            note(
+                NOTE_WARNING,
+                "Assault Vest prevents the use of status moves",
+            )
+        )
+
+    if (
+        defender_item == "Rocky Helmet"
+        and move_makes_contact(best_move)
+    ):
+        notes.append(
+            note(
+                NOTE_CAUTION,
+                f"{best_move_name} will trigger Rocky Helmet",
+            )
+        )
+
+    if (
+        defender_item == "Focus Sash"
+        and has_ohko_note
+    ):
+        notes.append(
+            note(
+                NOTE_WARNING,
+                "Focus Sash may prevent an OHKO at full HP",
+            )
+        )
+
+    if (
+        attacker_item == "Focus Sash"
+        and worst_move
+    ):
+        notes.append(
+            note(
+                NOTE_INFO,
+                "Focus Sash may preserve 1 HP from a lethal hit at full HP",
+            )
+        )
+
+    return notes
+
+
 # ---------- Move mechanics notes ----------
 
 def get_priority_notes(best_move, worst_move, opponent):
@@ -422,7 +514,8 @@ def build_battle_notes(
     incoming_hp_ratio=None,
     team_moves_second=False,
     likely_survives_first_hit=False,
-    dmax_note=""
+    dmax_note="",
+    items=None,
 ):
     if ability_rules is None:
         ability_rules = []
@@ -432,6 +525,9 @@ def build_battle_notes(
 
     if opponent_moves is None:
         opponent_moves = []
+
+    if items is None:
+        items = []
 
     notes = []
 
@@ -483,6 +579,16 @@ def build_battle_notes(
             best_move,
             ability_rules,
             has_ohko_note
+        )
+    )
+
+    notes.extend(
+        get_tactical_item_notes(
+            attacker,
+            defender,
+            best_move,
+            worst_move,
+            has_ohko_note,
         )
     )
 
