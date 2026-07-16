@@ -12,6 +12,8 @@ from typing import Any, cast
 
 import flet as ft
 
+from ui.rendering import get_item_sprite_src
+
 from ui.theme import (
     BORDER_ACCENT,
     BORDER_DEFAULT,
@@ -395,6 +397,49 @@ class RecommendationCard(ft.Container):
             (self.item_multiplier - 1) * 100
         )
 
+        item_sprite_src = get_item_sprite_src(
+                    self.held_item
+                )
+
+        item_identity_controls = cast(
+            list[ft.Control],
+            [],
+        )
+
+        if item_sprite_src:
+            item_identity_controls.append(
+                ft.Image(
+                    src=item_sprite_src,
+                    width=36,
+                    height=36,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=self.held_item,
+                )
+            )
+
+        item_identity_controls.append(
+            ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            self.held_item,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color=PRIMARY_BLUE,
+                        ),
+                        ft.Text(
+                            f"Move bonus: +{boost_percent}%",
+                            size=13,
+                            color=TEXT_SECONDARY,
+                        ),
+                    ],
+                ),
+                spacing=2,
+                expand=True,
+            )
+        )
+
         popup_controls = cast(
             list[ft.Control],
             [
@@ -404,16 +449,12 @@ class RecommendationCard(ft.Container):
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
-                ft.Text(
-                    self.held_item,
-                    size=14,
-                    weight=ft.FontWeight.BOLD,
-                    color=PRIMARY_BLUE,
-                ),
-                ft.Text(
-                    f"Move bonus: +{boost_percent}%",
-                    size=13,
-                    color=TEXT_SECONDARY,
+                ft.Row(
+                    controls=item_identity_controls,
+                    spacing=9,
+                    vertical_alignment=(
+                        ft.CrossAxisAlignment.CENTER
+                    ),
                 ),
                 ft.Divider(
                     color=BORDER_DEFAULT,

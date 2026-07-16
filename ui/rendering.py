@@ -4,6 +4,27 @@ from io import BytesIO
 from PIL import Image
 
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
+import re 
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ASSETS_DIR = PROJECT_ROOT / "assets"
+
+HELD_ITEM_SPRITE_DIR = (
+    ASSETS_DIR
+    / "raw"
+    / "pokesprite"
+    / "items"
+    / "hold-item"
+)
+
+PLATE_SPRITE_DIR = (
+    ASSETS_DIR
+    / "raw"
+    / "pokesprite"
+    / "items"
+    / "plate"
+)
 
 
 def image_to_base64(
@@ -193,6 +214,80 @@ def get_sprite_img_html(
         f"/>"
     )
 
+def slugify_item_name(
+    item_name: str,
+) -> str:
+    """Convert a held-item name into a PokéSprite filename slug."""
+
+    normalized = (
+        item_name
+        .strip()
+        .lower()
+        .replace("’", "")
+        .replace("'", "")
+    )
+
+    normalized = re.sub(
+        r"[^a-z0-9]+",
+        "-",
+        normalized,
+    )
+
+    return normalized.strip("-")
+
+
+def get_item_sprite_path(
+    item_name: object,
+) -> Path | None:
+    """Return the bundled sprite for a held item, when available."""
+
+    if not isinstance(item_name, str):
+        return None
+
+    item_name = item_name.strip()
+
+    if not item_name:
+        return None
+
+    sprite_name = slugify_item_name(
+        item_name
+    )
+
+    candidates = [
+    HELD_ITEM_SPRITE_DIR
+    / f"{sprite_name}.png",
+    PLATE_SPRITE_DIR
+    / f"{sprite_name}.png",
+]
+
+    if sprite_name.endswith("-plate"):
+        candidates.append(
+            PLATE_SPRITE_DIR
+            / f"{sprite_name.removesuffix('-plate')}.png"
+        )
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+def get_item_sprite_src(
+    item_name: object,
+) -> str | None:
+    """Return an asset-relative item sprite source for Flet."""
+
+    sprite_path = get_item_sprite_path(
+        item_name
+    )
+
+    if sprite_path is None:
+        return None
+
+    return sprite_path.relative_to(
+        ASSETS_DIR
+    ).as_posix()
 
 def opponent_uses_gmax(opponent):
     return any(

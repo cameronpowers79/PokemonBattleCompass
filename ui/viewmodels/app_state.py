@@ -35,7 +35,7 @@ class AppState:
         self,
         page: ft.Page,
         *,
-        reference_data: dict[str, list[dict]],
+        reference_data: dict[str, list],
     ) -> None:
         self.page = page
         self.reference_data = reference_data

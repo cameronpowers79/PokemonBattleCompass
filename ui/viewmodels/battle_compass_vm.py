@@ -319,7 +319,7 @@ def build_battle_compass_view_model(
     )
 
 
-def load_reference_data() -> dict[str, list[dict]]:
+def load_reference_data() -> dict[str, list]:
     """Load the bundled reference and default team data."""
 
     return {
@@ -327,5 +327,6 @@ def load_reference_data() -> dict[str, list[dict]]:
         "opponents": load_json("opponents"),
         "items": load_json("items"),
         "ability_rules": load_json("ability_rules"),
+        "abilities": load_json("abilities_swsh"),
         "moves_data": load_json("moves"),
     }

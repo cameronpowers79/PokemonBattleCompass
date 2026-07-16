@@ -1,3 +1,5 @@
+'''engine/notes.py'''
+
 from engine.mechanics import get_ability_multiplier, get_type_multiplier
 
 NOTE_INFO = "info"
@@ -212,107 +214,48 @@ def get_move_type_list(pokemon):
             "Type": move_type,
             "Power": move_power,
             "Category": move_category,
-            "MakesContact": pokemon.get(
-                f"Move{slot}MakesContact"
-            ),
-            "MechanicsTags": pokemon.get(
-                f"Move{slot}MechanicsTags",
-                [],
-            ),
         })
 
     return moves
 
 
-def get_immune_and_resisted_types(
-    pokemon,
-    opponent,
-    ability_rules,
-    opponent_moves=None,
-):
-    pokemon_types = [
-        pokemon.get("Type1"),
-        pokemon.get("Type2"),
-    ]
+def get_immune_and_resisted_types(pokemon, opponent, ability_rules):
+    pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
 
     immune_types = []
     resisted_types = []
 
-    moves = (
-        opponent_moves
-        if opponent_moves is not None
-        else get_move_type_list(opponent)
-    )
+    for move in get_move_type_list(opponent):
+        move_type = move["Type"]
 
-    for move in moves:
-        move_type = move.get("Type")
-
-        if not move_type:
-            continue
-
-        type_multiplier = get_type_multiplier(
-            move_type,
-            pokemon_types,
-        )
-
+        type_multiplier = get_type_multiplier(move_type, pokemon_types)
         ability_multiplier = get_ability_multiplier(
             pokemon,
             move,
             ability_rules,
-            type_multiplier,
-            opponent,
+            type_multiplier
         )
 
-        final_multiplier = (
-            type_multiplier
-            * ability_multiplier
-        )
+        final_multiplier = type_multiplier * ability_multiplier
 
         if final_multiplier == 0:
             immune_types.append(move_type)
         elif 0 < final_multiplier < 1:
             resisted_types.append(move_type)
 
-    return (
-        unique_text_list(immune_types),
-        unique_text_list(resisted_types),
-    )
+    return unique_text_list(immune_types), unique_text_list(resisted_types)
 
 
-def has_ability_immunity(
-    pokemon,
-    opponent,
-    ability_rules,
-    opponent_moves=None,
-):
-    pokemon_types = [
-        pokemon.get("Type1"),
-        pokemon.get("Type2"),
-    ]
+def has_ability_immunity(pokemon, opponent, ability_rules):
+    pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
 
-    moves = (
-        opponent_moves
-        if opponent_moves is not None
-        else get_move_type_list(opponent)
-    )
-
-    for move in moves:
-        move_type = move.get("Type")
-
-        if not move_type:
-            continue
-
-        type_multiplier = get_type_multiplier(
-            move_type,
-            pokemon_types,
-        )
-
+    for move in get_move_type_list(opponent):
+        type_multiplier = get_type_multiplier(move["Type"], pokemon_types)
         ability_multiplier = get_ability_multiplier(
             pokemon,
             move,
             ability_rules,
-            type_multiplier,
-            opponent,
+            type_multiplier
         )
 
         if ability_multiplier == 0:
@@ -522,13 +465,7 @@ def get_second_smallest(values):
     return sorted_values[1]
 
 
-def get_why_code(
-    selected_result,
-    all_results,
-    opponent,
-    ability_rules,
-    opponent_moves=None,
-):
+def get_why_code(selected_result, all_results, opponent, ability_rules):
     best_scores = [result["best_score"] for result in all_results]
     worst_scores = [result["worst_score"] for result in all_results]
 
@@ -564,8 +501,7 @@ def get_why_code(
     ability_immunity = has_ability_immunity(
         selected_pokemon,
         opponent,
-        ability_rules,
-        opponent_moves,
+        ability_rules
     )
 
     type_immunity = has_type_immunity(
@@ -601,17 +537,11 @@ def get_why_code(
     return 7
 
 
-def build_durability_reason(
-    pokemon,
-    opponent,
-    ability_rules,
-    opponent_moves=None,
-):
+def build_durability_reason(pokemon, opponent, ability_rules):
     immune_types, resisted_types = get_immune_and_resisted_types(
         pokemon,
         opponent,
-        ability_rules,
-        opponent_moves,
+        ability_rules
     )
 
     pokemon_name = pokemon.get("Pokemon", "This Pokémon")
@@ -631,13 +561,7 @@ def build_durability_reason(
     return f"{pokemon_name} has the best durability against this opponent"
 
 
-def build_why_explanation(
-    all_results,
-    selected_result,
-    opponent,
-    ability_rules=None,
-    opponent_moves=None,
-):
+def build_why_explanation(all_results, selected_result, opponent, ability_rules=None):
     if ability_rules is None:
         ability_rules = []
 
@@ -651,16 +575,14 @@ def build_why_explanation(
         return build_durability_reason(
             selected_pokemon,
             opponent,
-            ability_rules,
-            opponent_moves,
+            ability_rules
         )
 
     why_code = get_why_code(
         selected_result,
         all_results,
         opponent,
-        ability_rules,
-        opponent_moves,
+        ability_rules
     )
 
     if why_code == 0:
@@ -670,16 +592,14 @@ def build_why_explanation(
         return build_durability_reason(
             selected_pokemon,
             opponent,
-            ability_rules,
-            opponent_moves,
+            ability_rules
         )
 
     if why_code == 2:
         return build_durability_reason(
             selected_pokemon,
             opponent,
-            ability_rules,
-            opponent_moves,
+            ability_rules
         )
 
     if why_code == 3:

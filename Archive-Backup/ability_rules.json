@@ -130,14 +130,14 @@
     "Effect": "PowerBoost",
     "TargetType": "LowPower",
     "Modifier": 1.5,
-    "Notes": "Moves with BP ≤60 get x1.5"
+    "Notes": "Moves with BP \u226460 get x1.5"
   },
   {
     "Ability": "Intimidate",
     "Effect": "AttackReduction",
     "TargetType": "Physical",
     "Modifier": 0.667,
-    "Notes": "Reduces opponent ATK by 1 stage (×2/3) for incoming Physical moves. Singles matchup evaluation only."
+    "Notes": "Reduces opponent ATK by 1 stage (\u00d72/3) for incoming Physical moves. Singles matchup evaluation only."
   },
   {
     "Ability": "Rough Skin",
@@ -200,7 +200,7 @@
     "Effect": "Tactical",
     "TargetType": "Faint",
     "Modifier": 0,
-    "Notes": "Contact attacker takes damage if this Pokémon faints."
+    "Notes": "Contact attacker takes damage if this Pok\u00e9mon faints."
   },
   {
     "Ability": "Sturdy",
@@ -208,124 +208,5 @@
     "TargetType": "OHKO",
     "Modifier": 0,
     "Notes": "May survive an otherwise lethal hit at full HP."
-  },
-  {
-    "Ability": "Soundproof",
-    "Effect": "Immunity",
-    "TargetType": "Sound",
-    "Modifier": 0,
-    "Notes": "Immune to sound-based moves."
-  },
-  {
-    "Ability": "Bulletproof",
-    "Effect": "Immunity",
-    "TargetType": "Bullet",
-    "Modifier": 0,
-    "Notes": "Immune to ball and bomb moves."
-  },
-  {
-    "Ability": "Fur Coat",
-    "Effect": "Reduction",
-    "TargetType": "Physical",
-    "Modifier": 0.5,
-    "Notes": "Physical damage x0.5."
-  },
-  {
-    "Ability": "Fluffy",
-    "Effect": "Reduction",
-    "TargetType": "Contact",
-    "Modifier": 0.5,
-    "Notes": "Damage from contact moves x0.5."
-  },
-  {
-    "Ability": "Fluffy",
-    "Effect": "Vulnerability",
-    "TargetType": "Fire",
-    "Modifier": 2,
-    "Notes": "Fire damage x2."
-  },
-  {
-    "Ability": "Ice Scales",
-    "Effect": "Reduction",
-    "TargetType": "Special",
-    "Modifier": 0.5,
-    "Notes": "Special damage x0.5."
-  },
-  {
-    "Ability": "Wonder Guard",
-    "Effect": "Immunity",
-    "TargetType": "NotSuperEffective",
-    "Modifier": 0,
-    "Notes": "Immune to damaging moves that are not super effective."
-  },
-  {
-    "Ability": "Clear Body",
-    "Effect": "StatDropImmunity",
-    "TargetType": "OpponentStatReduction",
-    "Modifier": 0,
-    "Notes": "Opposing moves and Abilities cannot lower this Pokémon's stats."
-  },
-  {
-    "Ability": "White Smoke",
-    "Effect": "StatDropImmunity",
-    "TargetType": "OpponentStatReduction",
-    "Modifier": 0,
-    "Notes": "Opposing moves and Abilities cannot lower this Pokémon's stats."
-  },
-  {
-    "Ability": "Full Metal Body",
-    "Effect": "StatDropImmunity",
-    "TargetType": "OpponentStatReduction",
-    "Modifier": 0,
-    "Notes": "Other Pokémon's moves and Abilities cannot lower this Pokémon's stats."
-  },
-  {
-    "Ability": "Heavy Metal",
-    "Effect": "WeightModifier",
-    "TargetType": "UserWeight",
-    "Modifier": 2,
-    "Notes": "Doubles the Pokémon's weight."
-  },
-  {
-    "Ability": "Light Metal",
-    "Effect": "WeightModifier",
-    "TargetType": "UserWeight",
-    "Modifier": 0.5,
-    "Notes": "Halves the Pokémon's weight."
-  },
-  {
-    "Ability": "Pressure",
-    "Effect": "Tactical",
-    "TargetType": "PP",
-    "Modifier": 0,
-    "Notes": "Moves targeting this Pokémon use 2 PP instead of 1."
-  },
-  {
-    "Ability": "Prankster",
-    "Effect": "PriorityBoost",
-    "TargetType": "Status",
-    "Modifier": 1,
-    "Notes": "Status moves gain +1 priority."
-  },
-  {
-    "Ability": "Mold Breaker",
-    "Effect": "AbilityBypass",
-    "TargetType": "DefenderAbility",
-    "Modifier": 0,
-    "Notes": "Moves ignore applicable defensive Abilities."
-  },
-  {
-    "Ability": "Teravolt",
-    "Effect": "AbilityBypass",
-    "TargetType": "DefenderAbility",
-    "Modifier": 0,
-    "Notes": "Moves ignore applicable defensive Abilities."
-  },
-  {
-    "Ability": "Turboblaze",
-    "Effect": "AbilityBypass",
-    "TargetType": "DefenderAbility",
-    "Modifier": 0,
-    "Notes": "Moves ignore applicable defensive Abilities."
   }
 ]

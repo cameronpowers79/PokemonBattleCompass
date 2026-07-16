@@ -20,7 +20,10 @@ from engine.item_recommendations import (
 )
 from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
-from ui.rendering import get_sprite_path
+from ui.rendering import (
+    get_item_sprite_src,
+    get_sprite_path,
+)
 from ui.theme import (
     BORDER_DEFAULT,
     CARD_PADDING,
@@ -219,6 +222,29 @@ class MyTeamView:
         self.team_data = app_state.team_data
         self.moves_data = moves_data
         self.items_data = app_state.reference_data["items"]
+        raw_abilities = app_state.reference_data.get(
+            "abilities",
+            [],
+        )
+
+        self.ability_options = sorted(
+            ability
+            for ability in raw_abilities
+            if isinstance(ability, str)
+            and ability.strip()
+        )
+
+        self.ability_lookup = set(
+            self.ability_options
+        )
+
+        self.ability_suggestions = [
+            ft.AutoCompleteSuggestion(
+                key=ability_name,
+                value=ability_name,
+            )
+            for ability_name in self.ability_options
+        ]
         self.on_team_updated = on_team_updated
 
         self.move_lookup = {
@@ -1064,7 +1090,27 @@ class MyTeamView:
                     )
                 ),
             )
-
+        elif column == "Ability":
+            control = ft.AutoComplete(
+                value=(
+                    str(value)
+                    if value
+                    else ""
+                ),
+                suggestions=self.ability_suggestions,
+                suggestions_max_height=240,
+                width=165,
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_ability_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+            )
         elif column.startswith("Move"):
             control = ft.AutoComplete(
                 value=(
@@ -1199,6 +1245,29 @@ class MyTeamView:
         ).strip()
 
         self.working_team[row_index][column] = move_name
+        self._update_dirty_state()
+
+        if row_index == self.selected_index:
+            self._refresh_detail()
+
+        self.page.update()
+
+    def _handle_ability_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Update an edited Ability value."""
+
+        ability_name = (
+            event.control.value or ""
+        ).strip()
+
+        self.working_team[
+            row_index
+        ][column] = ability_name
+
         self._update_dirty_state()
 
         if row_index == self.selected_index:
@@ -2558,6 +2627,57 @@ class MyTeamView:
         self.page.pop_dialog()
         self.page.update()
         
+    @staticmethod
+    def _build_item_identity(
+        item_name_value: object,
+        *,
+        sprite_size: int = 32,
+        text_size: int = 18,
+    ) -> ft.Control:
+        """Build an item name with its bundled sprite when available."""
+
+        item_name = str(
+            item_name_value
+            or "—"
+        )
+
+        controls = cast(
+            list[ft.Control],
+            [],
+        )
+
+        sprite_src = get_item_sprite_src(
+            item_name_value
+        )
+
+        if sprite_src:
+            controls.append(
+                ft.Image(
+                    src=sprite_src,
+                    width=sprite_size,
+                    height=sprite_size,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=item_name,
+                )
+            )
+
+        controls.append(
+            ft.Text(
+                item_name,
+                size=text_size,
+                weight=ft.FontWeight.BOLD,
+                color=TEXT_PRIMARY,
+                expand=True,
+            )
+        )
+
+        return ft.Row(
+            controls=controls,
+            spacing=9,
+            vertical_alignment=(
+                ft.CrossAxisAlignment.CENTER
+            ),
+        )
 
     def _build_footer(
         self,
@@ -2641,14 +2761,10 @@ class MyTeamView:
                                             ft.CrossAxisAlignment.CENTER
                                         ),
                                     ),
-                                    ft.Text(
-                                        str(
-                                            pokemon.get("Held Item")
-                                            or "—"
+                                    self._build_item_identity(
+                                        pokemon.get(
+                                            "Held Item"
                                         ),
-                                        size=18,
-                                        weight=ft.FontWeight.BOLD,
-                                        color=TEXT_PRIMARY,
                                     ),
                                 ],
                             ),
@@ -2812,11 +2928,10 @@ class MyTeamView:
                 controls=cast(
                     list[ft.Control],
                     [
-                        ft.Text(
+                        MyTeamView._build_item_identity(
                             recommendation.item,
-                            size=19,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
+                            sprite_size=38,
+                            text_size=19,
                         ),
                         ft.Text(
                             recommendation.description,
@@ -2860,8 +2975,21 @@ class MyTeamView:
         del event
 
         invalid_moves: list[str] = []
+        invalid_abilities: list[str] = []
 
         for pokemon in self.working_team:
+            ability_name = str(
+                pokemon.get("Ability") or ""
+            ).strip()
+
+            if (
+                ability_name
+                and ability_name
+                not in self.ability_lookup
+            ):
+                invalid_abilities.append(
+                    ability_name
+                )
             for slot in range(1, 5):
                 move_name = str(
                     pokemon.get(f"Move{slot}") or ""
@@ -2892,6 +3020,23 @@ class MyTeamView:
             )
             for pokemon in self.working_team
         ]
+
+        if invalid_abilities:
+            invalid_list = ", ".join(
+                sorted(
+                    set(
+                        invalid_abilities
+                    )
+                )
+            )
+
+            self.save_status.value = (
+                "Invalid Ability selection: "
+                f"{invalid_list}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
 
         try:
             save_succeeded = await self.app_state.save_team(

@@ -1,3 +1,5 @@
+'''engine/calculations.py'''
+
 from engine.mechanics import (
     get_stab_multiplier,
     get_type_multiplier,
@@ -86,8 +88,7 @@ def calculate_move_score(attacker, defender, move, items=None, ability_rules=Non
         defender,
         move,
         ability_rules,
-        effectiveness,
-        attacker,
+        effectiveness
     )
     effectiveness *= ability_multiplier
 
@@ -161,7 +162,6 @@ def get_moves(pokemon, moves_data=None):
             "ActivationCondition": move_info.get("ActivationCondition"),
             "StatusEffect": move_info.get("StatusEffect"),
             "ActivationPowerMultiplier": move_info.get("ActivationPowerMultiplier", 1),
-            "MechanicsTags": move_info.get("MechanicsTags", []),
         })
 
     return moves
@@ -394,10 +394,6 @@ def find_best_team_member(
         selected_result,
         opponent,
         ability_rules,
-        opponent_moves=get_moves(
-            opponent,
-            moves_data,
-        ),
     )
 
     best_result = (
@@ -429,8 +425,7 @@ def calculate_offensive_multiplier(attacker, defender, move, ability_rules=None)
         defender,
         move,
         ability_rules,
-        type_multiplier,
-        attacker,
+        type_multiplier
     )
 
     return type_multiplier * ability_multiplier
@@ -450,8 +445,7 @@ def calculate_incoming_multiplier(opponent, defender, move, ability_rules=None):
         defender,
         move,
         ability_rules,
-        type_multiplier,
-        opponent,
+        type_multiplier
     )
 
     return type_multiplier * ability_multiplier
