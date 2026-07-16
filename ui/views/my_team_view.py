@@ -235,6 +235,11 @@ class MyTeamView:
         ] = {}
 
         self.selected_index = 0
+        self.party_management_selected_index: int | None = None
+
+        self.party_management_host = ft.Container()
+        self.box_pokemon_button: ft.Button | None = None
+        self.release_pokemon_button: ft.Button | None = None
 
         self.detail_selector = ft.Dropdown(
             label="Select Pokémon",
@@ -261,6 +266,19 @@ class MyTeamView:
                 bgcolor=SUCCESS_SOFT,
                 color=TEXT_PRIMARY,
                 icon_color=TEXT_PRIMARY,
+                elevation=1,
+            ),
+        )
+
+        self.manage_party_button = ft.Button(
+            content="Box / Release Pokémon",
+            icon=ft.Icons.ARCHIVE_OUTLINED,
+            disabled=not self.working_team,
+            on_click=self._show_party_management_dialog,
+            style=ft.ButtonStyle(
+                bgcolor=SURFACE_RAISED,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_SECONDARY,
                 elevation=1,
             ),
         )
@@ -321,6 +339,7 @@ class MyTeamView:
 
         self._refresh_selector()
         self._refresh_detail()
+        self._sync_team_management_buttons()
 
     def _add_pokemon(
         self,
@@ -331,7 +350,7 @@ class MyTeamView:
         del event
 
         if len(self.working_team) >= 6:
-            self._sync_add_pokemon_button()
+            self._sync_team_management_buttons()
             self.page.update()
             return
 
@@ -352,7 +371,7 @@ class MyTeamView:
         self._refresh_selector()
         self._refresh_detail()
         self._update_dirty_state()
-        self._sync_add_pokemon_button()
+        self._sync_team_management_buttons()
 
         self.page.update()
 
@@ -380,14 +399,451 @@ class MyTeamView:
             "Held Item": "",
         }
 
-    def _sync_add_pokemon_button(
+    def _sync_team_management_buttons(
         self,
     ) -> None:
-        """Disable adding Pokémon once the team reaches six."""
+        """Synchronize party-composition action buttons."""
 
         self.add_pokemon_button.disabled = (
             len(self.working_team) >= 6
         )
+        self.manage_party_button.disabled = (
+            not self.working_team
+        )
+
+    def _show_party_management_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Open the active-party management dialog."""
+
+        del event
+
+        self.party_management_selected_index = None
+
+        self.box_pokemon_button = ft.Button(
+            content="Box Pokémon",
+            icon=ft.Icons.ARCHIVE_OUTLINED,
+            disabled=True,
+            on_click=self._request_box_selected_pokemon,
+        )
+
+        self.release_pokemon_button = ft.Button(
+            content="Release Pokémon",
+            icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+            disabled=True,
+            color="#FCA5A5",
+            icon_color="#FCA5A5",
+            on_click=self._request_release_selected_pokemon,
+        )
+
+        self.party_management_host.content = (
+            self._build_party_management_content()
+        )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Box / Release Pokémon",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=self.party_management_host,
+                    width=520,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._close_party_management_dialog,
+                        ),
+                        self.box_pokemon_button,
+                        self.release_pokemon_button,
+                    ],
+                ),
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _build_party_management_content(
+        self,
+    ) -> ft.Control:
+        """Build the selectable active-party list."""
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    (
+                        "Choose a Pokémon from your active party. "
+                        "Boxing or releasing it removes it from the "
+                        "current team after confirmation."
+                    ),
+                    size=14,
+                    color=TEXT_SECONDARY,
+                ),
+            ],
+        )
+
+        controls.extend(
+            self._build_party_member_row(
+                index,
+                pokemon,
+            )
+            for index, pokemon in enumerate(
+                self.working_team
+            )
+        )
+
+        if len(self.working_team) <= 1:
+            controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        (
+                            "Your Journey must always contain at "
+                            "least one Pokémon."
+                        ),
+                        size=14,
+                        color="#FFE5A3",
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    padding=12,
+                    bgcolor="#3B3017",
+                    border_radius=10,
+                    alignment=ft.Alignment.CENTER,
+                )
+            )
+
+        return ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+
+    def _build_party_member_row(
+        self,
+        index: int,
+        pokemon: dict,
+    ) -> ft.Control:
+        """Build one selectable Pokémon row."""
+
+        pokemon_name = str(
+            pokemon.get("Pokemon")
+            or f"Team Slot {index + 1}"
+        )
+
+        sprite_path = get_sprite_path(
+            pokemon_name,
+            gender=pokemon.get("Gender"),
+            use_texture=False,
+        )
+
+        if sprite_path is None:
+            sprite: ft.Control = ft.Container(
+                content=ft.Icon(
+                    ft.Icons.HELP_OUTLINE_ROUNDED,
+                    size=24,
+                    color=TEXT_MUTED,
+                ),
+                width=46,
+                height=46,
+                alignment=ft.Alignment.CENTER,
+            )
+        else:
+            sprite = ft.Image(
+                src=self._asset_src(sprite_path),
+                width=46,
+                height=46,
+                fit=ft.BoxFit.CONTAIN,
+                semantics_label=pokemon_name,
+            )
+
+        is_selected = (
+            index
+            == self.party_management_selected_index
+        )
+
+        return ft.Container(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        sprite,
+                        ft.Column(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Text(
+                                        pokemon_name,
+                                        size=17,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=TEXT_PRIMARY,
+                                    ),
+                                    ft.Text(
+                                        (
+                                            f"Lv. "
+                                            f"{pokemon.get('Level', '—')}"
+                                        ),
+                                        size=13,
+                                        color=TEXT_MUTED,
+                                    ),
+                                ],
+                            ),
+                            spacing=2,
+                            expand=True,
+                        ),
+                        ft.Icon(
+                            (
+                                ft.Icons.CHECK_CIRCLE_ROUNDED
+                                if is_selected
+                                else ft.Icons.CIRCLE_OUTLINED
+                            ),
+                            size=22,
+                            color=(
+                                PRIMARY_BLUE
+                                if is_selected
+                                else TEXT_MUTED
+                            ),
+                        ),
+                    ],
+                ),
+                spacing=12,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=12,
+            bgcolor=(
+                PRIMARY_BLUE_SOFT
+                if is_selected
+                else SURFACE_RAISED
+            ),
+            border=ft.Border.all(
+                1,
+                (
+                    PRIMARY_BLUE
+                    if is_selected
+                    else BORDER_DEFAULT
+                ),
+            ),
+            border_radius=12,
+            on_click=(
+                lambda event, selected_index=index:
+                self._select_party_member(
+                    event,
+                    selected_index,
+                )
+            ),
+        )
+
+    def _select_party_member(
+        self,
+        event: ft.Event[ft.Container],
+        selected_index: int,
+    ) -> None:
+        """Select one Pokémon for boxing or release."""
+
+        del event
+
+        self.party_management_selected_index = (
+            selected_index
+        )
+
+        self.party_management_host.content = (
+            self._build_party_management_content()
+        )
+
+        actions_enabled = (
+            len(self.working_team) > 1
+        )
+
+        if self.box_pokemon_button is not None:
+            self.box_pokemon_button.disabled = (
+                not actions_enabled
+            )
+
+        if self.release_pokemon_button is not None:
+            self.release_pokemon_button.disabled = (
+                not actions_enabled
+            )
+
+        self.page.update()
+
+    def _request_box_selected_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Ask for confirmation before boxing the selected Pokémon."""
+
+        del event
+        self._show_remove_confirmation(
+            action="box",
+        )
+
+    def _request_release_selected_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Ask for confirmation before releasing the selected Pokémon."""
+
+        del event
+        self._show_remove_confirmation(
+            action="release",
+        )
+
+    def _show_remove_confirmation(
+        self,
+        *,
+        action: str,
+    ) -> None:
+        """Show a confirmation dialog for a party-removal action."""
+
+        selected_index = (
+            self.party_management_selected_index
+        )
+
+        if (
+            selected_index is None
+            or selected_index < 0
+            or selected_index >= len(self.working_team)
+            or len(self.working_team) <= 1
+        ):
+            return
+
+        pokemon_name = str(
+            self.working_team[
+                selected_index
+            ].get("Pokemon")
+            or f"Team Slot {selected_index + 1}"
+        )
+
+        self.page.pop_dialog()
+
+        if action == "box":
+            title = f"Box {pokemon_name}?"
+            message = (
+                f"{pokemon_name} will be removed from your "
+                "active party. Boxed Pokémon will be available "
+                "again once PC storage is added."
+            )
+            confirm_label = "Box Pokémon"
+            confirm_icon = ft.Icons.ARCHIVE_OUTLINED
+            confirm_color = PRIMARY_BLUE
+        else:
+            title = f"Release {pokemon_name}?"
+            message = (
+                f"This removes {pokemon_name} from your Journey. "
+                "This action cannot currently be undone after "
+                "the team is saved."
+            )
+            confirm_label = "Release Pokémon"
+            confirm_icon = ft.Icons.DELETE_OUTLINE_ROUNDED
+            confirm_color = "#B94A55"
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    title,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Text(
+                    message,
+                    size=15,
+                    color=TEXT_SECONDARY,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._cancel_remove_confirmation,
+                        ),
+                        ft.Button(
+                            content=confirm_label,
+                            icon=confirm_icon,
+                            bgcolor=confirm_color,
+                            color=TEXT_PRIMARY,
+                            icon_color=TEXT_PRIMARY,
+                            on_click=self._confirm_remove_pokemon,
+                        ),
+                    ],
+                ),
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _confirm_remove_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Remove the selected Pokémon from the working party."""
+
+        del event
+
+        selected_index = (
+            self.party_management_selected_index
+        )
+
+        if (
+            selected_index is None
+            or selected_index < 0
+            or selected_index >= len(self.working_team)
+            or len(self.working_team) <= 1
+        ):
+            self.page.pop_dialog()
+            self.page.update()
+            return
+
+        self.working_team.pop(
+            selected_index
+        )
+
+        self.selected_index = min(
+            self.selected_index,
+            len(self.working_team) - 1,
+        )
+
+        self.party_management_selected_index = None
+        self.editor_controls.clear()
+
+        self.table_host.content = (
+            self._build_editor_table()
+        )
+
+        self._refresh_selector()
+        self._refresh_detail()
+        self._update_dirty_state()
+        self._sync_team_management_buttons()
+
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _cancel_remove_confirmation(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Cancel a pending box or release action."""
+
+        del event
+
+        self.party_management_selected_index = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _close_party_management_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the party-management dialog."""
+
+        del event
+
+        self.party_management_selected_index = None
+        self.page.pop_dialog()
+        self.page.update()
 
     def _update_dirty_state(self) -> None:
         """Synchronize save controls with the current dirty state."""
@@ -433,6 +889,7 @@ class MyTeamView:
                                 list[ft.Control],
                                 [
                                     self.add_pokemon_button,
+                                    self.manage_party_button,
                                     self.save_button,
                                     self.save_status,
                                 ],
@@ -931,7 +1388,7 @@ class MyTeamView:
                             color=TEXT_PRIMARY,
                         ),
                         self._build_stats(pokemon),
-                        ft.Row(
+                        ft.Column(
                             controls=cast(
                                 list[ft.Control],
                                 [
@@ -942,16 +1399,15 @@ class MyTeamView:
                                         color=TEXT_PRIMARY,
                                     ),
                                     ft.Text(
-                                        "ACTIVE FILE TEST — CLICK A MOVE",
+                                        "Select a move to view its details.",
                                         size=13,
                                         color=TEXT_MUTED,
                                         expand=True,
                                     ),
                                 ],
                             ),
-                            spacing=10,
-                            wrap=True,
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=3,
+                            
                         ),
                         self._build_moves(pokemon),
                         self._build_footer(pokemon),
@@ -1259,8 +1715,7 @@ class MyTeamView:
                     content=self._build_move_detail_content(
                         move
                     ),
-                    width=540,
-                    height=500,
+                    width=540, 
                 ),
                 actions=cast(
                     list[ft.Control],
@@ -2463,12 +2918,12 @@ class MyTeamView:
                 self.app_state.team_data
             )
 
-        self.save_status.value = "Team saved."
+        self.save_status.value = "Team is up to date."
         self.save_status.color = SUCCESS
 
         self._refresh_selector()
         self._refresh_detail()
-        self._sync_add_pokemon_button()
+        self._sync_team_management_buttons()
 
         self.page.update()
 

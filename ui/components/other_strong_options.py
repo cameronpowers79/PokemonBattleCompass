@@ -63,6 +63,60 @@ class OtherStrongOptions(ft.Container):
         )
 
     def _build_content(self) -> ft.Control:
+        if not self.options:
+            return ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Other Strong Options",
+                            size=26,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        ft.Container(
+                            content=ft.Column(
+                                controls=cast(
+                                    list[ft.Control],
+                                    [
+                                        ft.Text(
+                                            "Catch a few more Pokémon!",
+                                            size=20,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                            text_align=ft.TextAlign.CENTER,
+                                        ),
+                                        ft.Text(
+                                            (
+                                                "As your team grows, your other "
+                                                "strongest matchup recommendations "
+                                                "will appear here."
+                                            ),
+                                            size=15,
+                                            color=TEXT_SECONDARY,
+                                            text_align=ft.TextAlign.CENTER,
+                                        ),
+                                    ],
+                                ),
+                                spacing=10,
+                                horizontal_alignment=(
+                                    ft.CrossAxisAlignment.CENTER
+                                ),
+                            ),
+                            padding=28,
+                            bgcolor=SURFACE,
+                            border=ft.Border.all(
+                                1,
+                                BORDER_DEFAULT,
+                            ),
+                            border_radius=16,
+                            alignment=ft.Alignment.CENTER,
+                        ),
+                    ],
+                ),
+                spacing=16,
+            )
+
         option_cards = cast(
             list[ft.Control],
             [
@@ -75,6 +129,27 @@ class OtherStrongOptions(ft.Container):
                 )
                 for option in self.options
             ],
+        )
+
+        return ft.Column(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Text(
+                        "Other Strong Options",
+                        size=26,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    ft.ResponsiveRow(
+                        controls=option_cards,
+                        columns=12,
+                        spacing=16,
+                        run_spacing=16,
+                    ),
+                ],
+            ),
+            spacing=16,
         )
 
         return ft.Column(

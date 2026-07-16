@@ -265,6 +265,11 @@ def build_battle_compass_view_model(
         moves_data,
     )
 
+    if recommended_pokemon is None:
+        raise RuntimeError(
+            "No team members currently have a damaging move."
+        )
+
     matchup_results = evaluate_team_matchups(
         team_data,
         opponent,

@@ -243,17 +243,26 @@ def get_opponent_dmax_note(opponent):
     return ""
 
 
-def get_best_move(attacker, defender, items, ability_rules=None, moves_data=None):
+def get_best_move(
+    attacker,
+    defender,
+    items,
+    ability_rules=None,
+    moves_data=None,
+):
     best_move = None
-    best_score = -1
+    best_score = 0
 
-    for move in get_moves(attacker, moves_data):
+    for move in get_moves(
+        attacker,
+        moves_data,
+    ):
         score = calculate_move_score(
             attacker,
             defender,
             move,
             items,
-            ability_rules
+            ability_rules,
         )
 
         if score > best_score:
@@ -283,62 +292,106 @@ def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves
     return worst_move, worst_score
 
 
-def calculate_matchup_ratio(attacker, defender, items, ability_rules=None, moves_data=None):
+def calculate_matchup_ratio(
+    attacker,
+    defender,
+    items,
+    ability_rules=None,
+    moves_data=None,
+):
     best_move, best_score = get_best_move(
         attacker,
         defender,
         items,
         ability_rules,
-        moves_data
+        moves_data,
     )
+
+    # An empty or status-only moveset has no offensive matchup
+    # to evaluate. Return immediately before calculating incoming
+    # damage against potentially incomplete stats.
+    if best_move is None:
+        return None, 0, None, 0, 0
 
     worst_move, worst_score = get_worst_incoming_move(
         defender,
         attacker,
         items,
         ability_rules,
-        moves_data
+        moves_data,
     )
 
     if worst_score == 0:
-        return best_move, best_score, worst_move, worst_score, 99
+        return (
+            best_move,
+            best_score,
+            worst_move,
+            worst_score,
+            99,
+        )
 
     ratio = best_score / worst_score
 
-    return best_move, best_score, worst_move, worst_score, ratio
+    return (
+        best_move,
+        best_score,
+        worst_move,
+        worst_score,
+        ratio,
+    )
 
 
-def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=None):
+def find_best_team_member(
+    team,
+    opponent,
+    items,
+    ability_rules=None,
+    moves_data=None,
+):
     all_results = []
 
     for pokemon in team:
-        best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
+        (
+            best_move,
+            best_score,
+            worst_move,
+            worst_score,
+            ratio,
+        ) = calculate_matchup_ratio(
             pokemon,
             opponent,
             items,
             ability_rules,
-            moves_data
+            moves_data,
         )
 
-        all_results.append({
-            "pokemon": pokemon,
-            "best_move": best_move,
-            "best_score": best_score,
-            "worst_move": worst_move,
-            "worst_score": worst_score,
-            "ratio": ratio
-        })
+        if best_move is None:
+            continue
+
+        all_results.append(
+            {
+                "pokemon": pokemon,
+                "best_move": best_move,
+                "best_score": best_score,
+                "worst_move": worst_move,
+                "worst_score": worst_score,
+                "ratio": ratio,
+            }
+        )
+
+    if not all_results:
+        return None, None, ""
 
     selected_result = max(
         all_results,
-        key=lambda result: result["ratio"]
+        key=lambda result: result["ratio"],
     )
 
     why = build_why_explanation(
         all_results,
         selected_result,
         opponent,
-        ability_rules
+        ability_rules,
     )
 
     best_result = (
@@ -346,10 +399,14 @@ def find_best_team_member(team, opponent, items, ability_rules=None, moves_data=
         selected_result["best_score"],
         selected_result["worst_move"],
         selected_result["worst_score"],
-        selected_result["ratio"]
+        selected_result["ratio"],
     )
 
-    return selected_result["pokemon"], best_result, why
+    return (
+        selected_result["pokemon"],
+        best_result,
+        why,
+    )
 
 def calculate_offensive_multiplier(attacker, defender, move, ability_rules=None):
     if ability_rules is None:
@@ -410,10 +467,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         )
 
         if best_move is None:
-            raise RuntimeError(
-                f"No valid offensive move found for "
-                f"{pokemon.get('Pokemon', 'Unknown Pokémon')}."
-            )
+            continue
+            
 
         if worst_move is None:
             raise RuntimeError(
@@ -530,6 +585,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 dmax_note
             )
         })
+
+    if not results:
+        return []
 
     return sorted(
         results,
