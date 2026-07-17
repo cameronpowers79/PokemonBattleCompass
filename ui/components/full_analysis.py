@@ -99,10 +99,10 @@ class FullAnalysis(ft.Container):
                 [
                     self._column("Pokémon"),
                     self._column("Best Move"),
-                    self._column("Effectiveness"),
+                    self._column("Type Effectiveness"),
                     self._column("Move Score"),
                     self._column("Worst Incoming Move"),
-                    self._column("Incoming Effectiveness"),
+                    self._column("Incoming Type Effectiveness"),
                     self._column("IWS"),
                     self._column("Ratio"),
                     self._column("Notes"),
@@ -136,8 +136,6 @@ class FullAnalysis(ft.Container):
     def _column(
         label: str,
     ) -> ft.DataColumn:
-        """Build one compact table heading."""
-
         return ft.DataColumn(
             label=ft.Text(
                 label,
@@ -151,23 +149,18 @@ class FullAnalysis(ft.Container):
         self,
         matchup: MatchupViewModel,
     ) -> ft.DataRow:
-        """Build one team-member analysis row."""
-
         pokemon_name = str(
             matchup.pokemon.get("Pokemon")
             or "Unknown"
         )
-
         best_move_name = str(
             matchup.best_move.get("Move")
             or "—"
         )
-
         worst_move_name = str(
             matchup.worst_move.get("Move")
             or "—"
         )
-
         worst_move_category = str(
             matchup.worst_move.get("Category")
             or "Unknown"
@@ -193,10 +186,8 @@ class FullAnalysis(ft.Container):
                     ),
                     ft.DataCell(
                         self._text_cell(
-                            (
-                                f"{matchup.best_move_multiplier:g}×"
-                            ),
-                            width=92,
+                            f"{matchup.best_move_type_multiplier:g}×",
+                            width=112,
                         )
                     ),
                     ft.DataCell(
@@ -216,10 +207,8 @@ class FullAnalysis(ft.Container):
                     ),
                     ft.DataCell(
                         self._text_cell(
-                            (
-                                f"{matchup.incoming_multiplier:g}×"
-                            ),
-                            width=130,
+                            f"{matchup.incoming_type_multiplier:g}×",
+                            width=150,
                         )
                     ),
                     ft.DataCell(
@@ -253,8 +242,6 @@ class FullAnalysis(ft.Container):
         width: int,
         bold: bool = False,
     ) -> ft.Control:
-        """Build a compact wrapped text table cell."""
-
         return ft.Container(
             content=ft.Text(
                 value,
@@ -283,8 +270,6 @@ class FullAnalysis(ft.Container):
         *,
         width: int,
     ) -> ft.Control:
-        """Build a compact right-aligned numeric table cell."""
-
         return ft.Container(
             content=ft.Text(
                 f"{value:.2f}",
@@ -304,8 +289,6 @@ class FullAnalysis(ft.Container):
     def _notes_text(
         matchup: MatchupViewModel,
     ) -> str:
-        """Flatten structured battle notes for table display."""
-
         note_texts = [
             note.text.strip()
             for note in matchup.battle_notes

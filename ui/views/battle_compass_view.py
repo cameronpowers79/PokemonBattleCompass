@@ -90,6 +90,16 @@ class BattleCompassView:
         self.opponents = reference_data["opponents"]
         self.items = reference_data["items"]
         self.ability_rules = reference_data["ability_rules"]
+        self.ability_descriptions = {
+            row["Ability"]: row["Description"]
+            for row in reference_data.get(
+                "ability_descriptions",
+                [],
+            )
+            if isinstance(row, dict)
+            and isinstance(row.get("Ability"), str)
+            and isinstance(row.get("Description"), str)
+        }
         self.moves_data = reference_data["moves_data"]
         self.move_lookup = {
             move["Move"]: move
@@ -124,10 +134,6 @@ class BattleCompassView:
                 STARTER_OPTIONS
             ),
             on_select=self._handle_starter_change,
-            col={
-                "xs": 12,
-                "md": 4,
-            },
         )
 
         self.trainer_dropdown = ft.Dropdown(
@@ -187,7 +193,7 @@ class BattleCompassView:
                             controls=cast(
                                 list[ft.Control],
                                 [
-                                    self.starter_dropdown,
+                                    self._build_starter_control(),
                                     self.trainer_dropdown,
                                     self.battle_dropdown,
                                 ],
@@ -221,6 +227,88 @@ class BattleCompassView:
             ),
             spacing=24,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def _build_starter_control(self) -> ft.Control:
+        """Build the starter dropdown with its Journey help popup."""
+
+        help_popup = ft.PopupMenuButton(
+            icon=ft.Icons.INFO_OUTLINE_ROUNDED,
+            icon_color=PRIMARY_BLUE,
+            tooltip="About changing your starter",
+            bgcolor=SURFACE,
+            menu_padding=6,
+            size_constraints=ft.BoxConstraints(
+                min_width=280,
+                max_width=320,
+            ),
+            items=[
+                ft.PopupMenuItem(
+                    padding=0,
+                    content=ft.Container(
+                        content=ft.Column(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Text(
+                                        "New Journey or Explore?",
+                                        size=15,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=TEXT_PRIMARY,
+                                    ),
+                                    ft.Text(
+                                        (
+                                            "Choose a different starter here "
+                                            "when you want to begin a new "
+                                            "Journey or temporarily Explore "
+                                            "another starter path."
+                                        ),
+                                        size=13,
+                                        color=TEXT_SECONDARY,
+                                    ),
+                                    ft.Text(
+                                        (
+                                            "Explore changes only the Battle "
+                                            "Compass matchup filter. Starting "
+                                            "a new Journey returns you to the "
+                                            "Welcome screen and lets you reset "
+                                            "the app for a new playthrough."
+                                        ),
+                                        size=13,
+                                        color=TEXT_MUTED,
+                                    ),
+                                ],
+                            ),
+                            spacing=8,
+                        ),
+                        width=292,
+                        padding=12,
+                        bgcolor=SURFACE,
+                        border_radius=10,
+                    ),
+                ),
+            ],
+        )
+
+        return ft.Container(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Container(
+                            content=self.starter_dropdown,
+                            expand=True,
+                        ),
+                        help_popup,
+                    ],
+                ),
+                spacing=4,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            col={
+                "xs": 12,
+                "md": 4,
+            },
         )
 
     @staticmethod
@@ -835,7 +923,7 @@ class BattleCompassView:
                     get_effectiveness_label(
                         (
                             recommendation
-                            .best_move_multiplier
+                            .best_move_type_multiplier
                         ),
                         mode="offense",
                     )
@@ -844,7 +932,7 @@ class BattleCompassView:
                     self._effectiveness_color(
                         (
                             recommendation
-                            .best_move_multiplier
+                            .best_move_type_multiplier
                         ),
                         mode="offense",
                     )
@@ -990,6 +1078,9 @@ class BattleCompassView:
                 )
             ),
             opponent_moves=opponent_moves,
+            ability_name=opponent.get("Ability"),
+            ability_descriptions=self.ability_descriptions,
+            ability_rules=self.ability_rules,
             incoming_worst_score=(
                 recommendation
                 .incoming_worst_score
@@ -1014,7 +1105,7 @@ class BattleCompassView:
                 get_effectiveness_label(
                     (
                         recommendation
-                        .incoming_multiplier
+                        .incoming_type_multiplier
                     ),
                     mode="defense",
                 )
@@ -1023,7 +1114,7 @@ class BattleCompassView:
                 self._effectiveness_color(
                     (
                         recommendation
-                        .incoming_multiplier
+                        .incoming_type_multiplier
                     ),
                     mode="defense",
                 )
@@ -1032,7 +1123,7 @@ class BattleCompassView:
                 self._effectiveness_background(
                     (
                         recommendation
-                        .incoming_multiplier
+                        .incoming_type_multiplier
                     ),
                     mode="defense",
                 )

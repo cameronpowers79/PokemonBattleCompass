@@ -49,6 +49,7 @@ class MatchupViewModel:
     pokemon: dict
     best_move: dict
     best_move_score: float
+    best_move_type_multiplier: float
     best_move_multiplier: float
     base_move_score: float
     item_boosted: bool
@@ -57,6 +58,7 @@ class MatchupViewModel:
     held_item: str | None
     worst_move: dict
     incoming_worst_score: float
+    incoming_type_multiplier: float
     incoming_multiplier: float
     ratio: float
     is_immune: bool
@@ -236,6 +238,12 @@ def _build_matchup_view_model(
         pokemon=pokemon,
         best_move=best_move,
         best_move_score=float(result["Best MoveScore"]),
+        best_move_type_multiplier=float(
+            result.get(
+                "Best Move Type Multiplier",
+                result["Best Move Multiplier"],
+            )
+        ),
         best_move_multiplier=float(
             result["Best Move Multiplier"]
         ),
@@ -247,6 +255,12 @@ def _build_matchup_view_model(
         worst_move=worst_move,
         incoming_worst_score=float(
             result["Incoming Worst Score"]
+        ),
+        incoming_type_multiplier=float(
+            result.get(
+                "Incoming Type Multiplier",
+                result["Incoming Multiplier"],
+            )
         ),
         incoming_multiplier=float(
             result["Incoming Multiplier"]
@@ -290,9 +304,14 @@ def build_battle_compass_view_model(
             other_options=[],
             all_matchups=[],
             empty_state_message=(
-                "No battle recommendation is available yet. "
-                "Add at least one damaging move to your team, save the team, "
-                "and return to the Battle Compass."
+                why_text
+                or (
+                    "No battle recommendation is available yet. "
+                    "Add at least one usable damaging move to your team, "
+                    "save the team, and return to the Battle Compass. "
+                    "An opponent's type, Ability, or held item may "
+                    "completely block a move."
+                )
             ),
         )
 

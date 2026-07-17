@@ -8,6 +8,7 @@ from engine.mechanics import (
     get_item_speed_multiplier,
     get_item_immunity_multiplier,
     get_ability_multiplier,
+    get_applicable_ability_rules,
     get_attack_stat_multiplier,
     get_attack_reduction_multiplier,
     get_move_power_multiplier,
@@ -414,6 +415,133 @@ def calculate_matchup_ratio(
     )
 
 
+
+def build_no_recommendation_reason(
+    team,
+    opponent,
+    ability_rules=None,
+    moves_data=None,
+):
+    """Explain when the opponent's Ability blocks every damaging option."""
+
+    if ability_rules is None:
+        ability_rules = []
+
+    opponent_name = str(
+        opponent.get("Pokemon")
+        or "The opponent"
+    )
+    opponent_types = [
+        opponent.get("Type1"),
+        opponent.get("Type2"),
+    ]
+    blocked_options = []
+
+    for pokemon in team:
+        pokemon_name = str(
+            pokemon.get("Pokemon")
+            or "A team member"
+        )
+
+        for move in get_moves(
+            pokemon,
+            moves_data,
+        ):
+            if (
+                move.get("Category") == "Status"
+                or not move.get("Power")
+            ):
+                continue
+
+            type_multiplier = get_type_multiplier(
+                move.get("Type"),
+                opponent_types,
+            )
+
+            immunity_rule = next(
+                (
+                    rule
+                    for rule in get_applicable_ability_rules(
+                        opponent,
+                        move,
+                        ability_rules,
+                        type_multiplier,
+                        pokemon,
+                    )
+                    if rule.get("Effect") == "Immunity"
+                ),
+                None,
+            )
+
+            if immunity_rule is None:
+                continue
+
+            blocked_options.append(
+                (
+                    str(
+                        immunity_rule.get("Ability")
+                        or opponent.get("Ability")
+                        or "Ability"
+                    ),
+                    pokemon_name,
+                    str(
+                        move.get("Move")
+                        or "damaging move"
+                    ),
+                )
+            )
+
+    unique_options = []
+
+    for option in blocked_options:
+        if option not in unique_options:
+            unique_options.append(option)
+
+    if not unique_options:
+        return ""
+
+    blocked_descriptions = [
+        f"{team_member_name}'s {move_name}"
+        for _, team_member_name, move_name
+        in unique_options
+    ]
+
+    if len(blocked_descriptions) == 1:
+        blocked_moves_text = blocked_descriptions[0]
+    elif len(blocked_descriptions) == 2:
+        blocked_moves_text = (
+            f"{blocked_descriptions[0]} and "
+            f"{blocked_descriptions[1]}"
+        )
+    else:
+        blocked_moves_text = (
+            f"{', '.join(blocked_descriptions[:-1])}, "
+            f"and {blocked_descriptions[-1]}"
+        )
+
+    ability_names = []
+
+    for ability_name, _, _ in unique_options:
+        if ability_name not in ability_names:
+            ability_names.append(ability_name)
+
+    if len(ability_names) == 1:
+        blocker_text = (
+            f"{opponent_name}'s {ability_names[0]}"
+        )
+    else:
+        blocker_text = (
+            f"{opponent_name}'s "
+            f"{' and '.join(ability_names)}"
+        )
+
+    return (
+        "No usable damaging move is available: "
+        f"{blocker_text} blocks {blocked_moves_text}."
+    )
+
+
+
 def find_best_team_member(
     team,
     opponent,
@@ -453,7 +581,16 @@ def find_best_team_member(
         )
 
     if not all_results:
-        return None, None, ""
+        return (
+            None,
+            None,
+            build_no_recommendation_reason(
+                team,
+                opponent,
+                ability_rules,
+                moves_data,
+            ),
+        )
 
     selected_result = max(
         all_results,
@@ -665,6 +802,11 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             or incoming_hp_ratio < 2
         )
 
+        attacker_moves = get_moves(
+            pokemon,
+            moves_data,
+        )
+
         battle_notes = build_battle_notes(
             pokemon,
             opponent,
@@ -683,6 +825,15 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             likely_survives_first_hit,
             dmax_note,
             items,
+            attacker_moves,
+        )
+
+        incoming_type_multiplier = get_type_multiplier(
+            worst_move["Type"],
+            [
+                pokemon.get("Type1"),
+                pokemon.get("Type2"),
+            ],
         )
 
         incoming_multiplier = calculate_incoming_multiplier(
@@ -691,6 +842,14 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             worst_move,
             items,
             ability_rules,
+        )
+
+        offensive_type_multiplier = get_type_multiplier(
+            best_move["Type"],
+            [
+                opponent.get("Type1"),
+                opponent.get("Type2"),
+            ],
         )
 
         offensive_multiplier = calculate_offensive_multiplier(
@@ -713,10 +872,18 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             "Item Multiplier": round(item_multiplier, 4),
             "Item Bonus Amount": round(item_bonus_amount, 2),
             "Held Item": pokemon.get("Held Item"),
+            "Best Move Type Multiplier": round(
+                offensive_type_multiplier,
+                2,
+            ),
             "Best Move Multiplier": round(offensive_multiplier, 2),
             "Worst Incoming Move": worst_move["Move"],
             "Worst Incoming Move Type": worst_move.get("Type"),
             "Worst Incoming Move Category": worst_move.get("Category"),
+            "Incoming Type Multiplier": round(
+                incoming_type_multiplier,
+                2,
+            ),
             "Incoming Multiplier": round(incoming_multiplier, 2),
             "Incoming Worst Score": round(worst_score, 2),
             "Is Immune": worst_score == 0,
@@ -740,6 +907,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 likely_survives_first_hit,
                 dmax_note,
                 items,
+                attacker_moves,
             )
         })
 

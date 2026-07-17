@@ -14,11 +14,14 @@ from typing import cast
 import flet as ft
 
 from ui.components.reference_dialogs import (
+    show_ability_dialog,
     show_move_dialog,
 )
 from ui.constants import TYPE_COLORS
 from ui.theme import (
     BORDER_DEFAULT,
+    PRIMARY_BLUE,
+    PRIMARY_BLUE_SOFT,
     SURFACE,
     SURFACE_RAISED,
     TEXT_MUTED,
@@ -41,6 +44,9 @@ class OpponentCard(ft.Container):
         level: int | None,
         type_badges: list[tuple[str, str]],
         opponent_moves: list[dict],
+        ability_name: str | None,
+        ability_descriptions: dict[str, str],
+        ability_rules: list[dict],
         incoming_worst_score: float,
         worst_incoming_move: str,
         incoming_category: str,
@@ -59,6 +65,14 @@ class OpponentCard(ft.Container):
         self.level = level
         self.type_badges = type_badges
         self.opponent_moves = opponent_moves
+        self.ability_name = (
+            ability_name.strip()
+            if isinstance(ability_name, str)
+            and ability_name.strip()
+            else None
+        )
+        self.ability_descriptions = ability_descriptions
+        self.ability_rules = ability_rules
 
         self.incoming_worst_score = incoming_worst_score
         self.worst_incoming_move = worst_incoming_move
@@ -308,44 +322,140 @@ class OpponentCard(ft.Container):
     def _build_moveset(
         self,
     ) -> ft.Control:
-        """Build compact type-colored opponent move cards."""
+        """Build compact opponent move and Ability reference cards."""
 
-        if not self.opponent_moves:
-            return ft.Container()
-
-        move_cards = cast(
+        sections = cast(
             list[ft.Control],
-            [
-                self._build_move_card(
-                    move
-                )
-                for move in self.opponent_moves
-            ],
+            [],
         )
 
-        return ft.Column(
-            controls=cast(
+        if self.opponent_moves:
+            move_cards = cast(
                 list[ft.Control],
                 [
-                    ft.Text(
-                        "Moves",
-                        size=16,
-                        weight=ft.FontWeight.BOLD,
-                        color=TEXT_PRIMARY,
-                    ),
-                    ft.ResponsiveRow(
-                        controls=move_cards,
-                        columns=12,
-                        spacing=8,
-                        run_spacing=8,
-                    ),
+                    self._build_move_card(move)
+                    for move in self.opponent_moves
                 ],
-            ),
+            )
+            sections.extend(
+                cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Moves",
+                            size=16,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        ft.ResponsiveRow(
+                            controls=move_cards,
+                            columns=12,
+                            spacing=8,
+                            run_spacing=8,
+                        ),
+                    ],
+                )
+            )
+
+        if self.ability_name:
+            sections.extend(
+                cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Ability",
+                            size=16,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        self._build_ability_card(),
+                    ],
+                )
+            )
+
+        if not sections:
+            return ft.Container()
+
+        return ft.Column(
+            controls=sections,
             spacing=9,
             horizontal_alignment=(
                 ft.CrossAxisAlignment.STRETCH
             ),
         )
+
+    def _build_ability_card(
+        self,
+    ) -> ft.Control:
+        """Build the compact clickable opponent Ability card."""
+
+        if self.ability_name is None:
+            return ft.Container()
+
+        card = ft.Container(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            self.ability_name,
+                            size=13,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                            expand=True,
+                            max_lines=1,
+                            overflow=ft.TextOverflow.ELLIPSIS,
+                        ),
+                        ft.Icon(
+                            ft.Icons.HELP_OUTLINE_ROUNDED,
+                            size=17,
+                            color=PRIMARY_BLUE,
+                        ),
+                    ],
+                ),
+                spacing=6,
+                vertical_alignment=(
+                    ft.CrossAxisAlignment.CENTER
+                ),
+            ),
+            height=42,
+            padding=ft.Padding.symmetric(
+                horizontal=10,
+                vertical=7,
+            ),
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border=ft.Border.all(
+                1,
+                "#405A8DFF",
+            ),
+            border_radius=10,
+            tooltip=f"View details for {self.ability_name}",
+        )
+
+        return ft.GestureDetector(
+            content=card,
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=self._show_ability_details,
+        )
+
+    def _show_ability_details(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+    ) -> None:
+        """Show details for the opponent's Ability."""
+
+        del event
+
+        if self.ability_name is None:
+            return
+
+        show_ability_dialog(
+            page=self.app_page,
+            ability_name=self.ability_name,
+            ability_descriptions=self.ability_descriptions,
+            ability_rules=self.ability_rules,
+        )
+
 
     def _build_move_card(
         self,

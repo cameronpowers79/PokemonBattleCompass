@@ -1,4 +1,8 @@
-from engine.mechanics import get_ability_multiplier, get_type_multiplier
+from engine.mechanics import (
+    get_ability_multiplier,
+    get_applicable_ability_rules,
+    get_type_multiplier,
+)
 
 NOTE_INFO = "info"
 NOTE_OPPORTUNITY = "opportunity"
@@ -68,6 +72,186 @@ def dedupe_notes(notes):
         cleaned.append(item)
 
     return cleaned
+
+
+# ---------- Damage-changing ability notes ----------
+
+def format_percent_change(modifier):
+    return round(abs(1 - modifier) * 100)
+
+
+def build_damage_ability_note(
+    *,
+    defender,
+    move,
+    rule,
+    perspective,
+):
+    ability = str(rule.get("Ability") or "The Ability")
+    effect = rule.get("Effect")
+    modifier = float(rule.get("Modifier", 1))
+    move_name = str(move.get("Move") or "this move")
+    defender_name = str(
+        defender.get("Pokemon")
+        or "The defending Pokémon"
+    )
+
+    if effect == "Immunity":
+        if perspective == "outgoing":
+            return note(
+                NOTE_WARNING,
+                f"{ability} makes {move_name} ineffective",
+            )
+
+        return note(
+            NOTE_INFO,
+            f"{defender_name}'s {ability} makes {move_name} ineffective",
+        )
+
+    if effect == "Reduction" and modifier < 1:
+        percent = format_percent_change(modifier)
+
+        if perspective == "outgoing":
+            return note(
+                NOTE_CAUTION,
+                f"{ability} reduces damage from {move_name} by {percent}%",
+            )
+
+        return note(
+            NOTE_INFO,
+            (
+                f"{defender_name}'s {ability} reduces damage "
+                f"from {move_name} by {percent}%"
+            ),
+        )
+
+    if effect == "Vulnerability" and modifier > 1:
+        if modifier == 2:
+            change_text = "doubles damage"
+        else:
+            percent = round((modifier - 1) * 100)
+            change_text = f"increases damage by {percent}%"
+
+        if perspective == "outgoing":
+            return note(
+                NOTE_OPPORTUNITY,
+                f"{ability} {change_text} from {move_name}",
+            )
+
+        return note(
+            NOTE_WARNING,
+            f"{defender_name}'s {ability} {change_text} from {move_name}",
+        )
+
+    return None
+
+
+def get_damage_ability_notes(
+    *,
+    defender,
+    attacker,
+    move,
+    ability_rules,
+    perspective,
+):
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
+
+    type_multiplier = get_type_multiplier(
+        move.get("Type"),
+        defender_types,
+    )
+
+    notes = []
+
+    for rule in get_applicable_ability_rules(
+        defender,
+        move,
+        ability_rules,
+        type_multiplier,
+        attacker,
+    ):
+        built_note = build_damage_ability_note(
+            defender=defender,
+            move=move,
+            rule=rule,
+            perspective=perspective,
+        )
+
+        if built_note:
+            notes.append(built_note)
+
+    return notes
+
+
+
+def get_blocked_move_ability_notes(
+    *,
+    attacker,
+    defender,
+    attacker_moves,
+    ability_rules,
+):
+    """Explain damaging moves completely blocked by the defender's Ability."""
+
+    notes = []
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
+
+    for move in attacker_moves:
+        if (
+            move.get("Category") == "Status"
+            or not move.get("Power")
+        ):
+            continue
+
+        type_multiplier = get_type_multiplier(
+            move.get("Type"),
+            defender_types,
+        )
+
+        applicable_rules = get_applicable_ability_rules(
+            defender,
+            move,
+            ability_rules,
+            type_multiplier,
+            attacker,
+        )
+
+        immunity_rule = next(
+            (
+                rule
+                for rule in applicable_rules
+                if rule.get("Effect") == "Immunity"
+            ),
+            None,
+        )
+
+        if immunity_rule is None:
+            continue
+
+        ability_name = str(
+            immunity_rule.get("Ability")
+            or defender.get("Ability")
+            or "The opponent's Ability"
+        )
+        move_name = str(
+            move.get("Move")
+            or "This move"
+        )
+
+        notes.append(
+            note(
+                NOTE_WARNING,
+                f"{ability_name} blocks {move_name}",
+            )
+        )
+
+    return dedupe_notes(notes)
 
 
 # ---------- Tactical ability notes ----------
@@ -516,6 +700,7 @@ def build_battle_notes(
     likely_survives_first_hit=False,
     dmax_note="",
     items=None,
+    attacker_moves=None,
 ):
     if ability_rules is None:
         ability_rules = []
@@ -528,6 +713,9 @@ def build_battle_notes(
 
     if items is None:
         items = []
+
+    if attacker_moves is None:
+        attacker_moves = []
 
     notes = []
 
@@ -561,6 +749,36 @@ def build_battle_notes(
 
     if incoming_ohko_note:
         notes.append(incoming_ohko_note)
+
+    notes.extend(
+        get_damage_ability_notes(
+            defender=defender,
+            attacker=attacker,
+            move=best_move,
+            ability_rules=ability_rules,
+            perspective="outgoing",
+        )
+    )
+
+    notes.extend(
+        get_blocked_move_ability_notes(
+            attacker=attacker,
+            defender=defender,
+            attacker_moves=attacker_moves,
+            ability_rules=ability_rules,
+        )
+    )
+
+    if worst_move:
+        notes.extend(
+            get_damage_ability_notes(
+                defender=attacker,
+                attacker=defender,
+                move=worst_move,
+                ability_rules=ability_rules,
+                perspective="incoming",
+            )
+        )
 
     if (
         not (incoming_ohko_note and incoming_ohko_note["text"].startswith("Likely"))

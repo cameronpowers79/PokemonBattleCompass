@@ -508,6 +508,47 @@ def ability_rule_applies(
     return False
 
 
+def get_applicable_ability_rules(
+    defender,
+    move,
+    ability_rules,
+    effectiveness=1,
+    attacker=None,
+):
+    """Return defensive Ability rules that apply to this specific move."""
+
+    ability_name = defender.get("Ability")
+
+    if not ability_name:
+        return []
+
+    if attacker_ignores_defender_ability(
+        attacker,
+        defender,
+        ability_rules,
+    ):
+        return []
+
+    return [
+        rule
+        for rule in ability_rules
+        if (
+            rule.get("Ability") == ability_name
+            and rule.get("Effect")
+            in {
+                "Immunity",
+                "Reduction",
+                "Vulnerability",
+            }
+            and ability_rule_applies(
+                rule,
+                move,
+                effectiveness,
+            )
+        )
+    ]
+
+
 def get_ability_multiplier(
     defender,
     move,
@@ -515,31 +556,15 @@ def get_ability_multiplier(
     effectiveness=1,
     attacker=None,
 ):
-    ability_name = defender.get("Ability")
-
-    if not ability_name:
-        return 1
-
-    if attacker_ignores_defender_ability(
-        attacker,
-        defender,
-        ability_rules,
-    ):
-        return 1
-
     multiplier = 1
 
-    for rule in ability_rules:
-        if rule.get("Ability") != ability_name:
-            continue
-
-        if not ability_rule_applies(
-            rule,
-            move,
-            effectiveness,
-        ):
-            continue
-
+    for rule in get_applicable_ability_rules(
+        defender,
+        move,
+        ability_rules,
+        effectiveness,
+        attacker,
+    ):
         modifier = rule.get(
             "Modifier",
             1,
