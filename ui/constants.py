@@ -3,10 +3,17 @@
 from pathlib import Path
 
 
-TYPE_BADGE_DIR = Path("assets/type_badges")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ASSETS_DIR = PROJECT_ROOT / "assets"
 
-SPRITE_DIR = Path(
-    "assets/raw/pokesprite/pokemon-gen8/regular"
+TYPE_BADGE_DIR = ASSETS_DIR / "type_badges"
+
+SPRITE_DIR = (
+    ASSETS_DIR
+    / "raw"
+    / "pokesprite"
+    / "pokemon-gen8"
+    / "regular"
 )
 
 NOTE_ICONS = {

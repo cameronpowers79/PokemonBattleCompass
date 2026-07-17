@@ -1,0 +1,53 @@
+[project]
+name = "pokemon-battle-compass"
+version = "0.1.0a1"
+description = "A fan-made Pokémon Sword battle decision-support tool."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "flet==0.85.3",
+    "pillow",
+]
+
+[tool.flet]
+product = "Pokémon Battle Compass"
+company = "Pokémon Battle Compass"
+copyright = "Copyright © 2026"
+build_number = 1
+
+[tool.flet.app]
+path = "."
+module = "flet_app.py"
+exclude = [
+    ".git",
+    ".github",
+    ".streamlit",
+    ".venv",
+    "Archive-Backup",
+    "build",
+    "design",
+    "dist",
+    "docs",
+    "tests",
+    "tools",
+    "workbook",
+    "app_diagnostics.py",
+    "project_tree.txt",
+    "streamlit_app.py",
+    "assets/raw/pokesprite/data",
+    "assets/raw/pokesprite/docs",
+    "assets/raw/pokesprite/icons",
+    "assets/raw/pokesprite/resources",
+    "assets/raw/pokesprite/scripts",
+    "assets/raw/pokesprite/src",
+    "assets/raw/pokesprite/.gitignore",
+    "assets/raw/pokesprite/contributors.md",
+    "assets/raw/pokesprite/index.js",
+    "assets/raw/pokesprite/license.md",
+    "assets/raw/pokesprite/package.json",
+    "assets/raw/pokesprite/readme.md",
+    "assets/raw/pokesprite/yarn.lock",
+]
+
+[tool.flet.windows]
+artifact = "Pokemon Battle Compass"

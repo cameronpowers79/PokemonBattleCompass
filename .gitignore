@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .venv/
 .env
+build/
+dist/
+.flutter/
+project_tree.txt
+*.log

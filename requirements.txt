@@ -1,5 +1,2 @@
-flet==0.85.3
-streamlit
-pandas
-openpyxl
+flet==0.85.3S
 pillow
