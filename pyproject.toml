@@ -1,6 +1,6 @@
 [project]
 name = "pokemon-battle-compass"
-version = "0.1.0a1"
+version = "0.1.0"
 description = "A fan-made Pokémon Sword battle decision-support tool."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
@@ -17,7 +17,7 @@ build_number = 1
 
 [tool.flet.app]
 path = "."
-module = "flet_app.py"
+module = "flet_app"
 exclude = [
     ".git",
     ".github",
