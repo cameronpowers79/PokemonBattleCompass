@@ -41,7 +41,12 @@ def get_stat(pokemon, stat_name):
             pokemon["Level"]
         )
 
-    return pokemon[stat_name]
+    value = pokemon.get(stat_name, 1)
+
+    if stat_name in {"HP", "ATK", "DEF", "SPA", "SPD", "SPE"}:
+        return max(float(value or 0), 1.0)
+
+    return value
 
 
 def get_relevant_attack_stat(attacker, move):
