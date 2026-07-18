@@ -1,0 +1,21 @@
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+
+Remove-Item ".\build" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item ".\dist" -Recurse -Force -ErrorAction SilentlyContinue
+
+python -m PyInstaller flet_app.py `
+  --noconfirm `
+  --clean `
+  --onedir `
+  --console `
+  --name PokemonBattleCompass `
+  --icon "assets\icon_windows.ico" `
+  --add-data "data;data"
+
+Copy-Item `
+  ".\assets" `
+  ".\dist\PokemonBattleCompass\_internal\" `
+  -Recurse -Force
+
+.\dist\PokemonBattleCompass\PokemonBattleCompass.exe
