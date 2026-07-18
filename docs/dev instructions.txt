@@ -8,7 +8,7 @@ python -m PyInstaller flet_app.py `
   --noconfirm `
   --clean `
   --onedir `
-  --console `
+  --windowed `
   --name PokemonBattleCompass `
   --icon "assets\icon_windows.ico" `
   --add-data "data;data"
