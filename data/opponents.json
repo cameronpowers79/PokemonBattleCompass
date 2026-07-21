@@ -4875,7 +4875,7 @@
     "Move3Power": 0,
     "Move3Accuracy": 100,
     "Move4": "Taunt",
-    "Move4Type": null,
+    "Move4Type": "Dark",
     "Move4Category": null,
     "Move4Power": 0,
     "Move4Accuracy": 100,
