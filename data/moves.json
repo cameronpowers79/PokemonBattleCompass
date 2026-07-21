@@ -16458,15 +16458,26 @@
     "StageChangeTarget": null
   },
   {
-    "Name": "Taunt",
-    "Category": "Status",
+    "Move": "Taunt",
     "Power": 0,
-    "Accuracy": 100,
-    "PP": 20,
     "Type": "Dark",
+    "Category": "Status",
+    "Accuracy": 100,
+    "Hits": 0,
+    "MakesContact": false,
     "Priority": 0,
-    "Target": "Selected Pokémon",
-    "Description": "For the next 3 turns, the target can only use damaging moves. Status moves fail."
+    "DamageMethod": null,
+    "ActivationCondition": "Always",
+    "StatusEffect": null,
+    "ActivationPowerMultiplier": 1,
+    "AtkStageChange": 0,
+    "DefStageChange": 0,
+    "SpAStageChange": 0,
+    "SpDStageChange": 0,
+    "SpeStageChange": 0,
+    "MechanicsTags": [],
+    "EffectDescription": "For the next 3 turns, the target can only use damaging moves. Status moves fail.",
+    "StageChangeTarget": null
   },
   {
     "Move": "Tearful Look",
