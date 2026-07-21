@@ -62,6 +62,58 @@ class AppState:
             return starter
 
         return None
+    
+    @property
+    def battle_compass_selection(
+        self,
+    ) -> dict[str, str | None]:
+        """Return the saved Battle Compass selection."""
+
+        empty_selection: dict[
+            str,
+            str | None,
+        ] = {
+            "trainer": None,
+            "battle": None,
+            "opponent": None,
+        }
+
+        if self.journey is None:
+            return empty_selection
+
+        selection = self.journey.get(
+            "battle_compass_selection"
+        )
+
+        if not isinstance(selection, dict):
+            return empty_selection
+
+        return {
+            "trainer": (
+                selection.get("trainer")
+                if isinstance(
+                    selection.get("trainer"),
+                    str,
+                )
+                else None
+            ),
+            "battle": (
+                selection.get("battle")
+                if isinstance(
+                    selection.get("battle"),
+                    str,
+                )
+                else None
+            ),
+            "opponent": (
+                selection.get("opponent")
+                if isinstance(
+                    selection.get("opponent"),
+                    str,
+                )
+                else None
+            ),
+        }
 
     @property
     def team_data(self) -> list[dict]:
@@ -271,6 +323,50 @@ class AppState:
         )
 
         return True
+    
+    async def save_battle_compass_selection(
+        self,
+        *,
+        trainer: str,
+        battle: str,
+        opponent: str,
+    ) -> bool:
+        """Persist the current Battle Compass dropdown selection."""
+
+        if self.journey is None:
+            return False
+
+        previous_selection = deepcopy(
+            self.journey.get(
+                "battle_compass_selection"
+            )
+        )
+
+        self.journey[
+            "battle_compass_selection"
+        ] = {
+            "trainer": trainer,
+            "battle": battle,
+            "opponent": opponent,
+        }
+
+        save_succeeded = await save_journey(
+            self.page,
+            self.journey,
+        )
+
+        if not save_succeeded:
+            if previous_selection is None:
+                self.journey.pop(
+                    "battle_compass_selection",
+                    None,
+                )
+            else:
+                self.journey[
+                    "battle_compass_selection"
+                ] = previous_selection
+
+        return save_succeeded
 
     async def set_starter(
         self,

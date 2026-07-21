@@ -33,7 +33,7 @@ class VersionEntry:
 
 HERO_TITLE = "Pokémon Battle Compass"
 HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword & Shield"
-HERO_VERSION = "Flet Alpha"
+HERO_VERSION = "v0.1.1"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
 
@@ -78,6 +78,7 @@ ABOUT_SECTIONS = (
             "Identifies each teammate’s best attacking move.",
             "Compares projected offense and incoming danger.",
             "Shows Matchup Strength and a full-team analysis.",
+            "Shows Nature effects and next-evolution requirements in Pokémon Details.",
             "Highlights important mechanics through Battle Notes.",
             "Suggests modeled held items that fit the current build.",
             "Provides move, type, Ability, and held-item reference popups.",
@@ -170,8 +171,8 @@ ABOUT_SECTIONS = (
         paragraphs=(
             (
                 "The project began as an Excel workbook, became a Streamlit "
-                "Alpha, and is now being rebuilt in Flet for desktop and PWA "
-                "use."
+                "Alpha, and now runs in Flet as a desktop application, with "
+                "PWA support still planned."
             ),
             (
                 "The validated battle engine remains framework-independent. "
@@ -198,14 +199,14 @@ ABOUT_SECTIONS = (
         icon="route",
         paragraphs=(
             (
-                "The current priority is finishing the plumbing that turns a "
-                "good Alpha into something people can safely keep using."
+                "The current priority is strengthening the features that make "
+                "Journeys safe, portable, and easier to manage over a full "
+                "playthrough."
             ),
         ),
         bullets=(
             "Manual backup/export and restore/import",
             "Save-data validation, migration, and interrupted-write recovery",
-            "Desktop packaging",
             "Installable and offline-capable PWA verification",
             "Additional error handling and automated engine tests",
             "More complete move-effect data and mechanics",
@@ -297,7 +298,7 @@ NERD_STUFF_GROUPS = (
         (
             "Doubles-specific targeting and partner interactions",
             "Full weather and terrain simulation",
-            "Natures, IVs, EV spreads, and competitive optimization",
+            "Nature effects in battle calculations, IVs, EV spreads, and competitive optimization",
             "Long-form turn-by-turn battle simulation",
             "Every wonderfully strange edge case Game Freak has invented",
         ),
@@ -307,21 +308,42 @@ NERD_STUFF_GROUPS = (
 
 VERSION_HISTORY = (
     VersionEntry(
-        name="Flet Alpha",
+    name="v0.1.1",
         status="Current",
         summary=(
-            "The active desktop/PWA architecture, built around the validated "
+            "The current desktop Alpha release, built around the validated "
             "battle engine and durable local Journeys."
         ),
         bullets=(
             "Responsive Battle Compass and My Team views",
-            "First-use Journey onboarding",
+            "First-use Journey onboarding with Gender and Nature",
             "Local Journey persistence",
-            "Ability, item, move, Pokémon-name, and type validation",
-            "Interactive move, type, Ability, and held-item references",
+            "Nature display and affected-stat indicators",
+            "Evolution-method guidance in Pokémon Details",
+            "Persistent Battle Compass selections",
+            "Interactive offensive and defensive type references",
             "Expanded Ability and held-item battle modeling",
         ),
     ),
+
+        VersionEntry(
+            name="v0.1.0-alpha.1",
+            status="Initial desktop Alpha",
+            summary=(
+                "The first packaged Flet release and the foundation of the "
+                "current desktop application."
+            ),
+            bullets=(
+                "Battle Compass and My Team views",
+                "First-use Journey onboarding",
+                "Local Journey persistence",
+                "Reference dialogs",
+                "Matchup Strength meter",
+                "Ability-aware recommendations",
+                "Full Analysis",
+            ),
+),
+
     VersionEntry(
         name="Streamlit Alpha",
         status="Reference implementation",

@@ -31,6 +31,7 @@ class ReferenceData(TypedDict):
     pokemon_validation: list[str]
     moves_data: list[dict]
     type_chart: dict[str, dict[str, float]]
+    evolutions: dict[str, dict]
 
 
 @dataclass(frozen=True)
@@ -403,4 +404,5 @@ def load_reference_data() -> ReferenceData:
             "pokemon_validation_swsh"
         ),
         "moves_data": load_json("moves"),
+        "evolutions": load_json("evolutions"),
     }

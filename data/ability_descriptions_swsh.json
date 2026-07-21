@@ -117,7 +117,7 @@
   },
   {
     "Ability": "Cotton Down",
-    "Description": "When Ignores moves and abilities that draw in moves."
+    "Description": "When this Pokémon is hit by a damaging move, every other Pokémon on the field has its Speed lowered by one stage."
   },
   {
     "Ability": "Curious Medicine",

@@ -67,11 +67,12 @@ async def main(page: ft.Page) -> None:
         """Display the normal Battle Compass application shell."""
 
         battle_compass_view = BattleCompassView(
-            page,
-            team_data=app_state.team_data,
-            selected_starter=app_state.starter,
-            on_start_new_journey=show_onboarding,
-        )
+    page,
+    app_state=app_state,
+    team_data=app_state.team_data,
+    selected_starter=app_state.starter,
+    on_start_new_journey=show_onboarding,
+)
 
         my_team_view = MyTeamView(
             page,

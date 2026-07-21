@@ -1,0 +1,7721 @@
+{
+  "Abomasnow": {
+    "evolutions": []
+  },
+  "Abra": {
+    "evolutions": [
+      {
+        "into": "Kadabra",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Absol": {
+    "evolutions": []
+  },
+  "Accelgor": {
+    "evolutions": []
+  },
+  "Aegislash": {
+    "evolutions": []
+  },
+  "Aerodactyl": {
+    "evolutions": []
+  },
+  "Aggron": {
+    "evolutions": []
+  },
+  "Aipom": {
+    "evolutions": [
+      {
+        "into": "Ambipom",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Double Hit"
+          }
+        ],
+        "display_text": "Level up while knowing Double Hit"
+      },
+      {
+        "into": "Ambipom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Alakazam": {
+    "evolutions": []
+  },
+  "Alcremie": {
+    "evolutions": []
+  },
+  "Alomomola": {
+    "evolutions": []
+  },
+  "Altaria": {
+    "evolutions": []
+  },
+  "Amaura": {
+    "evolutions": [
+      {
+        "into": "Aurorus",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      },
+      {
+        "into": "Aurorus",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Reach Lv. 39 at night"
+      }
+    ]
+  },
+  "Ambipom": {
+    "evolutions": []
+  },
+  "Amoonguss": {
+    "evolutions": []
+  },
+  "Ampharos": {
+    "evolutions": []
+  },
+  "Anorith": {
+    "evolutions": [
+      {
+        "into": "Armaldo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Appletun": {
+    "evolutions": []
+  },
+  "Applin": {
+    "evolutions": [
+      {
+        "into": "Appletun",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sweet Apple"
+          }
+        ],
+        "display_text": "Use a Sweet Apple"
+      },
+      {
+        "into": "Flapple",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Tart Apple"
+          }
+        ],
+        "display_text": "Use a Tart Apple"
+      }
+    ]
+  },
+  "Araquanid": {
+    "evolutions": []
+  },
+  "Arbok": {
+    "evolutions": []
+  },
+  "Arcanine": {
+    "evolutions": []
+  },
+  "Arceus": {
+    "evolutions": []
+  },
+  "Archen": {
+    "evolutions": [
+      {
+        "into": "Archeops",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Archeops": {
+    "evolutions": []
+  },
+  "Arctovish": {
+    "evolutions": []
+  },
+  "Arctozolt": {
+    "evolutions": []
+  },
+  "Ariados": {
+    "evolutions": []
+  },
+  "Armaldo": {
+    "evolutions": []
+  },
+  "Aromatisse": {
+    "evolutions": []
+  },
+  "Aron": {
+    "evolutions": [
+      {
+        "into": "Lairon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Arrokuda": {
+    "evolutions": [
+      {
+        "into": "Barraskewda",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Articuno": {
+    "evolutions": []
+  },
+  "Audino": {
+    "evolutions": []
+  },
+  "Aurorus": {
+    "evolutions": []
+  },
+  "Avalugg": {
+    "evolutions": []
+  },
+  "Axew": {
+    "evolutions": [
+      {
+        "into": "Fraxure",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Azelf": {
+    "evolutions": []
+  },
+  "Azumarill": {
+    "evolutions": []
+  },
+  "Azurill": {
+    "evolutions": [
+      {
+        "into": "Marill",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Bagon": {
+    "evolutions": [
+      {
+        "into": "Shelgon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Baltoy": {
+    "evolutions": [
+      {
+        "into": "Claydol",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Banette": {
+    "evolutions": []
+  },
+  "Barbaracle": {
+    "evolutions": []
+  },
+  "Barboach": {
+    "evolutions": [
+      {
+        "into": "Whiscash",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Barraskewda": {
+    "evolutions": []
+  },
+  "Basculegion": {
+    "evolutions": []
+  },
+  "Basculin": {
+    "evolutions": [
+      {
+        "into": "Basculegion",
+        "conditions": [
+          {
+            "type": "recoil_damage",
+            "minimum": 294
+          }
+        ],
+        "display_text": "Accumulate 294 recoil damage without fainting"
+      }
+    ]
+  },
+  "Basculin Blue Striped": {
+    "evolutions": []
+  },
+  "Basculin White Striped": {
+    "evolutions": []
+  },
+  "Bastiodon": {
+    "evolutions": []
+  },
+  "Bayleef": {
+    "evolutions": [
+      {
+        "into": "Meganium",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Beartic": {
+    "evolutions": []
+  },
+  "Beautifly": {
+    "evolutions": []
+  },
+  "Beedrill": {
+    "evolutions": []
+  },
+  "Beheeyem": {
+    "evolutions": []
+  },
+  "Beldum": {
+    "evolutions": [
+      {
+        "into": "Metang",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Bellossom": {
+    "evolutions": []
+  },
+  "Bellsprout": {
+    "evolutions": [
+      {
+        "into": "Weepinbell",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 21
+          }
+        ],
+        "display_text": "Reach Lv. 21"
+      }
+    ]
+  },
+  "Bergmite": {
+    "evolutions": []
+  },
+  "Bewear": {
+    "evolutions": []
+  },
+  "Bibarel": {
+    "evolutions": []
+  },
+  "Bidoof": {
+    "evolutions": [
+      {
+        "into": "Bibarel",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 15
+          }
+        ],
+        "display_text": "Reach Lv. 15"
+      }
+    ]
+  },
+  "Binacle": {
+    "evolutions": [
+      {
+        "into": "Barbaracle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      }
+    ]
+  },
+  "Bisharp": {
+    "evolutions": []
+  },
+  "Blacephalon": {
+    "evolutions": []
+  },
+  "Blastoise": {
+    "evolutions": []
+  },
+  "Blaziken": {
+    "evolutions": []
+  },
+  "Blipbug": {
+    "evolutions": [
+      {
+        "into": "Dottler",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Blissey": {
+    "evolutions": []
+  },
+  "Blitzle": {
+    "evolutions": [
+      {
+        "into": "Zebstrika",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 27
+          }
+        ],
+        "display_text": "Reach Lv. 27"
+      }
+    ]
+  },
+  "Boldore": {
+    "evolutions": [
+      {
+        "into": "Gigalith",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Boltund": {
+    "evolutions": []
+  },
+  "Bonsly": {
+    "evolutions": [
+      {
+        "into": "Sudowoodo",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Mimic"
+          }
+        ],
+        "display_text": "Level up while knowing Mimic"
+      }
+    ]
+  },
+  "Bouffalant": {
+    "evolutions": []
+  },
+  "Bounsweet": {
+    "evolutions": [
+      {
+        "into": "Steenee",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Braixen": {
+    "evolutions": [
+      {
+        "into": "Delphox",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Braviary": {
+    "evolutions": []
+  },
+  "Breloom": {
+    "evolutions": []
+  },
+  "Brionne": {
+    "evolutions": [
+      {
+        "into": "Primarina",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Bronzong": {
+    "evolutions": []
+  },
+  "Bronzor": {
+    "evolutions": [
+      {
+        "into": "Bronzong",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Bruxish": {
+    "evolutions": []
+  },
+  "Budew": {
+    "evolutions": [
+      {
+        "into": "Roselia",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "day"
+          }
+        ],
+        "display_text": "Level up with high friendship during the day"
+      }
+    ]
+  },
+  "Buizel": {
+    "evolutions": [
+      {
+        "into": "Floatzel",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Bulbasaur": {
+    "evolutions": [
+      {
+        "into": "Ivysaur",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Buneary": {
+    "evolutions": [
+      {
+        "into": "Lopunny",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Bunnelby": {
+    "evolutions": [
+      {
+        "into": "Diggersby",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Burmy": {
+    "evolutions": []
+  },
+  "Butterfree": {
+    "evolutions": []
+  },
+  "Buzzwole": {
+    "evolutions": []
+  },
+  "Cacnea": {
+    "evolutions": [
+      {
+        "into": "Cacturne",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Cacturne": {
+    "evolutions": []
+  },
+  "Calyrex": {
+    "evolutions": []
+  },
+  "Camerupt": {
+    "evolutions": []
+  },
+  "Carbink": {
+    "evolutions": []
+  },
+  "Carkol": {
+    "evolutions": [
+      {
+        "into": "Coalossal",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Carnivine": {
+    "evolutions": []
+  },
+  "Carracosta": {
+    "evolutions": []
+  },
+  "Carvanha": {
+    "evolutions": [
+      {
+        "into": "Sharpedo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Cascoon": {
+    "evolutions": [
+      {
+        "into": "Dustox",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Castform": {
+    "evolutions": []
+  },
+  "Castform Rainy": {
+    "evolutions": []
+  },
+  "Castform Snowy": {
+    "evolutions": []
+  },
+  "Castform Sunny": {
+    "evolutions": []
+  },
+  "Caterpie": {
+    "evolutions": [
+      {
+        "into": "Metapod",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 7
+          }
+        ],
+        "display_text": "Reach Lv. 7"
+      }
+    ]
+  },
+  "Celebi": {
+    "evolutions": []
+  },
+  "Celesteela": {
+    "evolutions": []
+  },
+  "Centiskorch": {
+    "evolutions": []
+  },
+  "Chandelure": {
+    "evolutions": []
+  },
+  "Chansey": {
+    "evolutions": [
+      {
+        "into": "Blissey",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Charizard": {
+    "evolutions": []
+  },
+  "Charjabug": {
+    "evolutions": [
+      {
+        "into": "Vikavolt",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      }
+    ]
+  },
+  "Charmander": {
+    "evolutions": [
+      {
+        "into": "Charmeleon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Charmeleon": {
+    "evolutions": [
+      {
+        "into": "Charizard",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Chatot": {
+    "evolutions": []
+  },
+  "Cherrim": {
+    "evolutions": []
+  },
+  "Cherubi": {
+    "evolutions": [
+      {
+        "into": "Cherrim",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Chesnaught": {
+    "evolutions": []
+  },
+  "Chespin": {
+    "evolutions": [
+      {
+        "into": "Quilladin",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Chewtle": {
+    "evolutions": [
+      {
+        "into": "Drednaw",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Chikorita": {
+    "evolutions": [
+      {
+        "into": "Bayleef",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Chimchar": {
+    "evolutions": [
+      {
+        "into": "Monferno",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Chimecho": {
+    "evolutions": []
+  },
+  "Chinchou": {
+    "evolutions": [
+      {
+        "into": "Lanturn",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 27
+          }
+        ],
+        "display_text": "Reach Lv. 27"
+      }
+    ]
+  },
+  "Chingling": {
+    "evolutions": [
+      {
+        "into": "Chimecho",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Level up with high friendship at night"
+      }
+    ]
+  },
+  "Cinccino": {
+    "evolutions": []
+  },
+  "Cinderace": {
+    "evolutions": []
+  },
+  "Clamperl": {
+    "evolutions": [
+      {
+        "into": "Gorebyss",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Deep Sea Scale"
+          }
+        ],
+        "display_text": "Trade while holding a Deep Sea Scale"
+      },
+      {
+        "into": "Huntail",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Deep Sea Tooth"
+          }
+        ],
+        "display_text": "Trade while holding a Deep Sea Tooth"
+      }
+    ]
+  },
+  "Clauncher": {
+    "evolutions": [
+      {
+        "into": "Clawitzer",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Clawitzer": {
+    "evolutions": []
+  },
+  "Claydol": {
+    "evolutions": []
+  },
+  "Clefable": {
+    "evolutions": []
+  },
+  "Clefairy": {
+    "evolutions": [
+      {
+        "into": "Clefable",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Cleffa": {
+    "evolutions": [
+      {
+        "into": "Clefairy",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Clobbopus": {
+    "evolutions": [
+      {
+        "into": "Grapploct",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Taunt"
+          }
+        ],
+        "display_text": "Level up while knowing Taunt"
+      }
+    ]
+  },
+  "Cloyster": {
+    "evolutions": []
+  },
+  "Coalossal": {
+    "evolutions": []
+  },
+  "Cobalion": {
+    "evolutions": []
+  },
+  "Cofagrigus": {
+    "evolutions": []
+  },
+  "Combee": {
+    "evolutions": [
+      {
+        "into": "Vespiquen",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 21
+          }
+        ],
+        "display_text": "Reach Lv. 21"
+      }
+    ]
+  },
+  "Combusken": {
+    "evolutions": [
+      {
+        "into": "Blaziken",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Comfey": {
+    "evolutions": []
+  },
+  "Conkeldurr": {
+    "evolutions": []
+  },
+  "Copperajah": {
+    "evolutions": []
+  },
+  "Corphish": {
+    "evolutions": [
+      {
+        "into": "Crawdaunt",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Corsola": {
+    "evolutions": [
+      {
+        "into": "Cursola",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Reach Lv. 38 as Galarian Corsola"
+      }
+    ]
+  },
+  "Corviknight": {
+    "evolutions": []
+  },
+  "Corvisquire": {
+    "evolutions": [
+      {
+        "into": "Corviknight",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Cosmoem": {
+    "evolutions": [
+      {
+        "into": "Lunala",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 53
+          }
+        ],
+        "display_text": "Reach Lv. 53"
+      },
+      {
+        "into": "Solgaleo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 53
+          }
+        ],
+        "display_text": "Reach Lv. 53"
+      }
+    ]
+  },
+  "Cosmog": {
+    "evolutions": [
+      {
+        "into": "Cosmoem",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 43
+          }
+        ],
+        "display_text": "Reach Lv. 43"
+      }
+    ]
+  },
+  "Cottonee": {
+    "evolutions": [
+      {
+        "into": "Whimsicott",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sun Stone"
+          }
+        ],
+        "display_text": "Use a Sun Stone"
+      }
+    ]
+  },
+  "Crabominable": {
+    "evolutions": []
+  },
+  "Crabrawler": {
+    "evolutions": [
+      {
+        "into": "Crabominable",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Ice Stone"
+          }
+        ],
+        "display_text": "Use an Ice Stone"
+      }
+    ]
+  },
+  "Cradily": {
+    "evolutions": []
+  },
+  "Cramorant": {
+    "evolutions": []
+  },
+  "Cranidos": {
+    "evolutions": [
+      {
+        "into": "Rampardos",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Crawdaunt": {
+    "evolutions": []
+  },
+  "Cresselia": {
+    "evolutions": []
+  },
+  "Croagunk": {
+    "evolutions": [
+      {
+        "into": "Toxicroak",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Crobat": {
+    "evolutions": []
+  },
+  "Croconaw": {
+    "evolutions": [
+      {
+        "into": "Feraligatr",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Crustle": {
+    "evolutions": []
+  },
+  "Cryogonal": {
+    "evolutions": []
+  },
+  "Cubchoo": {
+    "evolutions": [
+      {
+        "into": "Beartic",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Cubone": {
+    "evolutions": [
+      {
+        "into": "Marowak",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Cufant": {
+    "evolutions": [
+      {
+        "into": "Copperajah",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Cursola": {
+    "evolutions": []
+  },
+  "Cutiefly": {
+    "evolutions": [
+      {
+        "into": "Ribombee",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Cyndaquil": {
+    "evolutions": [
+      {
+        "into": "Quilava",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Darkrai": {
+    "evolutions": []
+  },
+  "Darmanitan": {
+    "evolutions": []
+  },
+  "Dartrix": {
+    "evolutions": [
+      {
+        "into": "Decidueye",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Darumaka": {
+    "evolutions": [
+      {
+        "into": "Darmanitan",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      },
+      {
+        "into": "Darmanitan",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Ice Stone"
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Use an Ice Stone as Galarian Darumaka"
+      }
+    ]
+  },
+  "Decidueye": {
+    "evolutions": []
+  },
+  "Dedenne": {
+    "evolutions": []
+  },
+  "Deerling": {
+    "evolutions": [
+      {
+        "into": "Sawsbuck",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Deino": {
+    "evolutions": [
+      {
+        "into": "Zweilous",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 50
+          }
+        ],
+        "display_text": "Reach Lv. 50"
+      }
+    ]
+  },
+  "Delcatty": {
+    "evolutions": []
+  },
+  "Delibird": {
+    "evolutions": []
+  },
+  "Delphox": {
+    "evolutions": []
+  },
+  "Deoxys": {
+    "evolutions": []
+  },
+  "Deoxys Attack": {
+    "evolutions": []
+  },
+  "Deoxys Defense": {
+    "evolutions": []
+  },
+  "Deoxys Speed": {
+    "evolutions": []
+  },
+  "Dewgong": {
+    "evolutions": []
+  },
+  "Dewott": {
+    "evolutions": [
+      {
+        "into": "Samurott",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Dewpider": {
+    "evolutions": [
+      {
+        "into": "Araquanid",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Dhelmise": {
+    "evolutions": []
+  },
+  "Dialga": {
+    "evolutions": []
+  },
+  "Diancie": {
+    "evolutions": []
+  },
+  "Diggersby": {
+    "evolutions": []
+  },
+  "Diglett": {
+    "evolutions": [
+      {
+        "into": "Dugtrio",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Ditto": {
+    "evolutions": []
+  },
+  "Dodrio": {
+    "evolutions": []
+  },
+  "Doduo": {
+    "evolutions": [
+      {
+        "into": "Dodrio",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 31
+          }
+        ],
+        "display_text": "Reach Lv. 31"
+      }
+    ]
+  },
+  "Donphan": {
+    "evolutions": []
+  },
+  "Dottler": {
+    "evolutions": [
+      {
+        "into": "Orbeetle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Doublade": {
+    "evolutions": [
+      {
+        "into": "Aegislash",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dusk Stone"
+          }
+        ],
+        "display_text": "Use a Dusk Stone"
+      }
+    ]
+  },
+  "Dracovish": {
+    "evolutions": []
+  },
+  "Dracozolt": {
+    "evolutions": []
+  },
+  "Dragalge": {
+    "evolutions": []
+  },
+  "Dragapult": {
+    "evolutions": []
+  },
+  "Dragonair": {
+    "evolutions": [
+      {
+        "into": "Dragonite",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 55
+          }
+        ],
+        "display_text": "Reach Lv. 55"
+      }
+    ]
+  },
+  "Dragonite": {
+    "evolutions": []
+  },
+  "Drakloak": {
+    "evolutions": [
+      {
+        "into": "Dragapult",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 60
+          }
+        ],
+        "display_text": "Reach Lv. 60"
+      }
+    ]
+  },
+  "Drampa": {
+    "evolutions": []
+  },
+  "Drapion": {
+    "evolutions": []
+  },
+  "Dratini": {
+    "evolutions": [
+      {
+        "into": "Dragonair",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Drednaw": {
+    "evolutions": []
+  },
+  "Dreepy": {
+    "evolutions": [
+      {
+        "into": "Drakloak",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 50
+          }
+        ],
+        "display_text": "Reach Lv. 50"
+      }
+    ]
+  },
+  "Drifblim": {
+    "evolutions": []
+  },
+  "Drifloon": {
+    "evolutions": [
+      {
+        "into": "Drifblim",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Drilbur": {
+    "evolutions": [
+        {
+        "into": "Excadrill",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 31
+          }
+        ],
+        "display_text": "Reach Lv. 31"
+      }]
+  },
+  "Drizzile": {
+    "evolutions": [
+      {
+        "into": "Inteleon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Drowzee": {
+    "evolutions": [
+      {
+        "into": "Hypno",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Druddigon": {
+    "evolutions": []
+  },
+  "Dubwool": {
+    "evolutions": []
+  },
+  "Ducklett": {
+    "evolutions": [
+      {
+        "into": "Swanna",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Dugtrio": {
+    "evolutions": []
+  },
+  "Dunsparce": {
+    "evolutions": []
+  },
+  "Duosion": {
+    "evolutions": [
+      {
+        "into": "Reuniclus",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 41
+          }
+        ],
+        "display_text": "Reach Lv. 41"
+      }
+    ]
+  },
+  "Duraludon": {
+    "evolutions": []
+  },
+  "Durant": {
+    "evolutions": []
+  },
+  "Dusclops": {
+    "evolutions": [
+      {
+        "into": "Dusknoir",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Reaper Cloth"
+          }
+        ],
+        "display_text": "Trade while holding a Reaper Cloth"
+      }
+    ]
+  },
+  "Dusknoir": {
+    "evolutions": []
+  },
+  "Duskull": {
+    "evolutions": [
+      {
+        "into": "Dusclops",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Dustox": {
+    "evolutions": []
+  },
+  "Dwebble": {
+    "evolutions": [
+      {
+        "into": "Crustle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Eelektrik": {
+    "evolutions": [
+      {
+        "into": "Eelektross",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      }
+    ]
+  },
+  "Eelektross": {
+    "evolutions": []
+  },
+  "Eevee": {
+    "evolutions": [
+      {
+        "into": "Espeon",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "day"
+          }
+        ],
+        "display_text": "Level up with high friendship during the day"
+      },
+      {
+        "into": "Flareon",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Fire Stone"
+          }
+        ],
+        "display_text": "Use a Fire Stone"
+      },
+      {
+        "into": "Glaceon",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Ice Stone"
+          }
+        ],
+        "display_text": "Use an Ice Stone"
+      },
+      {
+        "into": "Jolteon",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      },
+      {
+        "into": "Leafeon",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Leaf Stone"
+          }
+        ],
+        "display_text": "Use a Leaf Stone"
+      },
+      {
+        "into": "Sylveon",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "known_move_type",
+            "value": "Fairy"
+          }
+        ],
+        "display_text": "Level up with high friendship while knowing a Fairy-type move"
+      },
+      {
+        "into": "Umbreon",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Level up with high friendship at night"
+      },
+      {
+        "into": "Vaporeon",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Water Stone"
+          }
+        ],
+        "display_text": "Use a Water Stone"
+      }
+    ]
+  },
+  "Eiscue": {
+    "evolutions": []
+  },
+  "Ekans": {
+    "evolutions": [
+      {
+        "into": "Arbok",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Eldegoss": {
+    "evolutions": []
+  },
+  "Electabuzz": {
+    "evolutions": [
+      {
+        "into": "Electivire",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Electirizer"
+          }
+        ],
+        "display_text": "Trade while holding a Electirizer"
+      },
+      {
+        "into": "Electivire",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Electirizer"
+          }
+        ],
+        "display_text": "Trade while holding an Electirizer"
+      }
+    ]
+  },
+  "Electivire": {
+    "evolutions": []
+  },
+  "Electrike": {
+    "evolutions": [
+      {
+        "into": "Manectric",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Electrode": {
+    "evolutions": []
+  },
+  "Elekid": {
+    "evolutions": []
+  },
+  "Elgyem": {
+    "evolutions": [
+      {
+        "into": "Beheeyem",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Emboar": {
+    "evolutions": []
+  },
+  "Emolga": {
+    "evolutions": []
+  },
+  "Empoleon": {
+    "evolutions": []
+  },
+  "Enamorus": {
+    "evolutions": []
+  },
+  "Entei": {
+    "evolutions": []
+  },
+  "Escavalier": {
+    "evolutions": []
+  },
+  "Espeon": {
+    "evolutions": []
+  },
+  "Espurr": {
+    "evolutions": [
+      {
+        "into": "Meowstic",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Eternatus": {
+    "evolutions": []
+  },
+  "Excadrill": {
+    "evolutions": []
+  },
+  "Exeggcute": {
+    "evolutions": [
+      {
+        "into": "Exeggutor",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Leaf Stone"
+          }
+        ],
+        "display_text": "Use a Leaf Stone"
+      }
+    ]
+  },
+  "Exeggutor": {
+    "evolutions": []
+  },
+  "Exploud": {
+    "evolutions": []
+  },
+  "Falinks": {
+    "evolutions": []
+  },
+  "Farfetch'd": {
+    "evolutions": [
+      {
+        "into": "Sirfetch'd",
+        "conditions": [
+          {
+            "type": "battle",
+            "value": "three_critical_hits"
+          }
+        ],
+        "display_text": "Land 3 critical hits in one battle"
+      }
+    ]
+  },
+  "Fearow": {
+    "evolutions": []
+  },
+  "Feebas": {
+    "evolutions": [
+      {
+        "into": "Milotic",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Prism Scale"
+          }
+        ],
+        "display_text": "Trade while holding a Prism Scale"
+      }
+    ]
+  },
+  "Fennekin": {
+    "evolutions": [
+      {
+        "into": "Braixen",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Feraligatr": {
+    "evolutions": []
+  },
+  "Ferroseed": {
+    "evolutions": [
+      {
+        "into": "Ferrothorn",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Ferrothorn": {
+    "evolutions": []
+  },
+  "Finneon": {
+    "evolutions": [
+      {
+        "into": "Lumineon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 31
+          }
+        ],
+        "display_text": "Reach Lv. 31"
+      }
+    ]
+  },
+  "Flaaffy": {
+    "evolutions": [
+      {
+        "into": "Ampharos",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Flabébé": {
+    "evolutions": [
+      {
+        "into": "Floette",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 19
+          }
+        ],
+        "display_text": "Reach Lv. 19"
+      }
+    ]
+  },
+  "Flapple": {
+    "evolutions": []
+  },
+  "Flareon": {
+    "evolutions": []
+  },
+  "Fletchinder": {
+    "evolutions": [
+      {
+        "into": "Talonflame",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Fletchling": {
+    "evolutions": [
+      {
+        "into": "Fletchinder",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Floatzel": {
+    "evolutions": []
+  },
+  "Floette": {
+    "evolutions": [
+      {
+        "into": "Florges",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Shiny Stone"
+          }
+        ],
+        "display_text": "Use a Shiny Stone"
+      }
+    ]
+  },
+  "Florges": {
+    "evolutions": []
+  },
+  "Flygon": {
+    "evolutions": []
+  },
+  "Fomantis": {
+    "evolutions": [
+      {
+        "into": "Lurantis",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Foongus": {
+    "evolutions": [
+      {
+        "into": "Amoonguss",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      }
+    ]
+  },
+  "Forretress": {
+    "evolutions": []
+  },
+  "Fraxure": {
+    "evolutions": [
+      {
+        "into": "Haxorus",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 48
+          }
+        ],
+        "display_text": "Reach Lv. 48"
+      }
+    ]
+  },
+  "Frillish": {
+    "evolutions": [
+      {
+        "into": "Jellicent",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Froakie": {
+    "evolutions": [
+      {
+        "into": "Frogadier",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Frogadier": {
+    "evolutions": [
+      {
+        "into": "Greninja",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Froslass": {
+    "evolutions": []
+  },
+  "Frosmoth": {
+    "evolutions": []
+  },
+  "Furfrou": {
+    "evolutions": []
+  },
+  "Furret": {
+    "evolutions": []
+  },
+  "Gabite": {
+    "evolutions": [
+      {
+        "into": "Garchomp",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 48
+          }
+        ],
+        "display_text": "Reach Lv. 48"
+      }
+    ]
+  },
+  "Gallade": {
+    "evolutions": []
+  },
+  "Galvantula": {
+    "evolutions": []
+  },
+  "Garbodor": {
+    "evolutions": []
+  },
+  "Garchomp": {
+    "evolutions": []
+  },
+  "Gardevoir": {
+    "evolutions": []
+  },
+  "Gastly": {
+    "evolutions": [
+      {
+        "into": "Haunter",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Gastrodon": {
+    "evolutions": []
+  },
+  "Genesect": {
+    "evolutions": []
+  },
+  "Genesect Burn": {
+    "evolutions": []
+  },
+  "Genesect Chill": {
+    "evolutions": []
+  },
+  "Genesect Douse": {
+    "evolutions": []
+  },
+  "Genesect Shock": {
+    "evolutions": []
+  },
+  "Gengar": {
+    "evolutions": []
+  },
+  "Geodude": {
+    "evolutions": [
+      {
+        "into": "Graveler",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Gible": {
+    "evolutions": [
+      {
+        "into": "Gabite",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Gigalith": {
+    "evolutions": []
+  },
+  "Girafarig": {
+    "evolutions": []
+  },
+  "Giratina": {
+    "evolutions": []
+  },
+  "Glaceon": {
+    "evolutions": []
+  },
+  "Glalie": {
+    "evolutions": []
+  },
+  "Glameow": {
+    "evolutions": [
+      {
+        "into": "Purugly",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Glastrier": {
+    "evolutions": []
+  },
+  "Gligar": {
+    "evolutions": [
+      {
+        "into": "Gliscor",
+        "conditions": [
+          {
+            "type": "held_item",
+            "item": "Razor Fang"
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Level up at night while holding a Razor Fang"
+      }
+    ]
+  },
+  "Gliscor": {
+    "evolutions": []
+  },
+  "Gloom": {
+    "evolutions": [
+      {
+        "into": "Bellossom",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sun Stone"
+          }
+        ],
+        "display_text": "Use a Sun Stone"
+      },
+      {
+        "into": "Vileplume",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Leaf Stone"
+          }
+        ],
+        "display_text": "Use a Leaf Stone"
+      }
+    ]
+  },
+  "Gogoat": {
+    "evolutions": []
+  },
+  "Golbat": {
+    "evolutions": [
+      {
+        "into": "Crobat",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Goldeen": {
+    "evolutions": [
+      {
+        "into": "Seaking",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Golduck": {
+    "evolutions": []
+  },
+  "Golem": {
+    "evolutions": []
+  },
+  "Golett": {
+    "evolutions": [
+      {
+        "into": "Golurk",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 43
+          }
+        ],
+        "display_text": "Reach Lv. 43"
+      }
+    ]
+  },
+  "Golisopod": {
+    "evolutions": []
+  },
+  "Golurk": {
+    "evolutions": []
+  },
+  "Goodra": {
+    "evolutions": []
+  },
+  "Goomy": {
+    "evolutions": [
+      {
+        "into": "Sliggoo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Gorebyss": {
+    "evolutions": []
+  },
+  "Gossifleur": {
+    "evolutions": [
+      {
+        "into": "Eldegoss",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Gothita": {
+    "evolutions": [
+      {
+        "into": "Gothorita",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Gothitelle": {
+    "evolutions": []
+  },
+  "Gothorita": {
+    "evolutions": [
+      {
+        "into": "Gothitelle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 41
+          }
+        ],
+        "display_text": "Reach Lv. 41"
+      }
+    ]
+  },
+  "Gourgeist": {
+    "evolutions": []
+  },
+  "Granbull": {
+    "evolutions": []
+  },
+  "Grapploct": {
+    "evolutions": []
+  },
+  "Graveler": {
+    "evolutions": [
+      {
+        "into": "Golem",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Greedent": {
+    "evolutions": []
+  },
+  "Greninja": {
+    "evolutions": []
+  },
+  "Grimer": {
+    "evolutions": [
+      {
+        "into": "Muk",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Grimmsnarl": {
+    "evolutions": []
+  },
+  "Grookey": {
+    "evolutions": [
+      {
+        "into": "Thwackey",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Grotle": {
+    "evolutions": [
+      {
+        "into": "Torterra",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Groudon": {
+    "evolutions": []
+  },
+  "Grovyle": {
+    "evolutions": [
+      {
+        "into": "Sceptile",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Growlithe": {
+    "evolutions": [
+      {
+        "into": "Arcanine",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Fire Stone"
+          }
+        ],
+        "display_text": "Use a Fire Stone"
+      }
+    ]
+  },
+  "Grubbin": {
+    "evolutions": [
+      {
+        "into": "Charjabug",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Grumpig": {
+    "evolutions": []
+  },
+  "Gulpin": {
+    "evolutions": [
+      {
+        "into": "Swalot",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 26
+          }
+        ],
+        "display_text": "Reach Lv. 26"
+      }
+    ]
+  },
+  "Gumshoos": {
+    "evolutions": []
+  },
+  "Gurdurr": {
+    "evolutions": [
+      {
+        "into": "Conkeldurr",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Guzzlord": {
+    "evolutions": []
+  },
+  "Gyarados": {
+    "evolutions": []
+  },
+  "Hakamo-o": {
+    "evolutions": [
+      {
+        "into": "Kommo-o",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 45
+          }
+        ],
+        "display_text": "Reach Lv. 45"
+      }
+    ]
+  },
+  "Happiny": {
+    "evolutions": [
+      {
+        "into": "Chansey",
+        "conditions": [
+          {
+            "type": "held_item",
+            "item": "Oval Stone"
+          },
+          {
+            "type": "time",
+            "value": "day"
+          }
+        ],
+        "display_text": "Level up during the day while holding an Oval Stone"
+      }
+    ]
+  },
+  "Hariyama": {
+    "evolutions": []
+  },
+  "Hatenna": {
+    "evolutions": [
+      {
+        "into": "Hattrem",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Hatterene": {
+    "evolutions": []
+  },
+  "Hattrem": {
+    "evolutions": [
+      {
+        "into": "Hatterene",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Haunter": {
+    "evolutions": [
+      {
+        "into": "Gengar",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Hawlucha": {
+    "evolutions": []
+  },
+  "Haxorus": {
+    "evolutions": []
+  },
+  "Heatmor": {
+    "evolutions": []
+  },
+  "Heatran": {
+    "evolutions": []
+  },
+  "Heliolisk": {
+    "evolutions": []
+  },
+  "Helioptile": {
+    "evolutions": [
+      {
+        "into": "Heliolisk",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sun Stone"
+          }
+        ],
+        "display_text": "Use a Sun Stone"
+      }
+    ]
+  },
+  "Heracross": {
+    "evolutions": []
+  },
+  "Herdier": {
+    "evolutions": [
+      {
+        "into": "Stoutland",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Hippopotas": {
+    "evolutions": [
+      {
+        "into": "Hippowdon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Hippowdon": {
+    "evolutions": []
+  },
+  "Hitmonchan": {
+    "evolutions": []
+  },
+  "Hitmonlee": {
+    "evolutions": []
+  },
+  "Hitmontop": {
+    "evolutions": []
+  },
+  "Ho-Oh": {
+    "evolutions": []
+  },
+  "Honchkrow": {
+    "evolutions": []
+  },
+  "Honedge": {
+    "evolutions": [
+      {
+        "into": "Doublade",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Hoopa": {
+    "evolutions": []
+  },
+  "Hoothoot": {
+    "evolutions": [
+      {
+        "into": "Noctowl",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Hoppip": {
+    "evolutions": [
+      {
+        "into": "Skiploom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Horsea": {
+    "evolutions": [
+      {
+        "into": "Seadra",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Houndoom": {
+    "evolutions": []
+  },
+  "Houndour": {
+    "evolutions": [
+      {
+        "into": "Houndoom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Huntail": {
+    "evolutions": []
+  },
+  "Hydreigon": {
+    "evolutions": []
+  },
+  "Hypno": {
+    "evolutions": []
+  },
+  "Igglybuff": {
+    "evolutions": [
+      {
+        "into": "Jigglypuff",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Illumise": {
+    "evolutions": []
+  },
+  "Impidimp": {
+    "evolutions": [
+      {
+        "into": "Morgrem",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Incineroar": {
+    "evolutions": []
+  },
+  "Indeedee": {
+    "evolutions": []
+  },
+  "Infernape": {
+    "evolutions": []
+  },
+  "Inkay": {
+    "evolutions": [
+      {
+        "into": "Malamar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          },
+          {
+            "type": "turn_upside_down"
+          }
+        ],
+        "display_text": "Reach Lv. 30 while holding the system upside down"
+      }
+    ]
+  },
+  "Inteleon": {
+    "evolutions": []
+  },
+  "Ivysaur": {
+    "evolutions": [
+      {
+        "into": "Venusaur",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Jangmo-o": {
+    "evolutions": [
+      {
+        "into": "Hakamo-o",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Jellicent": {
+    "evolutions": []
+  },
+  "Jigglypuff": {
+    "evolutions": [
+      {
+        "into": "Wigglytuff",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Jirachi": {
+    "evolutions": []
+  },
+  "Jolteon": {
+    "evolutions": []
+  },
+  "Joltik": {
+    "evolutions": [
+      {
+        "into": "Galvantula",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Jumpluff": {
+    "evolutions": []
+  },
+  "Jynx": {
+    "evolutions": []
+  },
+  "Kabuto": {
+    "evolutions": [
+      {
+        "into": "Kabutops",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Kabutops": {
+    "evolutions": []
+  },
+  "Kadabra": {
+    "evolutions": [
+      {
+        "into": "Alakazam",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Kakuna": {
+    "evolutions": [
+      {
+        "into": "Beedrill",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Kangaskhan": {
+    "evolutions": []
+  },
+  "Karrablast": {
+    "evolutions": [
+      {
+        "into": "Escavalier",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "trade_species",
+            "species": "Shelmet"
+          }
+        ],
+        "display_text": "Trade for a Shelmet"
+      }
+    ]
+  },
+  "Kartana": {
+    "evolutions": []
+  },
+  "Kecleon": {
+    "evolutions": []
+  },
+  "Keldeo": {
+    "evolutions": []
+  },
+  "Kingdra": {
+    "evolutions": []
+  },
+  "Kingler": {
+    "evolutions": []
+  },
+  "Kirlia": {
+    "evolutions": [
+      {
+        "into": "Gallade",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dawn Stone"
+          }
+        ],
+        "display_text": "Use a Dawn Stone"
+      },
+      {
+        "into": "Gardevoir",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Klang": {
+    "evolutions": [
+      {
+        "into": "Klinklang",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 49
+          }
+        ],
+        "display_text": "Reach Lv. 49"
+      }
+    ]
+  },
+  "Kleavor": {
+    "evolutions": []
+  },
+  "Klefki": {
+    "evolutions": []
+  },
+  "Klink": {
+    "evolutions": [
+      {
+        "into": "Klang",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Klinklang": {
+    "evolutions": []
+  },
+  "Koffing": {
+    "evolutions": [
+      {
+        "into": "Weezing",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Komala": {
+    "evolutions": []
+  },
+  "Kommo-o": {
+    "evolutions": []
+  },
+  "Krabby": {
+    "evolutions": [
+      {
+        "into": "Kingler",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Kricketot": {
+    "evolutions": [
+      {
+        "into": "Kricketune",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Kricketune": {
+    "evolutions": []
+  },
+  "Krokorok": {
+    "evolutions": [
+      {
+        "into": "Krookodile",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Krookodile": {
+    "evolutions": []
+  },
+  "Kubfu": {
+    "evolutions": [
+      {
+        "into": "Urshifu",
+        "conditions": [
+          {
+            "type": "story",
+            "value": "Tower of Darkness or Tower of Waters"
+          }
+        ],
+        "display_text": "Complete the Tower of Darkness or Tower of Waters"
+      }
+    ]
+  },
+  "Kyogre": {
+    "evolutions": []
+  },
+  "Kyurem": {
+    "evolutions": []
+  },
+  "Kyurem Black": {
+    "evolutions": []
+  },
+  "Kyurem White": {
+    "evolutions": []
+  },
+  "Lairon": {
+    "evolutions": [
+      {
+        "into": "Aggron",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Lampent": {
+    "evolutions": [
+      {
+        "into": "Chandelure",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dusk Stone"
+          }
+        ],
+        "display_text": "Use a Dusk Stone"
+      }
+    ]
+  },
+  "Landorus": {
+    "evolutions": []
+  },
+  "Lanturn": {
+    "evolutions": []
+  },
+  "Lapras": {
+    "evolutions": []
+  },
+  "Larvesta": {
+    "evolutions": [
+      {
+        "into": "Volcarona",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 59
+          }
+        ],
+        "display_text": "Reach Lv. 59"
+      }
+    ]
+  },
+  "Larvitar": {
+    "evolutions": [
+      {
+        "into": "Pupitar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Latias": {
+    "evolutions": []
+  },
+  "Latios": {
+    "evolutions": []
+  },
+  "Leafeon": {
+    "evolutions": []
+  },
+  "Leavanny": {
+    "evolutions": []
+  },
+  "Ledian": {
+    "evolutions": []
+  },
+  "Ledyba": {
+    "evolutions": [
+      {
+        "into": "Ledian",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Lickilicky": {
+    "evolutions": []
+  },
+  "Lickitung": {
+    "evolutions": [
+      {
+        "into": "Lickilicky",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Rollout"
+          }
+        ],
+        "display_text": "Level up while knowing Rollout"
+      }
+    ]
+  },
+  "Liepard": {
+    "evolutions": []
+  },
+  "Lileep": {
+    "evolutions": [
+      {
+        "into": "Cradily",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Lilligant": {
+    "evolutions": []
+  },
+  "Lillipup": {
+    "evolutions": [
+      {
+        "into": "Herdier",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Linoone": {
+    "evolutions": [
+      {
+        "into": "Obstagoon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          },
+          {
+            "type": "time",
+            "value": "night"
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Reach Lv. 35 at night as Galarian Linoone"
+      }
+    ]
+  },
+  "Litleo": {
+    "evolutions": [
+      {
+        "into": "Pyroar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Litten": {
+    "evolutions": [
+      {
+        "into": "Torracat",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Litwick": {
+    "evolutions": [
+      {
+        "into": "Lampent",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 41
+          }
+        ],
+        "display_text": "Reach Lv. 41"
+      }
+    ]
+  },
+  "Lombre": {
+    "evolutions": [
+      {
+        "into": "Ludicolo",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Water Stone"
+          }
+        ],
+        "display_text": "Use a Water Stone"
+      }
+    ]
+  },
+  "Lopunny": {
+    "evolutions": []
+  },
+  "Lotad": {
+    "evolutions": [
+      {
+        "into": "Lombre",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Loudred": {
+    "evolutions": [
+      {
+        "into": "Exploud",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Lucario": {
+    "evolutions": []
+  },
+  "Ludicolo": {
+    "evolutions": []
+  },
+  "Lugia": {
+    "evolutions": []
+  },
+  "Lumineon": {
+    "evolutions": []
+  },
+  "Lunala": {
+    "evolutions": []
+  },
+  "Lunatone": {
+    "evolutions": []
+  },
+  "Lurantis": {
+    "evolutions": []
+  },
+  "Luvdisc": {
+    "evolutions": []
+  },
+  "Luxio": {
+    "evolutions": [
+      {
+        "into": "Luxray",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Luxray": {
+    "evolutions": []
+  },
+  "Lycanroc": {
+    "evolutions": []
+  },
+  "Lycanroc Midnight": {
+    "evolutions": []
+  },
+  "Machamp": {
+    "evolutions": []
+  },
+  "Machoke": {
+    "evolutions": [
+      {
+        "into": "Machamp",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Machop": {
+    "evolutions": [
+      {
+        "into": "Machoke",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Magby": {
+    "evolutions": []
+  },
+  "Magcargo": {
+    "evolutions": []
+  },
+  "Magearna": {
+    "evolutions": []
+  },
+  "Magikarp": {
+    "evolutions": [
+      {
+        "into": "Gyarados",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Magmar": {
+    "evolutions": [
+      {
+        "into": "Magmortar",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Magmarizer"
+          }
+        ],
+        "display_text": "Trade while holding a Magmarizer"
+      }
+    ]
+  },
+  "Magmortar": {
+    "evolutions": []
+  },
+  "Magnemite": {
+    "evolutions": [
+      {
+        "into": "Magneton",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Magneton": {
+    "evolutions": [
+      {
+        "into": "Magnezone",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      }
+    ]
+  },
+  "Magnezone": {
+    "evolutions": []
+  },
+  "Makuhita": {
+    "evolutions": [
+      {
+        "into": "Hariyama",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Malamar": {
+    "evolutions": []
+  },
+  "Mamoswine": {
+    "evolutions": []
+  },
+  "Manaphy": {
+    "evolutions": []
+  },
+  "Mandibuzz": {
+    "evolutions": []
+  },
+  "Manectric": {
+    "evolutions": []
+  },
+  "Mankey": {
+    "evolutions": [
+      {
+        "into": "Primeape",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Mantine": {
+    "evolutions": []
+  },
+  "Mantyke": {
+    "evolutions": [
+      {
+        "into": "Mantine",
+        "conditions": [
+          {
+            "type": "party_species",
+            "species": "Remoraid"
+          }
+        ],
+        "display_text": "Level up with Remoraid in the party"
+      }
+    ]
+  },
+  "Maractus": {
+    "evolutions": []
+  },
+  "Mareanie": {
+    "evolutions": [
+      {
+        "into": "Toxapex",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Mareep": {
+    "evolutions": [
+      {
+        "into": "Flaaffy",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 15
+          }
+        ],
+        "display_text": "Reach Lv. 15"
+      }
+    ]
+  },
+  "Marill": {
+    "evolutions": [
+      {
+        "into": "Azumarill",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Marowak": {
+    "evolutions": []
+  },
+  "Marshadow": {
+    "evolutions": []
+  },
+  "Marshtomp": {
+    "evolutions": [
+      {
+        "into": "Swampert",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Masquerain": {
+    "evolutions": []
+  },
+  "Mawile": {
+    "evolutions": []
+  },
+  "Medicham": {
+    "evolutions": []
+  },
+  "Meditite": {
+    "evolutions": [
+      {
+        "into": "Medicham",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Meganium": {
+    "evolutions": []
+  },
+  "Melmetal": {
+    "evolutions": []
+  },
+  "Meloetta": {
+    "evolutions": []
+  },
+  "Meltan": {
+    "evolutions": []
+  },
+  "Meowstic": {
+    "evolutions": []
+  },
+  "Meowth": {
+    "evolutions": [
+      {
+        "into": "Perrserker",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Reach Lv. 28 as Galarian Meowth"
+      },
+      {
+        "into": "Persian",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Mesprit": {
+    "evolutions": []
+  },
+  "Metagross": {
+    "evolutions": []
+  },
+  "Metang": {
+    "evolutions": [
+      {
+        "into": "Metagross",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 45
+          }
+        ],
+        "display_text": "Reach Lv. 45"
+      }
+    ]
+  },
+  "Metapod": {
+    "evolutions": [
+      {
+        "into": "Butterfree",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Mew": {
+    "evolutions": []
+  },
+  "Mewtwo": {
+    "evolutions": []
+  },
+  "Mienfoo": {
+    "evolutions": [
+      {
+        "into": "Mienshao",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 50
+          }
+        ],
+        "display_text": "Reach Lv. 50"
+      }
+    ]
+  },
+  "Mienshao": {
+    "evolutions": []
+  },
+  "Mightyena": {
+    "evolutions": []
+  },
+  "Milcery": {
+    "evolutions": [
+      {
+        "into": "Alcremie",
+        "conditions": [
+          {
+            "type": "held_item",
+            "item": "Sweet"
+          },
+          {
+            "type": "spin"
+          }
+        ],
+        "display_text": "Hold a Sweet and spin"
+      }
+    ]
+  },
+  "Milotic": {
+    "evolutions": []
+  },
+  "Miltank": {
+    "evolutions": []
+  },
+  "Mime Jr.": {
+    "evolutions": [
+      {
+        "into": "Mr. Mime",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Mimic"
+          }
+        ],
+        "display_text": "Level up while knowing Mimic"
+      }
+    ]
+  },
+  "Mimikyu": {
+    "evolutions": []
+  },
+  "Minccino": {
+    "evolutions": [
+      {
+        "into": "Cinccino",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Shiny Stone"
+          }
+        ],
+        "display_text": "Use a Shiny Stone"
+      }
+    ]
+  },
+  "Minior": {
+    "evolutions": []
+  },
+  "Minun": {
+    "evolutions": []
+  },
+  "Misdreavus": {
+    "evolutions": [
+      {
+        "into": "Mismagius",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dusk Stone"
+          }
+        ],
+        "display_text": "Use a Dusk Stone"
+      }
+    ]
+  },
+  "Mismagius": {
+    "evolutions": []
+  },
+  "Moltres": {
+    "evolutions": []
+  },
+  "Monferno": {
+    "evolutions": [
+      {
+        "into": "Infernape",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Morelull": {
+    "evolutions": [
+      {
+        "into": "Shiinotic",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Morgrem": {
+    "evolutions": [
+      {
+        "into": "Grimmsnarl",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Morpeko": {
+    "evolutions": []
+  },
+  "Mothim": {
+    "evolutions": []
+  },
+  "Mr. Mime": {
+    "evolutions": []
+  },
+  "Mr. Rime": {
+    "evolutions": []
+  },
+  "Mudbray": {
+    "evolutions": [
+      {
+        "into": "Mudsdale",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Mudkip": {
+    "evolutions": [
+      {
+        "into": "Marshtomp",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Mudsdale": {
+    "evolutions": []
+  },
+  "Muk": {
+    "evolutions": []
+  },
+  "Munchlax": {
+    "evolutions": [
+      {
+        "into": "Snorlax",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Munna": {
+    "evolutions": [
+      {
+        "into": "Musharna",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Murkrow": {
+    "evolutions": [
+      {
+        "into": "Honchkrow",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dusk Stone"
+          }
+        ],
+        "display_text": "Use a Dusk Stone"
+      }
+    ]
+  },
+  "Musharna": {
+    "evolutions": []
+  },
+  "Naganadel": {
+    "evolutions": []
+  },
+  "Natu": {
+    "evolutions": [
+      {
+        "into": "Xatu",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Necrozma": {
+    "evolutions": []
+  },
+  "Nickit": {
+    "evolutions": [
+      {
+        "into": "Thievul",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Nidoking": {
+    "evolutions": []
+  },
+  "Nidoqueen": {
+    "evolutions": []
+  },
+  "Nidoran♀": {
+    "evolutions": [
+      {
+        "into": "Nidorina",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Nidoran♂": {
+    "evolutions": [
+      {
+        "into": "Nidorino",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Nidorina": {
+    "evolutions": [
+      {
+        "into": "Nidoqueen",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Nidorino": {
+    "evolutions": [
+      {
+        "into": "Nidoking",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Nihilego": {
+    "evolutions": []
+  },
+  "Nincada": {
+    "evolutions": [
+      {
+        "into": "Ninjask",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      },
+      {
+        "into": "Shedinja",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          },
+          {
+            "type": "empty_party_slot"
+          },
+          {
+            "type": "poke_ball"
+          }
+        ],
+        "display_text": "Reach Lv. 20 with an empty party slot and a Poké Ball"
+      }
+    ]
+  },
+  "Ninetales": {
+    "evolutions": []
+  },
+  "Ninjask": {
+    "evolutions": []
+  },
+  "Noctowl": {
+    "evolutions": []
+  },
+  "Noibat": {
+    "evolutions": [
+      {
+        "into": "Noivern",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 48
+          }
+        ],
+        "display_text": "Reach Lv. 48"
+      }
+    ]
+  },
+  "Noivern": {
+    "evolutions": []
+  },
+  "Nosepass": {
+    "evolutions": [
+      {
+        "into": "Probopass",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      }
+    ]
+  },
+  "Numel": {
+    "evolutions": [
+      {
+        "into": "Camerupt",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Nuzleaf": {
+    "evolutions": [
+      {
+        "into": "Shiftry",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Leaf Stone"
+          }
+        ],
+        "display_text": "Use a Leaf Stone"
+      }
+    ]
+  },
+  "Obstagoon": {
+    "evolutions": []
+  },
+  "Octillery": {
+    "evolutions": []
+  },
+  "Oddish": {
+    "evolutions": [
+      {
+        "into": "Gloom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 21
+          }
+        ],
+        "display_text": "Reach Lv. 21"
+      }
+    ]
+  },
+  "Omanyte": {
+    "evolutions": [
+      {
+        "into": "Omastar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Omastar": {
+    "evolutions": []
+  },
+  "Onix": {
+    "evolutions": [
+      {
+        "into": "Steelix",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Metal Coat"
+          }
+        ],
+        "display_text": "Trade while holding a Metal Coat"
+      }
+    ]
+  },
+  "Oranguru": {
+    "evolutions": []
+  },
+  "Orbeetle": {
+    "evolutions": []
+  },
+  "Oricorio": {
+    "evolutions": []
+  },
+  "Oricorio Pau": {
+    "evolutions": []
+  },
+  "Oricorio Pom Pom": {
+    "evolutions": []
+  },
+  "Oricorio Sensu": {
+    "evolutions": []
+  },
+  "Oshawott": {
+    "evolutions": [
+      {
+        "into": "Dewott",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Overqwil": {
+    "evolutions": []
+  },
+  "Pachirisu": {
+    "evolutions": []
+  },
+  "Palkia": {
+    "evolutions": []
+  },
+  "Palossand": {
+    "evolutions": []
+  },
+  "Palpitoad": {
+    "evolutions": [
+      {
+        "into": "Seismitoad",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Pancham": {
+    "evolutions": [
+      {
+        "into": "Pangoro",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      },
+      {
+        "into": "Pangoro",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          },
+          {
+            "type": "party_type",
+            "value": "Dark"
+          }
+        ],
+        "display_text": "Reach Lv. 32 with a Dark-type Pokémon in the party"
+      }
+    ]
+  },
+  "Pangoro": {
+    "evolutions": []
+  },
+  "Panpour": {
+    "evolutions": []
+  },
+  "Pansage": {
+    "evolutions": []
+  },
+  "Pansear": {
+    "evolutions": []
+  },
+  "Paras": {
+    "evolutions": [
+      {
+        "into": "Parasect",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Parasect": {
+    "evolutions": []
+  },
+  "Passimian": {
+    "evolutions": []
+  },
+  "Patrat": {
+    "evolutions": [
+      {
+        "into": "Watchog",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Pawniard": {
+    "evolutions": [
+      {
+        "into": "Bisharp",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 52
+          }
+        ],
+        "display_text": "Reach Lv. 52"
+      }
+    ]
+  },
+  "Pelipper": {
+    "evolutions": []
+  },
+  "Perrserker": {
+    "evolutions": []
+  },
+  "Persian": {
+    "evolutions": []
+  },
+  "Petilil": {
+    "evolutions": [
+      {
+        "into": "Lilligant",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sun Stone"
+          }
+        ],
+        "display_text": "Use a Sun Stone"
+      }
+    ]
+  },
+  "Phanpy": {
+    "evolutions": [
+      {
+        "into": "Donphan",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Phantump": {
+    "evolutions": [
+      {
+        "into": "Trevenant",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Pheromosa": {
+    "evolutions": []
+  },
+  "Phione": {
+    "evolutions": []
+  },
+  "Pichu": {
+    "evolutions": [
+      {
+        "into": "Pikachu",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Pidgeot": {
+    "evolutions": []
+  },
+  "Pidgeotto": {
+    "evolutions": [
+      {
+        "into": "Pidgeot",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Pidgey": {
+    "evolutions": [
+      {
+        "into": "Pidgeotto",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Pidove": {
+    "evolutions": [
+      {
+        "into": "Tranquill",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 21
+          }
+        ],
+        "display_text": "Reach Lv. 21"
+      }
+    ]
+  },
+  "Pignite": {
+    "evolutions": [
+      {
+        "into": "Emboar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Pikachu": {
+    "evolutions": [
+      {
+        "into": "Raichu",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Thunder Stone"
+          }
+        ],
+        "display_text": "Use a Thunder Stone"
+      }
+    ]
+  },
+  "Pikipek": {
+    "evolutions": [
+      {
+        "into": "Trumbeak",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Piloswine": {
+    "evolutions": [
+      {
+        "into": "Mamoswine",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Ancient Power"
+          }
+        ],
+        "display_text": "Level up while knowing Ancient Power"
+      }
+    ]
+  },
+  "Pincurchin": {
+    "evolutions": []
+  },
+  "Pineco": {
+    "evolutions": [
+      {
+        "into": "Forretress",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 31
+          }
+        ],
+        "display_text": "Reach Lv. 31"
+      }
+    ]
+  },
+  "Pinsir": {
+    "evolutions": []
+  },
+  "Piplup": {
+    "evolutions": [
+      {
+        "into": "Prinplup",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Plusle": {
+    "evolutions": []
+  },
+  "Poipole": {
+    "evolutions": [
+      {
+        "into": "Naganadel",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Dragon Pulse"
+          }
+        ],
+        "display_text": "Level up while knowing Dragon Pulse"
+      }
+    ]
+  },
+  "Politoed": {
+    "evolutions": []
+  },
+  "Poliwag": {
+    "evolutions": [
+      {
+        "into": "Poliwhirl",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Poliwhirl": {
+    "evolutions": [
+      {
+        "into": "Politoed",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "King's Rock"
+          }
+        ],
+        "display_text": "Trade while holding a King's Rock"
+      },
+      {
+        "into": "Poliwrath",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Water Stone"
+          }
+        ],
+        "display_text": "Use a Water Stone"
+      }
+    ]
+  },
+  "Poliwrath": {
+    "evolutions": []
+  },
+  "Polteageist": {
+    "evolutions": []
+  },
+  "Ponyta": {
+    "evolutions": [
+      {
+        "into": "Rapidash",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Poochyena": {
+    "evolutions": [
+      {
+        "into": "Mightyena",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Popplio": {
+    "evolutions": [
+      {
+        "into": "Brionne",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Porygon": {
+    "evolutions": [
+      {
+        "into": "Porygon2",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Upgrade"
+          }
+        ],
+        "display_text": "Trade while holding a Upgrade"
+      }
+    ]
+  },
+  "Porygon-Z": {
+    "evolutions": []
+  },
+  "Porygon2": {
+    "evolutions": [
+      {
+        "into": "Porygon-Z",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Dubious Disc"
+          }
+        ],
+        "display_text": "Trade while holding a Dubious Disc"
+      }
+    ]
+  },
+  "Primarina": {
+    "evolutions": []
+  },
+  "Primeape": {
+    "evolutions": []
+  },
+  "Prinplup": {
+    "evolutions": [
+      {
+        "into": "Empoleon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Probopass": {
+    "evolutions": []
+  },
+  "Psyduck": {
+    "evolutions": [
+      {
+        "into": "Golduck",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Pumpkaboo": {
+    "evolutions": [
+      {
+        "into": "Gourgeist",
+        "conditions": [
+          {
+            "type": "trade"
+          }
+        ],
+        "display_text": "Trade"
+      }
+    ]
+  },
+  "Pupitar": {
+    "evolutions": [
+      {
+        "into": "Tyranitar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 55
+          }
+        ],
+        "display_text": "Reach Lv. 55"
+      }
+    ]
+  },
+  "Purrloin": {
+    "evolutions": [
+      {
+        "into": "Liepard",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Purugly": {
+    "evolutions": []
+  },
+  "Pyroar": {
+    "evolutions": []
+  },
+  "Pyukumuku": {
+    "evolutions": []
+  },
+  "Quagsire": {
+    "evolutions": []
+  },
+  "Quilava": {
+    "evolutions": [
+      {
+        "into": "Typhlosion",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Quilladin": {
+    "evolutions": [
+      {
+        "into": "Chesnaught",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Qwilfish": {
+    "evolutions": [
+      {
+        "into": "Overqwil",
+        "conditions": [
+          {
+            "type": "move_usage",
+            "move": "Barb Barrage",
+            "style": "Strong",
+            "count": 20
+          }
+        ],
+        "display_text": "Use Barb Barrage in Strong Style 20 times"
+      }
+    ]
+  },
+  "Raboot": {
+    "evolutions": [
+      {
+        "into": "Cinderace",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Raichu": {
+    "evolutions": []
+  },
+  "Raikou": {
+    "evolutions": []
+  },
+  "Ralts": {
+    "evolutions": [
+      {
+        "into": "Kirlia",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Rampardos": {
+    "evolutions": []
+  },
+  "Rapidash": {
+    "evolutions": []
+  },
+  "Raticate": {
+    "evolutions": []
+  },
+  "Rattata": {
+    "evolutions": [
+      {
+        "into": "Raticate",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Rayquaza": {
+    "evolutions": []
+  },
+  "Regice": {
+    "evolutions": []
+  },
+  "Regidrago": {
+    "evolutions": []
+  },
+  "Regieleki": {
+    "evolutions": []
+  },
+  "Regigigas": {
+    "evolutions": []
+  },
+  "Regirock": {
+    "evolutions": []
+  },
+  "Registeel": {
+    "evolutions": []
+  },
+  "Relicanth": {
+    "evolutions": []
+  },
+  "Remoraid": {
+    "evolutions": [
+      {
+        "into": "Octillery",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Reshiram": {
+    "evolutions": []
+  },
+  "Reuniclus": {
+    "evolutions": []
+  },
+  "Rhydon": {
+    "evolutions": [
+      {
+        "into": "Rhyperior",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Protector"
+          }
+        ],
+        "display_text": "Trade while holding a Protector"
+      }
+    ]
+  },
+  "Rhyhorn": {
+    "evolutions": [
+      {
+        "into": "Rhydon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Rhyperior": {
+    "evolutions": []
+  },
+  "Ribombee": {
+    "evolutions": []
+  },
+  "Rillaboom": {
+    "evolutions": []
+  },
+  "Riolu": {
+    "evolutions": [
+      {
+        "into": "Lucario",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "day"
+          }
+        ],
+        "display_text": "Level up with high friendship during the day"
+      }
+    ]
+  },
+  "Rockruff": {
+    "evolutions": [
+      {
+        "into": "Lycanroc",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      },
+      {
+        "into": "Lycanroc",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          },
+          {
+            "type": "condition",
+            "value": "time and Ability"
+          }
+        ],
+        "display_text": "Reach Lv. 25; form depends on time and Ability"
+      }
+    ]
+  },
+  "Roggenrola": {
+    "evolutions": [
+      {
+        "into": "Boldore",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Rolycoly": {
+    "evolutions": [
+      {
+        "into": "Carkol",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Rookidee": {
+    "evolutions": [
+      {
+        "into": "Corvisquire",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Roselia": {
+    "evolutions": [
+      {
+        "into": "Roserade",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Shiny Stone"
+          }
+        ],
+        "display_text": "Use a Shiny Stone"
+      }
+    ]
+  },
+  "Roserade": {
+    "evolutions": []
+  },
+  "Rotom": {
+    "evolutions": []
+  },
+  "Rotom Fan": {
+    "evolutions": []
+  },
+  "Rotom Frost": {
+    "evolutions": []
+  },
+  "Rotom Heat": {
+    "evolutions": []
+  },
+  "Rotom Mow": {
+    "evolutions": []
+  },
+  "Rotom Wash": {
+    "evolutions": []
+  },
+  "Rowlet": {
+    "evolutions": [
+      {
+        "into": "Dartrix",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Rufflet": {
+    "evolutions": [
+      {
+        "into": "Braviary",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 54
+          }
+        ],
+        "display_text": "Reach Lv. 54"
+      }
+    ]
+  },
+  "Runerigus": {
+    "evolutions": []
+  },
+  "Sableye": {
+    "evolutions": []
+  },
+  "Salamence": {
+    "evolutions": []
+  },
+  "Salandit": {
+    "evolutions": [
+      {
+        "into": "Salazzle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      },
+      {
+        "into": "Salazzle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          },
+          {
+            "type": "gender",
+            "value": "female"
+          }
+        ],
+        "display_text": "Reach Lv. 33 as a female"
+      }
+    ]
+  },
+  "Salazzle": {
+    "evolutions": []
+  },
+  "Samurott": {
+    "evolutions": []
+  },
+  "Sandaconda": {
+    "evolutions": []
+  },
+  "Sandile": {
+    "evolutions": [
+      {
+        "into": "Krokorok",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 29
+          }
+        ],
+        "display_text": "Reach Lv. 29"
+      }
+    ]
+  },
+  "Sandshrew": {
+    "evolutions": [
+      {
+        "into": "Sandslash",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Sandslash": {
+    "evolutions": []
+  },
+  "Sandygast": {
+    "evolutions": [
+      {
+        "into": "Palossand",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Sawk": {
+    "evolutions": []
+  },
+  "Sawsbuck": {
+    "evolutions": []
+  },
+  "Scatterbug": {
+    "evolutions": [
+      {
+        "into": "Spewpa",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 9
+          }
+        ],
+        "display_text": "Reach Lv. 9"
+      }
+    ]
+  },
+  "Sceptile": {
+    "evolutions": []
+  },
+  "Scizor": {
+    "evolutions": []
+  },
+  "Scolipede": {
+    "evolutions": []
+  },
+  "Scorbunny": {
+    "evolutions": [
+      {
+        "into": "Raboot",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Scrafty": {
+    "evolutions": []
+  },
+  "Scraggy": {
+    "evolutions": [
+      {
+        "into": "Scrafty",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      }
+    ]
+  },
+  "Scyther": {
+    "evolutions": [
+      {
+        "into": "Kleavor",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Black Augurite"
+          }
+        ],
+        "display_text": "Use Black Augurite"
+      },
+      {
+        "into": "Scizor",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Metal Coat"
+          }
+        ],
+        "display_text": "Trade while holding a Metal Coat"
+      }
+    ]
+  },
+  "Seadra": {
+    "evolutions": [
+      {
+        "into": "Kingdra",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Dragon Scale"
+          }
+        ],
+        "display_text": "Trade while holding a Dragon Scale"
+      }
+    ]
+  },
+  "Seaking": {
+    "evolutions": []
+  },
+  "Sealeo": {
+    "evolutions": [
+      {
+        "into": "Walrein",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 44
+          }
+        ],
+        "display_text": "Reach Lv. 44"
+      }
+    ]
+  },
+  "Seedot": {
+    "evolutions": [
+      {
+        "into": "Nuzleaf",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Seel": {
+    "evolutions": [
+      {
+        "into": "Dewgong",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Seismitoad": {
+    "evolutions": []
+  },
+  "Sentret": {
+    "evolutions": [
+      {
+        "into": "Furret",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 15
+          }
+        ],
+        "display_text": "Reach Lv. 15"
+      }
+    ]
+  },
+  "Serperior": {
+    "evolutions": []
+  },
+  "Servine": {
+    "evolutions": [
+      {
+        "into": "Serperior",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Seviper": {
+    "evolutions": []
+  },
+  "Sewaddle": {
+    "evolutions": [
+      {
+        "into": "Swadloon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Sharpedo": {
+    "evolutions": []
+  },
+  "Shaymin": {
+    "evolutions": []
+  },
+  "Shaymin Sky": {
+    "evolutions": []
+  },
+  "Shedinja": {
+    "evolutions": []
+  },
+  "Shelgon": {
+    "evolutions": [
+      {
+        "into": "Salamence",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 50
+          }
+        ],
+        "display_text": "Reach Lv. 50"
+      }
+    ]
+  },
+  "Shellder": {
+    "evolutions": [
+      {
+        "into": "Cloyster",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Water Stone"
+          }
+        ],
+        "display_text": "Use a Water Stone"
+      }
+    ]
+  },
+  "Shellos": {
+    "evolutions": [
+      {
+        "into": "Gastrodon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Shelmet": {
+    "evolutions": [
+      {
+        "into": "Accelgor",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "trade_species",
+            "species": "Karrablast"
+          }
+        ],
+        "display_text": "Trade for a Karrablast"
+      }
+    ]
+  },
+  "Shieldon": {
+    "evolutions": [
+      {
+        "into": "Bastiodon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Shiftry": {
+    "evolutions": []
+  },
+  "Shiinotic": {
+    "evolutions": []
+  },
+  "Shinx": {
+    "evolutions": [
+      {
+        "into": "Luxio",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 15
+          }
+        ],
+        "display_text": "Reach Lv. 15"
+      }
+    ]
+  },
+  "Shroomish": {
+    "evolutions": [
+      {
+        "into": "Breloom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 23
+          }
+        ],
+        "display_text": "Reach Lv. 23"
+      }
+    ]
+  },
+  "Shuckle": {
+    "evolutions": []
+  },
+  "Shuppet": {
+    "evolutions": [
+      {
+        "into": "Banette",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Sigilyph": {
+    "evolutions": []
+  },
+  "Silcoon": {
+    "evolutions": [
+      {
+        "into": "Beautifly",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 10
+          }
+        ],
+        "display_text": "Reach Lv. 10"
+      }
+    ]
+  },
+  "Silicobra": {
+    "evolutions": [
+      {
+        "into": "Sandaconda",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Silvally": {
+    "evolutions": []
+  },
+  "Simipour": {
+    "evolutions": []
+  },
+  "Simisage": {
+    "evolutions": []
+  },
+  "Simisear": {
+    "evolutions": []
+  },
+  "Sinistea": {
+    "evolutions": [
+      {
+        "into": "Polteageist",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Cracked Pot or Chipped Pot"
+          }
+        ],
+        "display_text": "Use a Cracked Pot or Chipped Pot, depending on authenticity"
+      }
+    ]
+  },
+  "Sirfetch'd": {
+    "evolutions": []
+  },
+  "Sizzlipede": {
+    "evolutions": [
+      {
+        "into": "Centiskorch",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Skarmory": {
+    "evolutions": []
+  },
+  "Skiddo": {
+    "evolutions": [
+      {
+        "into": "Gogoat",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Skiploom": {
+    "evolutions": [
+      {
+        "into": "Jumpluff",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 27
+          }
+        ],
+        "display_text": "Reach Lv. 27"
+      }
+    ]
+  },
+  "Skitty": {
+    "evolutions": [
+      {
+        "into": "Delcatty",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Moon Stone"
+          }
+        ],
+        "display_text": "Use a Moon Stone"
+      }
+    ]
+  },
+  "Skorupi": {
+    "evolutions": [
+      {
+        "into": "Drapion",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Skrelp": {
+    "evolutions": [
+      {
+        "into": "Dragalge",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 48
+          }
+        ],
+        "display_text": "Reach Lv. 48"
+      }
+    ]
+  },
+  "Skuntank": {
+    "evolutions": []
+  },
+  "Skwovet": {
+    "evolutions": [
+      {
+        "into": "Greedent",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Slaking": {
+    "evolutions": []
+  },
+  "Slakoth": {
+    "evolutions": [
+      {
+        "into": "Vigoroth",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Sliggoo": {
+    "evolutions": [
+      {
+        "into": "Goodra",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 50
+          },
+          {
+            "type": "weather",
+            "value": "rain"
+          }
+        ],
+        "display_text": "Reach Lv. 50 while it is raining"
+      }
+    ]
+  },
+  "Slowbro": {
+    "evolutions": []
+  },
+  "Slowking": {
+    "evolutions": []
+  },
+  "Slowpoke": {
+    "evolutions": [
+      {
+        "into": "Slowbro",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      },
+      {
+        "into": "Slowbro",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Galarica Cuff"
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Use a Galarica Cuff as Galarian Slowpoke"
+      },
+      {
+        "into": "Slowking",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "King's Rock"
+          }
+        ],
+        "display_text": "Trade while holding a King's Rock"
+      },
+      {
+        "into": "Slowking",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Galarica Wreath"
+          },
+          {
+            "type": "form",
+            "value": "Galarian"
+          }
+        ],
+        "display_text": "Use a Galarica Wreath as Galarian Slowpoke"
+      }
+    ]
+  },
+  "Slugma": {
+    "evolutions": [
+      {
+        "into": "Magcargo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 38
+          }
+        ],
+        "display_text": "Reach Lv. 38"
+      }
+    ]
+  },
+  "Slurpuff": {
+    "evolutions": []
+  },
+  "Smeargle": {
+    "evolutions": []
+  },
+  "Smoochum": {
+    "evolutions": []
+  },
+  "Sneasel": {
+    "evolutions": [
+      {
+        "into": "Sneasler",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Razor Claw"
+          },
+          {
+            "type": "time",
+            "value": "day"
+          },
+          {
+            "type": "form",
+            "value": "Hisuian"
+          }
+        ],
+        "display_text": "Use a Razor Claw during the day as Hisuian Sneasel"
+      },
+      {
+        "into": "Weavile",
+        "conditions": [
+          {
+            "type": "held_item",
+            "item": "Razor Claw"
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Level up at night while holding a Razor Claw"
+      }
+    ]
+  },
+  "Sneasler": {
+    "evolutions": []
+  },
+  "Snivy": {
+    "evolutions": [
+      {
+        "into": "Servine",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Snom": {
+    "evolutions": [
+      {
+        "into": "Frosmoth",
+        "conditions": [
+          {
+            "type": "friendship"
+          },
+          {
+            "type": "time",
+            "value": "night"
+          }
+        ],
+        "display_text": "Level up with high friendship at night"
+      }
+    ]
+  },
+  "Snorlax": {
+    "evolutions": []
+  },
+  "Snorunt": {
+    "evolutions": [
+      {
+        "into": "Froslass",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Dawn Stone"
+          }
+        ],
+        "display_text": "Use a Dawn Stone"
+      },
+      {
+        "into": "Glalie",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 42
+          }
+        ],
+        "display_text": "Reach Lv. 42"
+      }
+    ]
+  },
+  "Snover": {
+    "evolutions": [
+      {
+        "into": "Abomasnow",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Snubbull": {
+    "evolutions": [
+      {
+        "into": "Granbull",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 23
+          }
+        ],
+        "display_text": "Reach Lv. 23"
+      }
+    ]
+  },
+  "Sobble": {
+    "evolutions": [
+      {
+        "into": "Drizzile",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Solgaleo": {
+    "evolutions": []
+  },
+  "Solosis": {
+    "evolutions": [
+      {
+        "into": "Duosion",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Solrock": {
+    "evolutions": []
+  },
+  "Spearow": {
+    "evolutions": [
+      {
+        "into": "Fearow",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Spectrier": {
+    "evolutions": []
+  },
+  "Spewpa": {
+    "evolutions": [
+      {
+        "into": "Vivillon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 12
+          }
+        ],
+        "display_text": "Reach Lv. 12"
+      }
+    ]
+  },
+  "Spheal": {
+    "evolutions": [
+      {
+        "into": "Sealeo",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Spinarak": {
+    "evolutions": [
+      {
+        "into": "Ariados",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Spinda": {
+    "evolutions": []
+  },
+  "Spiritomb": {
+    "evolutions": []
+  },
+  "Spoink": {
+    "evolutions": [
+      {
+        "into": "Grumpig",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Spritzee": {
+    "evolutions": [
+      {
+        "into": "Aromatisse",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Sachet"
+          }
+        ],
+        "display_text": "Trade while holding a Sachet"
+      }
+    ]
+  },
+  "Squirtle": {
+    "evolutions": [
+      {
+        "into": "Wartortle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Stakataka": {
+    "evolutions": []
+  },
+  "Stantler": {
+    "evolutions": [
+      {
+        "into": "Wyrdeer",
+        "conditions": [
+          {
+            "type": "move_usage",
+            "move": "Psyshield Bash",
+            "style": "Agile",
+            "count": 20
+          }
+        ],
+        "display_text": "Use Psyshield Bash in Agile Style 20 times"
+      }
+    ]
+  },
+  "Staraptor": {
+    "evolutions": []
+  },
+  "Staravia": {
+    "evolutions": [
+      {
+        "into": "Staraptor",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Starly": {
+    "evolutions": [
+      {
+        "into": "Staravia",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 14
+          }
+        ],
+        "display_text": "Reach Lv. 14"
+      }
+    ]
+  },
+  "Starmie": {
+    "evolutions": []
+  },
+  "Staryu": {
+    "evolutions": [
+      {
+        "into": "Starmie",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Water Stone"
+          }
+        ],
+        "display_text": "Use a Water Stone"
+      }
+    ]
+  },
+  "Steelix": {
+    "evolutions": []
+  },
+  "Steenee": {
+    "evolutions": [
+      {
+        "into": "Tsareena",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Stomp"
+          }
+        ],
+        "display_text": "Level up while knowing Stomp"
+      }
+    ]
+  },
+  "Stonjourner": {
+    "evolutions": []
+  },
+  "Stoutland": {
+    "evolutions": []
+  },
+  "Stufful": {
+    "evolutions": [
+      {
+        "into": "Bewear",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 27
+          }
+        ],
+        "display_text": "Reach Lv. 27"
+      }
+    ]
+  },
+  "Stunfisk": {
+    "evolutions": []
+  },
+  "Stunky": {
+    "evolutions": [
+      {
+        "into": "Skuntank",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Sudowoodo": {
+    "evolutions": []
+  },
+  "Suicune": {
+    "evolutions": []
+  },
+  "Sunflora": {
+    "evolutions": []
+  },
+  "Sunkern": {
+    "evolutions": [
+      {
+        "into": "Sunflora",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Sun Stone"
+          }
+        ],
+        "display_text": "Use a Sun Stone"
+      }
+    ]
+  },
+  "Surskit": {
+    "evolutions": [
+      {
+        "into": "Masquerain",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Swablu": {
+    "evolutions": [
+      {
+        "into": "Altaria",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Swadloon": {
+    "evolutions": [
+      {
+        "into": "Leavanny",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Swalot": {
+    "evolutions": []
+  },
+  "Swampert": {
+    "evolutions": []
+  },
+  "Swanna": {
+    "evolutions": []
+  },
+  "Swellow": {
+    "evolutions": []
+  },
+  "Swinub": {
+    "evolutions": [
+      {
+        "into": "Piloswine",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Swirlix": {
+    "evolutions": [
+      {
+        "into": "Slurpuff",
+        "conditions": [
+          {
+            "type": "trade"
+          },
+          {
+            "type": "held_item",
+            "item": "Whipped Dream"
+          }
+        ],
+        "display_text": "Trade while holding a Whipped Dream"
+      }
+    ]
+  },
+  "Swoobat": {
+    "evolutions": []
+  },
+  "Sylveon": {
+    "evolutions": []
+  },
+  "Taillow": {
+    "evolutions": [
+      {
+        "into": "Swellow",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Talonflame": {
+    "evolutions": []
+  },
+  "Tangela": {
+    "evolutions": [
+      {
+        "into": "Tangrowth",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Ancient Power"
+          }
+        ],
+        "display_text": "Level up while knowing Ancient Power"
+      }
+    ]
+  },
+  "Tangrowth": {
+    "evolutions": []
+  },
+  "Tapu Bulu": {
+    "evolutions": []
+  },
+  "Tapu Fini": {
+    "evolutions": []
+  },
+  "Tapu Koko": {
+    "evolutions": []
+  },
+  "Tapu Lele": {
+    "evolutions": []
+  },
+  "Tauros": {
+    "evolutions": []
+  },
+  "Teddiursa": {
+    "evolutions": [
+      {
+        "into": "Ursaring",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Tentacool": {
+    "evolutions": [
+      {
+        "into": "Tentacruel",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Tentacruel": {
+    "evolutions": []
+  },
+  "Tepig": {
+    "evolutions": [
+      {
+        "into": "Pignite",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 17
+          }
+        ],
+        "display_text": "Reach Lv. 17"
+      }
+    ]
+  },
+  "Terrakion": {
+    "evolutions": []
+  },
+  "Thievul": {
+    "evolutions": []
+  },
+  "Throh": {
+    "evolutions": []
+  },
+  "Thundurus": {
+    "evolutions": []
+  },
+  "Thwackey": {
+    "evolutions": [
+      {
+        "into": "Rillaboom",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Timburr": {
+    "evolutions": [
+      {
+        "into": "Gurdurr",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Tirtouga": {
+    "evolutions": [
+      {
+        "into": "Carracosta",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 37
+          }
+        ],
+        "display_text": "Reach Lv. 37"
+      }
+    ]
+  },
+  "Togedemaru": {
+    "evolutions": []
+  },
+  "Togekiss": {
+    "evolutions": []
+  },
+  "Togepi": {
+    "evolutions": [
+      {
+        "into": "Togetic",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Togetic": {
+    "evolutions": [
+      {
+        "into": "Togekiss",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Shiny Stone"
+          }
+        ],
+        "display_text": "Use a Shiny Stone"
+      }
+    ]
+  },
+  "Torchic": {
+    "evolutions": [
+      {
+        "into": "Combusken",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Torkoal": {
+    "evolutions": []
+  },
+  "Tornadus": {
+    "evolutions": []
+  },
+  "Torracat": {
+    "evolutions": [
+      {
+        "into": "Incineroar",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      }
+    ]
+  },
+  "Torterra": {
+    "evolutions": []
+  },
+  "Totodile": {
+    "evolutions": [
+      {
+        "into": "Croconaw",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Toucannon": {
+    "evolutions": []
+  },
+  "Toxapex": {
+    "evolutions": []
+  },
+  "Toxel": {
+    "evolutions": [
+      {
+        "into": "Toxtricity",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      },
+      {
+        "into": "Toxtricity",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          },
+          {
+            "type": "nature"
+          }
+        ],
+        "display_text": "Reach Lv. 30; form depends on Nature"
+      }
+    ]
+  },
+  "Toxicroak": {
+    "evolutions": []
+  },
+  "Toxtricity": {
+    "evolutions": []
+  },
+  "Tranquill": {
+    "evolutions": [
+      {
+        "into": "Unfezant",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 32
+          }
+        ],
+        "display_text": "Reach Lv. 32"
+      }
+    ]
+  },
+  "Trapinch": {
+    "evolutions": [
+      {
+        "into": "Vibrava",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Treecko": {
+    "evolutions": [
+      {
+        "into": "Grovyle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 16
+          }
+        ],
+        "display_text": "Reach Lv. 16"
+      }
+    ]
+  },
+  "Trevenant": {
+    "evolutions": []
+  },
+  "Tropius": {
+    "evolutions": []
+  },
+  "Trubbish": {
+    "evolutions": [
+      {
+        "into": "Garbodor",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Trumbeak": {
+    "evolutions": [
+      {
+        "into": "Toucannon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 28
+          }
+        ],
+        "display_text": "Reach Lv. 28"
+      }
+    ]
+  },
+  "Tsareena": {
+    "evolutions": []
+  },
+  "Turtonator": {
+    "evolutions": []
+  },
+  "Turtwig": {
+    "evolutions": [
+      {
+        "into": "Grotle",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 18
+          }
+        ],
+        "display_text": "Reach Lv. 18"
+      }
+    ]
+  },
+  "Tympole": {
+    "evolutions": [
+      {
+        "into": "Palpitoad",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Tynamo": {
+    "evolutions": [
+      {
+        "into": "Eelektrik",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      }
+    ]
+  },
+  "Type: Null": {
+    "evolutions": [
+      {
+        "into": "Silvally",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Typhlosion": {
+    "evolutions": []
+  },
+  "Tyranitar": {
+    "evolutions": []
+  },
+  "Tyrantrum": {
+    "evolutions": []
+  },
+  "Tyrogue": {
+    "evolutions": [
+      {
+        "into": "Hitmonchan",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          },
+          {
+            "type": "condition",
+            "value": "with DEF higher than ATK"
+          }
+        ],
+        "display_text": "Reach Lv. 20 with DEF higher than ATK"
+      },
+      {
+        "into": "Hitmonlee",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          },
+          {
+            "type": "condition",
+            "value": "with ATK higher than DEF"
+          }
+        ],
+        "display_text": "Reach Lv. 20 with ATK higher than DEF"
+      },
+      {
+        "into": "Hitmontop",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          },
+          {
+            "type": "condition",
+            "value": "with ATK equal to DEF"
+          }
+        ],
+        "display_text": "Reach Lv. 20 with ATK equal to DEF"
+      }
+    ]
+  },
+  "Tyrunt": {
+    "evolutions": [
+      {
+        "into": "Tyrantrum",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          }
+        ],
+        "display_text": "Reach Lv. 39"
+      },
+      {
+        "into": "Tyrantrum",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 39
+          },
+          {
+            "type": "time",
+            "value": "day"
+          }
+        ],
+        "display_text": "Reach Lv. 39 during the day"
+      }
+    ]
+  },
+  "Umbreon": {
+    "evolutions": []
+  },
+  "Unfezant": {
+    "evolutions": []
+  },
+  "Unown": {
+    "evolutions": []
+  },
+  "Ursaluna": {
+    "evolutions": []
+  },
+  "Ursaring": {
+    "evolutions": [
+      {
+        "into": "Ursaluna",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Peat Block"
+          },
+          {
+            "type": "moon_phase",
+            "value": "full"
+          }
+        ],
+        "display_text": "Use a Peat Block during a full moon"
+      }
+    ]
+  },
+  "Urshifu": {
+    "evolutions": []
+  },
+  "Uxie": {
+    "evolutions": []
+  },
+  "Vanillish": {
+    "evolutions": [
+      {
+        "into": "Vanilluxe",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 47
+          }
+        ],
+        "display_text": "Reach Lv. 47"
+      }
+    ]
+  },
+  "Vanillite": {
+    "evolutions": [
+      {
+        "into": "Vanillish",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 35
+          }
+        ],
+        "display_text": "Reach Lv. 35"
+      }
+    ]
+  },
+  "Vanilluxe": {
+    "evolutions": []
+  },
+  "Vaporeon": {
+    "evolutions": []
+  },
+  "Venipede": {
+    "evolutions": [
+      {
+        "into": "Whirlipede",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Venomoth": {
+    "evolutions": []
+  },
+  "Venonat": {
+    "evolutions": [
+      {
+        "into": "Venomoth",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 31
+          }
+        ],
+        "display_text": "Reach Lv. 31"
+      }
+    ]
+  },
+  "Venusaur": {
+    "evolutions": []
+  },
+  "Vespiquen": {
+    "evolutions": []
+  },
+  "Vibrava": {
+    "evolutions": [
+      {
+        "into": "Flygon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 45
+          }
+        ],
+        "display_text": "Reach Lv. 45"
+      }
+    ]
+  },
+  "Victini": {
+    "evolutions": []
+  },
+  "Victreebel": {
+    "evolutions": []
+  },
+  "Vigoroth": {
+    "evolutions": [
+      {
+        "into": "Slaking",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Vikavolt": {
+    "evolutions": []
+  },
+  "Vileplume": {
+    "evolutions": []
+  },
+  "Virizion": {
+    "evolutions": []
+  },
+  "Vivillon": {
+    "evolutions": []
+  },
+  "Volbeat": {
+    "evolutions": []
+  },
+  "Volcanion": {
+    "evolutions": []
+  },
+  "Volcarona": {
+    "evolutions": []
+  },
+  "Voltorb": {
+    "evolutions": [
+      {
+        "into": "Electrode",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Vullaby": {
+    "evolutions": [
+      {
+        "into": "Mandibuzz",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 54
+          }
+        ],
+        "display_text": "Reach Lv. 54"
+      }
+    ]
+  },
+  "Vulpix": {
+    "evolutions": [
+      {
+        "into": "Ninetales",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Fire Stone"
+          }
+        ],
+        "display_text": "Use a Fire Stone"
+      }
+    ]
+  },
+  "Wailmer": {
+    "evolutions": [
+      {
+        "into": "Wailord",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 40
+          }
+        ],
+        "display_text": "Reach Lv. 40"
+      }
+    ]
+  },
+  "Wailord": {
+    "evolutions": []
+  },
+  "Walrein": {
+    "evolutions": []
+  },
+  "Wartortle": {
+    "evolutions": [
+      {
+        "into": "Blastoise",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 36
+          }
+        ],
+        "display_text": "Reach Lv. 36"
+      }
+    ]
+  },
+  "Watchog": {
+    "evolutions": []
+  },
+  "Weavile": {
+    "evolutions": []
+  },
+  "Weedle": {
+    "evolutions": [
+      {
+        "into": "Kakuna",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 7
+          }
+        ],
+        "display_text": "Reach Lv. 7"
+      }
+    ]
+  },
+  "Weepinbell": {
+    "evolutions": [
+      {
+        "into": "Victreebel",
+        "conditions": [
+          {
+            "type": "item",
+            "item": "Leaf Stone"
+          }
+        ],
+        "display_text": "Use a Leaf Stone"
+      }
+    ]
+  },
+  "Weezing": {
+    "evolutions": []
+  },
+  "Whimsicott": {
+    "evolutions": []
+  },
+  "Whirlipede": {
+    "evolutions": [
+      {
+        "into": "Scolipede",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Whiscash": {
+    "evolutions": []
+  },
+  "Whismur": {
+    "evolutions": [
+      {
+        "into": "Loudred",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Wigglytuff": {
+    "evolutions": []
+  },
+  "Wimpod": {
+    "evolutions": [
+      {
+        "into": "Golisopod",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Wingull": {
+    "evolutions": [
+      {
+        "into": "Pelipper",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Wishiwashi": {
+    "evolutions": []
+  },
+  "Wobbuffet": {
+    "evolutions": []
+  },
+  "Woobat": {
+    "evolutions": [
+      {
+        "into": "Swoobat",
+        "conditions": [
+          {
+            "type": "friendship"
+          }
+        ],
+        "display_text": "Level up with high friendship"
+      }
+    ]
+  },
+  "Wooloo": {
+    "evolutions": [
+      {
+        "into": "Dubwool",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 24
+          }
+        ],
+        "display_text": "Reach Lv. 24"
+      }
+    ]
+  },
+  "Wooper": {
+    "evolutions": [
+      {
+        "into": "Quagsire",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Wormadam": {
+    "evolutions": []
+  },
+  "Wurmple": {
+    "evolutions": [
+      {
+        "into": "Cascoon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 7
+          }
+        ],
+        "display_text": "Reach Lv. 7"
+      },
+      {
+        "into": "Silcoon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 7
+          }
+        ],
+        "display_text": "Reach Lv. 7"
+      }
+    ]
+  },
+  "Wynaut": {
+    "evolutions": []
+  },
+  "Wyrdeer": {
+    "evolutions": []
+  },
+  "Xatu": {
+    "evolutions": []
+  },
+  "Xerneas": {
+    "evolutions": []
+  },
+  "Xurkitree": {
+    "evolutions": []
+  },
+  "Yamask": {
+    "evolutions": [
+      {
+        "into": "Cofagrigus",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 34
+          }
+        ],
+        "display_text": "Reach Lv. 34"
+      },
+      {
+        "into": "Runerigus",
+        "conditions": [
+          {
+            "type": "damage_taken",
+            "minimum": 49
+          },
+          {
+            "type": "location",
+            "value": "Dusty Bowl stone arch"
+          }
+        ],
+        "display_text": "Take at least 49 HP of damage without fainting, then pass under the Dusty Bowl stone arch"
+      }
+    ]
+  },
+  "Yamper": {
+    "evolutions": [
+      {
+        "into": "Boltund",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 25
+          }
+        ],
+        "display_text": "Reach Lv. 25"
+      }
+    ]
+  },
+  "Yanma": {
+    "evolutions": [
+      {
+        "into": "Yanmega",
+        "conditions": [
+          {
+            "type": "known_move",
+            "move": "Ancient Power"
+          }
+        ],
+        "display_text": "Level up while knowing Ancient Power"
+      },
+      {
+        "into": "Yanmega",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 33
+          }
+        ],
+        "display_text": "Reach Lv. 33"
+      }
+    ]
+  },
+  "Yanmega": {
+    "evolutions": []
+  },
+  "Yungoos": {
+    "evolutions": [
+      {
+        "into": "Gumshoos",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Yveltal": {
+    "evolutions": []
+  },
+  "Zacian": {
+    "evolutions": []
+  },
+  "Zamazenta": {
+    "evolutions": []
+  },
+  "Zangoose": {
+    "evolutions": []
+  },
+  "Zapdos": {
+    "evolutions": []
+  },
+  "Zarude": {
+    "evolutions": []
+  },
+  "Zarude Dada": {
+    "evolutions": []
+  },
+  "Zebstrika": {
+    "evolutions": []
+  },
+  "Zekrom": {
+    "evolutions": []
+  },
+  "Zeraora": {
+    "evolutions": []
+  },
+  "Zigzagoon": {
+    "evolutions": [
+      {
+        "into": "Linoone",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 20
+          }
+        ],
+        "display_text": "Reach Lv. 20"
+      }
+    ]
+  },
+  "Zoroark": {
+    "evolutions": []
+  },
+  "Zorua": {
+    "evolutions": [
+      {
+        "into": "Zoroark",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 30
+          }
+        ],
+        "display_text": "Reach Lv. 30"
+      }
+    ]
+  },
+  "Zubat": {
+    "evolutions": [
+      {
+        "into": "Golbat",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 22
+          }
+        ],
+        "display_text": "Reach Lv. 22"
+      }
+    ]
+  },
+  "Zweilous": {
+    "evolutions": [
+      {
+        "into": "Hydreigon",
+        "conditions": [
+          {
+            "type": "level",
+            "level": 64
+          }
+        ],
+        "display_text": "Reach Lv. 64"
+      }
+    ]
+  },
+  "Zygarde": {
+    "evolutions": []
+  }
+}

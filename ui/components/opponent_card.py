@@ -50,11 +50,13 @@ class OpponentCard(ft.Container):
         incoming_worst_score: float,
         worst_incoming_move: str,
         incoming_category: str,
+        incoming_move_type: str,
         incoming_type_badge_src: str,
         defensive_effectiveness_label: str,
         defensive_effectiveness_color: str,
         defensive_effectiveness_background: str,
         on_type_badge_click: Callable[[str], None],
+        on_move_type_badge_click: Callable[[str], None],
     ) -> None:
         self.app_page = page
         self.trainer_name = trainer_name
@@ -77,6 +79,7 @@ class OpponentCard(ft.Container):
         self.incoming_worst_score = incoming_worst_score
         self.worst_incoming_move = worst_incoming_move
         self.incoming_category = incoming_category
+        self.incoming_move_type = incoming_move_type
         self.incoming_type_badge_src = (
             incoming_type_badge_src
         )
@@ -92,6 +95,9 @@ class OpponentCard(ft.Container):
         )
         self.on_type_badge_click = (
             on_type_badge_click
+        )
+        self.on_move_type_badge_click = (
+            on_move_type_badge_click
         )
 
         super().__init__(
@@ -498,12 +504,22 @@ class OpponentCard(ft.Container):
                             controls=cast(
                                 list[ft.Control],
                                 [
-                                    ft.Image(
-                                        src=badge_src,
-                                        height=12,
-                                        fit=ft.BoxFit.CONTAIN,
-                                        semantics_label=(
-                                            f"{move_type} type"
+                                    ft.GestureDetector(
+                                        content=ft.Image(
+                                            src=badge_src,
+                                            height=12,
+                                            fit=ft.BoxFit.CONTAIN,
+                                            semantics_label=(
+                                                f"{move_type} move type"
+                                            ),
+                                        ),
+                                        mouse_cursor=ft.MouseCursor.CLICK,
+                                        on_tap=(
+                                            lambda event,
+                                            selected_type=move_type:
+                                            self.on_move_type_badge_click(
+                                                selected_type
+                                            )
                                         ),
                                     ),
                                 ],
@@ -620,12 +636,21 @@ class OpponentCard(ft.Container):
                                         weight=ft.FontWeight.BOLD,
                                         color=TEXT_PRIMARY,
                                     ),
-                                    ft.Image(
-                                        src=self.incoming_type_badge_src,
-                                        height=20,
-                                        fit=ft.BoxFit.CONTAIN,
-                                        semantics_label=(
-                                            "Worst incoming move type"
+                                    ft.GestureDetector(
+                                        content=ft.Image(
+                                            src=self.incoming_type_badge_src,
+                                            height=20,
+                                            fit=ft.BoxFit.CONTAIN,
+                                            semantics_label=(
+                                                f"{self.incoming_move_type} move type"
+                                            ),
+                                        ),
+                                        mouse_cursor=ft.MouseCursor.CLICK,
+                                        on_tap=(
+                                            lambda event:
+                                            self.on_move_type_badge_click(
+                                                self.incoming_move_type
+                                            )
                                         ),
                                     ),
                                 ],

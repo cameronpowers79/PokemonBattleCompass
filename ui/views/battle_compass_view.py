@@ -40,6 +40,7 @@ from ui.theme import (
     TEXT_PRIMARY,
     TEXT_SECONDARY,
 )
+from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import (
     BattleCompassViewModel,
     MatchupViewModel,
@@ -73,11 +74,13 @@ class BattleCompassView:
         self,
         page: ft.Page,
         *,
+        app_state: AppState,
         team_data: list[dict] | None = None,
         selected_starter: str | None = None,
         on_start_new_journey: Callable[[], None] | None = None,
     ) -> None:
         self.page = page
+        self.app_state = app_state
         self.on_start_new_journey = on_start_new_journey
 
         reference_data = load_reference_data()
@@ -120,9 +123,22 @@ class BattleCompassView:
         self.selected_starter = self.journey_starter
         self.pending_starter: str | None = None
 
-        self.selected_trainer = ""
-        self.selected_battle = ""
-        self.selected_opponent_name = ""
+        saved_selection = (
+            self.app_state.battle_compass_selection
+        )
+
+        self.selected_trainer = (
+            saved_selection.get("trainer")
+            or ""
+        )
+        self.selected_battle = (
+            saved_selection.get("battle")
+            or ""
+        )
+        self.selected_opponent_name = (
+            saved_selection.get("opponent")
+            or ""
+        )
 
         self.filtered_opponents: list[dict] = []
         self.battle_opponents: list[dict] = []
@@ -324,10 +340,34 @@ class BattleCompassView:
         ]
 
     def _initialize_selections(self) -> None:
+        """Restore saved selections, falling back when necessary."""
+
         self._refresh_starter_filter()
-        self._select_first_trainer()
-        self._select_first_battle()
-        self._select_first_opponent()
+
+        trainer_names = self._trainer_names()
+
+        if self.selected_trainer not in trainer_names:
+            self._select_first_trainer()
+
+        battle_names = self._battle_names()
+
+        if self.selected_battle not in battle_names:
+            self._select_first_battle()
+
+        self._refresh_battle_opponents()
+
+        opponent_names = [
+            row["Pokemon"]
+            for row in self.battle_opponents
+            if row.get("Pokemon")
+        ]
+
+        if (
+            self.selected_opponent_name
+            not in opponent_names
+        ):
+            self._select_first_opponent()
+
         self._sync_dropdowns()
 
     def _refresh_starter_filter(self) -> None:
@@ -737,7 +777,21 @@ class BattleCompassView:
 
         self.page.update()
 
-    def _handle_trainer_change(
+    async def _save_selection(self) -> None:
+        """Persist the active Battle Compass dropdown chain."""
+
+        await (
+            self.app_state
+            .save_battle_compass_selection(
+                trainer=self.selected_trainer,
+                battle=self.selected_battle,
+                opponent=(
+                    self.selected_opponent_name
+                ),
+            )
+        )
+
+    async def _handle_trainer_change(
         self,
         event: ft.Event[ft.Dropdown],
     ) -> None:
@@ -750,9 +804,12 @@ class BattleCompassView:
         self._select_first_opponent()
         self._sync_dropdowns()
         self._refresh_results()
+
+        await self._save_selection()
+
         self.page.update()
 
-    def _handle_battle_change(
+    async def _handle_battle_change(
         self,
         event: ft.Event[ft.Dropdown],
     ) -> None:
@@ -764,9 +821,12 @@ class BattleCompassView:
         self._select_first_opponent()
         self._sync_dropdowns()
         self._refresh_results()
+
+        await self._save_selection()
+
         self.page.update()
 
-    def _handle_opponent_change(
+    async def _handle_opponent_change(
         self,
         event: ft.Event[ft.Dropdown],
     ) -> None:
@@ -776,6 +836,9 @@ class BattleCompassView:
             )
 
         self._refresh_results()
+
+        await self._save_selection()
+
         self.page.update()
 
     def _refresh_results(self) -> None:
@@ -912,6 +975,12 @@ class BattleCompassView:
                         "Move"
                     ]
                 ),
+                best_move_type=str(
+                    recommendation.best_move.get(
+                        "Type"
+                    )
+                    or "Unknown"
+                ),
                 best_move_type_badge_src=(
                     self._type_badge_asset(
                         recommendation.best_move.get(
@@ -982,6 +1051,9 @@ class BattleCompassView:
                 on_type_badge_click=(
                     self._show_type_matchups
                 ),
+                on_move_type_badge_click=(
+                    self._show_offensive_type_matchups
+                ),
             )
         )
 
@@ -1019,21 +1091,18 @@ class BattleCompassView:
                 )
             )
 
-            move.setdefault(
-                "Move",
-                move_name,
+            move["Move"] = move_name
+            move["Type"] = opponent.get(
+                f"Move{slot}Type"
             )
-            move.setdefault(
-                "Type",
-                opponent.get(
-                    f"Move{slot}Type"
-                ),
+            move["Category"] = opponent.get(
+                f"Move{slot}Category"
             )
-            move.setdefault(
-                "Category",
-                opponent.get(
-                    f"Move{slot}Category"
-                ),
+            move["Power"] = opponent.get(
+                f"Move{slot}Power"
+            )
+            move["Accuracy"] = opponent.get(
+                f"Move{slot}Accuracy"
             )
             move["BadgeSrc"] = (
                 self._type_badge_asset(
@@ -1096,6 +1165,9 @@ class BattleCompassView:
                     "Unknown",
                 )
             ),
+            incoming_move_type=str(
+                worst_move_type or "Unknown"
+            ),
             incoming_type_badge_src=(
                 self._type_badge_asset(
                     worst_move_type
@@ -1131,6 +1203,9 @@ class BattleCompassView:
             on_type_badge_click=(
                 self._show_type_matchups
             ),
+            on_move_type_badge_click=(
+                self._show_offensive_type_matchups
+            ),
         )
 
         other_options = OtherStrongOptions(
@@ -1146,6 +1221,9 @@ class BattleCompassView:
             ],
             on_type_badge_click=(
                 self._show_type_matchups
+            ),
+            on_move_type_badge_click=(
+                self._show_offensive_type_matchups
             ),
         )
 
@@ -1199,6 +1277,19 @@ class BattleCompassView:
             type_chart=self.type_chart,
         )
 
+    def _show_offensive_type_matchups(
+        self,
+        move_type: str,
+    ) -> None:
+        """Show offensive single-type matchup information."""
+
+        show_type_matchup_dialog(
+            page=self.page,
+            pokemon_type=move_type,
+            type_chart=self.type_chart,
+            mode="offensive",
+        )
+
     async def _scroll_to_full_analysis(
         self,
         event: ft.Event[ft.Button],
@@ -1240,6 +1331,10 @@ class BattleCompassView:
             matchup_ratio=matchup.ratio,
             best_move=(
                 matchup.best_move["Move"]
+            ),
+            best_move_type=str(
+                matchup.best_move.get("Type")
+                or "Unknown"
             ),
             best_move_type_badge_src=(
                 self._type_badge_asset(

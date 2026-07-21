@@ -86,6 +86,11 @@ def create_journey(
         "schema_version": JOURNEY_SCHEMA_VERSION,
         "starter": starter,
         "team": deepcopy(team or []),
+        "battle_compass_selection": {
+            "trainer": None,
+            "battle": None,
+            "opponent": None,
+        },
         "created_at": timestamp,
         "updated_at": timestamp,
     }
@@ -135,6 +140,43 @@ def _validate_journey(
             "Stored Journey contains an invalid "
             "team record."
         )
+    
+    battle_compass_selection = journey.get(
+    "battle_compass_selection"
+    )
+
+    if battle_compass_selection is not None:
+        if not isinstance(
+            battle_compass_selection,
+            dict,
+        ):
+            return (
+                "Stored Battle Compass selection "
+                "is invalid."
+            )
+
+        for field_name in (
+            "trainer",
+            "battle",
+            "opponent",
+        ):
+            field_value = (
+                battle_compass_selection.get(
+                    field_name
+                )
+            )
+
+            if (
+                field_value is not None
+                and not isinstance(
+                    field_value,
+                    str,
+                )
+            ):
+                return (
+                    "Stored Battle Compass "
+                    f"{field_name} is invalid."
+                )
 
     created_at = journey.get("created_at")
     updated_at = journey.get("updated_at")

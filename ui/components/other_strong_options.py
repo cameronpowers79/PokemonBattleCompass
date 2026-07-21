@@ -44,6 +44,7 @@ class StrongOptionData:
     matchup_label: str
     matchup_ratio: float
     best_move: str
+    best_move_type: str
     best_move_type_badge_src: str
     notes: list[StrongOptionNote]
 
@@ -56,10 +57,14 @@ class OtherStrongOptions(ft.Container):
         *,
         options: list[StrongOptionData],
         on_type_badge_click: Callable[[str], None],
+        on_move_type_badge_click: Callable[[str], None],
     ) -> None:
         self.options = options
         self.on_type_badge_click = (
             on_type_badge_click
+        )
+        self.on_move_type_badge_click = (
+            on_move_type_badge_click
         )
 
         super().__init__(
@@ -296,15 +301,25 @@ class OtherStrongOptions(ft.Container):
                                     weight=ft.FontWeight.BOLD,
                                     color=TEXT_PRIMARY,
                                 ),
-                                ft.Image(
-                                    src=(
-                                        option
-                                        .best_move_type_badge_src
+                                ft.GestureDetector(
+                                    content=ft.Image(
+                                        src=(
+                                            option
+                                            .best_move_type_badge_src
+                                        ),
+                                        height=20,
+                                        fit=ft.BoxFit.CONTAIN,
+                                        semantics_label=(
+                                            f"{option.best_move_type} move type"
+                                        ),
                                     ),
-                                    height=20,
-                                    fit=ft.BoxFit.CONTAIN,
-                                    semantics_label=(
-                                        f"{option.best_move} type"
+                                    mouse_cursor=ft.MouseCursor.CLICK,
+                                    on_tap=(
+                                        lambda event,
+                                        selected_type=option.best_move_type:
+                                        self.on_move_type_badge_click(
+                                            selected_type
+                                        )
                                     ),
                                 ),
                             ],

@@ -1,4 +1,4 @@
-import streamlit as st
+'''import streamlit as st
 
 
 def apply_app_styles():
@@ -865,4 +865,4 @@ def apply_app_styles():
 </style>
         """,
         unsafe_allow_html=True,
-    )
+    )'''

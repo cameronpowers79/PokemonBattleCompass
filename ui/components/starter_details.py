@@ -50,6 +50,36 @@ STAT_LABELS = {
     "SPE": "Speed",
 }
 
+NATURE_EFFECTS: dict[str, tuple[str | None, str | None]] = {
+    "Hardy": (None, None),
+    "Lonely": ("ATK", "DEF"),
+    "Brave": ("ATK", "SPE"),
+    "Adamant": ("ATK", "SPA"),
+    "Naughty": ("ATK", "SPD"),
+    "Bold": ("DEF", "ATK"),
+    "Docile": (None, None),
+    "Relaxed": ("DEF", "SPE"),
+    "Impish": ("DEF", "SPA"),
+    "Lax": ("DEF", "SPD"),
+    "Timid": ("SPE", "ATK"),
+    "Hasty": ("SPE", "DEF"),
+    "Serious": (None, None),
+    "Jolly": ("SPE", "SPA"),
+    "Naive": ("SPE", "SPD"),
+    "Modest": ("SPA", "ATK"),
+    "Mild": ("SPA", "DEF"),
+    "Quiet": ("SPA", "SPE"),
+    "Bashful": (None, None),
+    "Rash": ("SPA", "SPD"),
+    "Calm": ("SPD", "ATK"),
+    "Gentle": ("SPD", "DEF"),
+    "Sassy": ("SPD", "SPE"),
+    "Careful": ("SPD", "SPA"),
+    "Quirky": (None, None),
+}
+
+NATURE_OPTIONS = list(NATURE_EFFECTS)
+
 
 class StarterDetails(ft.Container):
     """Starter information and stat-entry screen."""
@@ -99,6 +129,17 @@ class StarterDetails(ft.Container):
                     key="Female",
                     text="Female",
                 ),
+            ],
+        )
+
+        self.nature_dropdown = ft.Dropdown(
+            label="Nature",
+            options=[
+                ft.DropdownOption(
+                    key=nature,
+                    text=nature,
+                )
+                for nature in NATURE_OPTIONS
             ],
         )
 
@@ -189,7 +230,7 @@ class StarterDetails(ft.Container):
                             f"{self.starter_name}, great! We already "
                             "know the basics about every new "
                             f"{self.starter_name}. Please provide their "
-                            "gender and current stats below to help the "
+                            "gender, Nature, and current stats below to help the "
                             "Battle Compass get ready for your Journey."
                         ),
                         size=16,
@@ -329,8 +370,8 @@ class StarterDetails(ft.Container):
                         ),
                         ft.Text(
                             (
-                                "Enter the gender and six current stats "
-                                "shown on your Pokémon summary screen."
+                                "Enter the gender, Nature, and six current "
+                                "stats shown on your Pokémon summary screen."
                             ),
                             size=14,
                             color=TEXT_SECONDARY,
@@ -346,6 +387,13 @@ class StarterDetails(ft.Container):
                             color=TEXT_PRIMARY,
                         ),
                         self.gender_dropdown,
+                        ft.Text(
+                            "Nature",
+                            size=16,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        self.nature_dropdown,
                         ft.Text(
                             "Current Stats",
                             size=16,
@@ -603,6 +651,7 @@ class StarterDetails(ft.Container):
         del event
 
         gender = self.gender_dropdown.value
+        nature = self.nature_dropdown.value
 
         if gender not in {
             "Male",
@@ -610,6 +659,12 @@ class StarterDetails(ft.Container):
         }:
             self._show_error(
                 "Please select your starter’s gender."
+            )
+            return
+
+        if nature not in NATURE_EFFECTS:
+            self._show_error(
+                "Please select your starter’s Nature."
             )
             return
 
@@ -645,6 +700,7 @@ class StarterDetails(ft.Container):
         starter_record = {
             "Pokemon": self.starter_name,
             "Gender": gender,
+            "Nature": nature,
             "Type1": self.starter_defaults["Type1"],
             "Type2": None,
             "Level": 5,

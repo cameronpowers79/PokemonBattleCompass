@@ -51,6 +51,7 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 EDITABLE_COLUMNS = [
     "Pokemon",
     "Gender",
+    "Nature",
     "Type1",
     "Type2",
     "Level",
@@ -101,6 +102,36 @@ GENDER_OPTIONS = [
     "Female",
     "Genderless",
 ]
+
+NATURE_EFFECTS: dict[str, tuple[str | None, str | None]] = {
+    "Hardy": (None, None),
+    "Lonely": ("ATK", "DEF"),
+    "Brave": ("ATK", "SPE"),
+    "Adamant": ("ATK", "SPA"),
+    "Naughty": ("ATK", "SPD"),
+    "Bold": ("DEF", "ATK"),
+    "Docile": (None, None),
+    "Relaxed": ("DEF", "SPE"),
+    "Impish": ("DEF", "SPA"),
+    "Lax": ("DEF", "SPD"),
+    "Timid": ("SPE", "ATK"),
+    "Hasty": ("SPE", "DEF"),
+    "Serious": (None, None),
+    "Jolly": ("SPE", "SPA"),
+    "Naive": ("SPE", "SPD"),
+    "Modest": ("SPA", "ATK"),
+    "Mild": ("SPA", "DEF"),
+    "Quiet": ("SPA", "SPE"),
+    "Bashful": (None, None),
+    "Rash": ("SPA", "SPD"),
+    "Calm": ("SPD", "ATK"),
+    "Gentle": ("SPD", "DEF"),
+    "Sassy": ("SPD", "SPE"),
+    "Careful": ("SPD", "SPA"),
+    "Quirky": (None, None),
+}
+
+NATURE_OPTIONS = list(NATURE_EFFECTS)
 
 MOVE_TAG_DESCRIPTIONS = {
     "Pivot": (
@@ -239,6 +270,13 @@ class MyTeamView:
         self.type_chart = cast(
             dict,
             app_state.reference_data["type_chart"],
+        )
+        self.evolutions = cast(
+            dict[str, dict],
+            app_state.reference_data.get(
+                "evolutions",
+                {},
+            ),
         )
         self.ability_rules = (
             app_state.reference_data["ability_rules"]
@@ -512,6 +550,7 @@ class MyTeamView:
         return {
             "Pokemon": "",
             "Gender": "",
+            "Nature": "",
             "Type1": "",
             "Type2": "",
             "Level": 1,
@@ -1206,6 +1245,31 @@ class MyTeamView:
                     )
                 ),
             )
+        elif column == "Nature":
+            control = ft.Dropdown(
+                value=(
+                    str(value)
+                    if value in NATURE_EFFECTS
+                    else None
+                ),
+                options=[
+                    ft.DropdownOption(
+                        key=nature,
+                        text=nature,
+                    )
+                    for nature in NATURE_OPTIONS
+                ],
+                width=125,
+                text_size=13,
+                dense=True,
+                on_select=lambda event, row=row_index, field=column: (
+                    self._handle_dropdown_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+            )
         elif column in {"Type1", "Type2"}:
             control = ft.AutoComplete(
                 value=(
@@ -1336,7 +1400,7 @@ class MyTeamView:
         if column == "Pokemon":
             return 125
 
-        if column in {"Type1", "Type2"}:
+        if column in {"Type1", "Type2", "Nature"}:
             return 100
 
         if column in NUMERIC_COLUMNS:
@@ -1662,6 +1726,9 @@ class MyTeamView:
                                         size=18,
                                         color=TEXT_SECONDARY,
                                     ),
+                                    self._build_evolution_summary(
+                                        pokemon
+                                    ),
                                 ],
                             ),
                             spacing=10,
@@ -1693,12 +1760,42 @@ class MyTeamView:
                             color=BORDER_DEFAULT,
                             height=1,
                         ),
-                        ft.Text(
-                            "Stats",
-                            size=19,
-                            weight=ft.FontWeight.BOLD,
-                            color=TEXT_PRIMARY,
-                        ),
+                        ft.ResponsiveRow(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Container(
+                                        content=ft.Text(
+                                            "Stats",
+                                            size=19,
+                                            weight=ft.FontWeight.BOLD,
+                                            color=TEXT_PRIMARY,
+                                        ),
+                                        col={
+                                            "xs": 12,
+                                            "sm": 4,
+                                        },
+                                        alignment=ft.Alignment.CENTER_LEFT,
+                                    ),
+                                    ft.Container(
+                                        content=self._build_nature_summary(
+                                            pokemon
+                                        ),
+                                        col={
+                                            "xs": 12,
+                                            "sm": 8,
+                                        },
+                                        alignment=ft.Alignment.CENTER_RIGHT,
+                                    ),
+                                ],
+                            ),
+                            columns=12,
+                            spacing=12,
+                            run_spacing=8,
+                            vertical_alignment=(
+                                ft.CrossAxisAlignment.CENTER
+                            ),
+),
                         self._build_stats(pokemon),
                         ft.Column(
                             controls=cast(
@@ -1730,6 +1827,113 @@ class MyTeamView:
             padding=20,
             bgcolor=SURFACE_RAISED,
             border_radius=16,
+        )
+
+    def _build_evolution_summary(
+        self,
+        pokemon: dict,
+    ) -> ft.Control:
+        """Build concise next-evolution guidance for one Pokémon."""
+
+        pokemon_name = str(
+            pokemon.get("Pokemon") or ""
+        ).strip()
+
+        if not pokemon_name:
+            return ft.Container()
+
+        evolution_record = self.evolutions.get(
+            pokemon_name
+        )
+
+        if not isinstance(evolution_record, dict):
+            return ft.Container()
+
+        evolution_options = evolution_record.get(
+            "evolutions"
+        )
+
+        if not isinstance(evolution_options, list):
+            return ft.Container()
+
+        if not evolution_options:
+            return ft.Container(
+                content=ft.Text(
+                    "Final evolutionary stage",
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_MUTED,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+                margin=ft.Margin.only(top=4),
+            )
+
+        heading = (
+            "Evolution Options"
+            if len(evolution_options) > 1
+            else "Next Evolution"
+        )
+
+        option_controls = cast(
+            list[ft.Control],
+            [],
+        )
+
+        for evolution in evolution_options:
+            if not isinstance(evolution, dict):
+                continue
+
+            evolved_name = str(
+                evolution.get("into") or ""
+            ).strip()
+
+            requirement = str(
+                evolution.get("display_text") or ""
+            ).strip()
+
+            if not evolved_name or not requirement:
+                continue
+
+            option_controls.append(
+                ft.Text(
+                    f"{evolved_name} — {requirement}",
+                    size=14,
+                    color=TEXT_SECONDARY,
+                    text_align=ft.TextAlign.CENTER,
+                )
+            )
+
+        if not option_controls:
+            return ft.Container()
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            heading,
+                            size=13,
+                            weight=ft.FontWeight.BOLD,
+                            color=PRIMARY_BLUE,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        *option_controls,
+                    ],
+                ),
+                spacing=3,
+                horizontal_alignment=(
+                    ft.CrossAxisAlignment.CENTER
+                ),
+                tight=True,
+            ),
+            margin=ft.Margin.only(top=4),
+            padding=ft.Padding.symmetric(
+                horizontal=12,
+                vertical=8,
+            ),
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border_radius=10,
         )
 
     def _build_type_badges(
@@ -1793,10 +1997,108 @@ class MyTeamView:
             alignment=ft.MainAxisAlignment.CENTER,
         )
 
+    @staticmethod
+    def _build_nature_summary(
+        pokemon: dict,
+    ) -> ft.Control:
+        """Build the Nature and its affected-stat summary."""
+
+        nature = str(
+            pokemon.get("Nature") or ""
+        ).strip()
+
+        if nature not in NATURE_EFFECTS:
+            return ft.Text(
+                "Nature: —",
+                size=14,
+                color=TEXT_MUTED,
+            )
+
+        boosted_stat, lowered_stat = (
+            NATURE_EFFECTS[nature]
+        )
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    f"Nature: {nature},",
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_SECONDARY,
+                ),
+            ],
+        )
+
+        if boosted_stat is None or lowered_stat is None:
+            controls.append(
+                ft.Text(
+                    "Neutral",
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_MUTED,
+                )
+            )
+        else:
+            controls.extend(
+                cast(
+                    list[ft.Control],
+                    [
+                        ft.Icon(
+                            ft.Icons.ARROW_UPWARD_ROUNDED,
+                            size=17,
+                            color="#60A5FA",
+                        ),
+                        ft.Text(
+                            boosted_stat,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color="#60A5FA",
+                        ),
+                        ft.Text(
+                            "/",
+                            size=14,
+                            color=TEXT_MUTED,
+                        ),
+                        ft.Icon(
+                            ft.Icons.ARROW_DOWNWARD_ROUNDED,
+                            size=17,
+                            color="#F87171",
+                        ),
+                        ft.Text(
+                            lowered_stat,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            color="#F87171",
+                        ),
+                    ],
+                )
+            )
+
+        return ft.Row(
+            controls=controls,
+            spacing=4,
+            tight=True,
+            wrap=True,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
     def _build_stats(
         self,
         pokemon: dict,
     ) -> ft.Control:
+        nature = str(
+            pokemon.get("Nature") or ""
+        ).strip()
+
+        boosted_stat: str | None = None
+        lowered_stat: str | None = None
+
+        if nature in NATURE_EFFECTS:
+            boosted_stat, lowered_stat = (
+                NATURE_EFFECTS[nature]
+            )
+
         return ft.Column(
             controls=cast(
                 list[ft.Control],
@@ -1805,6 +2107,12 @@ class MyTeamView:
                         stat_name,
                         self._numeric_value(
                             pokemon.get(stat_name)
+                        ),
+                        boosted=(
+                            stat_name == boosted_stat
+                        ),
+                        lowered=(
+                            stat_name == lowered_stat
                         ),
                     )
                     for stat_name in STAT_COLUMNS
@@ -1837,12 +2145,55 @@ class MyTeamView:
     def _build_stat_row(
         stat_name: str,
         stat_value: int,
+        *,
+        boosted: bool = False,
+        lowered: bool = False,
     ) -> ft.Control:
         progress_value = min(
             1.0,
             max(
                 0.0,
                 stat_value / 300,
+            ),
+        )
+
+        if boosted:
+            value_color = "#60A5FA"
+        elif lowered:
+            value_color = "#F87171"
+        else:
+            value_color = TEXT_PRIMARY
+
+        return ft.Row(
+            controls=cast(
+                list[ft.Control],
+                [
+                    ft.Text(
+                        stat_name,
+                        width=44,
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_SECONDARY,
+                    ),
+                    ft.ProgressBar(
+                        value=progress_value,
+                        expand=True,
+                        height=10,
+                        color=STAT_COLORS[stat_name],
+                        bgcolor="#22FFFFFF",
+                        border_radius=6,
+                    ),
+                    ft.Text(
+                        str(stat_value),
+                        width=40,
+                        text_align=ft.TextAlign.RIGHT,
+                        weight=ft.FontWeight.BOLD,
+                        color=value_color,
+                    ),
+                ],
+            ),
+            spacing=10,
+            vertical_alignment=(
+                ft.CrossAxisAlignment.CENTER
             ),
         )
 
@@ -1957,14 +2308,28 @@ class MyTeamView:
 
             if badge_path.exists():
                 card_controls.append(
-                    ft.Image(
-                        src=self._asset_src(
-                            badge_path
+                    ft.GestureDetector(
+                        content=ft.Image(
+                            src=self._asset_src(
+                                badge_path
+                            ),
+                            height=18,
+                            fit=ft.BoxFit.CONTAIN,
+                            semantics_label=(
+                                f"{move_type} type"
+                            ),
                         ),
-                        height=18,
-                        fit=ft.BoxFit.CONTAIN,
-                        semantics_label=(
-                            f"{move_type} type"
+                        mouse_cursor=ft.MouseCursor.CLICK,
+                        tooltip=(
+                            f"View {move_type} offensive matchups"
+                        ),
+                        on_tap=(
+                            lambda event,
+                            selected_type=move_type:
+                            self._show_offensive_type_matchups(
+                                event,
+                                selected_type,
+                            )
                         ),
                     )
                 )
@@ -3096,6 +3461,22 @@ class MyTeamView:
             page=self.page,
             pokemon_type=pokemon_type,
             type_chart=self.type_chart,
+        )
+
+    def _show_offensive_type_matchups(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        move_type: str,
+    ) -> None:
+        """Show offensive single-type matchup information."""
+
+        del event
+
+        show_type_matchup_dialog(
+            page=self.page,
+            pokemon_type=move_type,
+            type_chart=self.type_chart,
+            mode="offensive",
         )
 
     def _show_ability_details(

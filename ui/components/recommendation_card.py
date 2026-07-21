@@ -42,6 +42,7 @@ class RecommendationCard(ft.Container):
         artwork_src: str,
         type_badges: list[tuple[str, str]],
         best_move: str,
+        best_move_type: str,
         best_move_type_badge_src: str,
         effectiveness_label: str,
         effectiveness_color: str,
@@ -60,6 +61,7 @@ class RecommendationCard(ft.Container):
             Callable[[ft.Event[ft.Button]], Any]
         ),
         on_type_badge_click: Callable[[str], None],
+        on_move_type_badge_click: Callable[[str], None],
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -67,6 +69,7 @@ class RecommendationCard(ft.Container):
         self.type_badges = type_badges
 
         self.best_move = best_move
+        self.best_move_type = best_move_type
         self.best_move_type_badge_src = best_move_type_badge_src
         self.effectiveness_label = effectiveness_label
         self.effectiveness_color = effectiveness_color
@@ -93,6 +96,9 @@ class RecommendationCard(ft.Container):
         )
         self.on_type_badge_click = (
             on_type_badge_click
+        )
+        self.on_move_type_badge_click = (
+            on_move_type_badge_click
         )
 
         super().__init__(
@@ -362,12 +368,21 @@ class RecommendationCard(ft.Container):
                                     weight=ft.FontWeight.BOLD,
                                     color=TEXT_PRIMARY,
                                 ),
-                                ft.Image(
-                                    src=self.best_move_type_badge_src,
-                                    height=22,
-                                    fit=ft.BoxFit.CONTAIN,
-                                    semantics_label=(
-                                        f"{self.best_move} type"
+                                ft.GestureDetector(
+                                    content=ft.Image(
+                                        src=self.best_move_type_badge_src,
+                                        height=22,
+                                        fit=ft.BoxFit.CONTAIN,
+                                        semantics_label=(
+                                            f"{self.best_move_type} move type"
+                                        ),
+                                    ),
+                                    mouse_cursor=ft.MouseCursor.CLICK,
+                                    on_tap=(
+                                        lambda event:
+                                        self.on_move_type_badge_click(
+                                            self.best_move_type
+                                        )
                                     ),
                                 ),
                             ],
