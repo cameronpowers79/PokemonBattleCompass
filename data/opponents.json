@@ -4876,7 +4876,7 @@
     "Move3Accuracy": 100,
     "Move4": "Taunt",
     "Move4Type": "Dark",
-    "Move4Category": null,
+    "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
