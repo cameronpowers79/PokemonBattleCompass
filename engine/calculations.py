@@ -104,32 +104,18 @@ def calculate_move_score(
         defender.get("Type2"),
     ]
 
-    type_effectiveness = get_type_multiplier(
+    effectiveness = get_type_multiplier(
         move["Type"],
         defender_types,
     )
-
     ability_multiplier = get_ability_multiplier(
         defender,
         move,
         ability_rules,
-        type_effectiveness,
+        effectiveness,
         attacker,
     )
-
-    item_immunity_multiplier = (
-        get_item_immunity_multiplier(
-            defender,
-            move,
-            items,
-        )
-    )
-
-    effectiveness = (
-        type_effectiveness
-        * ability_multiplier
-        * item_immunity_multiplier
-    )
+    effectiveness *= ability_multiplier
 
     stab = get_stab_multiplier(
         move["Type"],
@@ -138,16 +124,11 @@ def calculate_move_score(
         ability_rules,
     )
 
-    item_damage_multiplier = (
-        get_item_damage_multiplier(
-            attacker,
-            defender,
-            move,
-            items,
-            type_effectiveness,
-        )
+    item_multiplier = get_item_multiplier(
+        attacker.get("Held Item"),
+        move,
+        items,
     )
-
     power_multiplier = get_move_power_multiplier(
         attacker,
         move,
@@ -158,13 +139,11 @@ def calculate_move_score(
         attacker,
         move,
     )
-
     attack_stat *= get_attack_stat_multiplier(
         attacker,
         move,
         ability_rules,
     )
-
     attack_stat *= get_attack_reduction_multiplier(
         attacker,
         defender,
@@ -172,29 +151,28 @@ def calculate_move_score(
         ability_rules,
     )
 
-    attack_stat *= get_item_attack_stat_multiplier(
-        attacker,
-        move,
-        items,
-    )
-
     defense_stat = get_relevant_defense_stat(
         defender,
         move,
     )
 
-    defense_stat *= get_item_defense_stat_multiplier(
-        defender,
-        move,
-        items,
-    )
+    hits = move.get("Hits", 1)
+
+    try:
+        hits = float(hits)
+    except (TypeError, ValueError):
+        hits = 1
+
+    if hits <= 0:
+        hits = 1
 
     return (
         move["Power"]
+        * hits
         * power_multiplier
         * effectiveness
         * stab
-        * item_damage_multiplier
+        * item_multiplier
         * attack_stat
         / defense_stat
     )
