@@ -1,3 +1,5 @@
+'''calculations.py'''
+
 from engine.mechanics import (
     get_stab_multiplier,
     get_type_multiplier,
@@ -175,6 +177,139 @@ def calculate_move_score(
         * item_multiplier
         * attack_stat
         / defense_stat
+    )
+
+
+def calculate_damage_range(
+    attacker,
+    defender,
+    move,
+    items=None,
+    ability_rules=None,
+):
+    """Estimate minimum and average damage using the in-game formula shape.
+
+    The estimate uses the same modeled stats and multipliers as Move Score,
+    then applies the Gen VIII random damage range. It intentionally assumes
+    the defender's currently modeled, unboosted defensive stat.
+    """
+
+    if move["Category"] == "Status" or not move["Power"]:
+        return None, None
+
+    if items is None:
+        items = []
+
+    if ability_rules is None:
+        ability_rules = []
+
+    attacker_types = [
+        attacker.get("Type1"),
+        attacker.get("Type2"),
+    ]
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
+
+    effectiveness = get_type_multiplier(
+        move["Type"],
+        defender_types,
+    )
+    effectiveness *= get_ability_multiplier(
+        defender,
+        move,
+        ability_rules,
+        effectiveness,
+        attacker,
+    )
+
+    if effectiveness == 0:
+        return 0, 0
+
+    stab = get_stab_multiplier(
+        move["Type"],
+        attacker_types,
+        attacker,
+        ability_rules,
+    )
+    item_multiplier = get_item_multiplier(
+        attacker.get("Held Item"),
+        move,
+        items,
+    )
+    power_multiplier = get_move_power_multiplier(
+        attacker,
+        move,
+        ability_rules,
+    )
+
+    attack_stat = get_relevant_attack_stat(
+        attacker,
+        move,
+    )
+    attack_stat *= get_attack_stat_multiplier(
+        attacker,
+        move,
+        ability_rules,
+    )
+    attack_stat *= get_attack_reduction_multiplier(
+        attacker,
+        defender,
+        move,
+        ability_rules,
+    )
+
+    defense_stat = max(
+        get_relevant_defense_stat(defender, move),
+        1,
+    )
+    level = max(int(attacker.get("Level") or 1), 1)
+
+    effective_power = max(
+        float(move["Power"]) * power_multiplier,
+        1,
+    )
+
+    # Pokémon's damage formula floors repeatedly. Keeping those floors is
+    # especially important at low levels, where one point is a large swing.
+    level_factor = (2 * level) // 5 + 2
+    scaled_damage = int(
+        level_factor
+        * effective_power
+        * attack_stat
+        / defense_stat
+    )
+    base_damage = scaled_damage // 50 + 2
+
+    fixed_modifier = (
+        effectiveness
+        * stab
+        * item_multiplier
+    )
+
+    hits = move.get("Hits", 1)
+
+    try:
+        hits = float(hits)
+    except (TypeError, ValueError):
+        hits = 1.0
+
+    if hits <= 0:
+        hits = 1.0
+
+    minimum_per_hit = max(
+        int(base_damage * fixed_modifier * 0.85),
+        1,
+    )
+    average_per_hit = max(
+        int(base_damage * fixed_modifier * 0.925),
+        1,
+    )
+
+    return (
+        minimum_per_hit * hits,
+        average_per_hit * hits,
     )
 
 
@@ -693,6 +828,12 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
     opponent_hp = get_stat(opponent, "HP")
     opponent_spe = get_stat(opponent, "SPE")
+    opponent_is_dmax = dmax_note != ""
+    offensive_target_hp = (
+        opponent_hp * 2
+        if opponent_is_dmax
+        else opponent_hp
+    )
 
     for pokemon in team:
         best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
@@ -765,6 +906,17 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         best_hp_ratio = best_score / opponent_hp if opponent_hp else None
         incoming_hp_ratio = worst_score / pokemon["HP"] if pokemon.get("HP") else None
 
+        (
+            offensive_min_damage,
+            offensive_average_damage,
+        ) = calculate_damage_range(
+            pokemon,
+            opponent,
+            best_move,
+            items,
+            ability_rules,
+        )
+
         effective_team_speed = (
             pokemon.get("SPE", 0)
             * get_item_speed_multiplier(
@@ -809,6 +961,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             dmax_note,
             items,
             attacker_moves,
+            offensive_min_damage,
+            offensive_average_damage,
+            offensive_target_hp,
         )
 
         incoming_type_multiplier = get_type_multiplier(
@@ -891,6 +1046,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 dmax_note,
                 items,
                 attacker_moves,
+                offensive_min_damage,
+                offensive_average_damage,
+                offensive_target_hp,
             )
         })
 

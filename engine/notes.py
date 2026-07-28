@@ -626,20 +626,36 @@ def get_status_boosted_move_notes(attacker, team_status_effects):
 # ---------- OHKO notes ----------
 
 def build_offensive_ohko_note(
-    best_hp_ratio,
+    minimum_damage,
+    average_damage,
+    target_hp,
     team_moves_second,
     likely_survives_first_hit,
     has_incoming_damage,
-    is_dmax
 ):
-    if best_hp_ratio is None:
+    """Build an OHKO note from a modeled damage range.
+
+    "Likely" means the minimum modeled roll reaches the target's modeled HP.
+    "Possible" means the average modeled roll reaches the target's modeled HP,
+    but the minimum roll does not.
+
+    The language remains intentionally non-promissory because the Compass
+    cannot know every live battle-state choice, including defensive boosts.
+    """
+
+    if (
+        minimum_damage is None
+        or average_damage is None
+        or target_hp is None
+        or target_hp <= 0
+    ):
         return None
 
-    likely_threshold = 6.5 if is_dmax else 3
-    possible_threshold = 4.5 if is_dmax else 2
-
-    meets_likely_ohko = best_hp_ratio >= likely_threshold
-    meets_possible_ohko = best_hp_ratio >= possible_threshold
+    meets_likely_ohko = minimum_damage >= target_hp
+    meets_possible_ohko = (
+        not meets_likely_ohko
+        and average_damage >= target_hp
+    )
 
     if (
         team_moves_second
@@ -701,6 +717,9 @@ def build_battle_notes(
     dmax_note="",
     items=None,
     attacker_moves=None,
+    offensive_min_damage=None,
+    offensive_average_damage=None,
+    offensive_target_hp=None,
 ):
     if ability_rules is None:
         ability_rules = []
@@ -721,14 +740,13 @@ def build_battle_notes(
 
     is_immune = worst_score == 0
     has_incoming_damage = worst_score > 0
-    is_dmax = dmax_note != ""
-
     offensive_ohko_note = build_offensive_ohko_note(
-        best_hp_ratio,
+        offensive_min_damage,
+        offensive_average_damage,
+        offensive_target_hp,
         team_moves_second,
         likely_survives_first_hit,
         has_incoming_damage,
-        is_dmax
     )
 
     incoming_ohko_note = build_incoming_ohko_note(

@@ -605,10 +605,16 @@ class RecommendationCard(ft.Container):
                         weight=ft.FontWeight.BOLD,
                         color=active_color,
                     ),
-                    ft.Text(
-                        f"Ratio {self.matchup_ratio:.2f}",
-                        size=13,
-                        color=TEXT_MUTED,
+                    *(
+                        []
+                        if self.matchup_label == "Immune"
+                        else [
+                            ft.Text(
+                                f"Ratio {self.matchup_ratio:.2f}",
+                                size=13,
+                                color=TEXT_MUTED,
+                            ),
+                        ]
                     ),
                 ],
             ),
