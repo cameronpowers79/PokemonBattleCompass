@@ -1,4 +1,4 @@
-import streamlit as st
+'''import streamlit as st
 
 from ui.constants import NOTE_ICONS
 from ui.rendering import (
@@ -379,4 +379,4 @@ def render_defensive_effectiveness(multiplier):
     elif multiplier < 4:
         st.warning(f"🔺 Super Effective ({multiplier:g}×)")
     else:
-        st.error(f"🔥 4× Weakness ({multiplier:g}×)")
+        st.error(f"🔥 4× Weakness ({multiplier:g}×)")'''

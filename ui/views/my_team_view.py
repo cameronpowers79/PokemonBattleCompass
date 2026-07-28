@@ -6,7 +6,16 @@ Saved changes update the active persistent Journey.
 """
 
 from __future__ import annotations
+
+import asyncio
+from importlib.metadata import PackageNotFoundError, version
+
 from ui.viewmodels.app_state import AppState
+from ui.storage.journey_storage import (
+    journey_export_filename,
+    parse_journey_export,
+    serialize_journey_export,
+)
 from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
@@ -47,6 +56,26 @@ from ui.theme import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
+
+AUTOCOMPLETE_DEBOUNCE_SECONDS = 0.45
+
+# My Team action-button colors.
+ADD_BUTTON_ACTIVE = "#4DA56A"
+ADD_BUTTON_DISABLED = "#315F42"
+
+MANAGE_BUTTON_ACTIVE = "#73508A"
+MANAGE_BUTTON_DISABLED = "#4B355A"
+
+SAVE_BUTTON_ACTIVE = PRIMARY_BLUE
+SAVE_BUTTON_DISABLED = "#355E99"
+
+EXPORT_BUTTON_ACTIVE = "#3C93B6"
+EXPORT_BUTTON_DISABLED = "#295E73"
+
+LOAD_BUTTON_ACTIVE = "#9A7A39"
+LOAD_BUTTON_DISABLED = "#655126"
+
+BUTTON_DISABLED_TEXT = "#B8C1CF"
 
 EDITABLE_COLUMNS = [
     "Pokemon",
@@ -249,6 +278,15 @@ ACTIVATION_CONDITION_DESCRIPTIONS = {
 }
 
 
+def _app_version() -> str:
+    """Return the installed application version."""
+
+    try:
+        return version("pokemon-battle-compass")
+    except PackageNotFoundError:
+        return "0.1.1"
+
+
 class MyTeamView:
     """Bulk team editor with a selected-Pokémon detail panel."""
 
@@ -260,6 +298,9 @@ class MyTeamView:
         moves_data: list[dict],
         on_team_updated: (
             Callable[[list[dict]], None] | None
+        ) = None,
+        on_journey_loaded: (
+            Callable[[], None] | None
         ) = None,
     ) -> None:
         self.page = page
@@ -379,6 +420,11 @@ class MyTeamView:
             for ability_name in self.ability_options
         ]
         self.on_team_updated = on_team_updated
+        self.on_journey_loaded = on_journey_loaded
+        self.pending_import_journey: dict | None = None
+
+        self.file_picker = ft.FilePicker()
+        self.page.services.append(self.file_picker)
 
         self.move_lookup = {
             move["Move"]: move
@@ -401,6 +447,10 @@ class MyTeamView:
             tuple[int, str],
             ft.TextField | ft.Dropdown | ft.AutoComplete,
         ] = {}
+        self._autocomplete_edit_versions: dict[
+            tuple[int, str],
+            int,
+        ] = {}
 
         self.selected_index = 0
         self.party_management_selected_index: int | None = None
@@ -417,6 +467,35 @@ class MyTeamView:
         )
 
         self.detail_host = ft.Container()
+        self.detail_notice = ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Unsaved team changes",
+                            size=15,
+                            weight=ft.FontWeight.BOLD,
+                            color="#FFE5A3",
+                        ),
+                        ft.Text(
+                            (
+                                "Pokémon Details and Battle Compass will "
+                                "update after you save."
+                            ),
+                            size=13,
+                            color=TEXT_SECONDARY,
+                        ),
+                    ],
+                ),
+                spacing=3,
+                tight=True,
+            ),
+            padding=12,
+            bgcolor="#3B3017",
+            border_radius=10,
+            visible=False,
+        )
         self.save_status = ft.Text(
             "",
             size=14,
@@ -426,15 +505,25 @@ class MyTeamView:
         self.add_pokemon_button = ft.Button(
             content="Add Pokémon",
             icon=ft.Icons.ADD_ROUNDED,
-            disabled=(
-                len(self.working_team) >= 6
-            ),
+            disabled=len(self.working_team) >= 6,
             on_click=self._add_pokemon,
             style=ft.ButtonStyle(
-                bgcolor=SUCCESS_SOFT,
-                color=TEXT_PRIMARY,
-                icon_color=TEXT_PRIMARY,
-                elevation=1,
+                bgcolor={
+                    ft.ControlState.DEFAULT: ADD_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: ADD_BUTTON_DISABLED,
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
             ),
         )
 
@@ -444,10 +533,22 @@ class MyTeamView:
             disabled=not self.working_team,
             on_click=self._show_party_management_dialog,
             style=ft.ButtonStyle(
-                bgcolor=SURFACE_RAISED,
-                color=TEXT_PRIMARY,
-                icon_color=TEXT_SECONDARY,
-                elevation=1,
+                bgcolor={
+                    ft.ControlState.DEFAULT: MANAGE_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: MANAGE_BUTTON_DISABLED,
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
             ),
         )
 
@@ -458,16 +559,66 @@ class MyTeamView:
             on_click=self._save_team,
             style=ft.ButtonStyle(
                 bgcolor={
-                    ft.ControlState.DEFAULT: PRIMARY_BLUE,
-                    ft.ControlState.DISABLED: "#334155",
+                    ft.ControlState.DEFAULT: SAVE_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: SAVE_BUTTON_DISABLED,
                 },
                 color={
                     ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: TEXT_MUTED,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
                 },
                 icon_color={
                     ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: TEXT_MUTED,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
+            ),
+        )
+
+        self.export_button = ft.Button(
+            content="Export Journey",
+            icon=ft.Icons.DOWNLOAD_OUTLINED,
+            disabled=False,
+            on_click=self._export_journey,
+            style=ft.ButtonStyle(
+                bgcolor={
+                    ft.ControlState.DEFAULT: EXPORT_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: EXPORT_BUTTON_DISABLED,
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
+            ),
+        )
+
+        self.load_button = ft.Button(
+            content="Load Journey",
+            icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+            disabled=False,
+            on_click=self._select_journey_file,
+            style=ft.ButtonStyle(
+                bgcolor={
+                    ft.ControlState.DEFAULT: LOAD_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: LOAD_BUTTON_DISABLED,
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
                 },
                 elevation={
                     ft.ControlState.DEFAULT: 1,
@@ -496,6 +647,7 @@ class MyTeamView:
             self.saved_team_snapshot
         )
         self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
 
         self.table_host.content = (
             self._build_editor_table()
@@ -504,6 +656,8 @@ class MyTeamView:
         self.save_status.value = ""
         self.save_status.color = SUCCESS
         self.save_button.disabled = True
+        self.export_button.disabled = False
+        self.detail_notice.visible = False
 
         self._refresh_selector()
         self._refresh_detail()
@@ -526,18 +680,13 @@ class MyTeamView:
             self._blank_pokemon_record()
         )
 
-        self.selected_index = (
-            len(self.working_team) - 1
-        )
-
         self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
 
         self.table_host.content = (
             self._build_editor_table()
         )
 
-        self._refresh_selector()
-        self._refresh_detail()
         self._update_dirty_state()
         self._sync_team_management_buttons()
 
@@ -970,20 +1119,14 @@ class MyTeamView:
             selected_index
         )
 
-        self.selected_index = min(
-            self.selected_index,
-            len(self.working_team) - 1,
-        )
-
         self.party_management_selected_index = None
         self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
 
         self.table_host.content = (
             self._build_editor_table()
         )
 
-        self._refresh_selector()
-        self._refresh_detail()
         self._update_dirty_state()
         self._sync_team_management_buttons()
 
@@ -1015,14 +1158,19 @@ class MyTeamView:
         self.page.update()
 
     def _update_dirty_state(self) -> None:
-        """Synchronize save controls with the current dirty state."""
+        """Synchronize controls with the current dirty state."""
 
         is_dirty = self.has_unsaved_changes
 
         self.save_button.disabled = not is_dirty
+        self.export_button.disabled = is_dirty
+        self.detail_notice.visible = is_dirty
 
         if is_dirty:
-            self.save_status.value = ""
+            self.save_status.value = "Unsaved changes"
+            self.save_status.color = "#FFE5A3"
+        else:
+            self.save_status.value = "Team is up to date."
             self.save_status.color = SUCCESS
 
     def build(self) -> ft.Control:
@@ -1060,6 +1208,8 @@ class MyTeamView:
                                     self.add_pokemon_button,
                                     self.manage_party_button,
                                     self.save_button,
+                                    self.export_button,
+                                    self.load_button,
                                     self.save_status,
                                 ],
                             ),
@@ -1105,6 +1255,7 @@ class MyTeamView:
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
                         ),
+                        self.detail_notice,
                         self.detail_selector,
                         self.detail_host,
                     ],
@@ -1213,7 +1364,17 @@ class MyTeamView:
                     lambda event,
                     row=row_index,
                     field=column:
-                    self._handle_pokemon_change(
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -1290,7 +1451,17 @@ class MyTeamView:
                     lambda event,
                     row=row_index,
                     field=column:
-                    self._handle_type_change(
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -1311,7 +1482,17 @@ class MyTeamView:
                     lambda event,
                     row=row_index,
                     field=column:
-                    self._handle_ability_change(
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -1332,7 +1513,17 @@ class MyTeamView:
                     lambda event,
                     row=row_index,
                     field=column:
-                    self._handle_item_change(
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -1349,8 +1540,21 @@ class MyTeamView:
                 suggestions=self.move_suggestions,
                 suggestions_max_height=240,
                 width=165,
-                on_change=lambda event, row=row_index, field=column: (
-                    self._handle_move_change(
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -1380,8 +1584,15 @@ class MyTeamView:
                     if column in NUMERIC_COLUMNS
                     else ft.KeyboardType.TEXT
                 ),
-                on_change=lambda event, row=row_index, field=column: (
-                    self._handle_text_change(
+                on_blur=lambda event, row=row_index, field=column: (
+                    self._handle_text_commit(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_submit=lambda event, row=row_index, field=column: (
+                    self._handle_text_commit(
                         event,
                         row,
                         field,
@@ -1414,12 +1625,14 @@ class MyTeamView:
 
         return 120
 
-    def _handle_text_change(
+    def _handle_text_commit(
         self,
         event: ft.Event[ft.TextField],
         row_index: int,
         column: str,
     ) -> None:
+        """Commit a text field after Enter or loss of focus."""
+
         raw_value = event.control.value or ""
 
         if column in NUMERIC_COLUMNS:
@@ -1435,40 +1648,100 @@ class MyTeamView:
         else:
             value = raw_value.strip()
 
-        self.working_team[row_index][column] = value
-        self._update_dirty_state()
+        self._commit_editor_value(
+            row_index=row_index,
+            column=column,
+            value=value,
+        )
 
-        if column == "Pokemon":
-            self._refresh_selector()
-
-        if row_index == self.selected_index:
-            self._refresh_detail()
-
-        self.page.update()
-
-    def _handle_pokemon_change(
+    def _handle_autocomplete_change(
         self,
         event: ft.Event[ft.AutoComplete],
         row_index: int,
         column: str,
     ) -> None:
-        """Update an edited Pokémon name."""
+        """Schedule a commit after the user pauses typing."""
 
-        pokemon_name = (
+        key = (row_index, column)
+        version = self._autocomplete_edit_versions.get(
+            key,
+            0,
+        ) + 1
+        self._autocomplete_edit_versions[key] = version
+
+        pending_value = (
             event.control.value or ""
         ).strip()
 
-        self.working_team[
-            row_index
-        ][column] = pokemon_name
+        self.page.run_task(
+            self._commit_autocomplete_after_delay,
+            row_index,
+            column,
+            pending_value,
+            version,
+            event.control,
+        )
 
-        self._update_dirty_state()
-        self._refresh_selector()
+    def _handle_autocomplete_select(
+        self,
+        event: ft.AutoCompleteSelectEvent,
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Commit a selected suggestion immediately."""
 
-        if row_index == self.selected_index:
-            self._refresh_detail()
+        key = (row_index, column)
+        self._autocomplete_edit_versions[key] = (
+            self._autocomplete_edit_versions.get(
+                key,
+                0,
+            ) + 1
+        )
 
-        self.page.update()
+        selected_value = (
+            event.control.value or ""
+        ).strip()
+
+        self._commit_editor_value(
+            row_index=row_index,
+            column=column,
+            value=selected_value,
+        )
+
+    async def _commit_autocomplete_after_delay(
+        self,
+        row_index: int,
+        column: str,
+        pending_value: str,
+        version: int,
+        control: ft.AutoComplete,
+    ) -> None:
+        """Commit only the latest edit after a brief typing pause."""
+
+        await asyncio.sleep(
+            AUTOCOMPLETE_DEBOUNCE_SECONDS
+        )
+
+        key = (row_index, column)
+
+        if self._autocomplete_edit_versions.get(key) != version:
+            return
+
+        if self.editor_controls.get(key) is not control:
+            return
+
+        current_value = (
+            control.value or ""
+        ).strip()
+
+        if current_value != pending_value:
+            return
+
+        self._commit_editor_value(
+            row_index=row_index,
+            column=column,
+            value=pending_value,
+        )
 
     def _handle_dropdown_change(
         self,
@@ -1476,107 +1749,49 @@ class MyTeamView:
         row_index: int,
         column: str,
     ) -> None:
-        self.working_team[row_index][column] = (
-            event.control.value
+        """Commit a fixed dropdown selection immediately."""
+
+        value = event.control.value
+
+        self._commit_editor_value(
+            row_index=row_index,
+            column=column,
+            value=value,
         )
-        self._update_dirty_state()
 
-        if row_index == self.selected_index:
-            self._refresh_detail()
-
-        self.page.update()
-
-    def _handle_move_change(
+    def _commit_editor_value(
         self,
-        event: ft.Event[ft.AutoComplete],
+        *,
         row_index: int,
         column: str,
+        value: object,
     ) -> None:
-        move_name = (
-            event.control.value or ""
-        ).strip()
+        """Apply one finalized edit and refresh only when it changed."""
 
-        self.working_team[row_index][column] = move_name
-        self._update_dirty_state()
+        if (
+            row_index < 0
+            or row_index >= len(self.working_team)
+        ):
+            return
 
-        if row_index == self.selected_index:
-            self._refresh_detail()
+        previous_value = self.working_team[
+            row_index
+        ].get(column)
 
-        self.page.update()
-
-    def _handle_ability_change(
-        self,
-        event: ft.Event[ft.AutoComplete],
-        row_index: int,
-        column: str,
-    ) -> None:
-        """Update an edited Ability value."""
-
-        ability_name = (
-            event.control.value or ""
-        ).strip()
+        if previous_value == value:
+            return
 
         self.working_team[
             row_index
-        ][column] = ability_name
+        ][column] = value
 
         self._update_dirty_state()
-
-        if row_index == self.selected_index:
-            self._refresh_detail()
-
-        self.page.update()
-
-    def _handle_item_change(
-        self,
-        event: ft.Event[ft.AutoComplete],
-        row_index: int,
-        column: str,
-    ) -> None:
-        """Update an edited held-item value."""
-
-        item_name = (
-        event.control.value or ""
-        ).strip()
-
-        self.working_team[
-            row_index
-        ][column] = item_name
-
-        self._update_dirty_state()
-
-        if row_index == self.selected_index:
-            self._refresh_detail()
-
-        self.page.update()
-
-    def _handle_type_change(
-        self,
-        event: ft.Event[ft.AutoComplete],
-        row_index: int,
-        column: str,
-    ) -> None:
-        """Update an edited Pokémon type."""
-
-        pokemon_type = (
-            event.control.value or ""
-        ).strip()
-
-        self.working_team[
-            row_index
-        ][column] = pokemon_type
-
-        self._update_dirty_state()
-
-        if row_index == self.selected_index:
-            self._refresh_detail()
-
         self.page.update()
 
     def _refresh_selector(self) -> None:
         pokemon_names = [
             str(pokemon.get("Pokemon") or f"Team Slot {index + 1}")
-            for index, pokemon in enumerate(self.working_team)
+            for index, pokemon in enumerate(self.saved_team_snapshot)
         ]
 
         self.detail_selector.options = [
@@ -1587,7 +1802,7 @@ class MyTeamView:
             for index, pokemon_name in enumerate(pokemon_names)
         ]
 
-        if self.selected_index >= len(self.working_team):
+        if self.selected_index >= len(self.saved_team_snapshot):
             self.selected_index = 0
 
         self.detail_selector.value = str(self.selected_index)
@@ -1608,14 +1823,17 @@ class MyTeamView:
         self.page.update()
 
     def _refresh_detail(self) -> None:
-        if not self.working_team:
+        if not self.saved_team_snapshot:
             self.detail_host.content = ft.Text(
                 "No Pokémon loaded.",
                 color=TEXT_SECONDARY,
             )
             return
 
-        pokemon = self.working_team[self.selected_index]
+        if self.selected_index >= len(self.saved_team_snapshot):
+            self.selected_index = 0
+
+        pokemon = self.saved_team_snapshot[self.selected_index]
         self.detail_host.content = self._build_detail_card(
             pokemon
         )
@@ -1996,7 +2214,6 @@ class MyTeamView:
             wrap=True,
             alignment=ft.MainAxisAlignment.CENTER,
         )
-
     @staticmethod
     def _build_nature_summary(
         pokemon: dict,
@@ -2047,13 +2264,13 @@ class MyTeamView:
                         ft.Icon(
                             ft.Icons.ARROW_UPWARD_ROUNDED,
                             size=17,
-                            color="#60A5FA",
+                            color="#F87171",
                         ),
                         ft.Text(
                             boosted_stat,
                             size=14,
                             weight=ft.FontWeight.BOLD,
-                            color="#60A5FA",
+                            color="#F87171",
                         ),
                         ft.Text(
                             "/",
@@ -2063,13 +2280,13 @@ class MyTeamView:
                         ft.Icon(
                             ft.Icons.ARROW_DOWNWARD_ROUNDED,
                             size=17,
-                            color="#F87171",
+                            color="#60A5FA",
                         ),
                         ft.Text(
                             lowered_stat,
                             size=14,
                             weight=ft.FontWeight.BOLD,
-                            color="#F87171",
+                            color="#60A5FA",
                         ),
                     ],
                 )
@@ -2158,9 +2375,9 @@ class MyTeamView:
         )
 
         if boosted:
-            value_color = "#60A5FA"
-        elif lowered:
             value_color = "#F87171"
+        elif lowered:
+            value_color = "#60A5FA"
         else:
             value_color = TEXT_PRIMARY
 
@@ -2374,6 +2591,22 @@ class MyTeamView:
                 "xs": 12,
                 "sm": 6,
             },
+        )
+
+    def _show_offensive_type_matchups(
+        self,
+        event: ft.TapEvent[ft.GestureDetector],
+        move_type: str,
+    ) -> None:
+        """Show offensive single-type matchup information."""
+
+        del event
+
+        show_type_matchup_dialog(
+            page=self.page,
+            pokemon_type=move_type,
+            type_chart=self.type_chart,
+            mode="offensive",
         )
 
     def _show_move_details(
@@ -3463,22 +3696,6 @@ class MyTeamView:
             type_chart=self.type_chart,
         )
 
-    def _show_offensive_type_matchups(
-        self,
-        event: ft.TapEvent[ft.GestureDetector],
-        move_type: str,
-    ) -> None:
-        """Show offensive single-type matchup information."""
-
-        del event
-
-        show_type_matchup_dialog(
-            page=self.page,
-            pokemon_type=move_type,
-            type_chart=self.type_chart,
-            mode="offensive",
-        )
-
     def _show_ability_details(
         self,
         event: ft.TapEvent[ft.GestureDetector],
@@ -3674,6 +3891,308 @@ class MyTeamView:
         event: ft.Event[ft.Button],
     ) -> None:
         """Close the held-item recommendation dialog."""
+
+        del event
+        self.page.pop_dialog()
+        self.page.update()
+
+    async def _export_journey(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Export the currently saved Journey to JSON."""
+
+        del event
+
+        if self.has_unsaved_changes:
+            self.save_status.value = (
+                "Save or discard your changes before exporting."
+            )
+            self.save_status.color = "#FFE5A3"
+            self.page.update()
+            return
+
+        try:
+            journey = self.app_state.get_journey_export_copy()
+            serialized_export = serialize_journey_export(
+                journey,
+                app_version=_app_version(),
+            )
+
+            selected_path = await self.file_picker.save_file(
+                dialog_title="Export Journey",
+                file_name=journey_export_filename(),
+                allowed_extensions=["json"],
+            )
+
+            if not selected_path:
+                return
+
+            export_path = Path(selected_path)
+
+            if export_path.suffix.lower() != ".json":
+                export_path = export_path.with_suffix(".json")
+
+            export_path.write_text(
+                serialized_export,
+                encoding="utf-8",
+            )
+        except (OSError, RuntimeError, ValueError) as error:
+            self.save_status.value = (
+                f"Journey could not be exported: {error}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
+        self.save_status.value = "Journey exported successfully."
+        self.save_status.color = SUCCESS
+        self.page.update()
+
+    async def _select_journey_file(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Select and validate a Journey export."""
+
+        del event
+
+        try:
+            selected_files = await self.file_picker.pick_files(
+                dialog_title="Load Journey",
+                allow_multiple=False,
+                allowed_extensions=["json"],
+            )
+
+            if not selected_files:
+                return
+
+            selected_file = selected_files[0]
+
+            if not selected_file.path:
+                self._show_load_error(
+                    "The selected file could not be accessed."
+                )
+                return
+
+            serialized_export = Path(selected_file.path).read_text(
+                encoding="utf-8"
+            )
+        except (OSError, UnicodeError) as error:
+            self._show_load_error(
+                f"The selected Journey file could not be read: {error}"
+            )
+            return
+
+        import_result = parse_journey_export(serialized_export)
+
+        if (
+            import_result.status != "valid"
+            or import_result.journey is None
+        ):
+            self._show_load_error(
+                import_result.error
+                or "The selected Journey file is invalid."
+            )
+            return
+
+        self.pending_import_journey = import_result.journey
+        self._show_load_confirmation(import_result.journey)
+
+    def _show_load_confirmation(self, journey: dict) -> None:
+        """Confirm replacement of the active Journey."""
+
+        starter = str(journey.get("starter") or "Unknown")
+        team = journey.get("team")
+        team_count = len(team) if isinstance(team, list) else 0
+
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    (
+                        "Loading this Journey will overwrite the "
+                        "Journey currently saved in Pokémon Battle "
+                        "Compass."
+                    ),
+                    size=15,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Container(
+                    content=ft.Column(
+                        controls=cast(
+                            list[ft.Control],
+                            [
+                                ft.Text(
+                                    f"Starter: {starter}",
+                                    weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY,
+                                ),
+                                ft.Text(
+                                    f"Active team: {team_count} Pokémon",
+                                    color=TEXT_SECONDARY,
+                                ),
+                            ],
+                        ),
+                        spacing=6,
+                        tight=True,
+                    ),
+                    padding=12,
+                    bgcolor=SURFACE_RAISED,
+                    border_radius=10,
+                ),
+            ],
+        )
+
+        if self.has_unsaved_changes:
+            controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        (
+                            "You also have unsaved My Team changes. "
+                            "Those edits will be discarded."
+                        ),
+                        size=14,
+                        color="#FFE5A3",
+                    ),
+                    padding=12,
+                    bgcolor="#3B3017",
+                    border_radius=10,
+                )
+            )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Load this Journey?",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=controls,
+                        spacing=14,
+                        tight=True,
+                    ),
+                    width=520,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._cancel_journey_load,
+                        ),
+                        ft.Button(
+                            content="Load Journey",
+                            icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+                            bgcolor=PRIMARY_BLUE,
+                            color=TEXT_PRIMARY,
+                            icon_color=TEXT_PRIMARY,
+                            on_click=self._confirm_journey_load,
+                        ),
+                    ],
+                ),
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _cancel_journey_load(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Cancel a pending Journey import."""
+
+        del event
+        self.pending_import_journey = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    async def _confirm_journey_load(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Persist an imported Journey and rebuild the app."""
+
+        del event
+        imported_journey = self.pending_import_journey
+
+        if imported_journey is None:
+            self.page.pop_dialog()
+            self._show_load_error(
+                "No valid Journey is waiting to be loaded."
+            )
+            return
+
+        self.page.pop_dialog()
+
+        try:
+            load_succeeded = await self.app_state.import_journey(
+                imported_journey
+            )
+        except (RuntimeError, ValueError) as error:
+            self.pending_import_journey = None
+            self._show_load_error(
+                f"The Journey could not be loaded: {error}"
+            )
+            return
+
+        if not load_succeeded:
+            self.pending_import_journey = None
+            self._show_load_error(
+                "The Journey could not be saved."
+            )
+            return
+
+        self.pending_import_journey = None
+
+        if self.on_journey_loaded is not None:
+            self.on_journey_loaded()
+            return
+
+        self._show_load_error(
+            (
+                "The Journey was loaded, but the application could "
+                "not refresh automatically. Restart Pokémon Battle "
+                "Compass to continue."
+            )
+        )
+
+    def _show_load_error(self, message: str) -> None:
+        """Show a non-fatal Journey load error."""
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Journey could not be loaded",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Text(
+                    (
+                        f"{message}\n\n"
+                        "Your current Journey has not been changed."
+                    ),
+                    size=15,
+                    color=TEXT_SECONDARY,
+                ),
+                actions=[
+                    ft.Button(
+                        content="OK",
+                        on_click=self._close_load_error,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _close_load_error(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the Journey load error dialog."""
 
         del event
         self.page.pop_dialog()
@@ -3880,6 +4399,8 @@ class MyTeamView:
             self.app_state.team_data
         )
         self.save_button.disabled = True
+        self.export_button.disabled = False
+        self.detail_notice.visible = False
 
         if self.on_team_updated:
             self.on_team_updated(

@@ -270,6 +270,51 @@ class AppState:
 
         return True
 
+    def get_journey_export_copy(self) -> dict:
+        """
+        Return an isolated copy of the active saved Journey.
+
+        Unsaved My Team editor changes are intentionally excluded.
+        """
+
+        if self.journey is None:
+            raise RuntimeError(
+                "No Journey is currently available to export."
+            )
+
+        return deepcopy(self.journey)
+
+    async def import_journey(
+        self,
+        journey: dict,
+    ) -> bool:
+        """
+        Persist and activate a complete imported Journey.
+
+        The currently active Journey remains unchanged unless the imported
+        Journey is saved successfully.
+        """
+
+        imported_journey = deepcopy(journey)
+
+        save_succeeded = await save_journey(
+            self.page,
+            imported_journey,
+        )
+
+        if not save_succeeded:
+            return False
+
+        self.journey = imported_journey
+        self.startup_state = (
+            "ready"
+            if self.has_team_member
+            else "needs_onboarding"
+        )
+        self.load_error = None
+
+        return True
+
     async def begin_journey(
         self,
         starter: str,

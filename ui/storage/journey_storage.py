@@ -2,7 +2,8 @@
 Persistent Journey storage.
 
 Stores player-owned Journey data in Flet SharedPreferences rather than
-writing into bundled application reference files.
+writing into bundled application reference files. Also provides portable,
+versioned Journey export and import validation.
 """
 
 from __future__ import annotations
@@ -19,6 +20,9 @@ import flet as ft
 JOURNEY_STORAGE_KEY = "pokemon_battle_compass.journey.v1"
 JOURNEY_SCHEMA_VERSION = 1
 
+JOURNEY_EXPORT_FORMAT = "pokemon-battle-compass-journey"
+JOURNEY_EXPORT_FORMAT_VERSION = 1
+
 VALID_STARTERS = {
     "Grookey",
     "Scorbunny",
@@ -31,12 +35,26 @@ JourneyLoadStatus = Literal[
     "invalid",
 ]
 
+JourneyImportStatus = Literal[
+    "valid",
+    "invalid",
+]
+
 
 @dataclass(frozen=True)
 class JourneyLoadResult:
     """Result of attempting to load the locally saved Journey."""
 
     status: JourneyLoadStatus
+    journey: dict | None = None
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class JourneyImportResult:
+    """Result of validating a portable Journey export."""
+
+    status: JourneyImportStatus
     journey: dict | None = None
     error: str | None = None
 
@@ -140,9 +158,9 @@ def _validate_journey(
             "Stored Journey contains an invalid "
             "team record."
         )
-    
+
     battle_compass_selection = journey.get(
-    "battle_compass_selection"
+        "battle_compass_selection"
     )
 
     if battle_compass_selection is not None:
@@ -160,10 +178,8 @@ def _validate_journey(
             "battle",
             "opponent",
         ):
-            field_value = (
-                battle_compass_selection.get(
-                    field_name
-                )
+            field_value = battle_compass_selection.get(
+                field_name
             )
 
             if (
@@ -192,6 +208,143 @@ def _validate_journey(
         )
 
     return None
+
+
+def create_journey_export(
+    journey: dict,
+    *,
+    app_version: str,
+) -> dict:
+    """
+    Create a portable export containing the complete Journey.
+
+    Unknown Journey fields are preserved so future player-owned features,
+    including My Journey, are automatically included.
+    """
+
+    journey_to_export = deepcopy(journey)
+
+    validation_error = _validate_journey(
+        journey_to_export
+    )
+
+    if validation_error:
+        raise ValueError(validation_error)
+
+    return {
+        "file_format": JOURNEY_EXPORT_FORMAT,
+        "file_format_version": (
+            JOURNEY_EXPORT_FORMAT_VERSION
+        ),
+        "app_version": app_version,
+        "exported_at": _utc_timestamp(),
+        "journey": journey_to_export,
+    }
+
+
+def serialize_journey_export(
+    journey: dict,
+    *,
+    app_version: str,
+) -> str:
+    """Serialize a Journey as formatted portable JSON."""
+
+    export_record = create_journey_export(
+        journey,
+        app_version=app_version,
+    )
+
+    return json.dumps(
+        export_record,
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
+def parse_journey_export(
+    serialized_export: str,
+) -> JourneyImportResult:
+    """
+    Parse and validate a portable Journey export.
+
+    This function never modifies local storage or active application state.
+    """
+
+    try:
+        export_record = json.loads(
+            serialized_export
+        )
+    except json.JSONDecodeError as error:
+        return JourneyImportResult(
+            status="invalid",
+            error=(
+                "The selected file does not contain "
+                f"valid JSON: {error}"
+            ),
+        )
+
+    if not isinstance(export_record, dict):
+        return JourneyImportResult(
+            status="invalid",
+            error=(
+                "The selected file is not a valid "
+                "Pokémon Battle Compass Journey."
+            ),
+        )
+
+    if (
+        export_record.get("file_format")
+        != JOURNEY_EXPORT_FORMAT
+    ):
+        return JourneyImportResult(
+            status="invalid",
+            error=(
+                "The selected file is not a Pokémon "
+                "Battle Compass Journey export."
+            ),
+        )
+
+    if (
+        export_record.get("file_format_version")
+               != JOURNEY_EXPORT_FORMAT_VERSION
+    ):
+        return JourneyImportResult(
+            status="invalid",
+            error=(
+                "This Journey export uses an unsupported "
+                "file-format version."
+            ),
+        )
+
+    journey = export_record.get("journey")
+
+    validation_error = _validate_journey(
+        journey
+    )
+
+    if validation_error:
+        return JourneyImportResult(
+            status="invalid",
+            error=validation_error,
+        )
+
+    return JourneyImportResult(
+        status="valid",
+        journey=deepcopy(journey),
+    )
+
+
+def journey_export_filename() -> str:
+    """Return the default filename for a Journey export."""
+
+    date_stamp = datetime.now().strftime(
+        "%Y-%m-%d"
+    )
+
+    return (
+        "Pokemon Battle Compass Journey "
+        f"- {date_stamp}.json"
+    )
 
 
 async def load_journey(

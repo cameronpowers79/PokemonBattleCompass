@@ -2176,8 +2176,8 @@
     "Move3Power": 80,
     "Move3Accuracy": 100,
     "Move4": "Yawn",
-    "Move4Type": null,
-    "Move4Category": null,
+    "Move4Type": "Normal",
+    "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Drought",
@@ -4403,7 +4403,7 @@
     "Move4Category": null,
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Run Away",
     "AbilityNotes": "Species default"
   },
   {
@@ -4562,7 +4562,7 @@
     "Move4Category": null,
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Run Away",
     "AbilityNotes": "Species default"
   },
   {
@@ -4760,7 +4760,7 @@
     "Move4Category": null,
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Run Away",
     "AbilityNotes": "Species default"
   },
   {
@@ -4958,7 +4958,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Run Away",
     "AbilityNotes": "Species default"
   },
   {
@@ -5393,7 +5393,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Steadfast",
     "AbilityNotes": "Species default"
   },
   {
@@ -5945,7 +5945,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Steadfast",
     "AbilityNotes": "Species default"
   },
   {
@@ -6260,7 +6260,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Fluffy",
+    "Ability": "Steadfast",
     "AbilityNotes": "Species default"
   },
   {
