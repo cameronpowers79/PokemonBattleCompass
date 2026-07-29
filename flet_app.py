@@ -18,6 +18,7 @@ from ui.viewmodels.battle_compass_vm import load_reference_data
 from ui.views.about_view import AboutView
 from ui.views.battle_compass_view import BattleCompassView
 from ui.views.my_team_view import MyTeamView
+from ui.views.my_journey_view import MyJourneyView
 from ui.views.onboarding_view import OnboardingView
 
 
@@ -73,7 +74,7 @@ async def main(page: ft.Page) -> None:
         show_onboarding(show_welcome=False)
 
     def close_journey_loaded_dialog(
-                event: ft.Event[ft.Button],
+        event: ft.Event[ft.Button],
     ) -> None:
         """Close the successful Journey-load confirmation."""
 
@@ -91,26 +92,25 @@ async def main(page: ft.Page) -> None:
 
         show_main_application()
 
-        page.show_dialog(
-            ft.AlertDialog(
-                modal=True,
-                title=ft.Text(
-                    "Journey Loaded!",
-                    weight=ft.FontWeight.BOLD,
-                ),
-                content=ft.Text(
-                    "Your saved Journey has been restored."
-                ),
-                actions=[
-                    ft.Button(
-                        content="OK",
-                        icon=ft.Icons.CHECK_ROUNDED,
-                        on_click=close_journey_loaded_dialog,
-                    ),
-                ],
-                actions_alignment=ft.MainAxisAlignment.END,
-            )
+        journey_loaded_dialog = ft.AlertDialog()
+        journey_loaded_dialog.modal = True
+        journey_loaded_dialog.title = ft.Text(
+            "Journey Loaded!",
+            weight=ft.FontWeight.BOLD,
         )
+        journey_loaded_dialog.content = ft.Text(
+            "Your saved Journey has been restored."
+        )
+        journey_loaded_dialog.actions = [
+            ft.Button(
+                content="OK",
+                icon=ft.Icons.CHECK_ROUNDED,
+                on_click=close_journey_loaded_dialog,
+            ),
+        ]
+        journey_loaded_dialog.actions_alignment = ft.MainAxisAlignment.END
+
+        page.show_dialog(journey_loaded_dialog)
 
     def show_main_application() -> None:
         """Display the normal Battle Compass application shell."""
@@ -133,6 +133,11 @@ async def main(page: ft.Page) -> None:
             on_journey_loaded=show_loaded_application,
         )
 
+        my_journey_view = MyJourneyView(
+            page,
+            app_state=app_state,
+        )
+
         about_view = AboutView(
             page
         )
@@ -145,7 +150,7 @@ async def main(page: ft.Page) -> None:
             page.run_task(
                 app_state.save_active_view,
                 view_name,
-            )                   
+            )
 
         app_shell = AppShell(
             page=page,
@@ -153,6 +158,7 @@ async def main(page: ft.Page) -> None:
                 battle_compass_view.build
             ),
             my_team_view=my_team_view.build,
+            my_journey_view=my_journey_view.build,
             about_view=about_view.build,
             initial_view=app_state.active_view,
             on_view_changed=persist_active_view,
@@ -178,7 +184,6 @@ async def main(page: ft.Page) -> None:
         )
         page.update()
 
-        
 
     if app_state.is_ready:
         show_main_application()

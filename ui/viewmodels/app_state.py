@@ -130,6 +130,89 @@ class AppState:
         return "battle_compass"
 
     @property
+    def my_journey_data(self) -> dict:
+        """Return normalized player-owned My Journey state."""
+
+        default_state = {
+            "earned_badges": 0,
+            "item_objectives": [],
+            "pokemon_objectives": [],
+        }
+
+        if self.journey is None:
+            return default_state
+
+        my_journey = self.journey.get("my_journey")
+        if not isinstance(my_journey, dict):
+            return default_state
+
+        earned_badges = my_journey.get("earned_badges", 0)
+        if (
+            not isinstance(earned_badges, int)
+            or isinstance(earned_badges, bool)
+            or not 0 <= earned_badges <= 8
+        ):
+            earned_badges = 0
+
+        item_objectives = my_journey.get("item_objectives", [])
+        if not isinstance(item_objectives, list):
+            item_objectives = []
+
+        pokemon_objectives = my_journey.get(
+            "pokemon_objectives",
+            [],
+        )
+        if not isinstance(pokemon_objectives, list):
+            pokemon_objectives = []
+
+        return {
+            "earned_badges": earned_badges,
+            "item_objectives": item_objectives,
+            "pokemon_objectives": pokemon_objectives,
+        }
+
+    @property
+    def earned_badges(self) -> int:
+        """Return the number of earned Galar badges."""
+
+        return int(self.my_journey_data["earned_badges"])
+
+
+    def get_item_quantity_obtained(
+        self,
+        item_id: str,
+    ) -> int:
+        """Return saved obtained quantity for a Journey item objective."""
+
+        for record in self.my_journey_data["item_objectives"]:
+            if (
+                isinstance(record, dict)
+                and record.get("id") == item_id
+            ):
+                quantity = record.get("quantity_obtained", 0)
+                if (
+                    isinstance(quantity, int)
+                    and not isinstance(quantity, bool)
+                    and quantity >= 0
+                ):
+                    return quantity
+        return 0
+
+    def is_pokemon_obtained(
+        self,
+        pokemon_id: str,
+    ) -> bool:
+        """Return whether a planned Pokémon has been marked caught."""
+
+        for record in self.my_journey_data["pokemon_objectives"]:
+            if (
+                isinstance(record, dict)
+                and record.get("id") == pokemon_id
+            ):
+                return record.get("obtained") is True
+        return False
+
+    @property
     def team_data(self) -> list[dict]:
         """Return the active Journey's mutable team list."""
 
@@ -457,6 +540,154 @@ class AppState:
             else:
                 self.journey["active_view"] = previous_view
 
+        return save_succeeded
+
+    async def save_earned_badges(
+        self,
+        earned_badges: int,
+    ) -> bool:
+        """Persist sequential Galar badge progress."""
+
+        if self.journey is None:
+            return False
+
+        if (
+            not isinstance(earned_badges, int)
+            or isinstance(earned_badges, bool)
+            or not 0 <= earned_badges <= 8
+        ):
+            raise ValueError(
+                "Earned badges must be an integer from 0 through 8."
+            )
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(
+            self.my_journey_data
+        )
+        updated_my_journey["earned_badges"] = earned_badges
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.page,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = (
+                    previous_my_journey
+                )
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = (
+                    previous_my_journey
+                )
+
+        return save_succeeded
+
+
+    async def save_item_objective_quantity(
+        self,
+        *,
+        item_id: str,
+        quantity_obtained: int,
+    ) -> bool:
+        """Persist quantity progress for one Journey item objective."""
+
+        if self.journey is None:
+            return False
+        if not item_id.strip():
+            raise ValueError("Item objective ID cannot be empty.")
+        if (
+            not isinstance(quantity_obtained, int)
+            or isinstance(quantity_obtained, bool)
+            or quantity_obtained < 0
+        ):
+            raise ValueError("Item quantity must be a non-negative integer.")
+
+        previous_my_journey = deepcopy(self.journey.get("my_journey"))
+        updated_my_journey = deepcopy(self.my_journey_data)
+        records = [
+            record
+            for record in updated_my_journey["item_objectives"]
+            if not (isinstance(record, dict) and record.get("id") == item_id)
+        ]
+        if quantity_obtained > 0:
+            records.append({
+                "id": item_id,
+                "quantity_obtained": quantity_obtained,
+            })
+        updated_my_journey["item_objectives"] = records
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(self.page, self.journey)
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+        return save_succeeded
+
+    async def save_pokemon_objective(
+        self,
+        *,
+        pokemon_id: str,
+        obtained: bool,
+    ) -> bool:
+        """Persist caught status for one planned Pokémon objective."""
+
+        if self.journey is None:
+            return False
+        if not pokemon_id.strip():
+            raise ValueError("Pokémon objective ID cannot be empty.")
+        if not isinstance(obtained, bool):
+            raise ValueError("Pokémon obtained state must be boolean.")
+
+        previous_my_journey = deepcopy(self.journey.get("my_journey"))
+        updated_my_journey = deepcopy(self.my_journey_data)
+        records = [
+            record
+            for record in updated_my_journey["pokemon_objectives"]
+            if not (isinstance(record, dict) and record.get("id") == pokemon_id)
+        ]
+        if obtained:
+            records.append({
+                "id": pokemon_id,
+                "obtained": True,
+            })
+        updated_my_journey["pokemon_objectives"] = records
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(self.page, self.journey)
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
         return save_succeeded
 
     async def set_starter(

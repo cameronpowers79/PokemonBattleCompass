@@ -34,6 +34,7 @@ class AppShell:
         page: ft.Page,
         battle_compass_view: ViewBuilder,
         my_team_view: ViewBuilder,
+        my_journey_view: ViewBuilder,
         about_view: ViewBuilder,
         *,
         initial_view: str = "battle_compass",
@@ -50,6 +51,7 @@ class AppShell:
         self.view_builders = {
             "battle_compass": battle_compass_view,
             "my_team": my_team_view,
+            "my_journey": my_journey_view,
             "about": about_view,
         }
 
@@ -101,6 +103,18 @@ class AppShell:
             ),
         )
 
+        self.my_journey_button = ft.Button(
+            content="My Journey",
+            icon=ft.Icons.ROUTE_OUTLINED,
+            on_click=(
+                lambda event:
+                self._request_view_change(
+                    event,
+                    "my_journey",
+                )
+            ),
+        )
+
         self.about_button = ft.Button(
             content="About",
             icon=ft.Icons.INFO_OUTLINE_ROUNDED,
@@ -117,6 +131,7 @@ class AppShell:
             controls=[
                 self.battle_compass_button,
                 self.my_team_button,
+                self.my_journey_button,
                 self.about_button,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -339,6 +354,7 @@ class AppShell:
                 self.battle_compass_button
             ),
             "my_team": self.my_team_button,
+            "my_journey": self.my_journey_button,
             "about": self.about_button,
         }
 

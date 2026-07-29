@@ -117,6 +117,11 @@ def create_journey(
             "battle": None,
             "opponent": None,
         },
+        "my_journey": {
+            "earned_badges": 0,
+            "item_objectives": [],
+            "pokemon_objectives": [],
+        },
         "created_at": timestamp,
         "updated_at": timestamp,
     }
@@ -175,6 +180,31 @@ def _validate_journey(
             or active_view not in VALID_ACTIVE_VIEWS
         ):
             return "Stored Journey active view is invalid."
+
+    my_journey = journey.get("my_journey")
+
+    if my_journey is not None:
+        if not isinstance(my_journey, dict):
+            return "Stored My Journey data is invalid."
+
+        earned_badges = my_journey.get("earned_badges", 0)
+        if (
+            not isinstance(earned_badges, int)
+            or isinstance(earned_badges, bool)
+            or not 0 <= earned_badges <= 8
+        ):
+            return "Stored My Journey badge progress is invalid."
+
+        for field_name in (
+            "item_objectives",
+            "pokemon_objectives",
+        ):
+            field_value = my_journey.get(field_name, [])
+            if not isinstance(field_value, list):
+                return (
+                    "Stored My Journey "
+                    f"{field_name} is invalid."
+                )
 
     battle_compass_selection = journey.get(
         "battle_compass_selection"

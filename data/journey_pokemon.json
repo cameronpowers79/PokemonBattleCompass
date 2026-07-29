@@ -1,0 +1,247 @@
+[
+  {
+    "id": "aegislash",
+    "pokemon": "Aegislash",
+    "acquire_as": "Honedge",
+    "required_badge": 3,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Hammerlocke Hills",
+      "map_locations": [
+        "hammerlocke_hills"
+      ],
+      "encounters": [
+        {
+          "method": "Random",
+          "weather": "Snowstorm",
+          "rarity_percent": 15,
+          "level_min": 28,
+          "level_max": 30
+        },
+        {
+          "method": "Overworld",
+          "weather": "Fog",
+          "rarity_percent": 44,
+          "level_min": 29,
+          "level_max": 31
+        }
+      ]
+    },
+    "evolution_summary": "Evolve twice · Dusk Stone required",
+    "evolution_steps": [
+      {
+        "from": "Honedge",
+        "to": "Doublade",
+        "method": "level",
+        "level": 35
+      },
+      {
+        "from": "Doublade",
+        "to": "Aegislash",
+        "method": "use_item",
+        "item_id": "dusk_stone",
+        "quantity": 1
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "dusk_stone",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/honedge/locations.shtml"
+  },
+  {
+    "id": "chandelure",
+    "pokemon": "Chandelure",
+    "acquire_as": "Litwick",
+    "required_badge": 2,
+    "primary_acquisition": {
+      "method": "wandering_encounter",
+      "location": "Motostoke Gym",
+      "map_locations": [
+        "motostoke"
+      ],
+      "encounters": [
+        {
+          "method": "Wandering",
+          "weather": "All Weather",
+          "rarity_percent": null,
+          "level_min": 25,
+          "level_max": 25
+        }
+      ]
+    },
+    "evolution_summary": "Evolve twice · Dusk Stone required",
+    "evolution_steps": [
+      {
+        "from": "Litwick",
+        "to": "Lampent",
+        "method": "level",
+        "level": 41
+      },
+      {
+        "from": "Lampent",
+        "to": "Chandelure",
+        "method": "use_item",
+        "item_id": "dusk_stone",
+        "quantity": 1
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "dusk_stone",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/litwick/locations.shtml"
+  },
+  {
+    "id": "dhelmise",
+    "pokemon": "Dhelmise",
+    "acquire_as": "Dhelmise",
+    "required_badge": 3,
+    "primary_acquisition": {
+      "method": "max_raid_battle",
+      "location": "Wild Area",
+      "map_locations": [
+        "bridge_field",
+        "dappled_grove",
+        "giants_mirror",
+        "stony_wilderness"
+      ],
+      "raid_dens": [
+        28,
+        59
+      ],
+      "availability_note": "Earlier than the Route 9 encounter, but dependent on higher-star raid availability and the active den pool."
+    },
+    "alternate_acquisitions": [
+      {
+        "method": "wild_encounter",
+        "location": "Route 9 — Circhester Bay",
+        "required_badge": 6,
+        "map_locations": [
+          "route_9_circhester_bay"
+        ],
+        "encounters": [
+          {
+            "method": "Overworld",
+            "weather": "All Weather",
+            "rarity_percent": 1,
+            "level_min": 39,
+            "level_max": 43
+          }
+        ]
+      }
+    ],
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/dhelmise/"
+  },
+  {
+    "id": "froslass",
+    "pokemon": "Froslass",
+    "acquire_as": "Snorunt",
+    "required_badge": 0,
+    "acquisition_requirement": "Female Snorunt",
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Rolling Fields",
+      "map_locations": [
+        "rolling_fields"
+      ],
+      "encounters": [
+        {
+          "method": "Random",
+          "weather": "Snowstorm",
+          "rarity_percent": 20,
+          "level_min": 7,
+          "level_max": 9
+        }
+      ]
+    },
+    "evolution_summary": "Female Snorunt · Dawn Stone required",
+    "evolution_steps": [
+      {
+        "from": "Snorunt",
+        "to": "Froslass",
+        "method": "use_item",
+        "item_id": "dawn_stone",
+        "quantity": 1,
+        "condition": "Snorunt must be female"
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "dawn_stone",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/snorunt/locations.shtml"
+  },
+  {
+    "id": "mimikyu",
+    "pokemon": "Mimikyu",
+    "acquire_as": "Mimikyu",
+    "required_badge": 3,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Bridge Field / Giant's Mirror",
+      "map_locations": [
+        "bridge_field",
+        "giants_mirror"
+      ],
+      "availability_note": "Direct encounter; exact method and weather variants should be expanded when full encounter ingestion is added."
+    },
+    "alternate_acquisitions": [
+      {
+        "method": "max_raid_battle",
+        "location": "Wild Area",
+        "required_badge": 3,
+        "map_locations": [
+          "hammerlocke_hills",
+          "rolling_fields"
+        ]
+      }
+    ],
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/mimikyu/"
+  },
+  {
+    "id": "runerigus",
+    "pokemon": "Runerigus",
+    "acquire_as": "Galarian Yamask",
+    "required_badge": 3,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 6",
+      "map_locations": [
+        "route_6"
+      ],
+      "encounters": [
+        {
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 35,
+          "level_min": 29,
+          "level_max": 33
+        }
+      ]
+    },
+    "evolution_summary": "Special evolution method",
+    "evolution_steps": [
+      {
+        "from": "Galarian Yamask",
+        "to": "Runerigus",
+        "method": "special",
+        "condition": "Take at least 49 HP of damage without fainting, then pass beneath the large stone arch in Dusty Bowl."
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/yamask/locations.shtml"
+  }
+]

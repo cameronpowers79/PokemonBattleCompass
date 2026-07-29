@@ -1,0 +1,195 @@
+[
+  {
+    "id": "dusk_stone",
+    "name": "Dusk Stone",
+    "category": "evolution_item",
+    "quantity_required": 2,
+    "required_by": [
+      "aegislash",
+      "chandelure"
+    ],
+    "sources": [
+      {
+        "id": "dusk_stone_stow_on_side",
+        "method": "fixed_pickup",
+        "location": "Stow-on-Side",
+        "location_detail": "Behind the Pokémon Center",
+        "required_badge": 3,
+        "map_locations": [
+          "stow_on_side"
+        ]
+      },
+      {
+        "id": "dusk_stone_lake_of_outrage",
+        "method": "respawning_pickup",
+        "location": "Lake of Outrage",
+        "location_detail": "One of the daily respawning evolution-stone pickups",
+        "required_badge": 6,
+        "map_locations": [
+          "lake_of_outrage"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/duskstone.shtml"
+  },
+  {
+    "id": "dawn_stone",
+    "name": "Dawn Stone",
+    "category": "evolution_item",
+    "quantity_required": 1,
+    "required_by": [
+      "froslass"
+    ],
+    "sources": [
+      {
+        "id": "dawn_stone_giants_cap",
+        "method": "fixed_pickup",
+        "location": "Giant's Cap",
+        "location_detail": "Fixed overworld pickup",
+        "required_badge": 3,
+        "map_locations": [
+          "giants_cap"
+        ]
+      },
+      {
+        "id": "dawn_stone_lake_of_outrage",
+        "method": "respawning_pickup",
+        "location": "Lake of Outrage",
+        "location_detail": "One of the daily respawning evolution-stone pickups",
+        "required_badge": 6,
+        "map_locations": [
+          "lake_of_outrage"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/dawnstone.shtml"
+  },
+  {
+    "id": "tr99_body_press",
+    "name": "TR99 Body Press",
+    "category": "tr",
+    "quantity_required": 1,
+    "required_by": [],
+    "sources": [
+      {
+        "id": "tr99_watt_traders",
+        "method": "watt_trader",
+        "location": "Wild Area",
+        "location_detail": "Rotating Watt Trader stock",
+        "required_badge": 0,
+        "map_locations": [
+          "meetup_spot",
+          "dappled_grove",
+          "east_lake_axewell",
+          "giants_cap",
+          "hammerlocke_hills"
+        ]
+      },
+      {
+        "id": "tr99_max_raids",
+        "method": "max_raid_reward",
+        "location": "Wild Area",
+        "location_detail": "Drop reward from compatible Max Raid Battles",
+        "required_badge": 0,
+        "map_locations": [
+          "dusty_bowl",
+          "north_lake_miloch",
+          "stony_wilderness",
+          "west_lake_axewell"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/tr99.shtml"
+  },
+  {
+    "id": "tm53_mud_shot",
+    "name": "TM53 Mud Shot",
+    "category": "tm",
+    "quantity_required": 1,
+    "required_by": [],
+    "fixture_quantity_obtained": 1,
+    "sources": [
+      {
+        "id": "tm53_galar_mine_no_2",
+        "method": "fixed_pickup",
+        "location": "Galar Mine No. 2",
+        "location_detail": "Behind the pool with Gastrodon; requires the Rotom Bike water upgrade",
+        "required_badge": 6,
+        "map_locations": [
+          "galar_mine_no_2"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/tm53.shtml"
+  },
+  {
+    "id": "tm74_venoshock",
+    "name": "TM74 Venoshock",
+    "category": "tm",
+    "quantity_required": 1,
+    "required_by": [],
+    "sources": [
+      {
+        "id": "tm74_stow_on_side",
+        "method": "fixed_pickup",
+        "location": "Stow-on-Side",
+        "location_detail": "Fixed TM pickup",
+        "required_badge": 3,
+        "map_locations": [
+          "stow_on_side"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/tm74.shtml"
+  },
+  {
+    "id": "tm69_psycho_cut",
+    "name": "TM69 Psycho Cut",
+    "category": "tm",
+    "quantity_required": 1,
+    "required_by": [],
+    "sources": [
+      {
+        "id": "tm69_route_2_lake",
+        "method": "fixed_pickup",
+        "location": "Route 2",
+        "location_detail": "In the lakeside alcove; requires the Rotom Bike water upgrade",
+        "required_badge": 6,
+        "map_locations": [
+          "route_2_lake"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/tm69.shtml"
+  },
+  {
+    "id": "black_sludge",
+    "name": "Black Sludge",
+    "category": "held_item",
+    "quantity_required": 1,
+    "required_by": [],
+    "sources": [
+      {
+        "id": "black_sludge_wyndon",
+        "method": "hidden_pickup",
+        "location": "Wyndon",
+        "location_detail": "Hidden on a manhole beside the riverbank near Rose of the Rondelands",
+        "required_badge": 8,
+        "map_locations": [
+          "wyndon"
+        ]
+      },
+      {
+        "id": "black_sludge_stow_on_side_shop",
+        "method": "bargain_shop",
+        "location": "Stow-on-Side",
+        "location_detail": "May appear as the Bargain Shop's daily item",
+        "required_badge": 3,
+        "map_locations": [
+          "stow_on_side"
+        ]
+      }
+    ],
+    "source_url": "https://www.serebii.net/itemdex/blacksludge.shtml"
+  }
+]
