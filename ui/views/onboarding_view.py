@@ -1,14 +1,15 @@
 """
 Journey onboarding view.
 
-Coordinates starter selection, starter details, and Journey completion.
-The existing Journey is not replaced until the player finishes entering
-and validates the new starter's information.
+Coordinates the welcome screen, Journey import, starter selection, starter
+entry, and Journey completion. The existing Journey is not replaced until
+the player confirms a valid import or finishes and validates new starter data.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import cast
 
 import flet as ft
@@ -16,9 +17,15 @@ import flet as ft
 from ui.components.journey_ready import JourneyReady
 from ui.components.starter_details import StarterDetails
 from ui.components.starter_selection import StarterSelection
+from ui.storage.journey_storage import parse_journey_export
 from ui.theme import (
     APP_BACKGROUND,
     CONTENT_MAX_WIDTH,
+    PRIMARY_BLUE,
+    SURFACE,
+    SURFACE_RAISED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
 )
 from ui.viewmodels.app_state import AppState
 
@@ -46,7 +53,7 @@ STARTER_DEFAULTS = {
 
 
 class OnboardingView:
-    """Coordinate the first-use Journey onboarding flow."""
+    """Coordinate first-use welcome and Journey onboarding."""
 
     def __init__(
         self,
@@ -54,17 +61,25 @@ class OnboardingView:
         *,
         app_state: AppState,
         on_complete: Callable[[], None],
+        show_welcome: bool = False,
     ) -> None:
         self.page = page
         self.app_state = app_state
         self.on_complete = on_complete
+        self.show_welcome = show_welcome
 
         self.pending_starter: str | None = None
         self.starter_details: StarterDetails | None = None
+        self.pending_import_journey: dict | None = None
+
+        self.file_picker = ft.FilePicker()
+        self.page.services.append(self.file_picker)
 
         initial_content: ft.Control
 
-        if (
+        if show_welcome:
+            initial_content = self._build_welcome_screen()
+        elif (
             not app_state.has_team_member
             and app_state.starter in STARTER_DEFAULTS
         ):
@@ -132,6 +147,332 @@ class OnboardingView:
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
+    def _build_welcome_screen(self) -> ft.Control:
+        """Offer new-Journey onboarding or portable Journey import."""
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "Welcome to Pokémon Battle Compass",
+                            size=28,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Text(
+                            (
+                                "Start a new adventure, or restore a "
+                                "Journey you previously exported."
+                            ),
+                            size=16,
+                            color=TEXT_SECONDARY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        ft.Row(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Button(
+                                        content="Start a New Journey",
+                                        icon=ft.Icons.EXPLORE_OUTLINED,
+                                        bgcolor=PRIMARY_BLUE,
+                                        color=TEXT_PRIMARY,
+                                        icon_color=TEXT_PRIMARY,
+                                        on_click=self._start_new_journey,
+                                    ),
+                                    ft.Button(
+                                        content="Load a Journey",
+                                        icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+                                        on_click=self._select_journey_file,
+                                    ),
+                                ],
+                            ),
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=14,
+                            wrap=True,
+                        ),
+                    ],
+                ),
+                spacing=18,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            width=720,
+            padding=28,
+            bgcolor=SURFACE,
+            border_radius=16,
+            alignment=ft.Alignment.CENTER,
+        )
+
+    def _start_new_journey(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Continue from Welcome into starter selection."""
+
+        del event
+        self.show_welcome = False
+        self.content_host.content = self._build_starter_selection()
+        self.page.update()
+
+    async def _select_journey_file(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Select and validate a portable Journey export."""
+
+        del event
+
+        try:
+            selected_files = await self.file_picker.pick_files(
+                dialog_title="Load Journey",
+                allow_multiple=False,
+                allowed_extensions=["json"],
+            )
+
+            if not selected_files:
+                return
+
+            selected_file = selected_files[0]
+
+            if not selected_file.path:
+                self._show_load_error(
+                    "The selected file could not be accessed."
+                )
+                return
+
+            serialized_export = Path(selected_file.path).read_text(
+                encoding="utf-8"
+            )
+        except (OSError, UnicodeError) as error:
+            self._show_load_error(
+                f"The selected Journey file could not be read: {error}"
+            )
+            return
+
+        import_result = parse_journey_export(serialized_export)
+
+        if (
+            import_result.status != "valid"
+            or import_result.journey is None
+        ):
+            self._show_load_error(
+                import_result.error
+                or "The selected Journey file is invalid."
+            )
+            return
+
+        self.pending_import_journey = import_result.journey
+        self._show_load_confirmation(import_result.journey)
+
+    def _show_load_confirmation(self, journey: dict) -> None:
+        """Confirm activation of the selected Journey."""
+
+        starter = str(journey.get("starter") or "Unknown")
+        team = journey.get("team")
+        team_count = len(team) if isinstance(team, list) else 0
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Load this Journey?",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=cast(
+                            list[ft.Control],
+                            [
+                                ft.Text(
+                                    (
+                                        "This Journey will become the active "
+                                        "Journey on this device."
+                                    ),
+                                    size=15,
+                                    color=TEXT_SECONDARY,
+                                ),
+                                ft.Container(
+                                    content=ft.Column(
+                                        controls=cast(
+                                            list[ft.Control],
+                                            [
+                                                ft.Text(
+                                                    f"Starter: {starter}",
+                                                    weight=ft.FontWeight.BOLD,
+                                                    color=TEXT_PRIMARY,
+                                                ),
+                                                ft.Text(
+                                                    (
+                                                        "Active team: "
+                                                        f"{team_count} Pokémon"
+                                                    ),
+                                                    color=TEXT_SECONDARY,
+                                                ),
+                                            ],
+                                        ),
+                                        spacing=6,
+                                        tight=True,
+                                    ),
+                                    padding=12,
+                                    bgcolor=SURFACE_RAISED,
+                                    border_radius=10,
+                                ),
+                            ],
+                        ),
+                        spacing=14,
+                        tight=True,
+                    ),
+                    width=520,
+                ),
+                actions=cast(
+                    list[ft.Control],
+                    [
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._cancel_journey_load,
+                        ),
+                        ft.Button(
+                            content="Load Journey",
+                            icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+                            bgcolor=PRIMARY_BLUE,
+                            color=TEXT_PRIMARY,
+                            icon_color=TEXT_PRIMARY,
+                            on_click=self._confirm_journey_load,
+                        ),
+                    ],
+                ),
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _cancel_journey_load(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Cancel a pending Journey import."""
+
+        del event
+        self.pending_import_journey = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    async def _confirm_journey_load(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Persist the imported Journey and show success confirmation."""
+
+        del event
+        imported_journey = self.pending_import_journey
+
+        if imported_journey is None:
+            self.page.pop_dialog()
+            self._show_load_error(
+                "No valid Journey is waiting to be loaded."
+            )
+            return
+
+        self.page.pop_dialog()
+
+        try:
+            load_succeeded = await self.app_state.import_journey(
+                imported_journey
+            )
+        except (RuntimeError, ValueError) as error:
+            self.pending_import_journey = None
+            self._show_load_error(
+                f"The Journey could not be loaded: {error}"
+            )
+            return
+
+        self.pending_import_journey = None
+
+        if not load_succeeded:
+            self._show_load_error(
+                "The Journey could not be saved."
+            )
+            return
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Journey Loaded!",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Text(
+                    (
+                        "Your saved Journey has been restored. Select OK "
+                        "to continue from its last saved page."
+                    ),
+                    size=15,
+                    color=TEXT_SECONDARY,
+                ),
+                actions=[
+                    ft.Button(
+                        content="OK",
+                        icon=ft.Icons.CHECK_ROUNDED,
+                        bgcolor=PRIMARY_BLUE,
+                        color=TEXT_PRIMARY,
+                        icon_color=TEXT_PRIMARY,
+                        on_click=self._finish_journey_load,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _finish_journey_load(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close load confirmation and enter the restored Journey."""
+
+        del event
+        self.page.pop_dialog()
+        self.on_complete()
+
+    def _show_load_error(self, message: str) -> None:
+        """Show a non-fatal Journey import error."""
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Journey could not be loaded",
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Text(
+                    message,
+                    size=15,
+                    color=TEXT_SECONDARY,
+                ),
+                actions=[
+                    ft.Button(
+                        content="OK",
+                        on_click=self._close_load_error,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _close_load_error(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close a Journey-import error dialog."""
+
+        del event
+        self.page.pop_dialog()
+        self.page.update()
+
     def _build_starter_selection(self) -> ft.Control:
         """Build the starter-selection component."""
 
@@ -167,24 +508,15 @@ class OnboardingView:
         self,
         starter_name: str,
     ) -> None:
-        """
-        Open starter details without changing persistent Journey data.
-
-        The selected starter remains pending until the player completes
-        and validates the starter-details form.
-        """
+        """Open starter details without changing persistent Journey data."""
 
         if starter_name not in STARTER_DEFAULTS:
             return
 
         self.pending_starter = starter_name
-
-        self.content_host.content = (
-            self._build_starter_details(
-                starter_name
-            )
+        self.content_host.content = self._build_starter_details(
+            starter_name
         )
-
         self.page.update()
 
     def _starter_ready(
@@ -210,20 +542,14 @@ class OnboardingView:
         self,
         starter_record: dict,
     ) -> None:
-        """
-        Atomically replace the active Journey after onboarding finishes.
-
-        Until this succeeds, any previously saved Journey remains intact.
-        """
+        """Atomically replace the active Journey after onboarding finishes."""
 
         if self.pending_starter is None:
             return
 
         save_succeeded = await self.app_state.replace_journey(
             starter=self.pending_starter,
-            team_data=[
-                starter_record
-            ],
+            team_data=[starter_record],
         )
 
         if not save_succeeded:
@@ -243,5 +569,4 @@ class OnboardingView:
         self.content_host.content = JourneyReady(
             on_continue=self.on_complete,
         )
-
         self.page.update()

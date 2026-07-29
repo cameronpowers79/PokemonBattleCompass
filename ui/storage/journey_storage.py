@@ -23,6 +23,13 @@ JOURNEY_SCHEMA_VERSION = 1
 JOURNEY_EXPORT_FORMAT = "pokemon-battle-compass-journey"
 JOURNEY_EXPORT_FORMAT_VERSION = 1
 
+VALID_ACTIVE_VIEWS = {
+    "battle_compass",
+    "my_team",
+    "my_journey",
+    "about",
+}
+
 VALID_STARTERS = {
     "Grookey",
     "Scorbunny",
@@ -104,6 +111,7 @@ def create_journey(
         "schema_version": JOURNEY_SCHEMA_VERSION,
         "starter": starter,
         "team": deepcopy(team or []),
+        "active_view": "battle_compass",
         "battle_compass_selection": {
             "trainer": None,
             "battle": None,
@@ -158,6 +166,15 @@ def _validate_journey(
             "Stored Journey contains an invalid "
             "team record."
         )
+
+    active_view = journey.get("active_view")
+
+    if active_view is not None:
+        if (
+            not isinstance(active_view, str)
+            or active_view not in VALID_ACTIVE_VIEWS
+        ):
+            return "Stored Journey active view is invalid."
 
     battle_compass_selection = journey.get(
         "battle_compass_selection"

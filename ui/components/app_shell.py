@@ -21,6 +21,7 @@ from ui.theme import (
 ViewBuilder = Callable[[], ft.Control]
 DirtyStateCheck = Callable[[], bool]
 DiscardChanges = Callable[[], None]
+ViewChanged = Callable[[str], None]
 
 
 class AppShell:
@@ -35,6 +36,8 @@ class AppShell:
         my_team_view: ViewBuilder,
         about_view: ViewBuilder,
         *,
+        initial_view: str = "battle_compass",
+        on_view_changed: ViewChanged | None = None,
         my_team_has_unsaved_changes: (
             DirtyStateCheck | None
         ) = None,
@@ -50,6 +53,8 @@ class AppShell:
             "about": about_view,
         }
 
+        self.on_view_changed = on_view_changed
+
         self.my_team_has_unsaved_changes = (
             my_team_has_unsaved_changes
         )
@@ -57,7 +62,11 @@ class AppShell:
             discard_my_team_changes
         )
 
-        self.active_view = "battle_compass"
+        self.active_view = (
+            initial_view
+            if initial_view in self.view_builders
+            else "battle_compass"
+        )
         self.pending_view: str | None = None
 
         self.content_host = ft.Container(
@@ -309,6 +318,9 @@ class AppShell:
             )
 
         self.active_view = view_name
+
+        if self.on_view_changed is not None:
+            self.on_view_changed(view_name)
 
         self.content_host.content = (
             self.view_builders[

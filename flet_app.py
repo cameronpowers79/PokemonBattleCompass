@@ -41,7 +41,10 @@ async def main(page: ft.Page) -> None:
 
     await app_state.initialize()
 
-    def show_onboarding() -> None:
+    def show_onboarding(
+        *,
+        show_welcome: bool = False,
+    ) -> None:
         """
         Display onboarding without clearing or replacing the saved Journey.
 
@@ -55,6 +58,7 @@ async def main(page: ft.Page) -> None:
             page,
             app_state=app_state,
             on_complete=show_main_application,
+            show_welcome=show_welcome,
         )
 
         page.controls.clear()
@@ -62,6 +66,51 @@ async def main(page: ft.Page) -> None:
             onboarding_view.build()
         )
         page.update()
+
+    def start_new_journey_from_app() -> None:
+        """Open the established starter onboarding flow."""
+
+        show_onboarding(show_welcome=False)
+
+    def close_journey_loaded_dialog(
+                event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the successful Journey-load confirmation."""
+
+        del event
+        page.pop_dialog()
+        page.update()
+
+    def show_loaded_application() -> None:
+        """
+        Rebuild the application after a Journey import and confirm success.
+
+        A Journey exported from My Team restores My Team as its active page,
+        so rebuilding refreshes all views without navigating the player away.
+        """
+
+        show_main_application()
+
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Journey Loaded!",
+                    weight=ft.FontWeight.BOLD,
+                ),
+                content=ft.Text(
+                    "Your saved Journey has been restored."
+                ),
+                actions=[
+                    ft.Button(
+                        content="OK",
+                        icon=ft.Icons.CHECK_ROUNDED,
+                        on_click=close_journey_loaded_dialog,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
 
     def show_main_application() -> None:
         """Display the normal Battle Compass application shell."""
@@ -71,7 +120,7 @@ async def main(page: ft.Page) -> None:
             app_state=app_state,
             team_data=app_state.team_data,
             selected_starter=app_state.starter,
-            on_start_new_journey=show_onboarding,
+            on_start_new_journey=start_new_journey_from_app,
         )
 
         my_team_view = MyTeamView(
@@ -81,12 +130,22 @@ async def main(page: ft.Page) -> None:
             on_team_updated=(
                 battle_compass_view.refresh_team_data
             ),
-            on_journey_loaded=show_main_application,
+            on_journey_loaded=show_loaded_application,
         )
 
         about_view = AboutView(
             page
         )
+
+        def persist_active_view(
+            view_name: str,
+        ) -> None:
+            """Schedule persistence of the newly active primary view."""
+
+            page.run_task(
+                app_state.save_active_view,
+                view_name,
+            )                   
 
         app_shell = AppShell(
             page=page,
@@ -95,6 +154,8 @@ async def main(page: ft.Page) -> None:
             ),
             my_team_view=my_team_view.build,
             about_view=about_view.build,
+            initial_view=app_state.active_view,
+            on_view_changed=persist_active_view,
             my_team_has_unsaved_changes=(
                 lambda:
                 my_team_view.has_unsaved_changes
@@ -117,10 +178,12 @@ async def main(page: ft.Page) -> None:
         )
         page.update()
 
+        
+
     if app_state.is_ready:
         show_main_application()
     else:
-        show_onboarding()
+        show_onboarding(show_welcome=not app_state.has_journey)
 
 
 if __name__ == "__main__":

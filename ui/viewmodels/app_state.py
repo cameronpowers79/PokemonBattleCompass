@@ -116,6 +116,20 @@ class AppState:
         }
 
     @property
+    def active_view(self) -> str:
+        """Return the last primary application view saved in the Journey."""
+
+        if self.journey is None:
+            return "battle_compass"
+
+        active_view = self.journey.get("active_view")
+
+        if isinstance(active_view, str) and active_view:
+            return active_view
+
+        return "battle_compass"
+
+    @property
     def team_data(self) -> list[dict]:
         """Return the active Journey's mutable team list."""
 
@@ -410,6 +424,38 @@ class AppState:
                 self.journey[
                     "battle_compass_selection"
                 ] = previous_selection
+
+        return save_succeeded
+
+    async def save_active_view(
+        self,
+        view_name: str,
+    ) -> bool:
+        """Persist primary-page navigation independently of team drafts."""
+
+        if self.journey is None:
+            return False
+
+        previous_view = self.journey.get("active_view")
+        self.journey["active_view"] = view_name
+
+        try:
+            save_succeeded = await save_journey(
+                self.page,
+                self.journey,
+            )
+        except ValueError:
+            if previous_view is None:
+                self.journey.pop("active_view", None)
+            else:
+                self.journey["active_view"] = previous_view
+            raise
+
+        if not save_succeeded:
+            if previous_view is None:
+                self.journey.pop("active_view", None)
+            else:
+                self.journey["active_view"] = previous_view
 
         return save_succeeded
 
