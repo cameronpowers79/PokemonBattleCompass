@@ -1,11 +1,12 @@
 """My Journey view with persistent badge and objective progression.
 
-Badge, item, and planned-Pokémon changes save immediately. Real badge artwork,
-celebrations, encounter-table expansion, and map markers remain deferred.
+Badge, item, and planned-Pokémon changes save immediately. The graphical badge
+tracker includes earned-badge celebrations; map markers remain deferred.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 from copy import deepcopy
 from pathlib import Path
@@ -43,6 +44,20 @@ BADGE_LAYERS = [
     ("Dark Badge", "badges/dark_badge.png"),
     ("Dragon Badge", "badges/dragon_badge.png"),
 ]
+
+BADGE_IMAGE_SIZE = (781, 779)
+
+BADGE_CROP_BOUNDS = {
+    "Grass Badge": (300, 445, 661, 757),
+    "Water Badge": (502, 65, 744, 327),
+    "Fire Badge": (257, 191, 523, 618),
+    "Fighting Badge": (57, 399, 346, 748),
+    "Fairy Badge": (514, 271, 761, 629),
+    "Rock Badge": (286, 15, 581, 225),
+    "Dark Badge": (184, 111, 397, 446),
+    "Dragon Badge": (18, 37, 301, 559),
+}
+
 BADGE_FRAME_ASSET = "badges/badge_coin_frame.png"
 
 
@@ -80,6 +95,10 @@ class MyJourneyView:
         self._caught_stage_selector: ft.Dropdown | None = None
         self._add_item_selector: ft.Dropdown | None = None
         self._add_item_quantity: ft.TextField | None = None
+
+        self._badge_celebration_badge: ft.Container | None = None
+        self._badge_celebration_shine: ft.Container | None = None
+        self._badge_celebration_sparkles: list[ft.Container] = []
 
     @staticmethod
     def _load_json(path: Path) -> list[dict[str, Any]]:
@@ -313,16 +332,164 @@ class MyJourneyView:
         self._refresh()
         self._show_badge_celebration(earned_badge_index)
 
+    def _build_centered_badge_image(
+    self,
+    badge_name: str,
+    badge_asset: str,
+    viewport_size: int,
+    tint: str | None = None,
+) -> ft.Control:
+        """Crop a badge layer to its visible badge and center it."""
+
+        source_width, source_height = BADGE_IMAGE_SIZE
+        left, top, right, bottom = BADGE_CROP_BOUNDS[badge_name]
+
+        crop_width = right - left
+        crop_height = bottom - top
+
+        padding = 24
+        available_size = viewport_size - padding * 2
+
+        scale = min(
+            available_size / crop_width,
+            available_size / crop_height,
+        )
+
+        rendered_width = source_width * scale
+        rendered_height = source_height * scale
+
+        visible_width = crop_width * scale
+        visible_height = crop_height * scale
+
+        image_left = (
+            viewport_size / 2
+            - visible_width / 2
+            - left * scale
+        )
+        image_top = (
+            viewport_size / 2
+            - visible_height / 2
+            - top * scale
+        )
+
+        badge_image = ft.Image(
+            src=badge_asset,
+            width=rendered_width,
+            height=rendered_height,
+            fit=ft.BoxFit.FILL,
+            left=image_left,
+            top=image_top,
+            semantics_label=badge_name,
+        )
+
+        if tint is not None:
+            badge_image.color = tint
+            badge_image.color_blend_mode = ft.BlendMode.SRC_IN
+
+        return ft.Stack(
+            controls=[badge_image],
+            width=viewport_size,
+            height=viewport_size,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        )
+
     def _show_badge_celebration(
         self,
         badge_index: int,
     ) -> None:
-        """Celebrate a newly earned badge."""
+        """Celebrate a newly earned isolated badge."""
 
         if badge_index < 0 or badge_index >= len(BADGE_LAYERS):
             return
 
         badge_name, badge_asset = BADGE_LAYERS[badge_index]
+        celebration_size = 260
+
+        centered_badge = self._build_centered_badge_image(
+            badge_name,
+            badge_asset,
+            celebration_size,
+        )
+
+        centered_badge_glow = self._build_centered_badge_image(
+            badge_name,
+            badge_asset,
+            celebration_size,
+            tint=ft.Colors.WHITE,
+        )
+
+        self._badge_celebration_badge = ft.Container(
+            content=centered_badge,
+            width=celebration_size,
+            height=celebration_size,
+            alignment=ft.Alignment.CENTER,
+            opacity=0.0,
+            scale=0.72,
+            animate_opacity=ft.Animation(
+                260,
+                ft.AnimationCurve.EASE_OUT,
+            ),
+            animate_scale=ft.Animation(
+                360,
+                ft.AnimationCurve.EASE_OUT_BACK,
+            ),
+        )
+
+        self._badge_celebration_shine = ft.Container(
+            content=centered_badge_glow,
+            width=celebration_size,
+            height=celebration_size,
+            alignment=ft.Alignment.CENTER,
+            opacity=0.0,
+            scale=1.0,
+            animate_opacity=ft.Animation(
+                180,
+                ft.AnimationCurve.EASE_IN_OUT,
+            ),
+            animate_scale=ft.Animation(
+                240,
+                ft.AnimationCurve.EASE_OUT,
+            ),
+        )
+
+        sparkle_positions = [
+            (22, 42, 17),
+            (194, 34, 14),
+            (212, 174, 16),
+            (34, 190, 14),
+            (121, 14, 12),
+            (122, 222, 13),
+        ]
+
+        self._badge_celebration_sparkles = []
+
+        stack_controls: list[ft.Control] = [
+            self._badge_celebration_badge,
+            self._badge_celebration_shine,
+        ]
+
+        for left, top, size in sparkle_positions:
+            sparkle = ft.Container(
+                content=ft.Icon(
+                    ft.Icons.AUTO_AWESOME_ROUNDED,
+                    size=size,
+                    color=ft.Colors.AMBER_200,
+                ),
+                left=left,
+                top=top,
+                opacity=0.0,
+                scale=0.55,
+                animate_opacity=ft.Animation(
+                    180,
+                    ft.AnimationCurve.EASE_IN_OUT,
+                ),
+                animate_scale=ft.Animation(
+                    220,
+                    ft.AnimationCurve.EASE_OUT_BACK,
+                ),
+            )
+            self._badge_celebration_sparkles.append(sparkle)
+            stack_controls.append(sparkle)
 
         dialog = ft.AlertDialog()
         dialog.modal = False
@@ -334,24 +501,16 @@ class MyJourneyView:
         )
         dialog.content = ft.Column(
             controls=[
-                ft.Stack(
-                    controls=[
-                        ft.Image(
-                            src=BADGE_FRAME_ASSET,
-                            width=240,
-                            height=240,
-                            fit=ft.BoxFit.CONTAIN,
-                        ),
-                        ft.Image(
-                            src=badge_asset,
-                            width=240,
-                            height=240,
-                            fit=ft.BoxFit.CONTAIN,
-                            semantics_label=badge_name,
-                        ),
-                    ],
-                    width=240,
-                    height=240,
+                ft.Container(
+                    content=ft.Stack(
+                        controls=stack_controls,
+                        width=celebration_size,
+                        height=celebration_size,
+                        clip_behavior=ft.ClipBehavior.NONE,
+                    ),
+                    width=celebration_size,
+                    height=celebration_size,
+                    alignment=ft.Alignment.CENTER,
                 ),
                 ft.Text(
                     f"You earned the {badge_name}!",
@@ -377,11 +536,86 @@ class MyJourneyView:
         dialog.actions = [
             ft.Button(
                 content="Continue",
-                on_click=lambda: self.page.pop_dialog(),
+                on_click=self._dismiss_badge_celebration,
             )
         ]
         dialog.actions_alignment = ft.MainAxisAlignment.CENTER
+        dialog.on_dismiss = self._clear_badge_celebration_state
+
         self.page.show_dialog(dialog)
+        self.page.run_task(self._animate_badge_celebration)
+
+    async def _animate_badge_celebration(self) -> None:
+        """Run the isolated badge pop, sparkle burst, and gleam."""
+
+        await asyncio.sleep(0.08)
+
+        if self._badge_celebration_badge is None:
+            return
+
+        self._badge_celebration_badge.opacity = 1.0
+        self._badge_celebration_badge.scale = 1.0
+
+        for sparkle in self._badge_celebration_sparkles:
+            sparkle.opacity = 1.0
+            sparkle.scale = 1.0
+
+        self.page.update()
+
+        await asyncio.sleep(0.34)
+
+        if self._badge_celebration_shine is not None:
+            self._badge_celebration_shine.opacity = 0.38
+            self._badge_celebration_shine.scale = 1.045
+            self.page.update()
+
+        await asyncio.sleep(0.22)
+
+        if self._badge_celebration_shine is not None:
+            self._badge_celebration_shine.opacity = 0.0
+            self._badge_celebration_shine.scale = 1.0
+
+        for sparkle in self._badge_celebration_sparkles:
+            sparkle.opacity = 0.0
+            sparkle.scale = 0.72
+
+        self.page.update()
+
+        await asyncio.sleep(0.28)
+
+        if self._badge_celebration_shine is not None:
+            self._badge_celebration_shine.opacity = 0.28
+            self._badge_celebration_shine.scale = 1.025
+            self.page.update()
+
+            await asyncio.sleep(0.18)
+
+            self._badge_celebration_shine.opacity = 0.0
+            self._badge_celebration_shine.scale = 1.0
+            self.page.update()
+
+    def _dismiss_badge_celebration(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Dismiss the badge celebration dialog."""
+
+        del event
+        self.page.pop_dialog()
+        self._reset_badge_celebration_state()
+        self.page.update()
+
+    def _clear_badge_celebration_state(self) -> None:
+        """Clear animation references after blur-dismissal."""
+
+        self._reset_badge_celebration_state()
+
+    def _reset_badge_celebration_state(self) -> None:
+        """Release transient celebration controls."""
+
+        self._badge_celebration_badge = None
+        self._badge_celebration_shine = None
+        self._badge_celebration_sparkles = []
 
     async def _set_item_quantity(
         self,
@@ -869,6 +1103,9 @@ class MyJourneyView:
                         },
                         mouse_cursor=ft.MouseCursor.CLICK,
                         animation_duration=160,
+                    ),
+                    on_click=lambda: self.page.run_task(
+                        self._earn_next_badge
                     ),
                 ),
                 width=button_width,
