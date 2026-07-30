@@ -7,8 +7,9 @@ celebrations, encounter-table expansion, and map markers remain deferred.
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import flet as ft
 
@@ -41,17 +42,21 @@ class MyJourneyView:
         page: ft.Page,
         *,
         app_state: AppState,
+        on_go_to_my_team: Callable[[str], None] | None = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
+        self.on_go_to_my_team = on_go_to_my_team
         self.items = self._load_json(DATA_DIR / "journey_items.json")
         self.pokemon = self._load_json(DATA_DIR / "journey_pokemon.json")
         self.earned_badges = app_state.earned_badges
+        self.derived_item_requirements = (
+            self._build_derived_item_requirements()
+        )
+        self.item_objectives = self._load_item_objectives()
         self.item_quantities = {
-            str(item.get("id")): app_state.get_item_quantity_obtained(
-                str(item.get("id"))
-            )
-            for item in self.items
+            item_id: int(record.get("quantity_obtained", 0))
+            for item_id, record in self.item_objectives.items()
         }
         self.pokemon_obtained = {
             str(pokemon.get("id")): app_state.is_pokemon_obtained(
@@ -60,6 +65,9 @@ class MyJourneyView:
             for pokemon in self.pokemon
         }
         self._root: ft.Column | None = None
+        self._caught_stage_selector: ft.Dropdown | None = None
+        self._add_item_selector: ft.Dropdown | None = None
+        self._add_item_quantity: ft.TextField | None = None
 
     @staticmethod
     def _load_json(path: Path) -> list[dict[str, Any]]:
@@ -68,6 +76,142 @@ class MyJourneyView:
         if not isinstance(data, list):
             raise ValueError(f"Expected a list in {path.name}.")
         return data
+
+    def _build_derived_item_requirements(self) -> dict[str, int]:
+        """Aggregate evolution-item quantities required by the team plan."""
+
+        requirements: dict[str, int] = {}
+        for pokemon in self.pokemon:
+            for requirement in pokemon.get("required_items", []):
+                if not isinstance(requirement, dict):
+                    continue
+                item_id = str(requirement.get("item_id", "")).strip()
+                quantity = requirement.get("quantity", 0)
+                if (
+                    not item_id
+                    or not isinstance(quantity, int)
+                    or isinstance(quantity, bool)
+                    or quantity <= 0
+                ):
+                    continue
+                requirements[item_id] = (
+                    requirements.get(item_id, 0) + quantity
+                )
+        return requirements
+
+    def _load_item_objectives(self) -> dict[str, dict[str, int]]:
+        """Load persisted checklist rows or initialize the fixture checklist."""
+
+        journey_state = self.app_state.my_journey_data
+        stored_records = journey_state.get("item_objectives", [])
+        initialized = (
+            journey_state.get("checklist_initialized") is True
+        )
+
+        stored_by_id: dict[str, dict[str, Any]] = {
+            str(record.get("id")): record
+            for record in stored_records
+            if isinstance(record, dict) and record.get("id")
+        }
+
+        objectives: dict[str, dict[str, int]] = {}
+
+        if initialized:
+            for item_id, record in stored_by_id.items():
+                obtained = record.get("quantity_obtained", 0)
+                manual = record.get("manual_quantity_required", 0)
+                objectives[item_id] = {
+                    "quantity_obtained": (
+                        obtained
+                        if isinstance(obtained, int)
+                        and not isinstance(obtained, bool)
+                        and obtained >= 0
+                        else 0
+                    ),
+                    "manual_quantity_required": (
+                        manual
+                        if isinstance(manual, int)
+                        and not isinstance(manual, bool)
+                        and manual >= 0
+                        else 0
+                    ),
+                }
+        else:
+            # Backward-compatible fixture initialization: preserve the
+            # checklist that existed before editing was introduced.
+            for item in self.items:
+                item_id = str(item.get("id", "")).strip()
+                if not item_id:
+                    continue
+                catalog_required = max(
+                    1,
+                    int(item.get("quantity_required", 1)),
+                )
+                derived = self.derived_item_requirements.get(
+                    item_id,
+                    0,
+                )
+                legacy = stored_by_id.get(item_id, {})
+                obtained = legacy.get("quantity_obtained", 0)
+                objectives[item_id] = {
+                    "quantity_obtained": (
+                        obtained
+                        if isinstance(obtained, int)
+                        and not isinstance(obtained, bool)
+                        and obtained >= 0
+                        else 0
+                    ),
+                    "manual_quantity_required": max(
+                        0,
+                        catalog_required - derived,
+                    ),
+                }
+
+        # Team-planner requirements always keep their linked item present.
+        for item_id in self.derived_item_requirements:
+            objectives.setdefault(
+                item_id,
+                {
+                    "quantity_obtained": 0,
+                    "manual_quantity_required": 0,
+                },
+            )
+
+        return objectives
+
+    def _required_item_quantity(self, item_id: str) -> int:
+        record = self.item_objectives.get(item_id, {})
+        manual = int(record.get("manual_quantity_required", 0))
+        derived = self.derived_item_requirements.get(item_id, 0)
+        return manual + derived
+
+    def _checklist_items(self) -> list[dict[str, Any]]:
+        return [
+            item
+            for item in self.items
+            if self._required_item_quantity(
+                str(item.get("id", ""))
+            ) > 0
+        ]
+
+    def _serialized_item_objectives(self) -> list[dict]:
+        records: list[dict] = []
+        for item_id, record in self.item_objectives.items():
+            required = self._required_item_quantity(item_id)
+            if required <= 0:
+                continue
+            obtained = min(
+                int(record.get("quantity_obtained", 0)),
+                required,
+            )
+            records.append({
+                "id": item_id,
+                "quantity_obtained": obtained,
+                "manual_quantity_required": int(
+                    record.get("manual_quantity_required", 0)
+                ),
+            })
+        return records
 
     def build(self) -> ft.Control:
         self._root = ft.Column(
@@ -113,6 +257,23 @@ class MyJourneyView:
         self._root.controls = self._build_page_controls()
         self.page.update()
 
+    def refresh_from_app_state(self) -> None:
+        """Reload saved Journey progress after party or Box changes."""
+
+        self.earned_badges = self.app_state.earned_badges
+        self.item_objectives = self._load_item_objectives()
+        self.item_quantities = {
+            item_id: int(record.get("quantity_obtained", 0))
+            for item_id, record in self.item_objectives.items()
+        }
+        self.pokemon_obtained = {
+            str(pokemon.get("id")): self.app_state.is_pokemon_obtained(
+                str(pokemon.get("id"))
+            )
+            for pokemon in self.pokemon
+        }
+        self._refresh()
+
     async def _earn_next_badge(self) -> None:
         if self.earned_badges >= 8:
             return
@@ -140,52 +301,125 @@ class MyJourneyView:
         item_id: str,
         quantity: int,
     ) -> None:
-        item = next(
-            (entry for entry in self.items if str(entry.get("id")) == item_id),
-            None,
-        )
-        if item is None:
+        required = self._required_item_quantity(item_id)
+        if required <= 0:
             return
 
-        required = max(1, int(item.get("quantity_required", 1)))
         bounded_quantity = max(0, min(quantity, required))
-        previous = self.item_quantities.get(item_id, 0)
+        previous_state = deepcopy(self.item_objectives)
+        record = self.item_objectives.setdefault(
+            item_id,
+            {
+                "quantity_obtained": 0,
+                "manual_quantity_required": 0,
+            },
+        )
+        previous = int(record.get("quantity_obtained", 0))
         if bounded_quantity == previous:
             return
 
-        save_succeeded = await self.app_state.save_item_objective_quantity(
-            item_id=item_id,
-            quantity_obtained=bounded_quantity,
+        record["quantity_obtained"] = bounded_quantity
+        save_succeeded = await self.app_state.save_item_checklist(
+            self._serialized_item_objectives()
         )
         if not save_succeeded:
+            self.item_objectives = previous_state
             self._show_save_error("Item progress could not be saved.")
             return
 
         self.item_quantities[item_id] = bounded_quantity
         self._refresh()
 
-    async def _set_pokemon_obtained(
+    async def _add_item_objective(
         self,
-        pokemon_id: str,
-        obtained: bool,
+        item_id: str,
+        quantity: int,
     ) -> None:
-        previous = self.pokemon_obtained.get(pokemon_id, False)
-        if obtained == previous:
+        """Add or increment a manual checklist objective."""
+
+        if quantity <= 0:
             return
 
-        save_succeeded = await self.app_state.save_pokemon_objective(
-            pokemon_id=pokemon_id,
-            obtained=obtained,
+        previous_state = deepcopy(self.item_objectives)
+        record = self.item_objectives.setdefault(
+            item_id,
+            {
+                "quantity_obtained": 0,
+                "manual_quantity_required": 0,
+            },
+        )
+        record["manual_quantity_required"] = (
+            int(record.get("manual_quantity_required", 0))
+            + quantity
+        )
+
+        save_succeeded = await self.app_state.save_item_checklist(
+            self._serialized_item_objectives()
         )
         if not save_succeeded:
-            self._show_save_error("Pokémon progress could not be saved.")
+            self.item_objectives = previous_state
+            self._show_save_error(
+                "The checklist objective could not be added."
+            )
             return
 
-        self.pokemon_obtained[pokemon_id] = obtained
+        self.item_quantities[item_id] = int(
+            record.get("quantity_obtained", 0)
+        )
+        self._refresh()
+
+    async def _remove_manual_item_objective(
+        self,
+        item_id: str,
+    ) -> None:
+        """Remove the manual portion while retaining team-required quantity."""
+
+        record = self.item_objectives.get(item_id)
+        if record is None:
+            return
+
+        manual = int(record.get("manual_quantity_required", 0))
+        if manual <= 0:
+            return
+
+        previous_state = deepcopy(self.item_objectives)
+        record["manual_quantity_required"] = 0
+
+        required = self._required_item_quantity(item_id)
+        record["quantity_obtained"] = min(
+            int(record.get("quantity_obtained", 0)),
+            required,
+        )
+
+        if required <= 0:
+            self.item_objectives.pop(item_id, None)
+
+        save_succeeded = await self.app_state.save_item_checklist(
+            self._serialized_item_objectives()
+        )
+        if not save_succeeded:
+            self.item_objectives = previous_state
+            self._show_save_error(
+                "The checklist objective could not be removed."
+            )
+            return
+
+        self.item_quantities = {
+            objective_id: int(
+                objective.get("quantity_obtained", 0)
+            )
+            for objective_id, objective in self.item_objectives.items()
+        }
         self._refresh()
 
     def _show_save_error(self, message: str) -> None:
-        self.page.show_dialog(ft.SnackBar(content=ft.Text(message)))
+        """Show a concise error when Journey progress cannot be saved."""
+
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(message),
+            )
+        )
 
     def _item_checkbox_handler(
         self,
@@ -193,19 +427,142 @@ class MyJourneyView:
         item_id: str,
         required: int,
     ) -> None:
-        quantity = required if checkbox.value is True else 0
-        self.page.run_task(self._set_item_quantity, item_id, quantity)
+        """Persist a single-quantity item's checked or unchecked state."""
 
-    def _pokemon_checkbox_handler(
-        self,
-        checkbox: ft.Checkbox,
-        pokemon_id: str,
-    ) -> None:
+        quantity = required if checkbox.value is True else 0
         self.page.run_task(
-            self._set_pokemon_obtained,
-            pokemon_id,
-            checkbox.value is True,
+            self._set_item_quantity,
+            item_id,
+            quantity,
         )
+
+    @staticmethod
+    def _pokemon_family_stages(
+        pokemon: dict[str, Any],
+    ) -> list[str]:
+        """Return catchable/evolution stages in acquisition order."""
+
+        stages: list[str] = []
+
+        acquire_as = str(pokemon.get("acquire_as") or "").strip()
+        if acquire_as:
+            stages.append(acquire_as)
+
+        for step in pokemon.get("evolution_steps", []):
+            if not isinstance(step, dict):
+                continue
+            from_name = str(step.get("from") or "").strip()
+            to_name = str(step.get("to") or "").strip()
+            if from_name and from_name not in stages:
+                stages.append(from_name)
+            if to_name and to_name not in stages:
+                stages.append(to_name)
+
+        final_name = str(pokemon.get("pokemon") or "").strip()
+        if final_name and final_name not in stages:
+            stages.append(final_name)
+
+        return stages or ["Pokémon"]
+
+    def _show_pokemon_acquired_prompt(
+        self,
+        pokemon: dict[str, Any],
+    ) -> None:
+        """Choose the caught evolution stage, then open a prefilled editor row."""
+
+        stages = self._pokemon_family_stages(pokemon)
+        default_stage = stages[0]
+
+        self._caught_stage_selector = ft.Dropdown(
+            label="Which Pokémon did you catch?",
+            value=default_stage,
+            options=[
+                ft.DropdownOption(key=stage, text=stage)
+                for stage in stages
+            ],
+            width=320,
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Congratulations!",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(
+                    (
+                        "Choose the evolution stage you caught. My Team will "
+                        "open with that Pokémon's name already entered so you "
+                        "can add the rest of its information."
+                    ),
+                    color=TEXT_SECONDARY,
+                ),
+                self._caught_stage_selector,
+                ft.Text(
+                    (
+                        "Saving the Pokémon to either your active party or "
+                        "My Box will mark this Journey objective as acquired."
+                    ),
+                    color=TEXT_MUTED,
+                    size=12,
+                ),
+            ],
+            spacing=14,
+            tight=True,
+        )
+
+        actions: list[ft.Control] = [
+            ft.Button(
+                content="Not Yet",
+                on_click=self._close_pokemon_acquired_prompt,
+            )
+        ]
+        if self.on_go_to_my_team is not None:
+            actions.append(
+                ft.Button(
+                    content="Add in My Team",
+                    icon=ft.Icons.GROUP_ROUNDED,
+                    bgcolor=PRIMARY_BLUE,
+                    color=TEXT_PRIMARY,
+                    icon_color=TEXT_PRIMARY,
+                    on_click=self._go_to_my_team_from_prompt,
+                )
+            )
+        dialog.actions = actions
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _close_pokemon_acquired_prompt(
+        self,
+        event: ft.Event[ft.Button] | None = None,
+    ) -> None:
+        del event
+        self._caught_stage_selector = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _go_to_my_team_from_prompt(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+
+        selected_stage = ""
+        if self._caught_stage_selector is not None:
+            selected_stage = str(
+                self._caught_stage_selector.value or ""
+            ).strip()
+
+        if not selected_stage:
+            return
+
+        self._caught_stage_selector = None
+        self.page.pop_dialog()
+
+        if self.on_go_to_my_team is not None:
+            self.on_go_to_my_team(selected_stage)
 
     @staticmethod
     def _build_page_intro() -> ft.Control:
@@ -230,8 +587,8 @@ class MyJourneyView:
         )
 
     def _item_status(self, item: dict[str, Any]) -> str:
-        required = int(item.get("quantity_required", 1))
         item_id = str(item.get("id", ""))
+        required = self._required_item_quantity(item_id)
         obtained = self.item_quantities.get(item_id, 0)
         if obtained >= required:
             return "obtained"
@@ -281,7 +638,7 @@ class MyJourneyView:
     def _build_current_objectives_card(self) -> ft.Control:
         objectives: list[ft.Control] = []
 
-        for item in self.items:
+        for item in self._checklist_items():
             if self._item_status(item) != "available":
                 continue
             objectives.append(
@@ -301,9 +658,9 @@ class MyJourneyView:
                     status="available",
                     title=str(pokemon.get("pokemon", "Unknown Pokémon")),
                     detail=self._pokemon_acquisition_text(pokemon),
-                    action=self._build_pokemon_progress_control(
+                    action=self._build_pokemon_obtained_action(
                         pokemon,
-                        compact=True,
+                        "available",
                     ),
                 )
             )
@@ -415,8 +772,44 @@ class MyJourneyView:
 
     def _build_journey_checklist_card(self) -> ft.Control:
         rows: list[ft.DataRow] = []
-        for item in self.items:
+        for item in self._checklist_items():
+            item_id = str(item.get("id", ""))
             status = self._item_status(item)
+            manual_quantity = int(
+                self.item_objectives.get(item_id, {}).get(
+                    "manual_quantity_required",
+                    0,
+                )
+            )
+            derived_quantity = self.derived_item_requirements.get(
+                item_id,
+                0,
+            )
+
+            if manual_quantity > 0:
+                remove_control: ft.Control = ft.IconButton(
+                    icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                    icon_color=DANGER,
+                    tooltip="Remove from Journey Checklist",
+                    on_click=(
+                        lambda event, objective_id=item_id:
+                        self._request_remove_item_objective(
+                            event,
+                            objective_id,
+                        )
+                    ),
+                )
+            else:
+                remove_control = ft.IconButton(
+                    icon=ft.Icons.LINK_ROUNDED,
+                    disabled=True,
+                    tooltip=(
+                        "Required by the Team Planner"
+                        if derived_quantity > 0
+                        else "Cannot remove"
+                    ),
+                )
+
             rows.append(
                 ft.DataRow(
                     cells=[
@@ -441,8 +834,12 @@ class MyJourneyView:
                             )
                         ),
                         ft.DataCell(
-                            self._build_item_obtained_action(item, status)
+                            self._build_item_obtained_action(
+                                item,
+                                status,
+                            )
                         ),
+                        ft.DataCell(remove_control),
                     ],
                 )
             )
@@ -453,6 +850,7 @@ class MyJourneyView:
                 self._column("Item"),
                 self._column("Location"),
                 self._column("Mark as obtained"),
+                self._column("Remove"),
             ],
             rows=rows,
             border=ft.Border.all(1, BORDER_DEFAULT),
@@ -463,12 +861,234 @@ class MyJourneyView:
             data_row_max_height=72,
         )
 
+        body_controls: list[ft.Control] = [
+            ft.Row(
+                controls=[
+                    ft.Button(
+                        content="Add Objective",
+                        icon=ft.Icons.ADD_ROUNDED,
+                        bgcolor=SUCCESS,
+                        color="#07120B",
+                        icon_color="#07120B",
+                        on_click=self._show_add_item_dialog,
+                    )
+                ],
+                alignment=ft.MainAxisAlignment.END,
+            ),
+            ft.Row(
+                controls=[table],
+                scroll=ft.ScrollMode.AUTO,
+            ),
+        ]
+
         return self._build_card(
             title="Journey Checklist",
             icon=ft.Icons.CHECKLIST_ROUNDED,
-            subtitle="Availability and completion status remain separate from progress controls.",
-            body=ft.Row(controls=[table], scroll=ft.ScrollMode.AUTO),
+            subtitle=(
+                "Add items, TMs, and TRs to your Journey and track "
+                "their completion."
+            ),
+            body=ft.Column(
+                controls=body_controls,
+                spacing=12,
+            ),
             col={"xs": 12, "lg": 6},
+        )
+
+    def _show_add_item_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+
+        options = [
+            ft.DropdownOption(
+                key=str(item.get("id", "")),
+                text=str(item.get("name", "Unknown item")),
+            )
+            for item in self.items
+            if item.get("id")
+        ]
+        if not options:
+            return
+
+        self._add_item_selector = ft.Dropdown(
+            label="Item, TM, or TR",
+            value=options[0].key,
+            options=options,
+            width=360,
+        )
+        self._add_item_quantity = ft.TextField(
+            label="Quantity",
+            value="1",
+            keyboard_type=ft.KeyboardType.NUMBER,
+            width=120,
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Add Journey Objective",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(
+                    (
+                        "Choose an objective from the current Sword "
+                        "reference catalog. Adding an item already on the "
+                        "checklist increases its required quantity."
+                    ),
+                    color=TEXT_SECONDARY,
+                ),
+                self._add_item_selector,
+                self._add_item_quantity,
+            ],
+            spacing=14,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._close_add_item_dialog,
+            ),
+            ft.Button(
+                content="Add Objective",
+                icon=ft.Icons.ADD_ROUNDED,
+                bgcolor=SUCCESS,
+                color="#07120B",
+                icon_color="#07120B",
+                on_click=self._confirm_add_item_objective,
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _close_add_item_dialog(
+        self,
+        event: ft.Event[ft.Button] | None = None,
+    ) -> None:
+        del event
+        self._add_item_selector = None
+        self._add_item_quantity = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _confirm_add_item_objective(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+
+        item_id = ""
+        if self._add_item_selector is not None:
+            item_id = str(
+                self._add_item_selector.value or ""
+            ).strip()
+
+        quantity_text = "1"
+        if self._add_item_quantity is not None:
+            quantity_text = str(
+                self._add_item_quantity.value or "1"
+            ).strip()
+
+        try:
+            quantity = int(quantity_text)
+        except ValueError:
+            quantity = 0
+
+        if not item_id or quantity <= 0:
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(
+                        "Choose an objective and enter a quantity "
+                        "greater than zero."
+                    )
+                )
+            )
+            return
+
+        self._add_item_selector = None
+        self._add_item_quantity = None
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._add_item_objective,
+            item_id,
+            quantity,
+        )
+
+    def _request_remove_item_objective(
+        self,
+        event: ft.Event[ft.IconButton],
+        item_id: str,
+    ) -> None:
+        del event
+
+        item = next(
+            (
+                entry
+                for entry in self.items
+                if str(entry.get("id", "")) == item_id
+            ),
+            None,
+        )
+        if item is None:
+            return
+
+        item_name = str(item.get("name", "this objective"))
+        derived = self.derived_item_requirements.get(item_id, 0)
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"Remove {item_name}?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                "This removes the manually added checklist objective."
+                + (
+                    f" The Team Planner still requires {derived}, so "
+                    "that linked quantity will remain."
+                    if derived > 0
+                    else ""
+                )
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=lambda: self.page.pop_dialog(),
+            ),
+            ft.Button(
+                content="Remove",
+                icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                bgcolor=DANGER,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event, objective_id=item_id:
+                    self._confirm_remove_item_objective(
+                        event,
+                        objective_id,
+                    )
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_remove_item_objective(
+        self,
+        event: ft.Event[ft.Button],
+        item_id: str,
+    ) -> None:
+        del event
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._remove_manual_item_objective,
+            item_id,
         )
 
     def _build_map_card(self) -> ft.Control:
@@ -659,9 +1279,9 @@ class MyJourneyView:
             border_radius=12,
         )
 
-    @staticmethod
-    def _item_display_name(item: dict[str, Any]) -> str:
-        quantity = int(item.get("quantity_required", 1))
+    def _item_display_name(self, item: dict[str, Any]) -> str:
+        item_id = str(item.get("id", ""))
+        quantity = self._required_item_quantity(item_id)
         name = str(item.get("name", "Unknown item"))
         return f"{name} ×{quantity}" if quantity > 1 else name
 
@@ -670,8 +1290,9 @@ class MyJourneyView:
         item: dict[str, Any],
         status: str,
     ) -> str:
-        required = int(item.get("quantity_required", 1))
-        obtained = self.item_quantities.get(str(item.get("id", "")), 0)
+        item_id = str(item.get("id", ""))
+        required = self._required_item_quantity(item_id)
+        obtained = self.item_quantities.get(item_id, 0)
         if status == "obtained":
             return f"Obtained ({obtained}/{required})"
         if obtained > 0:
@@ -694,7 +1315,18 @@ class MyJourneyView:
     ) -> ft.Control:
         if status == "unavailable":
             return ft.Text("—", color=TEXT_MUTED, text_align=ft.TextAlign.CENTER)
-        return self._build_pokemon_progress_control(pokemon)
+        if status == "obtained":
+            return ft.Text(
+                "Acquired",
+                color=PRIMARY_BLUE,
+                size=12,
+                weight=ft.FontWeight.W_600,
+            )
+        return ft.Button(
+            content="I caught one!",
+            icon=ft.Icons.CATCHING_POKEMON_ROUNDED,
+            on_click=lambda: self._show_pokemon_acquired_prompt(pokemon),
+        )
 
     def _build_item_progress_control(
         self,
@@ -703,7 +1335,7 @@ class MyJourneyView:
         compact: bool = False,
     ) -> ft.Control:
         item_id = str(item.get("id", ""))
-        required = max(1, int(item.get("quantity_required", 1)))
+        required = self._required_item_quantity(item_id)
         obtained = min(self.item_quantities.get(item_id, 0), required)
         status = self._item_status(item)
         enabled = status != "unavailable"
@@ -755,27 +1387,6 @@ class MyJourneyView:
             tight=True,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
-
-    def _build_pokemon_progress_control(
-        self,
-        pokemon: dict[str, Any],
-        *,
-        compact: bool = False,
-    ) -> ft.Control:
-        pokemon_id = str(pokemon.get("id", ""))
-        obtained = self.pokemon_obtained.get(pokemon_id, False)
-        status = self._pokemon_status(pokemon)
-        checkbox = ft.Checkbox(
-            value=obtained,
-            disabled=status == "unavailable",
-            tooltip="Caught" if obtained else status.title(),
-            active_color=PRIMARY_BLUE,
-            scale=0.9 if compact else 1.0,
-        )
-        checkbox.on_change = lambda: self._pokemon_checkbox_handler(
-            checkbox, pokemon_id
-        )
-        return checkbox
 
     def _available_sources(self, item: dict[str, Any]) -> list[dict[str, Any]]:
         return [

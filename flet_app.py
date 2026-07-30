@@ -123,19 +123,34 @@ async def main(page: ft.Page) -> None:
             on_start_new_journey=start_new_journey_from_app,
         )
 
-        my_team_view = MyTeamView(
-            page,
-            app_state=app_state,
-            moves_data=app_state.moves_data,
-            on_team_updated=(
-                battle_compass_view.refresh_team_data
-            ),
-            on_journey_loaded=show_loaded_application,
-        )
+        app_shell: AppShell
+
+        def go_to_my_team_with_prefill(
+            pokemon_name: str,
+        ) -> None:
+            my_team_view.begin_prefilled_pokemon_entry(
+                pokemon_name
+            )
+            app_shell.show_view("my_team")
 
         my_journey_view = MyJourneyView(
             page,
             app_state=app_state,
+            on_go_to_my_team=go_to_my_team_with_prefill,
+        )
+
+        def refresh_after_team_update(
+            team_data: list[dict],
+        ) -> None:
+            battle_compass_view.refresh_team_data(team_data)
+            my_journey_view.refresh_from_app_state()
+
+        my_team_view = MyTeamView(
+            page,
+            app_state=app_state,
+            moves_data=app_state.moves_data,
+            on_team_updated=refresh_after_team_update,
+            on_journey_loaded=show_loaded_application,
         )
 
         about_view = AboutView(

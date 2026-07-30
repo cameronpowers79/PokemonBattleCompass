@@ -111,6 +111,7 @@ def create_journey(
         "schema_version": JOURNEY_SCHEMA_VERSION,
         "starter": starter,
         "team": deepcopy(team or []),
+        "box": [],
         "active_view": "battle_compass",
         "battle_compass_selection": {
             "trainer": None,
@@ -119,6 +120,7 @@ def create_journey(
         },
         "my_journey": {
             "earned_badges": 0,
+            "checklist_initialized": False,
             "item_objectives": [],
             "pokemon_objectives": [],
         },
@@ -172,6 +174,20 @@ def _validate_journey(
             "team record."
         )
 
+    box = journey.get("box", [])
+
+    if not isinstance(box, list):
+        return "Stored Journey box is not a list."
+
+    if not all(
+        isinstance(pokemon, dict)
+        for pokemon in box
+    ):
+        return (
+            "Stored Journey contains an invalid "
+            "boxed Pokémon record."
+        )
+
     active_view = journey.get("active_view")
 
     if active_view is not None:
@@ -194,6 +210,16 @@ def _validate_journey(
             or not 0 <= earned_badges <= 8
         ):
             return "Stored My Journey badge progress is invalid."
+
+        checklist_initialized = my_journey.get(
+            "checklist_initialized",
+            False,
+        )
+        if not isinstance(checklist_initialized, bool):
+            return (
+                "Stored My Journey checklist initialization "
+                "state is invalid."
+            )
 
         for field_name in (
             "item_objectives",

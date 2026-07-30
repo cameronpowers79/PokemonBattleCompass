@@ -11,7 +11,9 @@ from ui.viewmodels.battle_compass_vm import (
 )
 
 from copy import deepcopy
-from typing import Literal
+import json
+from pathlib import Path
+from typing import Any, Literal
 
 import flet as ft
 
@@ -22,6 +24,9 @@ from ui.storage.journey_storage import (
     load_journey,
     save_journey,
 )
+
+
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 
 AppStartupState = Literal[
@@ -135,6 +140,7 @@ class AppState:
 
         default_state = {
             "earned_badges": 0,
+            "checklist_initialized": False,
             "item_objectives": [],
             "pokemon_objectives": [],
         }
@@ -154,6 +160,13 @@ class AppState:
         ):
             earned_badges = 0
 
+        checklist_initialized = my_journey.get(
+            "checklist_initialized",
+            False,
+        )
+        if not isinstance(checklist_initialized, bool):
+            checklist_initialized = False
+
         item_objectives = my_journey.get("item_objectives", [])
         if not isinstance(item_objectives, list):
             item_objectives = []
@@ -167,6 +180,7 @@ class AppState:
 
         return {
             "earned_badges": earned_badges,
+            "checklist_initialized": checklist_initialized,
             "item_objectives": item_objectives,
             "pokemon_objectives": pokemon_objectives,
         }
@@ -225,6 +239,21 @@ class AppState:
             return []
 
         return team
+
+    @property
+    def box_data(self) -> list[dict]:
+        """Return the active Journey's boxed Pokémon list."""
+
+        if self.journey is None:
+            return []
+
+        box = self.journey.get("box")
+
+        if not isinstance(box, list):
+            box = []
+            self.journey["box"] = box
+
+        return box
 
     @property
     def moves_data(self) -> list[dict]:
@@ -466,6 +495,153 @@ class AppState:
 
         return True
     
+
+    @staticmethod
+    def _normalize_pokemon_name(value: object) -> str:
+        """Return a comparison-safe Pokémon name."""
+
+        normalized = str(value or "").strip().casefold()
+        for prefix in ("galarian ", "alolan ", "hisuian ", "paldean "):
+            if normalized.startswith(prefix):
+                normalized = normalized[len(prefix):]
+                break
+        return normalized
+
+    @classmethod
+    def _planned_pokemon_matches_owned_record(
+        cls,
+        planned: dict[str, Any],
+        owned: dict[str, Any],
+    ) -> bool:
+        """Return whether a party/Box record satisfies a Journey plan."""
+
+        owned_name = cls._normalize_pokemon_name(owned.get("Pokemon"))
+        if not owned_name:
+            return False
+
+        valid_names = {
+            cls._normalize_pokemon_name(planned.get("pokemon")),
+            cls._normalize_pokemon_name(planned.get("acquire_as")),
+        }
+
+        for step in planned.get("evolution_steps", []):
+            if not isinstance(step, dict):
+                continue
+            valid_names.add(cls._normalize_pokemon_name(step.get("from")))
+            valid_names.add(cls._normalize_pokemon_name(step.get("to")))
+
+        valid_names.discard("")
+        if owned_name not in valid_names:
+            return False
+
+        requirement = str(
+            planned.get("acquisition_requirement", "")
+        ).strip().casefold()
+        if "female" in requirement:
+            return str(owned.get("Gender", "")).strip().casefold() == "female"
+
+        return True
+
+    def _sync_pokemon_objectives_from_owned_pokemon(
+        self,
+        team_data: list[dict],
+        box_data: list[dict],
+    ) -> None:
+        """Mark planned Pokémon acquired when owned in party or Box."""
+
+        journey = self.journey
+        if journey is None:
+            return
+
+        try:
+            with (DATA_DIR / "journey_pokemon.json").open(
+                "r",
+                encoding="utf-8",
+            ) as file:
+                planned_pokemon = json.load(file)
+        except (OSError, json.JSONDecodeError):
+            return
+
+        if not isinstance(planned_pokemon, list):
+            return
+
+        owned_pokemon = [
+            record
+            for record in [*team_data, *box_data]
+            if isinstance(record, dict)
+        ]
+        if not owned_pokemon:
+            return
+
+        updated_my_journey = deepcopy(self.my_journey_data)
+        existing_ids = {
+            str(record.get("id"))
+            for record in updated_my_journey["pokemon_objectives"]
+            if isinstance(record, dict) and record.get("obtained") is True
+        }
+
+        for planned in planned_pokemon:
+            if not isinstance(planned, dict):
+                continue
+            pokemon_id = str(planned.get("id", "")).strip()
+            if not pokemon_id or pokemon_id in existing_ids:
+                continue
+            if any(
+                self._planned_pokemon_matches_owned_record(planned, owned)
+                for owned in owned_pokemon
+            ):
+                updated_my_journey["pokemon_objectives"].append({
+                    "id": pokemon_id,
+                    "obtained": True,
+                })
+                existing_ids.add(pokemon_id)
+
+        journey["my_journey"] = updated_my_journey
+
+    async def save_team_and_box(
+        self,
+        team_data: list[dict],
+        box_data: list[dict],
+    ) -> bool:
+        """Atomically save active-party and boxed Pokémon data."""
+
+        if self.journey is None:
+            raise RuntimeError(
+                "A Journey must exist before Pokémon can be saved."
+            )
+
+        previous_team = deepcopy(self.team_data)
+        previous_box = deepcopy(self.box_data)
+        previous_my_journey = deepcopy(self.journey.get("my_journey"))
+
+        self.journey["team"] = deepcopy(team_data)
+        self.journey["box"] = deepcopy(box_data)
+        self._sync_pokemon_objectives_from_owned_pokemon(
+            team_data,
+            box_data,
+        )
+
+        save_succeeded = await save_journey(
+            self.page,
+            self.journey,
+        )
+
+        if not save_succeeded:
+            self.journey["team"] = previous_team
+            self.journey["box"] = previous_box
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            return False
+
+        self.startup_state = (
+            "ready"
+            if self.has_team_member
+            else "needs_onboarding"
+        )
+        return True
+
     async def save_battle_compass_selection(
         self,
         *,
@@ -643,6 +819,84 @@ class AppState:
             else:
                 self.journey["my_journey"] = previous_my_journey
         return save_succeeded
+
+    async def save_item_checklist(
+        self,
+        records: list[dict],
+    ) -> bool:
+        """Persist the complete editable Journey Checklist state."""
+
+        if self.journey is None:
+            return False
+        if not isinstance(records, list):
+            raise ValueError("Item objectives must be a list.")
+
+        normalized_records: list[dict] = []
+        seen_ids: set[str] = set()
+
+        for record in records:
+            if not isinstance(record, dict):
+                raise ValueError("Each item objective must be an object.")
+
+            item_id = str(record.get("id", "")).strip()
+            if not item_id or item_id in seen_ids:
+                raise ValueError("Item objective IDs must be unique.")
+
+            quantity_obtained = record.get("quantity_obtained", 0)
+            manual_quantity_required = record.get(
+                "manual_quantity_required",
+                0,
+            )
+
+            for value, label in (
+                (quantity_obtained, "obtained quantity"),
+                (manual_quantity_required, "manual required quantity"),
+            ):
+                if (
+                    not isinstance(value, int)
+                    or isinstance(value, bool)
+                    or value < 0
+                ):
+                    raise ValueError(
+                        f"Item objective {label} must be a "
+                        "non-negative integer."
+                    )
+
+            normalized_records.append({
+                "id": item_id,
+                "quantity_obtained": quantity_obtained,
+                "manual_quantity_required": manual_quantity_required,
+            })
+            seen_ids.add(item_id)
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey["checklist_initialized"] = True
+        updated_my_journey["item_objectives"] = normalized_records
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.page,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
+
 
     async def save_pokemon_objective(
         self,

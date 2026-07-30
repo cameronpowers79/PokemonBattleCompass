@@ -1,3 +1,4 @@
+
 """
 My Team view.
 
@@ -306,6 +307,7 @@ class MyTeamView:
         self.page = page
         self.app_state = app_state
         self.team_data = app_state.team_data
+        self.box_data = app_state.box_data
         self.moves_data = moves_data
         self.items_data = app_state.reference_data["items"]
         self.type_chart = cast(
@@ -442,6 +444,8 @@ class MyTeamView:
         ]
         self.working_team = deepcopy(self.team_data)
         self.saved_team_snapshot = deepcopy(self.team_data)
+        self.working_box = deepcopy(self.box_data)
+        self.saved_box_snapshot = deepcopy(self.box_data)
 
         self.editor_controls: dict[
             tuple[int, str],
@@ -453,7 +457,15 @@ class MyTeamView:
         ] = {}
 
         self.selected_index = 0
+        self.selected_source = "party"
         self.party_management_selected_index: int | None = None
+        self.pending_party_action: str | None = None
+        self.pending_box_index: int | None = None
+        self.pending_swap_party_index: int | None = None
+
+        self.box_table_host = ft.Container()
+        self.move_to_party_button: ft.Button | None = None
+        self.release_boxed_button: ft.Button | None = None
 
         self.party_management_host = ft.Container()
         self.box_pokemon_button: ft.Button | None = None
@@ -630,6 +642,7 @@ class MyTeamView:
         self.table_host = ft.Container(
             content=self._build_editor_table(),
         )
+        self.box_table_host.content = self._build_box_table()
 
         self._refresh_selector()
         self._refresh_detail()
@@ -638,7 +651,10 @@ class MyTeamView:
     def has_unsaved_changes(self) -> bool:
         """Return whether the working editor differs from the saved team."""
 
-        return self.working_team != self.saved_team_snapshot
+        return (
+            self.working_team != self.saved_team_snapshot
+            or self.working_box != self.saved_box_snapshot
+        )
 
     def discard_unsaved_changes(self) -> None:
         """Restore the editor to the most recently saved team."""
@@ -646,12 +662,16 @@ class MyTeamView:
         self.working_team = deepcopy(
             self.saved_team_snapshot
         )
+        self.working_box = deepcopy(
+            self.saved_box_snapshot
+        )
         self.editor_controls.clear()
         self._autocomplete_edit_versions.clear()
 
         self.table_host.content = (
             self._build_editor_table()
         )
+        self.box_table_host.content = self._build_box_table()
 
         self.save_status.value = ""
         self.save_status.color = SUCCESS
@@ -662,6 +682,113 @@ class MyTeamView:
         self._refresh_selector()
         self._refresh_detail()
         self._sync_team_management_buttons()
+
+    def begin_prefilled_pokemon_entry(
+        self,
+        pokemon_name: str,
+    ) -> None:
+        """Open a new Team Editor row with the Pokémon name pre-populated."""
+
+        normalized_name = pokemon_name.strip()
+        if not normalized_name:
+            return
+
+        if len(self.working_team) < 6:
+            record = self._blank_pokemon_record()
+            record["Pokemon"] = normalized_name
+            self.working_team.append(record)
+            self._refresh_after_prefilled_entry()
+            return
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                (
+                    f"Your active party is full. Choose a party Pokémon to "
+                    f"move to My Box so {normalized_name} can be added to "
+                    "the Team Editor."
+                ),
+                color=TEXT_SECONDARY,
+            )
+        ]
+
+        for index, pokemon in enumerate(self.working_team):
+            party_name = str(
+                pokemon.get("Pokemon")
+                or f"Team Slot {index + 1}"
+            )
+            controls.append(
+                ft.Button(
+                    content=(
+                        f"{party_name} · "
+                        f"Lv. {pokemon.get('Level', '—')}"
+                    ),
+                    on_click=(
+                        lambda event, party_index=index, name=normalized_name:
+                        self._prefill_after_boxing_party_member(
+                            event,
+                            party_index,
+                            name,
+                        )
+                    ),
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Choose a Party Pokémon",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=lambda: self.page.pop_dialog(),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _prefill_after_boxing_party_member(
+        self,
+        event: ft.Event[ft.Button],
+        party_index: int,
+        pokemon_name: str,
+    ) -> None:
+        """Box one party member and add a prefilled editor row."""
+
+        del event
+
+        if party_index < 0 or party_index >= len(self.working_team):
+            return
+
+        outgoing = self.working_team[party_index]
+        record = self._blank_pokemon_record()
+        record["Pokemon"] = pokemon_name
+
+        self.working_team[party_index] = record
+        self.working_box.append(outgoing)
+
+        self.page.pop_dialog()
+        self._refresh_after_prefilled_entry()
+
+    def _refresh_after_prefilled_entry(self) -> None:
+        """Refresh the Team Editor after creating a prefilled row."""
+
+        self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
+        self.table_host.content = self._build_editor_table()
+        self.box_table_host.content = self._build_box_table()
+        self._update_dirty_state()
+        self._sync_team_management_buttons()
+        self._sync_box_buttons()
+        self._refresh_selector()
+        self._refresh_detail()
+        self.page.update()
 
     def _add_pokemon(
         self,
@@ -686,6 +813,7 @@ class MyTeamView:
         self.table_host.content = (
             self._build_editor_table()
         )
+        self.box_table_host.content = self._build_box_table()
 
         self._update_dirty_state()
         self._sync_team_management_buttons()
@@ -1038,12 +1166,13 @@ class MyTeamView:
 
         self.page.pop_dialog()
 
+        self.pending_party_action = action
+
         if action == "box":
             title = f"Box {pokemon_name}?"
             message = (
-                f"{pokemon_name} will be removed from your "
-                "active party. Boxed Pokémon will be available "
-                "again once PC storage is added."
+                f"{pokemon_name} will move from your active party "
+                "to My Box when you save the team."
             )
             confirm_label = "Box Pokémon"
             confirm_icon = ft.Icons.ARCHIVE_OUTLINED
@@ -1115,10 +1244,11 @@ class MyTeamView:
             self.page.update()
             return
 
-        self.working_team.pop(
-            selected_index
-        )
+        pokemon = self.working_team.pop(selected_index)
+        if self.pending_party_action == "box":
+            self.working_box.append(pokemon)
 
+        self.pending_party_action = None
         self.party_management_selected_index = None
         self.editor_controls.clear()
         self._autocomplete_edit_versions.clear()
@@ -1142,6 +1272,7 @@ class MyTeamView:
         del event
 
         self.party_management_selected_index = None
+        self.pending_party_action = None
         self.page.pop_dialog()
         self.page.update()
 
@@ -1154,6 +1285,7 @@ class MyTeamView:
         del event
 
         self.party_management_selected_index = None
+        self.pending_party_action = None
         self.page.pop_dialog()
         self.page.update()
 
@@ -1165,6 +1297,7 @@ class MyTeamView:
         self.save_button.disabled = not is_dirty
         self.export_button.disabled = is_dirty
         self.detail_notice.visible = is_dirty
+        self._sync_box_buttons()
 
         if is_dirty:
             self.save_status.value = "Unsaved changes"
@@ -1272,17 +1405,659 @@ class MyTeamView:
             border_radius=CARD_RADIUS,
         )
 
+        box_card = self._build_box_card()
+
         return ft.Column(
             controls=cast(
                 list[ft.Control],
                 [
                     editor_card,
                     details_card,
+                    box_card,
                 ],
             ),
             spacing=24,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
+
+    def _build_box_card(self) -> ft.Control:
+        self.move_to_party_button = ft.Button(
+            content="Move to Party",
+            icon=ft.Icons.SWAP_HORIZ_ROUNDED,
+            on_click=self._request_move_boxed_to_party,
+        )
+        self.release_boxed_button = ft.Button(
+            content="Release",
+            icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+            color="#FCA5A5",
+            icon_color="#FCA5A5",
+            on_click=self._request_release_boxed,
+        )
+        self._sync_box_buttons()
+
+        return ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Text(
+                            "My Box",
+                            size=24,
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        ft.Text(
+                            (
+                                "Boxed Pokémon remain part of your Journey. "
+                                "Use the controls below to move or release one; "
+                                "use Pokémon Details only when you want to inspect it."
+                            ),
+                            size=14,
+                            color=TEXT_SECONDARY,
+                        ),
+                        self.box_table_host,
+                        ft.Row(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    self.move_to_party_button,
+                                    self.release_boxed_button,
+                                ],
+                            ),
+                            spacing=14,
+                            wrap=True,
+                        ),
+                    ],
+                ),
+                spacing=16,
+            ),
+            width=940,
+            padding=CARD_PADDING,
+            bgcolor=SURFACE,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=CARD_RADIUS,
+        )
+
+    def _build_box_table(self) -> ft.Control:
+        if not self.working_box:
+            return ft.Container(
+                content=ft.Text(
+                    "No Pokémon are currently boxed.",
+                    color=TEXT_MUTED,
+                    italic=True,
+                ),
+                padding=16,
+                bgcolor=SURFACE_RAISED,
+                border_radius=12,
+            )
+
+        rows: list[ft.DataRow] = []
+        for pokemon in self.working_box:
+            pokemon_name = str(pokemon.get("Pokemon") or "Unknown")
+            sprite_path = get_sprite_path(
+                pokemon_name,
+                gender=pokemon.get("Gender"),
+                use_texture=False,
+            )
+            if sprite_path is None:
+                sprite: ft.Control = ft.Icon(
+                    ft.Icons.HELP_OUTLINE_ROUNDED,
+                    size=34,
+                    color=TEXT_MUTED,
+                )
+            else:
+                sprite = ft.Image(
+                    src=self._asset_src(sprite_path),
+                    width=48,
+                    height=48,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=pokemon_name,
+                )
+            rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(sprite),
+                        ft.DataCell(
+                            ft.Text(
+                                pokemon_name,
+                                color=TEXT_PRIMARY,
+                                weight=ft.FontWeight.W_600,
+                            )
+                        ),
+                        ft.DataCell(
+                            ft.Text(
+                                str(pokemon.get("Level", "—")),
+                                color=TEXT_SECONDARY,
+                            )
+                        ),
+                    ]
+                )
+            )
+
+        table = ft.DataTable(
+            columns=[
+                ft.DataColumn(label=ft.Text("Sprite", weight=ft.FontWeight.BOLD)),
+                ft.DataColumn(label=ft.Text("Pokémon", weight=ft.FontWeight.BOLD)),
+                ft.DataColumn(label=ft.Text("Level", weight=ft.FontWeight.BOLD)),
+            ],
+            rows=rows,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=12,
+            heading_row_color=SURFACE_RAISED,
+            column_spacing=24,
+            data_row_min_height=58,
+            data_row_max_height=58,
+        )
+        return ft.Row(controls=cast(list[ft.Control], [table]))
+
+    def _sync_box_buttons(self) -> None:
+        """Enable Box controls whenever at least one Pokémon is boxed."""
+
+        has_boxed_pokemon = bool(self.working_box)
+
+        if self.move_to_party_button is not None:
+            self.move_to_party_button.disabled = not has_boxed_pokemon
+
+        if self.release_boxed_button is not None:
+            self.release_boxed_button.disabled = not has_boxed_pokemon
+
+    def _request_move_boxed_to_party(self) -> None:
+        """Ask which boxed Pokémon should move to the active party."""
+
+        if not self.working_box:
+            return
+
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                "Choose the boxed Pokémon you want to move to the active party.",
+                color=TEXT_SECONDARY,
+            )
+        ]
+
+        for index, pokemon in enumerate(self.working_box):
+            pokemon_name = str(
+                pokemon.get("Pokemon")
+                or f"Box Slot {index + 1}"
+            )
+            controls.append(
+                ft.Button(
+                    content=(
+                        f"{pokemon_name} · "
+                        f"Lv. {pokemon.get('Level', '—')}"
+                    ),
+                    on_click=(
+                        lambda event, box_index=index:
+                        self._select_boxed_for_party(
+                            event,
+                            box_index,
+                        )
+                    ),
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Move to Party",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _select_boxed_for_party(
+        self,
+        event: ft.Event[ft.Button],
+        box_index: int,
+    ) -> None:
+        """Continue the move flow after a boxed Pokémon is chosen."""
+
+        del event
+
+        if box_index < 0 or box_index >= len(self.working_box):
+            return
+
+        self.pending_box_index = box_index
+        self.page.pop_dialog()
+
+        if len(self.working_team) < 6:
+            self._show_open_slot_move_confirmation()
+            return
+
+        self._show_party_swap_selection()
+
+    def _show_open_slot_move_confirmation(self) -> None:
+        """Confirm moving a boxed Pokémon into an open party slot."""
+
+        if self.pending_box_index is None:
+            return
+
+        pokemon_name = str(
+            self.working_box[self.pending_box_index].get("Pokemon")
+            or "this Pokémon"
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"Move {pokemon_name} to the party?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                f"{pokemon_name} will move from My Box to the active party "
+                "when you save the team."
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            ),
+            ft.Button(
+                content="Move to Party",
+                icon=ft.Icons.SWAP_HORIZ_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=self._confirm_move_to_open_slot,
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_move_to_open_slot(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Move the chosen boxed Pokémon into the working party."""
+
+        del event
+
+        if self.pending_box_index is None:
+            self.page.pop_dialog()
+            return
+
+        if (
+            self.pending_box_index < 0
+            or self.pending_box_index >= len(self.working_box)
+            or len(self.working_team) >= 6
+        ):
+            self._cancel_box_action()
+            return
+
+        pokemon = self.working_box.pop(self.pending_box_index)
+        self.working_team.append(pokemon)
+
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+        self.page.pop_dialog()
+        self._refresh_after_box_action()
+
+    def _show_party_swap_selection(self) -> None:
+        """Ask which party Pokémon should be boxed during a full-party swap."""
+
+        if self.pending_box_index is None:
+            return
+
+        incoming_name = str(
+            self.working_box[self.pending_box_index].get("Pokemon")
+            or "this Pokémon"
+        )
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                (
+                    f"Your party is full. Choose the party Pokémon that should "
+                    f"move to My Box so {incoming_name} can join."
+                ),
+                color=TEXT_SECONDARY,
+            )
+        ]
+
+        for index, pokemon in enumerate(self.working_team):
+            pokemon_name = str(
+                pokemon.get("Pokemon")
+                or f"Team Slot {index + 1}"
+            )
+            controls.append(
+                ft.Button(
+                    content=(
+                        f"{pokemon_name} · "
+                        f"Lv. {pokemon.get('Level', '—')}"
+                    ),
+                    on_click=(
+                        lambda event, party_index=index:
+                        self._select_party_swap_target(
+                            event,
+                            party_index,
+                        )
+                    ),
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Choose a party Pokémon",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _select_party_swap_target(
+        self,
+        event: ft.Event[ft.Button],
+        party_index: int,
+    ) -> None:
+        """Show a final confirmation for a Box/party swap."""
+
+        del event
+
+        if (
+            self.pending_box_index is None
+            or party_index < 0
+            or party_index >= len(self.working_team)
+        ):
+            return
+
+        self.pending_swap_party_index = party_index
+        self.page.pop_dialog()
+
+        incoming_name = str(
+            self.working_box[self.pending_box_index].get("Pokemon")
+            or "the boxed Pokémon"
+        )
+        outgoing_name = str(
+            self.working_team[party_index].get("Pokemon")
+            or "the party Pokémon"
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"Swap {incoming_name} and {outgoing_name}?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                f"{incoming_name} will join the active party and "
+                f"{outgoing_name} will move to My Box when you save the team."
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            ),
+            ft.Button(
+                content="Confirm Swap",
+                icon=ft.Icons.SWAP_HORIZ_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=self._confirm_box_party_swap,
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_box_party_swap(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Apply the confirmed Box/party swap to the working state."""
+
+        del event
+
+        if (
+            self.pending_box_index is None
+            or self.pending_swap_party_index is None
+            or self.pending_box_index < 0
+            or self.pending_box_index >= len(self.working_box)
+            or self.pending_swap_party_index < 0
+            or self.pending_swap_party_index >= len(self.working_team)
+        ):
+            self._cancel_box_action()
+            return
+
+        incoming = self.working_box[self.pending_box_index]
+        outgoing = self.working_team[self.pending_swap_party_index]
+
+        self.working_team[self.pending_swap_party_index] = incoming
+        self.working_box[self.pending_box_index] = outgoing
+
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+        self.page.pop_dialog()
+        self._refresh_after_box_action()
+
+    def _request_release_boxed(self) -> None:
+        """Ask which boxed Pokémon should be released."""
+
+        if not self.working_box:
+            return
+
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                "Choose the boxed Pokémon you want to release.",
+                color=TEXT_SECONDARY,
+            )
+        ]
+
+        for index, pokemon in enumerate(self.working_box):
+            pokemon_name = str(
+                pokemon.get("Pokemon")
+                or f"Box Slot {index + 1}"
+            )
+            controls.append(
+                ft.Button(
+                    content=(
+                        f"{pokemon_name} · "
+                        f"Lv. {pokemon.get('Level', '—')}"
+                    ),
+                    on_click=(
+                        lambda event, box_index=index:
+                        self._select_boxed_for_release(
+                            event,
+                            box_index,
+                        )
+                    ),
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Release a Boxed Pokémon",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _select_boxed_for_release(
+        self,
+        event: ft.Event[ft.Button],
+        box_index: int,
+    ) -> None:
+        """Confirm release after a boxed Pokémon is chosen."""
+
+        del event
+
+        if box_index < 0 or box_index >= len(self.working_box):
+            return
+
+        self.pending_box_index = box_index
+        self.page.pop_dialog()
+
+        pokemon_name = str(
+            self.working_box[box_index].get("Pokemon")
+            or "this Pokémon"
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"Release {pokemon_name}?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                f"This removes {pokemon_name} from the current Journey when "
+                "you save the team. This cannot be undone after saving."
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._cancel_box_action,
+            ),
+            ft.Button(
+                content="Release",
+                icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                bgcolor="#B94A55",
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=self._confirm_release_boxed,
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_release_boxed(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Remove the confirmed Pokémon from the working Box."""
+
+        del event
+
+        if (
+            self.pending_box_index is None
+            or self.pending_box_index < 0
+            or self.pending_box_index >= len(self.working_box)
+        ):
+            self._cancel_box_action()
+            return
+
+        self.working_box.pop(self.pending_box_index)
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+        self.page.pop_dialog()
+        self._refresh_after_box_action()
+
+    def _cancel_box_action(
+        self,
+        event: ft.Event[ft.Button] | None = None,
+    ) -> None:
+        """Cancel any pending Box move, swap, or release action."""
+
+        del event
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _refresh_after_box_action(self) -> None:
+        """Refresh the working party and Box after a confirmed action."""
+
+        self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
+        self.table_host.content = self._build_editor_table()
+        self.box_table_host.content = self._build_box_table()
+        self._update_dirty_state()
+        self._sync_team_management_buttons()
+        self._sync_box_buttons()
+        self._refresh_selector()
+        self._refresh_detail()
+        self.page.update()
+
+    def _close_simple_dialog(self) -> None:
+        self.page.pop_dialog()
+        self.page.update()
+
+    async def _persist_team_and_box_change(
+        self,
+        team: list[dict],
+        box: list[dict],
+        *,
+        selected_source: str,
+        selected_index: int,
+    ) -> None:
+        try:
+            succeeded = await self.app_state.save_team_and_box(team, box)
+        except (RuntimeError, ValueError) as error:
+            self.save_status.value = f"Pokémon could not be moved: {error}"
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+        if not succeeded:
+            self.save_status.value = "Pokémon could not be moved."
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
+        self.team_data = self.app_state.team_data
+        self.box_data = self.app_state.box_data
+        self.working_team = deepcopy(self.team_data)
+        self.saved_team_snapshot = deepcopy(self.team_data)
+        self.working_box = deepcopy(self.box_data)
+        self.saved_box_snapshot = deepcopy(self.box_data)
+        self.selected_source = selected_source
+        self.selected_index = selected_index
+        self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
+        self.table_host.content = self._build_editor_table()
+        self.box_table_host.content = self._build_box_table()
+        self._refresh_selector()
+        self._refresh_detail()
+        self._sync_team_management_buttons()
+        self.save_status.value = "Party and Box are up to date."
+        self.save_status.color = SUCCESS
+        if self.on_team_updated:
+            self.on_team_updated(self.app_state.team_data)
+        self.page.update()
 
     def _build_editor_table(self) -> ft.Control:
         table = ft.DataTable(
@@ -1789,54 +2564,151 @@ class MyTeamView:
         self.page.update()
 
     def _refresh_selector(self) -> None:
-        pokemon_names = [
-            str(pokemon.get("Pokemon") or f"Team Slot {index + 1}")
-            for index, pokemon in enumerate(self.saved_team_snapshot)
-        ]
+        options: list[ft.DropdownOption] = []
 
-        self.detail_selector.options = [
-            ft.DropdownOption(
-                key=str(index),
-                text=pokemon_name,
+        if self.saved_team_snapshot:
+            options.append(
+                ft.DropdownOption(
+                    key="heading:party",
+                    content=ft.Text(
+                        f"PARTY · {len(self.saved_team_snapshot)}",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_MUTED,
+                    ),
+                )
             )
-            for index, pokemon_name in enumerate(pokemon_names)
-        ]
+            options.extend(
+                ft.DropdownOption(
+                    key=f"party:{index}",
+                    text=str(
+                        pokemon.get("Pokemon")
+                        or f"Team Slot {index + 1}"
+                    ),
+                )
+                for index, pokemon in enumerate(
+                    self.saved_team_snapshot
+                )
+            )
 
-        if self.selected_index >= len(self.saved_team_snapshot):
+        if self.saved_box_snapshot:
+            options.append(
+                ft.DropdownOption(
+                    key="heading:box",
+                    content=ft.Text(
+                        f"BOX · {len(self.saved_box_snapshot)}",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_MUTED,
+                    ),
+                )
+            )
+            options.extend(
+                ft.DropdownOption(
+                    key=f"box:{index}",
+                    text=str(
+                        pokemon.get("Pokemon")
+                        or f"Box Slot {index + 1}"
+                    ),
+                )
+                for index, pokemon in enumerate(
+                    self.saved_box_snapshot
+                )
+            )
+
+        self.detail_selector.options = options
+
+        selected_records = (
+            self.saved_box_snapshot
+            if self.selected_source == "box"
+            else self.saved_team_snapshot
+        )
+        if self.selected_index >= len(selected_records):
+            self.selected_source = "party"
             self.selected_index = 0
 
-        self.detail_selector.value = str(self.selected_index)
+        if self.saved_team_snapshot or self.saved_box_snapshot:
+            if (
+                self.selected_source == "party"
+                and not self.saved_team_snapshot
+            ):
+                self.selected_source = "box"
+                self.selected_index = 0
+            self.detail_selector.value = (
+                f"{self.selected_source}:{self.selected_index}"
+            )
+        else:
+            self.detail_selector.value = None
+
+        self._sync_box_buttons()
 
     def _handle_detail_selection(
         self,
         event: ft.Event[ft.Dropdown],
     ) -> None:
-        if event.control.value is None:
+        value = event.control.value
+        if value is None:
+            return
+        if value.startswith("heading:"):
+            event.control.value = (
+                f"{self.selected_source}:{self.selected_index}"
+            )
+            self.page.update()
             return
 
         try:
-            self.selected_index = int(event.control.value)
-        except ValueError:
+            source, raw_index = value.split(":", 1)
+            selected_index = int(raw_index)
+        except (ValueError, TypeError):
             return
 
+        if source not in {"party", "box"}:
+            return
+
+        records = (
+            self.saved_box_snapshot
+            if source == "box"
+            else self.saved_team_snapshot
+        )
+        if selected_index < 0 or selected_index >= len(records):
+            return
+
+        self.selected_source = source
+        self.selected_index = selected_index
         self._refresh_detail()
+        self._sync_box_buttons()
         self.page.update()
 
     def _refresh_detail(self) -> None:
-        if not self.saved_team_snapshot:
-            self.detail_host.content = ft.Text(
-                "No Pokémon loaded.",
-                color=TEXT_SECONDARY,
-            )
-            return
+        records = (
+            self.saved_box_snapshot
+            if self.selected_source == "box"
+            else self.saved_team_snapshot
+        )
 
-        if self.selected_index >= len(self.saved_team_snapshot):
+        if not records:
+            fallback = (
+                self.saved_team_snapshot
+                if self.selected_source == "box"
+                else self.saved_box_snapshot
+            )
+            if not fallback:
+                self.detail_host.content = ft.Text(
+                    "No Pokémon loaded.",
+                    color=TEXT_SECONDARY,
+                )
+                self._sync_box_buttons()
+                return
+            self.selected_source = (
+                "party" if self.saved_team_snapshot else "box"
+            )
+            self.selected_index = 0
+            records = fallback
+
+        if self.selected_index >= len(records):
             self.selected_index = 0
 
-        pokemon = self.saved_team_snapshot[self.selected_index]
-        self.detail_host.content = self._build_detail_card(
-            pokemon
-        )
+        pokemon = records[self.selected_index]
+        self.detail_host.content = self._build_detail_card(pokemon)
+        self._sync_box_buttons()
 
     def _build_detail_card(
         self,
@@ -4372,8 +5244,9 @@ class MyTeamView:
             return
 
         try:
-            save_succeeded = await self.app_state.save_team(
-                saved_team
+            save_succeeded = await self.app_state.save_team_and_box(
+                saved_team,
+                self.working_box,
             )
         except (RuntimeError, ValueError) as error:
             self.save_status.value = (
@@ -4392,12 +5265,12 @@ class MyTeamView:
             return
 
         self.team_data = self.app_state.team_data
-        self.working_team = deepcopy(
-            self.app_state.team_data
-        )
-        self.saved_team_snapshot = deepcopy(
-            self.app_state.team_data
-        )
+        self.box_data = self.app_state.box_data
+        self.working_team = deepcopy(self.app_state.team_data)
+        self.saved_team_snapshot = deepcopy(self.app_state.team_data)
+        self.working_box = deepcopy(self.app_state.box_data)
+        self.saved_box_snapshot = deepcopy(self.app_state.box_data)
+        self.box_table_host.content = self._build_box_table()
         self.save_button.disabled = True
         self.export_button.disabled = False
         self.detail_notice.visible = False

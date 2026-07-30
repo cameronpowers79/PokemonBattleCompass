@@ -178,16 +178,6 @@
         "map_locations": [
           "wyndon"
         ]
-      },
-      {
-        "id": "black_sludge_stow_on_side_shop",
-        "method": "bargain_shop",
-        "location": "Stow-on-Side",
-        "location_detail": "May appear as the Bargain Shop's daily item",
-        "required_badge": 3,
-        "map_locations": [
-          "stow_on_side"
-        ]
       }
     ],
     "source_url": "https://www.serebii.net/itemdex/blacksludge.shtml"
