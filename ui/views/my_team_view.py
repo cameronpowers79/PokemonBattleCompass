@@ -72,6 +72,9 @@ MANAGE_BUTTON_DISABLED = "#4B355A"
 SAVE_BUTTON_ACTIVE = PRIMARY_BLUE
 SAVE_BUTTON_DISABLED = "#355E99"
 
+DISCARD_BUTTON_ACTIVE = "#8B5A5A"
+DISCARD_BUTTON_DISABLED = "#553A3A"
+
 EXPORT_BUTTON_ACTIVE = "#3C93B6"
 EXPORT_BUTTON_DISABLED = "#295E73"
 
@@ -613,6 +616,31 @@ class MyTeamView:
             ),
         )
 
+        self.discard_button = ft.Button(
+            content="Discard Changes",
+            icon=ft.Icons.UNDO_ROUNDED,
+            disabled=True,
+            on_click=self._discard_changes,
+            style=ft.ButtonStyle(
+                bgcolor={
+                    ft.ControlState.DEFAULT: DISCARD_BUTTON_ACTIVE,
+                    ft.ControlState.DISABLED: DISCARD_BUTTON_DISABLED,
+                },
+                color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                icon_color={
+                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
+                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
+                },
+                elevation={
+                    ft.ControlState.DEFAULT: 1,
+                    ft.ControlState.DISABLED: 0,
+                },
+            ),
+        )
+
         self.export_button = ft.Button(
             content="Export Journey",
             icon=ft.Icons.DOWNLOAD_OUTLINED,
@@ -681,7 +709,7 @@ class MyTeamView:
         )
 
     def discard_unsaved_changes(self) -> None:
-        """Restore the editor to the most recently saved team."""
+        """Restore the editor to the most recently saved team and Box."""
 
         self.working_team = deepcopy(
             self.saved_team_snapshot
@@ -689,6 +717,12 @@ class MyTeamView:
         self.working_box = deepcopy(
             self.saved_box_snapshot
         )
+
+        self.pending_party_action = None
+        self.pending_box_index = None
+        self.pending_swap_party_index = None
+        self.party_management_selected_index = None
+
         self.editor_controls.clear()
         self._autocomplete_edit_versions.clear()
 
@@ -697,15 +731,27 @@ class MyTeamView:
         )
         self.box_table_host.content = self._build_box_table()
 
-        self.save_status.value = ""
+        self.save_status.value = "Team is up to date."
         self.save_status.color = SUCCESS
         self.save_button.disabled = True
+        self.discard_button.disabled = True
         self.export_button.disabled = False
         self.detail_notice.visible = False
 
         self._refresh_selector()
         self._refresh_detail()
         self._sync_team_management_buttons()
+        self._sync_box_buttons()
+        self.page.update()
+
+    def _discard_changes(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Discard all unsaved Team Editor and Box changes."""
+
+        del event
+        self.discard_unsaved_changes()
 
     def begin_prefilled_pokemon_entry(
         self,
@@ -1319,6 +1365,7 @@ class MyTeamView:
         is_dirty = self.has_unsaved_changes
 
         self.save_button.disabled = not is_dirty
+        self.discard_button.disabled = not is_dirty
         self.export_button.disabled = is_dirty
         self.detail_notice.visible = is_dirty
         self._sync_box_buttons()
@@ -1365,6 +1412,7 @@ class MyTeamView:
                                     self.add_pokemon_button,
                                     self.manage_party_button,
                                     self.save_button,
+                                    self.discard_button,
                                     self.export_button,
                                     self.load_button,
                                     self.save_status,
@@ -1560,7 +1608,7 @@ class MyTeamView:
 
         table = ft.DataTable(
             columns=[
-                ft.DataColumn(label=ft.Text("Sprite", weight=ft.FontWeight.BOLD)),
+                ft.DataColumn(label=ft.Text("", weight=ft.FontWeight.BOLD)),
                 ft.DataColumn(label=ft.Text("Pokémon", weight=ft.FontWeight.BOLD)),
                 ft.DataColumn(label=ft.Text("Level", weight=ft.FontWeight.BOLD)),
             ],
@@ -5630,6 +5678,7 @@ class MyTeamView:
         self.saved_box_snapshot = deepcopy(self.app_state.box_data)
         self.box_table_host.content = self._build_box_table()
         self.save_button.disabled = True
+        self.discard_button.disabled = True
         self.export_button.disabled = False
         self.detail_notice.visible = False
 

@@ -1,7 +1,8 @@
 """My Journey view with persistent badge and objective progression.
 
 Badge, item, and planned-Pokémon changes save immediately. The graphical badge
-tracker includes earned-badge celebrations; map markers remain deferred.
+tracker includes earned-badge celebrations. Map markers use unobstructed,
+full-opacity sprites with larger Pokémon rendering and tap details.
 """
 
 from __future__ import annotations
@@ -60,6 +61,94 @@ BADGE_CROP_BOUNDS = {
 
 BADGE_FRAME_ASSET = "badges/badge_coin_frame.png"
 
+TOP_JOURNEY_CARD_HEIGHT = 650
+
+MAP_IMAGE_WIDTH = 1025
+MAP_IMAGE_HEIGHT = 2490
+MAP_RENDER_WIDTH = 520
+MAP_RENDER_HEIGHT = MAP_RENDER_WIDTH * MAP_IMAGE_HEIGHT / MAP_IMAGE_WIDTH
+
+# Initial calibration set. Coordinates are normalized against Galar_Map_Base.png.
+# Additional locations can be added without changing marker rendering.
+MAP_LOCATION_COORDINATES: dict[str, tuple[float, float]] = {
+    # Cities, routes, and fixed locations.
+    "wyndon": (0.448, 0.132),
+    "stow_on_side": (0.176, 0.440),
+    "galar_mine_no_2": (0.151, 0.610),
+    "route_2_lake": (0.562, 0.846),
+    "motostoke": (0.438, 0.642),
+    "route_6": (0.267, 0.468),
+    "route_9_circhester_bay": (0.758, 0.372),
+
+    # Southern Wild Area.
+    "meetup_spot": (0.405, 0.810),
+    "rolling_fields": (0.356, 0.779),
+    "dappled_grove": (0.302, 0.747),
+    "west_lake_axewell": (0.302, 0.712),
+    "east_lake_axewell": (0.520, 0.700),
+    "north_lake_miloch": (0.548, 0.663),
+
+    # Northern Wild Area. These correspond to the map's individual cyan dots.
+    "lake_of_outrage": (0.181, 0.527),
+    "hammerlocke_hills": (0.438, 0.507),
+    "giants_cap": (0.373, 0.523),
+    "giants_mirror": (0.497, 0.523),
+    "dusty_bowl": (0.405, 0.548),
+    "stony_wilderness": (0.454, 0.558),
+    "bridge_field": (0.408, 0.602),
+}
+
+POKEMON_MARKER_ASSETS: dict[str, str] = {
+    "aegislash": "raw/pokesprite/pokemon-gen8/regular/honedge.png",
+    "chandelure": "raw/pokesprite/pokemon-gen8/regular/litwick.png",
+    "dhelmise": "raw/pokesprite/pokemon-gen8/regular/dhelmise.png",
+    "froslass": "raw/pokesprite/pokemon-gen8/regular/snorunt.png",
+    "mimikyu": "raw/pokesprite/pokemon-gen8/regular/mimikyu.png",
+    "runerigus": "raw/pokesprite/pokemon-gen8/regular/yamask-galar.png",
+}
+
+ITEM_MARKER_ASSETS: dict[str, str] = {
+    "dusk_stone": "raw/pokesprite/items/evo-item/dusk-stone.png",
+    "dawn_stone": "raw/pokesprite/items/evo-item/dawn-stone.png",
+    "black_sludge": "raw/pokesprite/items/hold-item/black-sludge.png",
+}
+
+MOVE_TYPE_BY_ITEM_ID: dict[str, str] = {
+    "tr99_body_press": "fighting",
+    "tm53_mud_shot": "ground",
+    "tm74_venoshock": "poison",
+    "tm69_psycho_cut": "psychic",
+}
+
+TR_REPRESENTATIVE_LOCATIONS: dict[str, dict[str, str]] = {
+    "tr99_body_press": {
+        "watt_trader": "meetup_spot",
+        "max_raid_reward": "west_lake_axewell",
+    },
+}
+
+MAP_LOCATION_LABELS: dict[str, str] = {
+    "wyndon": "Wyndon",
+    "stow_on_side": "Stow-on-Side",
+    "galar_mine_no_2": "Galar Mine No. 2",
+    "route_2_lake": "Route 2 lakeside alcove",
+    "motostoke": "Motostoke",
+    "route_6": "Route 6",
+    "route_9_circhester_bay": "Route 9 — Circhester Bay",
+    "meetup_spot": "Meetup Spot",
+    "rolling_fields": "Rolling Fields",
+    "dappled_grove": "Dappled Grove",
+    "west_lake_axewell": "West Lake Axewell",
+    "east_lake_axewell": "East Lake Axewell",
+    "north_lake_miloch": "North Lake Miloch",
+    "bridge_field": "Bridge Field",
+    "giants_mirror": "Giant's Mirror",
+    "stony_wilderness": "Stony Wilderness",
+    "dusty_bowl": "Dusty Bowl",
+    "giants_cap": "Giant's Cap",
+    "lake_of_outrage": "Lake of Outrage",
+    "hammerlocke_hills": "Hammerlocke Hills",
+}
 
 class MyJourneyView:
     """Render My Journey fixture data with saved badge progression."""
@@ -99,6 +188,14 @@ class MyJourneyView:
         self._badge_celebration_badge: ft.Container | None = None
         self._badge_celebration_shine: ft.Container | None = None
         self._badge_celebration_sparkles: list[ft.Container] = []
+
+        self._move_to_map_enabled = True
+        self._selected_map_objective_id: str | None = None
+        self._map_stack: ft.Stack | None = None
+        self._move_to_map_overlay: ft.Container | None = None
+        self._map_markers_by_objective: dict[str, list[ft.Container]] = {}
+        self._selected_marker_y: float | None = None
+        self._selected_marker_record: dict[str, Any] | None = None
 
     @staticmethod
     def _load_json(path: Path) -> list[dict[str, Any]]:
@@ -245,6 +342,8 @@ class MyJourneyView:
         return records
 
     def build(self) -> ft.Control:
+        self._ensure_move_to_map_overlay()
+
         self._root = ft.Column(
             controls=self._build_page_controls(),
             spacing=24,
@@ -964,6 +1063,7 @@ class MyJourneyView:
                 continue
             objectives.append(
                 self._build_objective_row(
+                    objective_id=f"item:{item.get('id', '')}",
                     status="available",
                     title=self._item_display_name(item),
                     detail=self._current_item_source_text(item),
@@ -976,6 +1076,7 @@ class MyJourneyView:
                 continue
             objectives.append(
                 self._build_objective_row(
+                    objective_id=f"pokemon:{pokemon.get('id', '')}",
                     status="available",
                     title=str(pokemon.get("pokemon", "Unknown Pokémon")),
                     detail=self._pokemon_acquisition_text(pokemon),
@@ -1000,9 +1101,503 @@ class MyJourneyView:
             title="Current Objectives",
             icon=ft.Icons.FACT_CHECK_OUTLINED,
             subtitle="Top available goals you can act on right now.",
-            body=ft.Column(controls=objectives[:3], spacing=10),
+            body=ft.Column(
+                controls=objectives[:6],
+                spacing=10,
+            ),
             col={"xs": 12, "lg": 6},
+            height=TOP_JOURNEY_CARD_HEIGHT,
         )
+
+    def _ensure_move_to_map_overlay(self) -> None:
+        """Add the persistent Move to Map control to the page overlay."""
+
+        if self._move_to_map_overlay is not None:
+            return
+
+        move_to_map_toggle = ft.Switch(
+            label="Move to Map",
+            value=self._move_to_map_enabled,
+            active_color=PRIMARY_BLUE,
+            tooltip=(
+                "When enabled, selecting an item or Pokémon moves the "
+                "page to its map location."
+            ),
+        )
+        move_to_map_toggle.on_change = lambda: (
+            self._set_move_to_map_enabled(move_to_map_toggle)
+        )
+
+        overlay = ft.Container(
+            content=move_to_map_toggle,
+            padding=ft.Padding.symmetric(horizontal=14, vertical=8),
+            bgcolor=ft.Colors.with_opacity(0.94, SURFACE_RAISED),
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=24,
+            shadow=ft.BoxShadow(
+                blur_radius=18,
+                spread_radius=1,
+                color=ft.Colors.with_opacity(0.35, ft.Colors.BLACK),
+                offset=ft.Offset(0, 6),
+            ),
+        )
+        overlay.right = 24
+        overlay.bottom = 24
+
+        self._move_to_map_overlay = overlay
+        self.page.overlay.append(overlay)
+
+    def _set_move_to_map_enabled(
+        self,
+        toggle: ft.Switch,
+    ) -> None:
+        """Remember whether objective selection should move to the map."""
+
+        self._move_to_map_enabled = toggle.value is True
+
+    def _select_objective_for_map(
+        self,
+        objective_id: str,
+    ) -> None:
+        """Select an item or Pokémon and focus its map marker."""
+
+        if not objective_id:
+            return
+
+        self._selected_map_objective_id = objective_id
+        self._refresh()
+
+        if objective_id in self._map_markers_by_objective:
+            self.page.run_task(self._pulse_selected_markers)
+
+        if self._move_to_map_enabled:
+            self.page.run_task(self._scroll_to_selected_marker)
+
+    async def _pulse_selected_markers(self) -> None:
+        """Briefly pop every marker linked to the selected objective."""
+
+        markers = self._map_markers_by_objective.get(
+            self._selected_map_objective_id or "",
+            [],
+        )
+        if not markers:
+            return
+
+        for marker in markers:
+            marker.scale = 0.82
+        self.page.update()
+
+        await asyncio.sleep(0.18)
+
+        for marker in markers:
+            marker.scale = 1.38
+        self.page.update()
+
+        await asyncio.sleep(0.40)
+
+        for marker in markers:
+            marker.scale = 1.05
+        self.page.update()
+
+        await asyncio.sleep(0.18)
+
+        for marker in markers:
+            marker.scale = 1.24
+        self.page.update()
+
+        await asyncio.sleep(0.28)
+
+        for marker in markers:
+            marker.scale = 1.16
+        self.page.update()
+
+    async def _scroll_to_selected_marker(self) -> None:
+        """Center the selected marker vertically as closely as possible."""
+
+        marker_y = self._selected_marker_y
+        if marker_y is None:
+            return
+
+        page_width = float(self.page.width or 0)
+        viewport_height = float(self.page.height or 760)
+
+        if page_width >= 1000:
+            # Includes the page intro, top row, second-row spacing, and
+            # the map card's heading/padding.
+            map_top = 1320.0
+        else:
+            checklist_rows = len(self._checklist_items())
+            checklist_height = 220.0 + checklist_rows * 62.0
+            map_top = (
+                460.0
+                + TOP_JOURNEY_CARD_HEIGHT * 2
+                + 110.0
+                + checklist_height
+            )
+
+        target_offset = max(
+            0.0,
+            map_top + marker_y * MAP_RENDER_HEIGHT - viewport_height * 0.50,
+        )
+
+        await self.page.scroll_to(
+            offset=target_offset,
+            duration=520,
+            curve=ft.AnimationCurve.EASE_OUT_CUBIC,
+        )
+
+    @staticmethod
+    def _map_location_ids(
+        acquisition: dict[str, Any],
+    ) -> list[str]:
+        """Return canonical map-location IDs from Journey data."""
+
+        raw_locations = acquisition.get("map_locations", [])
+        if not isinstance(raw_locations, list):
+            return []
+
+        return [
+            str(location_id).strip()
+            for location_id in raw_locations
+            if str(location_id).strip()
+        ]
+
+    @staticmethod
+    def _source_marker_status(
+        objective_status: str,
+        required_badge: int,
+        earned_badges: int,
+    ) -> str:
+        """Resolve marker state for one specific acquisition source."""
+
+        if objective_status == "obtained":
+            return "obtained"
+        if required_badge <= earned_badges:
+            return "available"
+        return "unavailable"
+
+    @staticmethod
+    def _marker_asset_for_record(
+        record: dict[str, Any],
+    ) -> str | None:
+        """Resolve the sprite asset used as the marker's main visual."""
+
+        kind = str(record.get("kind", ""))
+        objective_id = str(record.get("objective_id", ""))
+        raw_id = objective_id.split(":", 1)[-1]
+
+        if kind == "pokemon":
+            return POKEMON_MARKER_ASSETS.get(raw_id)
+
+        category = str(record.get("category", ""))
+        if category in {"tm", "tr"}:
+            move_type = MOVE_TYPE_BY_ITEM_ID.get(raw_id)
+            if move_type:
+                return f"raw/pokesprite/items/{category}/{move_type}.png"
+
+        return ITEM_MARKER_ASSETS.get(raw_id)
+
+    def _show_map_marker_details(
+        self,
+        record: dict[str, Any],
+    ) -> None:
+        """Show marker details in a tap-friendly dialog."""
+
+        self._selected_marker_record = record
+
+        dialog = ft.AlertDialog()
+        dialog.modal = False
+        dialog.title = ft.Text(
+            str(record.get("title", "Journey objective")),
+            weight=ft.FontWeight.BOLD,
+            color=TEXT_PRIMARY,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(
+                    str(record.get("location", "Location unavailable")),
+                    size=15,
+                    weight=ft.FontWeight.W_600,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Text(
+                    str(record.get("detail", "")),
+                    size=13,
+                    color=TEXT_MUTED,
+                ),
+                ft.Text(
+                    f"Status: {str(record.get('status', '')).title()}",
+                    size=13,
+                    color=TEXT_SECONDARY,
+                ),
+            ],
+            spacing=8,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Close",
+                on_click=lambda: self.page.pop_dialog(),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _marker_records(self) -> list[dict[str, Any]]:
+        """Build markers directly from canonical map_locations IDs."""
+
+        records: list[dict[str, Any]] = []
+
+        for item in self._checklist_items():
+            item_id = str(item.get("id", "")).strip()
+            if not item_id:
+                continue
+
+            objective_id = f"item:{item_id}"
+            objective_status = self._item_status(item)
+            title = self._item_display_name(item)
+            category = str(item.get("category", "item"))
+            seen_locations: set[str] = set()
+
+            for source in item.get("sources", []):
+                if not isinstance(source, dict):
+                    continue
+
+                required_badge = int(source.get("required_badge", 0))
+                marker_status = self._source_marker_status(
+                    objective_status,
+                    required_badge,
+                    self.earned_badges,
+                )
+                source_method = str(source.get("method", ""))
+
+                map_location_ids = self._map_location_ids(source)
+
+                representative_locations = TR_REPRESENTATIVE_LOCATIONS.get(
+                    item_id,
+                    {},
+                )
+                representative_location = representative_locations.get(
+                    source_method
+                )
+                if representative_location is not None:
+                    map_location_ids = [representative_location]
+
+                for location_id in map_location_ids:
+                    if location_id in seen_locations:
+                        continue
+
+                    coordinates = MAP_LOCATION_COORDINATES.get(location_id)
+                    if coordinates is None:
+                        continue
+
+                    seen_locations.add(location_id)
+                    x, y = coordinates
+                    records.append({
+                        "objective_id": objective_id,
+                        "title": title,
+                        "location_id": location_id,
+                        "location": MAP_LOCATION_LABELS.get(
+                            location_id,
+                            location_id.replace("_", " ").title(),
+                        ),
+                        "detail": str(source.get("location_detail", "")),
+                        "source_method": source_method,
+                        "status": marker_status,
+                        "kind": "item",
+                        "category": category,
+                        "x": x,
+                        "y": y,
+                    })
+
+        for pokemon in self.pokemon:
+            pokemon_id = str(pokemon.get("id", "")).strip()
+            if not pokemon_id:
+                continue
+
+            acquisition = pokemon.get("primary_acquisition", {})
+            if not isinstance(acquisition, dict):
+                continue
+
+            objective_id = f"pokemon:{pokemon_id}"
+            objective_status = self._pokemon_status(pokemon)
+            title = str(pokemon.get("pokemon", "Unknown Pokémon"))
+            required_badge = int(pokemon.get("required_badge", 0))
+            marker_status = self._source_marker_status(
+                objective_status,
+                required_badge,
+                self.earned_badges,
+            )
+
+            for location_id in self._map_location_ids(acquisition):
+                coordinates = MAP_LOCATION_COORDINATES.get(location_id)
+                if coordinates is None:
+                    continue
+
+                x, y = coordinates
+                records.append({
+                    "objective_id": objective_id,
+                    "title": title,
+                    "location_id": location_id,
+                    "location": MAP_LOCATION_LABELS.get(
+                        location_id,
+                        location_id.replace("_", " ").title(),
+                    ),
+                    "detail": str(
+                        acquisition.get("availability_note", "")
+                    ),
+                    "status": marker_status,
+                    "kind": "pokemon",
+                    "category": "pokemon",
+                    "x": x,
+                    "y": y,
+                })
+
+        return records
+
+    def _build_map_marker(
+        self,
+        record: dict[str, Any],
+        marker_index: int,
+    ) -> ft.Container:
+        """Render one persistent sprite-based map marker."""
+
+        objective_id = str(record["objective_id"])
+        status = str(record["status"])
+        selected = objective_id == self._selected_map_objective_id
+
+        if status == "obtained":
+            status_icon = ft.Icons.CHECK_ROUNDED
+            marker_color = PRIMARY_BLUE
+        elif status == "available":
+            status_icon = ft.Icons.PRIORITY_HIGH_ROUNDED
+            marker_color = SUCCESS
+        else:
+            status_icon = ft.Icons.BLOCK_ROUNDED
+            marker_color = DANGER
+
+        marker_asset = self._marker_asset_for_record(record)
+
+        # Pokémon sprites generally occupy less of their source canvas than
+        # item sprites, so give them a larger rendered footprint.
+        if record["kind"] == "pokemon":
+            marker_size = 56
+            sprite_size = 52
+        else:
+            marker_size = 48
+            sprite_size = 42
+
+        collision_index = int(record.get("collision_index", 0))
+        collision_count = int(record.get("collision_count", 1))
+        collision_x = 0.0
+        collision_y = 0.0
+
+        if collision_count > 1:
+            collision_offsets = [
+                (-23.0, -17.0),
+                (23.0, 17.0),
+                (23.0, -17.0),
+                (-23.0, 17.0),
+                (0.0, -29.0),
+                (0.0, 29.0),
+            ]
+            collision_x, collision_y = collision_offsets[
+                collision_index % len(collision_offsets)
+            ]
+
+        if marker_asset is not None:
+            main_visual: ft.Control = ft.Image(
+                src=marker_asset,
+                width=sprite_size,
+                height=sprite_size,
+                fit=ft.BoxFit.CONTAIN,
+                error_content=ft.Icon(
+                    ft.Icons.LOCATION_ON_ROUNDED,
+                    size=22,
+                    color="#07120B",
+                ),
+            )
+        else:
+            main_visual = ft.Icon(
+                ft.Icons.LOCATION_ON_ROUNDED,
+                size=22,
+                color="#07120B",
+            )
+
+        marker = ft.Container(
+            key=f"map-marker-{objective_id}-{marker_index}",
+            content=ft.Stack(
+                controls=[
+                    ft.Container(
+                        content=main_visual,
+                        width=marker_size,
+                        height=marker_size,
+                        alignment=ft.Alignment.CENTER,
+                        shadow=ft.BoxShadow(
+                            blur_radius=14 if selected else 7,
+                            spread_radius=2 if selected else 0,
+                            color=ft.Colors.with_opacity(
+                                0.58 if selected else 0.30,
+                                ft.Colors.BLACK,
+                            ),
+                        ),
+                    ),
+                    ft.Container(
+                        content=ft.Icon(
+                            status_icon,
+                            size=11,
+                            color=ft.Colors.WHITE,
+                        ),
+                        width=18,
+                        height=18,
+                        bgcolor=marker_color,
+                        border=ft.Border.all(1.5, ft.Colors.WHITE),
+                        border_radius=10,
+                        right=0,
+                        bottom=0,
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                ],
+                width=marker_size + 5,
+                height=marker_size + 5,
+                clip_behavior=ft.ClipBehavior.NONE,
+            ),
+            width=marker_size + 5,
+            height=marker_size + 5,
+            left=(
+                float(record["x"]) * MAP_RENDER_WIDTH
+                - marker_size / 2
+                + collision_x
+            ),
+            top=(
+                float(record["y"]) * MAP_RENDER_HEIGHT
+                - marker_size / 2
+                + collision_y
+            ),
+            opacity=1.0,
+            scale=1.16 if selected else 1.0,
+            animate_scale=ft.Animation(
+                220,
+                ft.AnimationCurve.EASE_OUT_BACK,
+            ),
+            on_click=lambda: self._handle_map_marker_click(record),
+        )
+
+        self._map_markers_by_objective.setdefault(
+            objective_id,
+            [],
+        ).append(marker)
+
+        return marker
+
+    def _handle_map_marker_click(
+        self,
+        record: dict[str, Any],
+    ) -> None:
+        """Select a marker and open its mobile-friendly details."""
+
+        self._select_objective_for_map(str(record["objective_id"]))
+        self._show_map_marker_details(record)
 
     def _build_badge_tracker_card(self) -> ft.Control:
         """Build the layered Sword badge coin."""
@@ -1176,6 +1771,7 @@ class MyJourneyView:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             col={"xs": 12, "lg": 6},
+            height=TOP_JOURNEY_CARD_HEIGHT
         )
 
     def _build_journey_checklist_card(self) -> ft.Control:
@@ -1249,6 +1845,10 @@ class MyJourneyView:
                         ),
                         ft.DataCell(remove_control),
                     ],
+                    on_select_change=(
+                        lambda event, objective_id=f"item:{item_id}":
+                        self._select_objective_for_map(objective_id)
+                    ),
                 )
             )
 
@@ -1267,6 +1867,7 @@ class MyJourneyView:
             column_spacing=18,
             data_row_min_height=52,
             data_row_max_height=72,
+            show_checkbox_column=False,
         )
 
         body_controls: list[ft.Control] = [
@@ -1500,22 +2101,70 @@ class MyJourneyView:
         )
 
     def _build_map_card(self) -> ft.Control:
+        """Build the base-game Galar map and persistent objective markers."""
+
+        self._map_markers_by_objective = {}
+        self._selected_marker_y = None
+
+        marker_records = self._marker_records()
+        marker_controls: list[ft.Control] = []
+
+        location_groups: dict[str, list[dict[str, Any]]] = {}
+        for record in marker_records:
+            location_id = str(record.get("location_id", ""))
+            location_groups.setdefault(location_id, []).append(record)
+
+        for grouped_records in location_groups.values():
+            collision_count = len(grouped_records)
+            for collision_index, record in enumerate(grouped_records):
+                record["collision_index"] = collision_index
+                record["collision_count"] = collision_count
+
+        for marker_index, record in enumerate(marker_records):
+            marker_controls.append(
+                self._build_map_marker(record, marker_index)
+            )
+
+            if (
+                record["objective_id"] == self._selected_map_objective_id
+                and self._selected_marker_y is None
+            ):
+                self._selected_marker_y = float(record["y"])
+
+        self._map_stack = ft.Stack(
+            controls=[
+                ft.Image(
+                    src="Galar_Map_Base.png",
+                    width=MAP_RENDER_WIDTH,
+                    height=MAP_RENDER_HEIGHT,
+                    fit=ft.BoxFit.FILL,
+                    semantics_label="Base-game map of the Galar region",
+                ),
+                *marker_controls,
+            ],
+            width=MAP_RENDER_WIDTH,
+            height=MAP_RENDER_HEIGHT,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        )
+
+        mapped_count = len(marker_records)
+        subtitle = (
+            f"{mapped_count} objective marker"
+            f"{'' if mapped_count == 1 else 's'} shown. "
+            "Select a row or marker to focus it."
+        )
+
         return self._build_card(
             title="Galar Map",
             icon=ft.Icons.MAP_OUTLINED,
-            subtitle="Journey objective markers will be added in a later pass.",
+            subtitle=subtitle,
             body=ft.Container(
-                content=ft.Image(
-                    src="Galar_Map.png",
-                    fit=ft.BoxFit.CONTAIN,
-                    semantics_label="Map of the Galar region",
-                ),
-                width=520,
-                height=700,
-                bgcolor=SURFACE_RAISED,
+                key="journey-map-anchor",
+                content=self._map_stack,
+                width=MAP_RENDER_WIDTH,
+                height=MAP_RENDER_HEIGHT,
                 border=ft.Border.all(1, BORDER_DEFAULT),
                 border_radius=12,
-                padding=10,
                 alignment=ft.Alignment.TOP_CENTER,
                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
             ),
@@ -1526,6 +2175,7 @@ class MyJourneyView:
         rows: list[ft.DataRow] = []
 
         for pokemon in self.pokemon:
+            pokemon_id = str(pokemon.get("id", ""))
             status = self._pokemon_status(pokemon)
             encounter = self._primary_encounter(pokemon)
 
@@ -1607,7 +2257,11 @@ class MyJourneyView:
                                 status,
                             )
                         ),
-                    ]
+                    ],
+                    on_select_change=(
+                        lambda event, objective_id=f"pokemon:{pokemon_id}":
+                        self._select_objective_for_map(objective_id)
+                    ),
                 )
             )
 
@@ -1629,6 +2283,7 @@ class MyJourneyView:
             column_spacing=20,
             data_row_min_height=76,
             data_row_max_height=104,
+            show_checkbox_column=False,
         )
 
         return self._build_card(
@@ -1655,11 +2310,14 @@ class MyJourneyView:
     def _build_objective_row(
         self,
         *,
+        objective_id: str,
         status: str,
         title: str,
         detail: str,
         action: ft.Control | None = None,
     ) -> ft.Control:
+        """Build a selectable Current Objectives row."""
+
         return ft.Container(
             content=ft.Row(
                 controls=[
@@ -1672,7 +2330,11 @@ class MyJourneyView:
                                 weight=ft.FontWeight.W_600,
                                 size=14,
                             ),
-                            ft.Text(detail, color=TEXT_SECONDARY, size=12),
+                            ft.Text(
+                                detail,
+                                color=TEXT_SECONDARY,
+                                size=12,
+                            ),
                         ],
                         spacing=2,
                         expand=True,
@@ -1685,6 +2347,10 @@ class MyJourneyView:
             padding=12,
             bgcolor=SURFACE_RAISED,
             border_radius=12,
+            ink=True,
+            on_click=lambda: self._select_objective_for_map(
+                objective_id
+            ),
         )
 
     def _item_display_name(self, item: dict[str, Any]) -> str:
@@ -1940,7 +2606,8 @@ class MyJourneyView:
         subtitle: str,
         body: ft.Control,
         col: Any,
-    ) -> ft.Container:
+        height: float | None = None,
+) -> ft.Container:
         controls: list[ft.Control] = [
             ft.Row(
                 controls=[
@@ -1962,10 +2629,14 @@ class MyJourneyView:
         ]
 
         return ft.Container(
-            content=ft.Column(controls=controls, spacing=16),
+            content=ft.Column(
+                controls=controls,
+                spacing=16,
+            ),
             padding=CARD_PADDING,
             bgcolor=SURFACE,
             border=ft.Border.all(1, BORDER_DEFAULT),
             border_radius=CARD_RADIUS,
             col=col,
+            height=height,
         )
