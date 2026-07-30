@@ -33,6 +33,18 @@ from ui.viewmodels.app_state import AppState
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
+BADGE_LAYERS = [
+    ("Grass Badge", "badges/grass_badge.png"),
+    ("Water Badge", "badges/water_badge.png"),
+    ("Fire Badge", "badges/fire_badge.png"),
+    ("Fighting Badge", "badges/fighting_badge.png"),
+    ("Fairy Badge", "badges/fairy_badge.png"),
+    ("Rock Badge", "badges/rock_badge.png"),
+    ("Dark Badge", "badges/dark_badge.png"),
+    ("Dragon Badge", "badges/dragon_badge.png"),
+]
+BADGE_FRAME_ASSET = "badges/badge_coin_frame.png"
+
 
 class MyJourneyView:
     """Render My Journey fixture data with saved badge progression."""
@@ -275,10 +287,14 @@ class MyJourneyView:
         self._refresh()
 
     async def _earn_next_badge(self) -> None:
-        if self.earned_badges >= 8:
+        """Persist the next badge and show its celebration dialog."""
+
+        if self.earned_badges >= len(BADGE_LAYERS):
             return
 
-        next_badge_count = self.earned_badges + 1
+        earned_badge_index = self.earned_badges
+        next_badge_count = earned_badge_index + 1
+
         save_succeeded = await self.app_state.save_earned_badges(
             next_badge_count
         )
@@ -295,6 +311,77 @@ class MyJourneyView:
 
         self.earned_badges = next_badge_count
         self._refresh()
+        self._show_badge_celebration(earned_badge_index)
+
+    def _show_badge_celebration(
+        self,
+        badge_index: int,
+    ) -> None:
+        """Celebrate a newly earned badge."""
+
+        if badge_index < 0 or badge_index >= len(BADGE_LAYERS):
+            return
+
+        badge_name, badge_asset = BADGE_LAYERS[badge_index]
+
+        dialog = ft.AlertDialog()
+        dialog.modal = False
+        dialog.title = ft.Text(
+            "Congratulations!",
+            weight=ft.FontWeight.BOLD,
+            color=TEXT_PRIMARY,
+            text_align=ft.TextAlign.CENTER,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Stack(
+                    controls=[
+                        ft.Image(
+                            src=BADGE_FRAME_ASSET,
+                            width=240,
+                            height=240,
+                            fit=ft.BoxFit.CONTAIN,
+                        ),
+                        ft.Image(
+                            src=badge_asset,
+                            width=240,
+                            height=240,
+                            fit=ft.BoxFit.CONTAIN,
+                            semantics_label=badge_name,
+                        ),
+                    ],
+                    width=240,
+                    height=240,
+                ),
+                ft.Text(
+                    f"You earned the {badge_name}!",
+                    size=20,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+                ft.Text(
+                    (
+                        "Any Journey objectives unlocked by this badge "
+                        "are now available."
+                    ),
+                    size=14,
+                    color=TEXT_SECONDARY,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+            ],
+            spacing=12,
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Continue",
+                on_click=lambda: self.page.pop_dialog(),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.CENTER
+        self.page.show_dialog(dialog)
 
     async def _set_item_quantity(
         self,
@@ -684,89 +771,173 @@ class MyJourneyView:
         )
 
     def _build_badge_tracker_card(self) -> ft.Control:
-        badges: list[ft.Control] = []
+        """Build the layered Sword badge coin."""
 
-        for index in range(8):
-            badge_number = index + 1
+        coin_size = 390
+
+        # Normalized visual centers of the manually traced badge polygons.
+        # These keep the action button centered on whichever badge is next.
+        badge_button_centers = [
+            (0.631, 0.808),  # Grass
+            (0.783, 0.279),  # Water
+            (0.535, 0.534),  # Fire
+            (0.268, 0.740),  # Fighting
+            (0.834, 0.548),  # Fairy
+            (0.541, 0.137),  # Rock
+            (0.379, 0.367),  # Dark
+            (0.177, 0.367),  # Dragon
+        ]
+
+        coin_layers: list[ft.Control] = [
+            ft.Image(
+                src=BADGE_FRAME_ASSET,
+                width=coin_size,
+                height=coin_size,
+                fit=ft.BoxFit.CONTAIN,
+                semantics_label="Galar badge coin frame",
+            )
+        ]
+
+        for index, (badge_name, badge_asset) in enumerate(
+            BADGE_LAYERS
+        ):
             earned = index < self.earned_badges
-            next_badge = index == self.earned_badges and self.earned_badges < 8
-
-            if earned:
-                icon = ft.Icons.CHECK_ROUNDED
-                icon_color = PRIMARY_BLUE
-                border_color = PRIMARY_BLUE
-                opacity = 1.0
-                tooltip = f"Badge {badge_number} earned"
-            elif next_badge:
-                icon = ft.Icons.SHIELD_OUTLINED
-                icon_color = SUCCESS
-                border_color = SUCCESS
-                opacity = 1.0
-                tooltip = f"Earn Badge {badge_number}"
-            else:
-                icon = ft.Icons.SHIELD_OUTLINED
-                icon_color = TEXT_MUTED
-                border_color = BORDER_DEFAULT
-                opacity = 0.4
-                tooltip = f"Badge {badge_number} is locked"
-
-            badge_circle = ft.Container(
-                content=ft.Icon(icon, size=28, color=icon_color),
-                width=58,
-                height=58,
-                bgcolor=SURFACE_RAISED,
-                border=ft.Border.all(1, border_color),
-                border_radius=29,
-                alignment=ft.Alignment.CENTER,
-                tooltip=tooltip,
-                opacity=opacity,
+            next_badge = (
+                index == self.earned_badges
+                and self.earned_badges < len(BADGE_LAYERS)
             )
 
-            if next_badge:
-                badges.append(
-                    ft.GestureDetector(
-                        content=badge_circle,
-                        on_tap=self._earn_next_badge,
-                        mouse_cursor=ft.MouseCursor.CLICK,
-                    )
-                )
+            if earned:
+                opacity = 1.0
+            elif next_badge:
+                opacity = 0.28
             else:
-                badges.append(badge_circle)
+                opacity = 0.0
 
-        badge_row = ft.Row(
-            controls=badges,
-            spacing=10,
-            run_spacing=10,
-            wrap=True,
-            alignment=ft.MainAxisAlignment.CENTER,
-        )
+            coin_layers.append(
+                ft.Image(
+                    src=badge_asset,
+                    width=coin_size,
+                    height=coin_size,
+                    fit=ft.BoxFit.CONTAIN,
+                    opacity=opacity,
+                    semantics_label=(
+                        badge_name
+                        if earned or next_badge
+                        else "Hidden future badge"
+                    ),
+                )
+            )
 
-        progress_row_controls: list[ft.Control] = [
+        if self.earned_badges < len(BADGE_LAYERS):
+            center_x, center_y = badge_button_centers[
+                self.earned_badges
+            ]
+            button_width = 112
+            button_height = 55
+
+            badge_button = ft.Container(
+                content=ft.Button(
+                    content=ft.Text(
+                        "I've earned\nthis badge!",
+                        size=8.5,
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    icon=ft.Icons.MILITARY_TECH_ROUNDED,
+                    style=ft.ButtonStyle(
+                        bgcolor={
+                            ft.ControlState.DEFAULT: ft.Colors.with_opacity(
+                                0.68,
+                                SUCCESS,
+                            ),
+                            ft.ControlState.HOVERED: SUCCESS,
+                            ft.ControlState.PRESSED: ft.Colors.with_opacity(
+                                0.86,
+                                SUCCESS,
+                            ),
+                        },
+                        color={
+                            ft.ControlState.DEFAULT: "#07120B",
+                            ft.ControlState.HOVERED: "#07120B",
+                            ft.ControlState.PRESSED: "#07120B",
+                        },
+                        icon_color={
+                            ft.ControlState.DEFAULT: "#07120B",
+                            ft.ControlState.HOVERED: "#07120B",
+                            ft.ControlState.PRESSED: "#07120B",
+                        },
+                        mouse_cursor=ft.MouseCursor.CLICK,
+                        animation_duration=160,
+                    ),
+                ),
+                width=button_width,
+                height=button_height,
+            )
+            badge_button.left = (
+                center_x * coin_size - button_width / 2
+            )
+            badge_button.top = (
+                center_y * coin_size - button_height / 2
+            )
+            coin_layers.append(badge_button)
+
+        controls: list[ft.Control] = [
+            ft.Container(
+                content=ft.Stack(
+                    controls=coin_layers,
+                    width=coin_size,
+                    height=coin_size,
+                ),
+                alignment=ft.Alignment.CENTER,
+            )
+        ]
+
+        if self.earned_badges < len(BADGE_LAYERS):
+            next_badge_name = BADGE_LAYERS[
+                self.earned_badges
+            ][0]
+            controls.append(
+                ft.Text(
+                    f"Next: {next_badge_name}",
+                    size=14,
+                    weight=ft.FontWeight.W_600,
+                    color=TEXT_SECONDARY,
+                    text_align=ft.TextAlign.CENTER,
+                )
+            )
+        else:
+            controls.append(
+                ft.Text(
+                    "All 8 badges earned",
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=SUCCESS,
+                    text_align=ft.TextAlign.CENTER,
+                )
+            )
+
+        controls.append(
             ft.Text(
                 f"{self.earned_badges} of 8 badges earned",
                 size=13,
                 color=TEXT_SECONDARY,
-            ),
-        ]
-        progress_row = ft.Row(
-            controls=progress_row_controls,
-            alignment=ft.MainAxisAlignment.START,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            wrap=True,
+                text_align=ft.TextAlign.CENTER,
+            )
         )
-
-        controls: list[ft.Control] = []
-        controls.append(badge_row)
-        controls.append(progress_row)
 
         return self._build_card(
             title="Badge Tracker",
             icon=ft.Icons.MILITARY_TECH_OUTLINED,
             subtitle=(
-                "Select the next badge to record your progress and "
-                "unlock eligible objectives."
+                "Earn badges in order. Select the button on the "
+                "ghosted badge when it has been earned."
             ),
-            body=ft.Column(controls=controls, spacing=14),
+            body=ft.Column(
+                controls=controls,
+                spacing=12,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
             col={"xs": 12, "lg": 6},
         )
 
