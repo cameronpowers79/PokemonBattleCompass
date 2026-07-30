@@ -9,6 +9,7 @@ Saved changes update the active persistent Journey.
 from __future__ import annotations
 
 import asyncio
+import json
 from importlib.metadata import PackageNotFoundError, version
 
 from ui.viewmodels.app_state import AppState
@@ -57,6 +58,7 @@ from ui.theme import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
+DATA_DIR = PROJECT_ROOT / "data"
 
 AUTOCOMPLETE_DEBOUNCE_SECONDS = 0.45
 
@@ -462,6 +464,28 @@ class MyTeamView:
         self.pending_party_action: str | None = None
         self.pending_box_index: int | None = None
         self.pending_swap_party_index: int | None = None
+        self._recommendation_target_source: str | None = None
+        self._recommendation_target_index: int | None = None
+        self._pending_recommended_item: str | None = None
+
+        try:
+            raw_journey_items = json.loads(
+                (DATA_DIR / "journey_items.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            raw_journey_items = []
+
+        self.journey_item_by_name = {
+            self._normalize_item_name(
+                str(item.get("name", ""))
+            ): item
+            for item in raw_journey_items
+            if isinstance(item, dict)
+            and str(item.get("name", "")).strip()
+            and str(item.get("id", "")).strip()
+        }
 
         self.box_table_host = ft.Container()
         self.move_to_party_button: ft.Button | None = None
@@ -4586,23 +4610,71 @@ class MyTeamView:
             ability_rules=self.ability_rules,
         )
 
+    @staticmethod
+    def _normalize_item_name(item_name: str) -> str:
+        """Normalize held-item names for reliable comparisons."""
+
+        return " ".join(item_name.strip().casefold().split())
+
+    def _recommendation_target_record(self) -> dict | None:
+        """Return the working party/Box record targeted by the popup."""
+
+        if (
+            self._recommendation_target_source is None
+            or self._recommendation_target_index is None
+        ):
+            return None
+
+        records = (
+            self.working_box
+            if self._recommendation_target_source == "box"
+            else self.working_team
+        )
+        index = self._recommendation_target_index
+        if index < 0 or index >= len(records):
+            return None
+        return records[index]
+
     def _show_item_recommendations(
         self,
         event: ft.Event[ft.IconButton],
         pokemon: dict,
     ) -> None:
-        """Show modeled held items that fit the selected Pokémon."""
+        """Show modeled held items not already equipped by this Pokémon."""
 
         del event
 
+        self._recommendation_target_source = self.selected_source
+        self._recommendation_target_index = self.selected_index
+
+        target_record = self._recommendation_target_record()
+        recommendation_record = (
+            target_record if target_record is not None else pokemon
+        )
+
         recommendations = recommend_held_items(
-            pokemon=pokemon,
+            pokemon=recommendation_record,
             moves_data=self.moves_data,
             items_data=self.items_data,
         )
 
+        equipped_item = self._normalize_item_name(
+            str(recommendation_record.get("Held Item") or "")
+        )
+        if equipped_item in {"", "none", "—", "-"}:
+            equipped_item = ""
+
+        if equipped_item:
+            recommendations = [
+                recommendation
+                for recommendation in recommendations
+                if self._normalize_item_name(
+                    recommendation.item
+                ) != equipped_item
+            ]
+
         pokemon_name = str(
-            pokemon.get("Pokemon")
+            recommendation_record.get("Pokemon")
             or "this Pokémon"
         )
 
@@ -4618,9 +4690,10 @@ class MyTeamView:
                     content=self._build_item_recommendation_content(
                         pokemon_name,
                         recommendations,
+                        had_equipped_item=bool(equipped_item),
                     ),
-                    width=560,
-                    height=480,
+                    width=620,
+                    height=520,
                 ),
                 actions=cast(
                     list[ft.Control],
@@ -4639,6 +4712,8 @@ class MyTeamView:
         self,
         pokemon_name: str,
         recommendations: list[ItemRecommendation],
+        *,
+        had_equipped_item: bool,
     ) -> ft.Control:
         """Build the scrollable recommendation-dialog content."""
 
@@ -4659,13 +4734,16 @@ class MyTeamView:
         )
 
         if not recommendations:
+            empty_text = (
+                "This Pokémon is already holding the modeled "
+                "recommended item."
+                if had_equipped_item
+                else "No currently modeled held items match this build yet."
+            )
             controls.append(
                 ft.Container(
                     content=ft.Text(
-                        (
-                            "No currently modeled held items match "
-                            "this build yet."
-                        ),
+                        empty_text,
                         size=15,
                         color=TEXT_SECONDARY,
                         text_align=ft.TextAlign.CENTER,
@@ -4690,11 +4768,11 @@ class MyTeamView:
             scroll=ft.ScrollMode.AUTO,
         )
 
-    @staticmethod
     def _build_item_recommendation_card(
+        self,
         recommendation: ItemRecommendation,
     ) -> ft.Control:
-        """Build one unranked held-item recommendation card."""
+        """Build one unranked recommendation with actionable choices."""
 
         reason_controls = cast(
             list[ft.Control],
@@ -4723,6 +4801,52 @@ class MyTeamView:
             ],
         )
 
+        catalog_item = self.journey_item_by_name.get(
+            self._normalize_item_name(recommendation.item)
+        )
+        checklist_available = catalog_item is not None
+
+        action_controls: list[ft.Control] = [
+            ft.Button(
+                content="Add to Pokémon",
+                icon=ft.Icons.CATCHING_POKEMON_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event, item_name=recommendation.item:
+                    self._request_add_recommended_item_to_pokemon(
+                        event,
+                        item_name,
+                    )
+                ),
+            ),
+            ft.Button(
+                content="Add to Journey Checklist",
+                icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
+                disabled=not checklist_available,
+                tooltip=(
+                    None
+                    if checklist_available
+                    else (
+                        "This item is not yet available in the "
+                        "Journey item catalog."
+                    )
+                ),
+                on_click=(
+                    (
+                        lambda event, item_name=recommendation.item:
+                        self._add_recommended_item_to_checklist(
+                            event,
+                            item_name,
+                        )
+                    )
+                    if checklist_available
+                    else None
+                ),
+            ),
+        ]
+
         return ft.Container(
             content=ft.Column(
                 controls=cast(
@@ -4745,6 +4869,21 @@ class MyTeamView:
                             color=TEXT_PRIMARY,
                         ),
                         *reason_controls,
+                        ft.Row(
+                            controls=action_controls,
+                            spacing=10,
+                            run_spacing=10,
+                            wrap=True,
+                        ),
+                        ft.Text(
+                            (
+                                "Adding an item to a Pokémon updates the Team Editor. "
+                                "Remember to click Save Team to keep the change."
+                            ),
+                            size=12,
+                            color=TEXT_MUTED,
+                            italic=True,
+                        ),
                     ],
                 ),
                 spacing=9,
@@ -4758,6 +4897,222 @@ class MyTeamView:
             border_radius=12,
         )
 
+    def _request_add_recommended_item_to_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+        item_name: str,
+    ) -> None:
+        """Add a recommendation, confirming replacement when necessary."""
+
+        del event
+        target = self._recommendation_target_record()
+        if target is None:
+            return
+
+        current_item = str(target.get("Held Item") or "").strip()
+        normalized_current = self._normalize_item_name(current_item)
+        normalized_new = self._normalize_item_name(item_name)
+
+        if normalized_current == normalized_new:
+            return
+
+        self._pending_recommended_item = item_name
+        self.page.pop_dialog()
+
+        if normalized_current not in {"", "none", "—", "-"}:
+            pokemon_name = str(
+                target.get("Pokemon") or "this Pokémon"
+            )
+            dialog = ft.AlertDialog()
+            dialog.modal = True
+            dialog.title = ft.Text(
+                f"Replace {current_item}?",
+                weight=ft.FontWeight.BOLD,
+            )
+            dialog.content = ft.Column(
+                controls=[
+                    ft.Text(
+                        (
+                            f"{pokemon_name} is currently holding {current_item}. "
+                            f"Replace it with {item_name} in the Team Editor?"
+                        ),
+                        color=TEXT_SECONDARY,
+                    ),
+                    ft.Text(
+                        (
+                            "This updates the Team Editor only. "
+                            "Remember to click Save Team to keep the change."
+                        ),
+                        size=12,
+                        color=TEXT_MUTED,
+                        italic=True,
+                    ),
+                ],
+                spacing=10,
+                tight=True,
+            )
+                
+            dialog.actions = [
+                ft.Button(
+                    content="Cancel",
+                    on_click=self._cancel_recommended_item_change,
+                ),
+                ft.Button(
+                    content="Replace Item",
+                    icon=ft.Icons.SWAP_HORIZ_ROUNDED,
+                    bgcolor=PRIMARY_BLUE,
+                    color=TEXT_PRIMARY,
+                    icon_color=TEXT_PRIMARY,
+                    on_click=self._confirm_recommended_item_change,
+                ),
+            ]
+            dialog.actions_alignment = ft.MainAxisAlignment.END
+            self.page.show_dialog(dialog)
+            return
+
+        self._apply_recommended_item_to_working_record(item_name)
+
+    def _cancel_recommended_item_change(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+        self._pending_recommended_item = None
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _confirm_recommended_item_change(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+        item_name = self._pending_recommended_item
+        self._pending_recommended_item = None
+        self.page.pop_dialog()
+        if item_name:
+            self._apply_recommended_item_to_working_record(item_name)
+
+    def _apply_recommended_item_to_working_record(
+        self,
+        item_name: str,
+    ) -> None:
+        """Write the item into working Team/Box state for normal saving."""
+
+        target = self._recommendation_target_record()
+        if target is None:
+            return
+
+        target["Held Item"] = item_name
+
+        self.editor_controls.clear()
+        self._autocomplete_edit_versions.clear()
+        self.table_host.content = self._build_editor_table()
+        self.box_table_host.content = self._build_box_table()
+        self._update_dirty_state()
+
+        pokemon_name = str(
+            target.get("Pokemon") or "this Pokémon"
+        )
+
+        self.save_status.value = (
+            f"{item_name} added to {pokemon_name}. Save Team to keep it."
+        )
+        self.save_status.color = "#FFE5A3"
+        self.page.update()
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Held Item Added",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                f"{item_name} has been given to {pokemon_name} to hold. "
+                'Please be sure to click "Save Team" to send the '
+                "updated information to the Battle Compass."
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+            content="Got It",
+            on_click=self._dismiss_held_item_added_dialog,
+        )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+
+        self.page.show_dialog(dialog)
+
+    async def _dismiss_held_item_added_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the confirmation and briskly return to the Team Editor."""
+
+        del event
+
+        self.page.pop_dialog()
+        self.page.update()
+
+        await self.page.scroll_to(
+            offset=350,
+            duration=450,
+            curve=ft.AnimationCurve.EASE_OUT_CUBIC,
+        )
+
+    def _add_recommended_item_to_checklist(
+        self,
+        event: ft.Event[ft.Button],
+        item_name: str,
+    ) -> None:
+        """Schedule a catalog-backed checklist addition."""
+
+        del event
+        catalog_item = self.journey_item_by_name.get(
+            self._normalize_item_name(item_name)
+        )
+        if catalog_item is None:
+            return
+
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._persist_recommended_item_to_checklist,
+            str(catalog_item.get("id", "")),
+            item_name,
+        )
+
+    async def _persist_recommended_item_to_checklist(
+        self,
+        item_id: str,
+        item_name: str,
+    ) -> None:
+        try:
+            succeeded = await self.app_state.add_manual_item_objective(
+                item_id=item_id,
+                quantity=1,
+            )
+        except (RuntimeError, ValueError) as error:
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(
+                        f"{item_name} could not be added: {error}"
+                    )
+                )
+            )
+            return
+
+        message = (
+            f"{item_name} added to Journey Checklist."
+            if succeeded
+            else f"{item_name} could not be added to Journey Checklist."
+        )
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(message)
+            )
+        )
+
     def _close_item_recommendations(
         self,
         event: ft.Event[ft.Button],
@@ -4765,6 +5120,9 @@ class MyTeamView:
         """Close the held-item recommendation dialog."""
 
         del event
+        self._recommendation_target_source = None
+        self._recommendation_target_index = None
+        self._pending_recommended_item = None
         self.page.pop_dialog()
         self.page.update()
 

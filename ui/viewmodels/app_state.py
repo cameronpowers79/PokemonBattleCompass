@@ -898,6 +898,199 @@ class AppState:
         return save_succeeded
 
 
+    async def add_manual_item_objective(
+        self,
+        *,
+        item_id: str,
+        quantity: int = 1,
+    ) -> bool:
+        """Add or increment one manually selected Journey Checklist item."""
+
+        if self.journey is None:
+            return False
+        if not item_id.strip():
+            raise ValueError("Item objective ID cannot be empty.")
+        if (
+            not isinstance(quantity, int)
+            or isinstance(quantity, bool)
+            or quantity <= 0
+        ):
+            raise ValueError("Item quantity must be a positive integer.")
+
+        journey_items_path = DATA_DIR / "journey_items.json"
+        journey_pokemon_path = DATA_DIR / "journey_pokemon.json"
+
+        try:
+            journey_items = json.loads(
+                journey_items_path.read_text(encoding="utf-8")
+            )
+            journey_pokemon = json.loads(
+                journey_pokemon_path.read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise RuntimeError(
+                "Journey reference data could not be loaded."
+            ) from error
+
+        if not isinstance(journey_items, list):
+            raise RuntimeError("Journey item reference data is invalid.")
+        if not isinstance(journey_pokemon, list):
+            raise RuntimeError("Journey Pokémon reference data is invalid.")
+
+        catalog_by_id = {
+            str(item.get("id", "")).strip(): item
+            for item in journey_items
+            if isinstance(item, dict)
+            and str(item.get("id", "")).strip()
+        }
+        if item_id not in catalog_by_id:
+            raise ValueError(
+                "That held item is not yet available in the Journey catalog."
+            )
+
+        derived_requirements: dict[str, int] = {}
+        for pokemon in journey_pokemon:
+            if not isinstance(pokemon, dict):
+                continue
+            for requirement in pokemon.get("required_items", []):
+                if not isinstance(requirement, dict):
+                    continue
+                required_item_id = str(
+                    requirement.get("item_id", "")
+                ).strip()
+                required_quantity = requirement.get("quantity", 0)
+                if (
+                    required_item_id
+                    and isinstance(required_quantity, int)
+                    and not isinstance(required_quantity, bool)
+                    and required_quantity > 0
+                ):
+                    derived_requirements[required_item_id] = (
+                        derived_requirements.get(required_item_id, 0)
+                        + required_quantity
+                    )
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(self.my_journey_data)
+        initialized = (
+            updated_my_journey.get("checklist_initialized") is True
+        )
+        existing_records = updated_my_journey.get(
+            "item_objectives",
+            [],
+        )
+        records_by_id: dict[str, dict] = {
+            str(record.get("id", "")).strip(): deepcopy(record)
+            for record in existing_records
+            if isinstance(record, dict)
+            and str(record.get("id", "")).strip()
+        }
+
+        if not initialized:
+            for catalog_id, item in catalog_by_id.items():
+                catalog_required = item.get("quantity_required", 1)
+                if (
+                    not isinstance(catalog_required, int)
+                    or isinstance(catalog_required, bool)
+                    or catalog_required < 1
+                ):
+                    catalog_required = 1
+
+                legacy = records_by_id.get(catalog_id, {})
+                obtained = legacy.get("quantity_obtained", 0)
+                if (
+                    not isinstance(obtained, int)
+                    or isinstance(obtained, bool)
+                    or obtained < 0
+                ):
+                    obtained = 0
+
+                records_by_id[catalog_id] = {
+                    "id": catalog_id,
+                    "quantity_obtained": obtained,
+                    "manual_quantity_required": max(
+                        0,
+                        catalog_required
+                        - derived_requirements.get(catalog_id, 0),
+                    ),
+                }
+
+        target = records_by_id.setdefault(
+            item_id,
+            {
+                "id": item_id,
+                "quantity_obtained": 0,
+                "manual_quantity_required": 0,
+            },
+        )
+        manual_quantity = target.get(
+            "manual_quantity_required",
+            0,
+        )
+        if (
+            not isinstance(manual_quantity, int)
+            or isinstance(manual_quantity, bool)
+            or manual_quantity < 0
+        ):
+            manual_quantity = 0
+        target["manual_quantity_required"] = manual_quantity + quantity
+
+        normalized_records: list[dict] = []
+        for record_id, record in records_by_id.items():
+            obtained = record.get("quantity_obtained", 0)
+            manual = record.get("manual_quantity_required", 0)
+            if (
+                not isinstance(obtained, int)
+                or isinstance(obtained, bool)
+                or obtained < 0
+            ):
+                obtained = 0
+            if (
+                not isinstance(manual, int)
+                or isinstance(manual, bool)
+                or manual < 0
+            ):
+                manual = 0
+
+            required_total = (
+                manual + derived_requirements.get(record_id, 0)
+            )
+            if required_total <= 0:
+                continue
+
+            normalized_records.append({
+                "id": record_id,
+                "quantity_obtained": min(obtained, required_total),
+                "manual_quantity_required": manual,
+            })
+
+        updated_my_journey["checklist_initialized"] = True
+        updated_my_journey["item_objectives"] = normalized_records
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.page,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
+
+
     async def save_pokemon_objective(
         self,
         *,
