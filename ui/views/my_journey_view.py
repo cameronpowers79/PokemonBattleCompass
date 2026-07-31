@@ -188,7 +188,11 @@ class MyJourneyView:
         self.app_state = app_state
         self.on_go_to_my_team = on_go_to_my_team
         self.items = self._load_json(DATA_DIR / "journey_items.json")
-        self.pokemon = self._load_json(DATA_DIR / "journey_pokemon.json")
+        self.pokemon_catalog = self._load_json(
+            DATA_DIR / "journey_pokemon.json"
+        )
+        self.planned_pokemon_ids = self._load_planned_pokemon_ids()
+        self.pokemon = self._planned_pokemon_records()
         self.earned_badges = app_state.earned_badges
         self.derived_item_requirements = (
             self._build_derived_item_requirements()
@@ -202,12 +206,16 @@ class MyJourneyView:
             str(pokemon.get("id")): app_state.is_pokemon_obtained(
                 str(pokemon.get("id"))
             )
-            for pokemon in self.pokemon
+            for pokemon in self.pokemon_catalog
         }
         self._root: ft.Column | None = None
         self._caught_stage_selector: ft.Dropdown | None = None
         self._add_item_selector: ft.Dropdown | None = None
         self._add_item_quantity: ft.TextField | None = None
+        self._add_pokemon_selector: ft.AutoComplete | None = None
+        self._add_pokemon_button: ft.Button | None = None
+        self._add_pokemon_validation_text: ft.Text | None = None
+        self._add_pokemon_name_to_id: dict[str, str] = {}
 
         self._badge_celebration_badge: ft.Container | None = None
         self._badge_celebration_shine: ft.Container | None = None
@@ -226,6 +234,9 @@ class MyJourneyView:
         self._objective_data_rows: dict[str, list[ft.DataRow]] = {}
         self._move_to_map_overlay: ft.Container | None = None
         self._map_markers_by_objective: dict[str, list[ft.Container]] = {}
+        self._map_marker_generation = 0
+        self._map_marker_pulse_token = 0
+        self._selected_marker_pulse_scale = 1.16
         self._selected_marker_y: float | None = None
         self._selected_marker_record: dict[str, Any] | None = None
 
@@ -236,6 +247,74 @@ class MyJourneyView:
         if not isinstance(data, list):
             raise ValueError(f"Expected a list in {path.name}.")
         return data
+
+    def _load_planned_pokemon_ids(self) -> list[str]:
+        """Load the saved planner roster or initialize from the catalog."""
+
+        journey_state = self.app_state.my_journey_data
+        catalog_ids = [
+            str(pokemon.get("id", "")).strip()
+            for pokemon in self.pokemon_catalog
+            if str(pokemon.get("id", "")).strip()
+        ]
+        catalog_id_set = set(catalog_ids)
+
+        if journey_state.get("planner_initialized") is not True:
+            return catalog_ids
+
+        raw_ids = journey_state.get("planned_pokemon_ids", [])
+        if not isinstance(raw_ids, list):
+            return []
+
+        planned_ids: list[str] = []
+        for raw_id in raw_ids:
+            pokemon_id = str(raw_id).strip()
+            if (
+                pokemon_id
+                and pokemon_id in catalog_id_set
+                and pokemon_id not in planned_ids
+            ):
+                planned_ids.append(pokemon_id)
+        return planned_ids
+
+    def _planned_pokemon_records(self) -> list[dict[str, Any]]:
+        """Return catalog records in the player's saved planner order."""
+
+        records_by_id = {
+            str(pokemon.get("id", "")).strip(): pokemon
+            for pokemon in self.pokemon_catalog
+            if str(pokemon.get("id", "")).strip()
+        }
+        return [
+            records_by_id[pokemon_id]
+            for pokemon_id in self.planned_pokemon_ids
+            if pokemon_id in records_by_id
+        ]
+
+    def _reload_planner_dependencies(self) -> None:
+        """Rebuild planner records, ownership state, and linked requirements."""
+
+        self.pokemon = self._planned_pokemon_records()
+
+        # Ownership may have changed while the user was on My Team. Always
+        # resolve acquired state from current AppState when the planner roster
+        # changes instead of reusing the view's older cached values.
+        self.pokemon_obtained = {
+            str(pokemon.get("id", "")):
+            self.app_state.is_pokemon_obtained(
+                str(pokemon.get("id", ""))
+            )
+            for pokemon in self.pokemon_catalog
+        }
+
+        self.derived_item_requirements = (
+            self._build_derived_item_requirements()
+        )
+        self.item_objectives = self._load_item_objectives()
+        self.item_quantities = {
+            item_id: int(record.get("quantity_obtained", 0))
+            for item_id, record in self.item_objectives.items()
+        }
 
     def _build_derived_item_requirements(self) -> dict[str, int]:
         """Aggregate evolution-item quantities required by the team plan."""
@@ -426,16 +505,13 @@ class MyJourneyView:
         """Reload saved Journey progress after party or Box changes."""
 
         self.earned_badges = self.app_state.earned_badges
-        self.item_objectives = self._load_item_objectives()
-        self.item_quantities = {
-            item_id: int(record.get("quantity_obtained", 0))
-            for item_id, record in self.item_objectives.items()
-        }
+        self.planned_pokemon_ids = self._load_planned_pokemon_ids()
+        self._reload_planner_dependencies()
         self.pokemon_obtained = {
             str(pokemon.get("id")): self.app_state.is_pokemon_obtained(
                 str(pokemon.get("id"))
             )
-            for pokemon in self.pokemon
+            for pokemon in self.pokemon_catalog
         }
         self._refresh()
 
@@ -1229,33 +1305,21 @@ class MyJourneyView:
         self,
         objective_id: str,
     ) -> None:
-        """Select an item or Pokémon without rebuilding the whole map."""
+        """Select an item or Pokémon and rebuild the live marker controls."""
 
         if not objective_id:
             return
 
         previous_objective_id = self._selected_map_objective_id
         self._selected_map_objective_id = objective_id
-        self._selected_marker_y = next(
-            (
-                float(record["y"])
-                for record in self._map_marker_records
-                if record.get("objective_id") == objective_id
-            ),
-            None,
-        )
-
-        # Update only the existing marker controls. Rebuilding the complete page
-        # here briefly replaces the map image and causes a visible flash.
+        self._map_marker_pulse_token += 1
+        self._selected_marker_pulse_scale = 1.16
         previous_id = previous_objective_id or ""
 
-        for marker in self._map_markers_by_objective.get(previous_id, []):
-            marker.scale = 1.0
-            marker.shadow = self._map_marker_shadow(False)
-
-        for marker in self._map_markers_by_objective.get(objective_id, []):
-            marker.scale = 1.16
-            marker.shadow = self._map_marker_shadow(True)
+        # Marker controls may be replaced by a filter change, a page refresh, or
+        # a responsive map-size event. Rebuild from selection state instead of
+        # mutating references that may already have been frozen by Flet.
+        self._refresh_visible_map_markers()
 
         for row_container in self._objective_row_containers.get(
             previous_id,
@@ -1277,9 +1341,6 @@ class MyJourneyView:
         for data_row in self._objective_data_rows.get(objective_id, []):
             data_row.color = ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
 
-        if self._map_marker_filter == "highlighted":
-            self._refresh_visible_map_markers()
-
         self.page.update()
         self.page.run_task(self._focus_selected_map_objective)
 
@@ -1293,42 +1354,40 @@ class MyJourneyView:
         await self._pulse_selected_markers()
 
     async def _pulse_selected_markers(self) -> None:
-        """Briefly pop every marker linked to the selected objective."""
+        """Bounce selected markers by rebuilding from transient scale state.
 
-        markers = self._map_markers_by_objective.get(
-            self._selected_map_objective_id or "",
-            [],
-        )
-        if not markers:
+        Marker controls are never mutated after mounting. Each animation frame
+        changes a view-state value and rebuilds the live marker layer, so map
+        filtering and responsive size changes cannot leave this task holding
+        frozen controls. A token cancels an older pulse when another objective
+        is selected.
+        """
+
+        objective_id = self._selected_map_objective_id
+        if not objective_id:
             return
 
-        for marker in markers:
-            marker.scale = 0.82
-        self.page.update()
+        pulse_token = self._map_marker_pulse_token
+        frames = [
+            (0.82, 0.18),
+            (1.38, 0.40),
+            (1.05, 0.18),
+            (1.24, 0.28),
+            (1.16, 0.0),
+        ]
 
-        await asyncio.sleep(0.18)
+        for scale, delay in frames:
+            if (
+                pulse_token != self._map_marker_pulse_token
+                or objective_id != self._selected_map_objective_id
+            ):
+                return
 
-        for marker in markers:
-            marker.scale = 1.38
-        self.page.update()
+            self._selected_marker_pulse_scale = scale
+            self._refresh_visible_map_markers()
 
-        await asyncio.sleep(0.40)
-
-        for marker in markers:
-            marker.scale = 1.05
-        self.page.update()
-
-        await asyncio.sleep(0.18)
-
-        for marker in markers:
-            marker.scale = 1.24
-        self.page.update()
-
-        await asyncio.sleep(0.28)
-
-        for marker in markers:
-            marker.scale = 1.16
-        self.page.update()
+            if delay > 0:
+                await asyncio.sleep(delay)
 
     async def _scroll_to_selected_marker(self) -> None:
         """Center the selected marker vertically as closely as possible."""
@@ -1751,7 +1810,11 @@ class MyJourneyView:
                 + collision_y
             ),
             opacity=1.0,
-            scale=1.16 if selected else 1.0,
+            scale=(
+                self._selected_marker_pulse_scale
+                if selected
+                else 1.0
+            ),
             shadow=self._map_marker_shadow(selected),
             animate_scale=ft.Animation(
                 220,
@@ -2327,6 +2390,7 @@ class MyJourneyView:
     def _build_responsive_map_stack(self) -> ft.Stack:
         """Build the map and markers against one shared measured canvas."""
 
+        self._map_marker_generation += 1
         self._map_markers_by_objective = {}
         self._selected_marker_y = None
 
@@ -2398,6 +2462,7 @@ class MyJourneyView:
             return
 
         self._map_marker_records = self._prepare_map_marker_records()
+        self._map_marker_generation += 1
         self._map_markers_by_objective = {}
         self._selected_marker_y = None
 
@@ -2514,13 +2579,392 @@ class MyJourneyView:
             col={"xs": 12, "lg": 6},
         )
 
+    def _show_add_pokemon_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Search the unplanned catalog and add one exact Pokémon match."""
+
+        del event
+        available_pokemon = [
+            pokemon
+            for pokemon in self.pokemon_catalog
+            if str(pokemon.get("id", "")).strip()
+            not in self.planned_pokemon_ids
+        ]
+        if not available_pokemon:
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(
+                        "Every Pokémon in the current Journey catalog "
+                        "is already in the Team Planner."
+                    )
+                )
+            )
+            return
+
+        self._add_pokemon_name_to_id = {
+            str(pokemon.get("pokemon", "")).strip().casefold():
+            str(pokemon.get("id", "")).strip()
+            for pokemon in available_pokemon
+            if (
+                str(pokemon.get("pokemon", "")).strip()
+                and str(pokemon.get("id", "")).strip()
+            )
+        }
+
+        suggestions: list[ft.AutoCompleteSuggestion] = []
+        for pokemon in available_pokemon:
+            pokemon_name = str(
+                pokemon.get("pokemon", "Unknown Pokémon")
+            ).strip()
+            acquire_as = str(pokemon.get("acquire_as") or "").strip()
+
+            search_key_parts = [pokemon_name]
+            if (
+                acquire_as
+                and acquire_as.casefold() != pokemon_name.casefold()
+            ):
+                search_key_parts.append(acquire_as)
+
+            suggestions.append(
+                ft.AutoCompleteSuggestion(
+                    key=" ".join(search_key_parts),
+                    value=pokemon_name,
+                )
+            )
+
+        self._add_pokemon_validation_text = ft.Text(
+            "Choose an exact match from the suggestions.",
+            color=TEXT_MUTED,
+            size=12,
+        )
+
+        self._add_pokemon_selector = ft.AutoComplete(
+            value="",
+            suggestions=suggestions,
+            suggestions_max_height=260,
+            width=380,
+            on_change=self._handle_add_pokemon_search_change,
+            on_select=self._handle_add_pokemon_search_select,
+        )
+
+        self._add_pokemon_button = ft.Button(
+            content="Add Pokémon",
+            icon=ft.Icons.ADD_ROUNDED,
+            bgcolor=SUCCESS,
+            color="#07120B",
+            icon_color="#07120B",
+            disabled=True,
+            on_click=self._confirm_add_pokemon,
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Add Pokémon to Team Planner",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(
+                    (
+                        "Search the current Sword Journey catalog. Its "
+                        "objective, map marker, and linked evolution items "
+                        "will be added automatically."
+                    ),
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Text(
+                    (
+                        "Search by either the Pokémon you want on your final "
+                        "team or the Pokémon you will catch. Suggestions show "
+                        "the fully evolved team member—for example, Eevee may "
+                        "return the Eeveelutions, while Pikachu returns Raichu."
+                    ),
+                    color=TEXT_MUTED,
+                    size=13,
+                    italic=True,
+                ),
+                ft.Text(
+                    "Start typing a Pokémon name here",
+                    color=TEXT_PRIMARY,
+                    size=13,
+                    weight=ft.FontWeight.W_600,
+                ),
+                self._add_pokemon_selector,
+                self._add_pokemon_validation_text,
+            ],
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=self._close_add_pokemon_dialog,
+            ),
+            self._add_pokemon_button,
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _selected_add_pokemon_id(self) -> str:
+        """Resolve the current text only when it exactly matches a name."""
+
+        if self._add_pokemon_selector is None:
+            return ""
+
+        entered_name = str(
+            self._add_pokemon_selector.value or ""
+        ).strip().casefold()
+        return self._add_pokemon_name_to_id.get(entered_name, "")
+
+    def _sync_add_pokemon_validation(self) -> None:
+        """Enable Add only for an exact, currently unplanned catalog match."""
+
+        pokemon_id = self._selected_add_pokemon_id()
+        has_input = bool(
+            self._add_pokemon_selector
+            and str(self._add_pokemon_selector.value or "").strip()
+        )
+
+        if self._add_pokemon_button is not None:
+            self._add_pokemon_button.disabled = not bool(pokemon_id)
+
+        if self._add_pokemon_validation_text is not None:
+            if pokemon_id:
+                self._add_pokemon_validation_text.value = (
+                    "Ready to add to the Team Planner."
+                )
+                self._add_pokemon_validation_text.color = SUCCESS
+            elif has_input:
+                self._add_pokemon_validation_text.value = (
+                    "Choose an exact Pokémon name from the suggestions."
+                )
+                self._add_pokemon_validation_text.color = TEXT_MUTED
+            else:
+                self._add_pokemon_validation_text.value = (
+                    "Choose an exact match from the suggestions."
+                )
+                self._add_pokemon_validation_text.color = TEXT_MUTED
+
+        if self._add_pokemon_button is not None:
+            self._add_pokemon_button.update()
+        if self._add_pokemon_validation_text is not None:
+            self._add_pokemon_validation_text.update()
+
+    def _handle_add_pokemon_search_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+    ) -> None:
+        """Validate lightweight text input without refreshing My Journey."""
+
+        del event
+        self._sync_add_pokemon_validation()
+
+    def _handle_add_pokemon_search_select(
+        self,
+        event: ft.AutoCompleteSelectEvent,
+    ) -> None:
+        """Validate a selected autocomplete suggestion immediately."""
+
+        del event
+        self._sync_add_pokemon_validation()
+
+    def _clear_add_pokemon_dialog_state(self) -> None:
+        """Release transient autocomplete dialog controls."""
+
+        self._add_pokemon_selector = None
+        self._add_pokemon_button = None
+        self._add_pokemon_validation_text = None
+        self._add_pokemon_name_to_id = {}
+
+    def _close_add_pokemon_dialog(
+        self,
+        event: ft.Event[ft.Button] | None = None,
+    ) -> None:
+        del event
+        self._clear_add_pokemon_dialog_state()
+        self.page.pop_dialog()
+        self.page.update()
+
+    def _confirm_add_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+        pokemon_id = self._selected_add_pokemon_id()
+        if not pokemon_id:
+            self._sync_add_pokemon_validation()
+            return
+
+        self._clear_add_pokemon_dialog_state()
+        self.page.pop_dialog()
+        self.page.run_task(self._add_planned_pokemon, pokemon_id)
+
+    async def _add_planned_pokemon(self, pokemon_id: str) -> None:
+        """Persist one new Team Planner Pokémon."""
+
+        if pokemon_id in self.planned_pokemon_ids:
+            return
+
+        updated_ids = [*self.planned_pokemon_ids, pokemon_id]
+        save_succeeded = await self.app_state.save_planned_pokemon_ids(
+            updated_ids
+        )
+        if not save_succeeded:
+            self._show_save_error(
+                "The Pokémon could not be added to the Team Planner."
+            )
+            return
+
+        self.planned_pokemon_ids = updated_ids
+        self._reload_planner_dependencies()
+        self._refresh()
+
+    def _request_remove_planned_pokemon(
+        self,
+        event: ft.Event[ft.IconButton],
+        pokemon_id: str,
+    ) -> None:
+        """Always confirm removal and explain linked-item changes."""
+
+        del event
+        pokemon = next(
+            (
+                record
+                for record in self.pokemon
+                if str(record.get("id", "")) == pokemon_id
+            ),
+            None,
+        )
+        if pokemon is None:
+            return
+
+        pokemon_name = str(
+            pokemon.get("pokemon", "this Pokémon")
+        )
+        impact_lines = [
+            "This will remove its Current Objective and map marker.",
+            (
+                "Your acquired Pokémon data in My Team or My Box "
+                "will not be deleted."
+            ),
+        ]
+
+        for requirement in pokemon.get("required_items", []):
+            if not isinstance(requirement, dict):
+                continue
+            item_id = str(requirement.get("item_id", "")).strip()
+            quantity = requirement.get("quantity", 0)
+            if (
+                not item_id
+                or not isinstance(quantity, int)
+                or isinstance(quantity, bool)
+                or quantity <= 0
+            ):
+                continue
+
+            current_required = self._required_item_quantity(item_id)
+            new_required = max(0, current_required - quantity)
+            item_name = next(
+                (
+                    str(item.get("name", item_id))
+                    for item in self.items
+                    if str(item.get("id", "")) == item_id
+                ),
+                item_id.replace("_", " ").title(),
+            )
+            impact_lines.append(
+                (
+                    f"The {item_name} requirement will change "
+                    f"from {current_required} to {new_required}."
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"Remove {pokemon_name} from the Team Planner?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(line, color=TEXT_SECONDARY)
+                for line in impact_lines
+            ],
+            spacing=8,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=lambda: self.page.pop_dialog(),
+            ),
+            ft.Button(
+                content="Remove",
+                icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                bgcolor=DANGER,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event, objective_id=pokemon_id:
+                    self._confirm_remove_planned_pokemon(
+                        event,
+                        objective_id,
+                    )
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_remove_planned_pokemon(
+        self,
+        event: ft.Event[ft.Button],
+        pokemon_id: str,
+    ) -> None:
+        del event
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._remove_planned_pokemon,
+            pokemon_id,
+        )
+
+    async def _remove_planned_pokemon(self, pokemon_id: str) -> None:
+        """Persist removal without deleting acquired Pokémon history."""
+
+        if pokemon_id not in self.planned_pokemon_ids:
+            return
+
+        updated_ids = [
+            planned_id
+            for planned_id in self.planned_pokemon_ids
+            if planned_id != pokemon_id
+        ]
+        save_succeeded = await self.app_state.save_planned_pokemon_ids(
+            updated_ids
+        )
+        if not save_succeeded:
+            self._show_save_error(
+                "The Pokémon could not be removed from the Team Planner."
+            )
+            return
+
+        self.planned_pokemon_ids = updated_ids
+        if self._selected_map_objective_id == f"pokemon:{pokemon_id}":
+            self._selected_map_objective_id = None
+            self._selected_marker_y = None
+
+        self._reload_planner_dependencies()
+        self._refresh()
+
     def _build_team_planner_card(self) -> ft.Control:
         rows: list[ft.DataRow] = []
 
         for pokemon in self.pokemon:
             pokemon_id = str(pokemon.get("id", ""))
             status = self._pokemon_status(pokemon)
-            encounter = self._primary_encounter(pokemon)
 
             pokemon_cell_controls: list[ft.Control] = [
                 self._status_icon(status),
@@ -2545,6 +2989,7 @@ class MyJourneyView:
                         ),
                     ],
                     spacing=2,
+                    alignment=ft.MainAxisAlignment.CENTER,
                 ),
             ]
 
@@ -2553,66 +2998,74 @@ class MyJourneyView:
                 self._register_objective_data_row(
                     objective_id,
                     ft.DataRow(
-                    cells=[
-                        ft.DataCell(
-                            ft.Row(
-                                controls=pokemon_cell_controls,
-                                spacing=10,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        cells=[
+                            ft.DataCell(
+                                ft.Container(
+                                    content=ft.Row(
+                                        controls=pokemon_cell_controls,
+                                        spacing=10,
+                                        vertical_alignment=(
+                                            ft.CrossAxisAlignment.CENTER
+                                        ),
+                                    ),
+                                    height=136,
+                                    alignment=ft.Alignment.CENTER_LEFT,
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.Text(
+                                    self._pokemon_location_text(pokemon),
+                                    color=TEXT_SECONDARY,
+                                    size=13,
+                                )
+                            ),
+                            ft.DataCell(
+                                self._pokemon_encounter_options_control(
+                                    pokemon
+                                )
+                            ),
+                            ft.DataCell(
+                                self._pokemon_more_locations_control(
+                                    pokemon
+                                )
+                            ),
+                            ft.DataCell(
+                                self._build_pokemon_obtained_action(
+                                    pokemon,
+                                    status,
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.IconButton(
+                                    icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                                    icon_color=DANGER,
+                                    tooltip="Remove from Team Planner",
+                                    on_click=(
+                                        lambda event,
+                                        objective_id=pokemon_id:
+                                        self._request_remove_planned_pokemon(
+                                            event,
+                                            objective_id,
+                                        )
+                                    ),
+                                )
+                            ),
+                        ],
+                        color=(
+                            ft.Colors.with_opacity(
+                                0.16,
+                                PRIMARY_BLUE,
                             )
-                        ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._pokemon_location_text(pokemon),
-                                color=TEXT_SECONDARY,
-                                size=13,
+                            if (
+                                objective_id
+                                == self._selected_map_objective_id
                             )
+                            else None
                         ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._pokemon_method_text(pokemon, encounter),
-                                color=TEXT_SECONDARY,
-                                size=13,
-                            )
+                        on_select_change=(
+                            lambda event, objective_id=objective_id:
+                            self._select_objective_for_map(objective_id)
                         ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._pokemon_weather_text(encounter),
-                                color=TEXT_SECONDARY,
-                                size=13,
-                            )
-                        ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._pokemon_rarity_text(pokemon, encounter),
-                                color=TEXT_SECONDARY,
-                                size=13,
-                            )
-                        ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._pokemon_level_text(encounter),
-                                color=TEXT_SECONDARY,
-                                size=13,
-                            )
-                        ),
-                        ft.DataCell(self._pokemon_more_locations_control(pokemon)),
-                        ft.DataCell(
-                            self._build_pokemon_obtained_action(
-                                pokemon,
-                                status,
-                            )
-                        ),
-                    ],
-                    color=(
-                        ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
-                        if objective_id == self._selected_map_objective_id
-                        else None
-                    ),
-                    on_select_change=(
-                        lambda event, objective_id=objective_id:
-                        self._select_objective_for_map(objective_id)
-                    ),
                     ),
                 )
             )
@@ -2621,20 +3074,18 @@ class MyJourneyView:
             columns=[
                 self._column("Pokémon"),
                 self._column("Location"),
-                self._column("Method"),
-                self._column("Weather"),
-                self._column("Rarity"),
-                self._column("Level"),
+                self._column("Encounter Options"),
                 self._column("More Locations"),
                 self._column("Mark as acquired"),
+                self._column("Remove"),
             ],
             rows=rows,
             border=ft.Border.all(1, BORDER_DEFAULT),
             border_radius=12,
             heading_row_color=SURFACE_RAISED,
-            column_spacing=20,
-            data_row_min_height=76,
-            data_row_max_height=104,
+            column_spacing=24,
+            data_row_min_height=88,
+            data_row_max_height=160,
             show_checkbox_column=False,
         )
 
@@ -2645,7 +3096,28 @@ class MyJourneyView:
                 "Planned final team members with acquisition, encounter, "
                 "and evolution guidance."
             ),
-            body=ft.Row(controls=[table], scroll=ft.ScrollMode.AUTO),
+            body=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[
+                            ft.Button(
+                                content="Add Pokémon",
+                                icon=ft.Icons.ADD_ROUNDED,
+                                bgcolor=SUCCESS,
+                                color="#07120B",
+                                icon_color="#07120B",
+                                on_click=self._show_add_pokemon_dialog,
+                            )
+                        ],
+                        alignment=ft.MainAxisAlignment.END,
+                    ),
+                    ft.Row(
+                        controls=[table],
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
+                ],
+                spacing=12,
+            ),
             col={"xs": 12},
         )
 
@@ -2934,6 +3406,123 @@ class MyJourneyView:
             return str(min_level)
 
         return f"{min_level}–{max_level}"
+
+    @staticmethod
+    def _pokemon_encounter_option_line(
+        pokemon: dict[str, Any],
+        encounter: dict[str, Any],
+    ) -> str:
+        """Format one normalized encounter variant for Team Planner."""
+
+        acquisition = pokemon.get("primary_acquisition", {})
+        raw_method = encounter.get("method") or acquisition.get("method", "")
+        method = (
+            str(raw_method).replace("_", " ").title()
+            if raw_method
+            else "Encounter"
+        )
+        method = method.replace("Max Raid Battle", "Max Raid")
+
+        weather = str(encounter.get("weather") or "").strip()
+
+        rarity = encounter.get("rarity_percent")
+        rarity_text = f"{rarity}%" if rarity is not None else ""
+
+        min_level = encounter.get("level_min")
+        max_level = encounter.get("level_max")
+        if min_level is None and max_level is None:
+            level_text = ""
+        elif min_level == max_level:
+            level_text = f"Lv. {min_level}"
+        elif min_level is None:
+            level_text = f"Lv. {max_level}"
+        elif max_level is None:
+            level_text = f"Lv. {min_level}"
+        else:
+            level_text = f"Lv. {min_level}–{max_level}"
+
+        details = [
+            value
+            for value in (rarity_text, level_text, weather)
+            if value
+        ]
+        return (
+            f"{method}: {' · '.join(details)}"
+            if details
+            else method
+        )
+
+    @classmethod
+    def _pokemon_encounter_options_control(
+        cls,
+        pokemon: dict[str, Any],
+    ) -> ft.Control:
+        """Render every encounter variant for the curated acquisition."""
+
+        acquisition = pokemon.get("primary_acquisition", {})
+        raw_encounters = acquisition.get("encounters", [])
+        encounters = (
+            [
+                encounter
+                for encounter in raw_encounters
+                if isinstance(encounter, dict)
+            ]
+            if isinstance(raw_encounters, list)
+            else []
+        )
+
+        if encounters:
+            return ft.Column(
+                controls=[
+                    ft.Text(
+                        cls._pokemon_encounter_option_line(
+                            pokemon,
+                            encounter,
+                        ),
+                        color=TEXT_SECONDARY,
+                        size=13,
+                    )
+                    for encounter in encounters
+                ],
+                spacing=5,
+                tight=True,
+            )
+
+        raw_method = str(acquisition.get("method") or "").strip()
+        method = (
+            raw_method.replace("_", " ").title()
+            if raw_method
+            else "Details forthcoming"
+        )
+        method = method.replace("Max Raid Battle", "Max Raid")
+
+        availability_note = str(
+            acquisition.get("availability_note") or ""
+        ).strip()
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                method,
+                color=TEXT_SECONDARY,
+                size=13,
+                weight=ft.FontWeight.W_600,
+            )
+        ]
+        if availability_note:
+            controls.append(
+                ft.Text(
+                    availability_note,
+                    color=TEXT_MUTED,
+                    size=12,
+                    italic=True,
+                )
+            )
+
+        return ft.Column(
+            controls=controls,
+            spacing=4,
+            tight=True,
+        )
 
     @staticmethod
     def _pokemon_more_locations_control(

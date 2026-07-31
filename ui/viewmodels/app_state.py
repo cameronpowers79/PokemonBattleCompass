@@ -141,6 +141,8 @@ class AppState:
         default_state = {
             "earned_badges": 0,
             "checklist_initialized": False,
+            "planner_initialized": False,
+            "planned_pokemon_ids": [],
             "item_objectives": [],
             "pokemon_objectives": [],
         }
@@ -167,6 +169,25 @@ class AppState:
         if not isinstance(checklist_initialized, bool):
             checklist_initialized = False
 
+        planner_initialized = my_journey.get(
+            "planner_initialized",
+            False,
+        )
+        if not isinstance(planner_initialized, bool):
+            planner_initialized = False
+
+        planned_pokemon_ids = my_journey.get(
+            "planned_pokemon_ids",
+            [],
+        )
+        if not isinstance(planned_pokemon_ids, list):
+            planned_pokemon_ids = []
+        planned_pokemon_ids = [
+            pokemon_id
+            for pokemon_id in planned_pokemon_ids
+            if isinstance(pokemon_id, str) and pokemon_id.strip()
+        ]
+
         item_objectives = my_journey.get("item_objectives", [])
         if not isinstance(item_objectives, list):
             item_objectives = []
@@ -181,6 +202,8 @@ class AppState:
         return {
             "earned_badges": earned_badges,
             "checklist_initialized": checklist_initialized,
+            "planner_initialized": planner_initialized,
+            "planned_pokemon_ids": planned_pokemon_ids,
             "item_objectives": item_objectives,
             "pokemon_objectives": pokemon_objectives,
         }
@@ -547,7 +570,7 @@ class AppState:
         team_data: list[dict],
         box_data: list[dict],
     ) -> None:
-        """Mark planned Pokémon acquired when owned in party or Box."""
+        """Synchronize acquired objectives to Pokémon currently owned."""
 
         journey = self.journey
         if journey is None:
@@ -570,32 +593,30 @@ class AppState:
             for record in [*team_data, *box_data]
             if isinstance(record, dict)
         ]
-        if not owned_pokemon:
-            return
 
-        updated_my_journey = deepcopy(self.my_journey_data)
-        existing_ids = {
-            str(record.get("id"))
-            for record in updated_my_journey["pokemon_objectives"]
-            if isinstance(record, dict) and record.get("obtained") is True
-        }
-
+        acquired_records: list[dict[str, object]] = []
         for planned in planned_pokemon:
             if not isinstance(planned, dict):
                 continue
+
             pokemon_id = str(planned.get("id", "")).strip()
-            if not pokemon_id or pokemon_id in existing_ids:
+            if not pokemon_id:
                 continue
+
             if any(
-                self._planned_pokemon_matches_owned_record(planned, owned)
+                self._planned_pokemon_matches_owned_record(
+                    planned,
+                    owned,
+                )
                 for owned in owned_pokemon
             ):
-                updated_my_journey["pokemon_objectives"].append({
+                acquired_records.append({
                     "id": pokemon_id,
                     "obtained": True,
                 })
-                existing_ids.add(pokemon_id)
 
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey["pokemon_objectives"] = acquired_records
         journey["my_journey"] = updated_my_journey
 
     async def save_team_and_box(
@@ -1090,6 +1111,58 @@ class AppState:
 
         return save_succeeded
 
+
+    async def save_planned_pokemon_ids(
+        self,
+        pokemon_ids: list[str],
+    ) -> bool:
+        """Persist the ordered Pokémon IDs selected for Team Planner."""
+
+        if self.journey is None:
+            return False
+        if not isinstance(pokemon_ids, list):
+            raise ValueError("Planned Pokémon IDs must be a list.")
+
+        normalized_ids: list[str] = []
+        seen_ids: set[str] = set()
+        for raw_id in pokemon_ids:
+            if not isinstance(raw_id, str):
+                raise ValueError("Each planned Pokémon ID must be text.")
+            pokemon_id = raw_id.strip()
+            if not pokemon_id:
+                raise ValueError("Planned Pokémon IDs cannot be empty.")
+            if pokemon_id in seen_ids:
+                raise ValueError("Planned Pokémon IDs must be unique.")
+            normalized_ids.append(pokemon_id)
+            seen_ids.add(pokemon_id)
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey["planner_initialized"] = True
+        updated_my_journey["planned_pokemon_ids"] = normalized_ids
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.page,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
 
     async def save_pokemon_objective(
         self,

@@ -1,4 +1,3 @@
-
 """
 My Team view.
 
@@ -859,6 +858,19 @@ class MyTeamView:
         self._refresh_selector()
         self._refresh_detail()
         self.page.update()
+        self.page.run_task(self._scroll_to_team_editor)
+
+    async def _scroll_to_team_editor(self) -> None:
+        """Place a Journey-prefilled Pokémon editor row in view."""
+
+        # Navigation to My Team happens immediately after the prefill call.
+        # Give AppShell one frame to swap views before resetting the page scroll.
+        await asyncio.sleep(0.10)
+        await self.page.scroll_to(
+            offset=350,
+            duration=360,
+            curve=ft.AnimationCurve.EASE_OUT_CUBIC,
+        )
 
     def _add_pokemon(
         self,
