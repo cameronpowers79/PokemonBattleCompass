@@ -71,83 +71,107 @@ MAP_RENDER_HEIGHT = MAP_RENDER_WIDTH * MAP_IMAGE_HEIGHT / MAP_IMAGE_WIDTH
 # Initial calibration set. Coordinates are normalized against Galar_Map_Base.png.
 # Additional locations can be added without changing marker rendering.
 MAP_LOCATION_COORDINATES: dict[str, tuple[float, float]] = {
-    # Cities, routes, and fixed locations.
-    "wyndon": (0.448, 0.132),
-    "stow_on_side": (0.176, 0.440),
-    "galar_mine_no_2": (0.151, 0.610),
+    "slumbering_weald": (0.282, 0.968),
+    "postwick": (0.477, 0.969),
+    "route_1": (0.477, 0.925),
+    "wedgehurst": (0.477, 0.887),
+    "route_2": (0.609, 0.873),
     "route_2_lake": (0.562, 0.846),
-    "motostoke": (0.438, 0.642),
-    "route_6": (0.267, 0.468),
-    "route_9_circhester_bay": (0.758, 0.372),
-
-    # Southern Wild Area.
-    "meetup_spot": (0.405, 0.810),
+    "meetup_spot": (0.421, 0.801),
     "rolling_fields": (0.356, 0.779),
-    "dappled_grove": (0.302, 0.747),
-    "west_lake_axewell": (0.302, 0.712),
-    "east_lake_axewell": (0.520, 0.700),
-    "north_lake_miloch": (0.548, 0.663),
-
-    # Northern Wild Area. These correspond to the map's individual cyan dots.
-    "lake_of_outrage": (0.181, 0.527),
-    "hammerlocke_hills": (0.438, 0.507),
-    "giants_cap": (0.373, 0.523),
-    "giants_mirror": (0.497, 0.523),
-    "dusty_bowl": (0.405, 0.548),
-    "stony_wilderness": (0.454, 0.558),
-    "bridge_field": (0.408, 0.602),
+    "dappled_grove": (0.319, 0.794),
+    "west_lake_axewell": (0.319, 0.745),
+    "east_lake_axewell": (0.440, 0.716),
+    "north_lake_miloch": (0.553, 0.706),
+    "south_lake_miloch": (0.535, 0.733),
+    "watchtower_ruins": (0.337, 0.716),
+    "giants_seat": (0.572, 0.755),
+    "axews_eye": (0.393, 0.745),
+    "motostoke": (0.438, 0.642),
+    "motostoke_outskirts": (0.542, 0.642),
+    "route_3": (0.258, 0.625),
+    "galar_mine": (0.151, 0.610),
+    "route_4": (0.150, 0.588),
+    "turffield": (0.205, 0.545),
+    "route_5": (0.337, 0.559),
+    "hulbury": (0.712, 0.559),
+    "galar_mine_no_2": (0.675, 0.610),
+    "motostoke_riverbank": (0.534, 0.657),
+    "bridge_field": (0.525, 0.618),
+    "stony_wilderness": (0.506, 0.559),
+    "dusty_bowl": (0.468, 0.539),
+    "giants_mirror": (0.515, 0.539),
+    "giants_cap": (0.412, 0.539),
+    "hammerlocke_hills": (0.506, 0.500),
+    "lake_of_outrage": (0.375, 0.510),
+    "hammerlocke": (0.455, 0.474),
+    "route_6": (0.267, 0.468),
+    "stow_on_side": (0.176, 0.440),
+    "glimwood_tangle": (0.220, 0.370),
+    "ballonlea": (0.180, 0.335),
+    "route_7": (0.610, 0.475),
+    "route_8": (0.650, 0.420),
+    "circhester": (0.758, 0.372),
+    "route_9": (0.820, 0.420),
+    "route_9_circhester_bay": (0.790, 0.430),
+    "route_9_tunnel": (0.690, 0.475),
+    "spikemuth": (0.845, 0.475),
+    "route_10": (0.480, 0.315),
+    "wyndon": (0.448, 0.165),
 }
 
-POKEMON_MARKER_ASSETS: dict[str, str] = {
-    "aegislash": "raw/pokesprite/pokemon-gen8/regular/honedge.png",
-    "chandelure": "raw/pokesprite/pokemon-gen8/regular/litwick.png",
-    "dhelmise": "raw/pokesprite/pokemon-gen8/regular/dhelmise.png",
-    "froslass": "raw/pokesprite/pokemon-gen8/regular/snorunt.png",
-    "mimikyu": "raw/pokesprite/pokemon-gen8/regular/mimikyu.png",
-    "runerigus": "raw/pokesprite/pokemon-gen8/regular/yamask-galar.png",
-}
 
-ITEM_MARKER_ASSETS: dict[str, str] = {
-    "dusk_stone": "raw/pokesprite/items/evo-item/dusk-stone.png",
-    "dawn_stone": "raw/pokesprite/items/evo-item/dawn-stone.png",
-    "black_sludge": "raw/pokesprite/items/hold-item/black-sludge.png",
-}
 
-MOVE_TYPE_BY_ITEM_ID: dict[str, str] = {
-    "tr99_body_press": "fighting",
-    "tm53_mud_shot": "ground",
-    "tm74_venoshock": "poison",
-    "tm69_psycho_cut": "psychic",
-}
 
-TR_REPRESENTATIVE_LOCATIONS: dict[str, dict[str, str]] = {
-    "tr99_body_press": {
-        "watt_trader": "meetup_spot",
-        "max_raid_reward": "west_lake_axewell",
-    },
-}
 
 MAP_LOCATION_LABELS: dict[str, str] = {
-    "wyndon": "Wyndon",
-    "stow_on_side": "Stow-on-Side",
-    "galar_mine_no_2": "Galar Mine No. 2",
+    "slumbering_weald": "Slumbering Weald",
+    "postwick": "Postwick",
+    "route_1": "Route 1",
+    "wedgehurst": "Wedgehurst",
+    "route_2": "Route 2",
     "route_2_lake": "Route 2 lakeside alcove",
-    "motostoke": "Motostoke",
-    "route_6": "Route 6",
-    "route_9_circhester_bay": "Route 9 — Circhester Bay",
     "meetup_spot": "Meetup Spot",
     "rolling_fields": "Rolling Fields",
     "dappled_grove": "Dappled Grove",
     "west_lake_axewell": "West Lake Axewell",
     "east_lake_axewell": "East Lake Axewell",
     "north_lake_miloch": "North Lake Miloch",
+    "south_lake_miloch": "South Lake Miloch",
+    "watchtower_ruins": "Watchtower Ruins",
+    "giants_seat": "Giant's Seat",
+    "axews_eye": "Axew's Eye",
+    "motostoke": "Motostoke",
+    "motostoke_outskirts": "Motostoke Outskirts",
+    "route_3": "Route 3",
+    "galar_mine": "Galar Mine",
+    "route_4": "Route 4",
+    "turffield": "Turffield",
+    "route_5": "Route 5",
+    "hulbury": "Hulbury",
+    "galar_mine_no_2": "Galar Mine No. 2",
+    "motostoke_riverbank": "Motostoke Riverbank",
     "bridge_field": "Bridge Field",
-    "giants_mirror": "Giant's Mirror",
     "stony_wilderness": "Stony Wilderness",
     "dusty_bowl": "Dusty Bowl",
+    "giants_mirror": "Giant's Mirror",
     "giants_cap": "Giant's Cap",
-    "lake_of_outrage": "Lake of Outrage",
     "hammerlocke_hills": "Hammerlocke Hills",
+    "lake_of_outrage": "Lake of Outrage",
+    "hammerlocke": "Hammerlocke",
+    "route_6": "Route 6",
+    "stow_on_side": "Stow-on-Side",
+    "glimwood_tangle": "Glimwood Tangle",
+    "ballonlea": "Ballonlea",
+    "route_7": "Route 7",
+    "route_8": "Route 8",
+    "circhester": "Circhester",
+    "route_9": "Route 9",
+    "route_9_circhester_bay": "Route 9 — Circhester Bay",
+    "route_9_tunnel": "Route 9 Tunnel",
+    "spikemuth": "Spikemuth",
+    "route_10": "Route 10",
+    "wyndon": "Wyndon",
 }
 
 class MyJourneyView:
@@ -192,6 +216,12 @@ class MyJourneyView:
         self._move_to_map_enabled = True
         self._selected_map_objective_id: str | None = None
         self._map_stack: ft.Stack | None = None
+        self._map_host: ft.Container | None = None
+        self._map_image: ft.Image | None = None
+        self._map_render_width = float(MAP_RENDER_WIDTH)
+        self._map_render_height = float(MAP_RENDER_HEIGHT)
+        self._map_marker_records: list[dict[str, Any]] = []
+        self._map_marker_filter = "all"
         self._move_to_map_overlay: ft.Container | None = None
         self._map_markers_by_objective: dict[str, list[ft.Container]] = {}
         self._selected_marker_y: float | None = None
@@ -1056,24 +1086,15 @@ class MyJourneyView:
         )
 
     def _build_current_objectives_card(self) -> ft.Control:
+        """Build the six highest-priority objectives available right now."""
+
         objectives: list[ft.Control] = []
 
-        for item in self._checklist_items():
-            if self._item_status(item) != "available":
-                continue
-            objectives.append(
-                self._build_objective_row(
-                    objective_id=f"item:{item.get('id', '')}",
-                    status="available",
-                    title=self._item_display_name(item),
-                    detail=self._current_item_source_text(item),
-                    action=self._build_item_progress_control(item, compact=True),
-                )
-            )
-
+        # 1. Currently catchable Pokémon.
         for pokemon in self.pokemon:
             if self._pokemon_status(pokemon) != "available":
                 continue
+
             objectives.append(
                 self._build_objective_row(
                     objective_id=f"pokemon:{pokemon.get('id', '')}",
@@ -1086,6 +1107,49 @@ class MyJourneyView:
                     ),
                 )
             )
+
+        available_items = [
+            item
+            for item in self._checklist_items()
+            if self._item_status(item) == "available"
+        ]
+
+        # 2. Evolution items required by planned Pokémon.
+        prioritized_item_groups = [
+            [
+                item
+                for item in available_items
+                if str(item.get("category", "")) == "evolution_item"
+            ],
+            # 3. Currently attainable held items.
+            [
+                item
+                for item in available_items
+                if str(item.get("category", "")) == "held_item"
+            ],
+            # 4. Any other currently attainable checklist items.
+            [
+                item
+                for item in available_items
+                if str(item.get("category", ""))
+                not in {"evolution_item", "held_item"}
+            ],
+        ]
+
+        for item_group in prioritized_item_groups:
+            for item in item_group:
+                objectives.append(
+                    self._build_objective_row(
+                        objective_id=f"item:{item.get('id', '')}",
+                        status="available",
+                        title=self._item_display_name(item),
+                        detail=self._current_item_source_text(item),
+                        action=self._build_item_progress_control(
+                            item,
+                            compact=True,
+                        ),
+                    )
+                )
 
         if not objectives:
             objectives.append(
@@ -1100,7 +1164,7 @@ class MyJourneyView:
         return self._build_card(
             title="Current Objectives",
             icon=ft.Icons.FACT_CHECK_OUTLINED,
-            subtitle="Top available goals you can act on right now.",
+            subtitle="Highest-priority goals available at your current Badge count.",
             body=ft.Column(
                 controls=objectives[:6],
                 spacing=10,
@@ -1159,19 +1223,49 @@ class MyJourneyView:
         self,
         objective_id: str,
     ) -> None:
-        """Select an item or Pokémon and focus its map marker."""
+        """Select an item or Pokémon without rebuilding the whole map."""
 
         if not objective_id:
             return
 
+        previous_objective_id = self._selected_map_objective_id
         self._selected_map_objective_id = objective_id
-        self._refresh()
+        self._selected_marker_y = next(
+            (
+                float(record["y"])
+                for record in self._map_marker_records
+                if record.get("objective_id") == objective_id
+            ),
+            None,
+        )
 
-        if objective_id in self._map_markers_by_objective:
-            self.page.run_task(self._pulse_selected_markers)
+        # Update only the existing marker controls. Rebuilding the complete page
+        # here briefly replaces the map image and causes a visible flash.
+        for marker in self._map_markers_by_objective.get(
+            previous_objective_id or "",
+            [],
+        ):
+            marker.scale = 1.0
+            marker.shadow = self._map_marker_shadow(False)
+
+        for marker in self._map_markers_by_objective.get(
+            objective_id,
+            [],
+        ):
+            marker.scale = 1.16
+            marker.shadow = self._map_marker_shadow(True)
+
+        self.page.update()
+        self.page.run_task(self._focus_selected_map_objective)
+
+    async def _focus_selected_map_objective(self) -> None:
+        """Scroll to the selected marker, then animate the live controls."""
 
         if self._move_to_map_enabled:
-            self.page.run_task(self._scroll_to_selected_marker)
+            await self._scroll_to_selected_marker()
+            await asyncio.sleep(0.10)
+
+        await self._pulse_selected_markers()
 
     async def _pulse_selected_markers(self) -> None:
         """Briefly pop every marker linked to the selected objective."""
@@ -1227,17 +1321,35 @@ class MyJourneyView:
             map_top = 1320.0
         else:
             checklist_rows = len(self._checklist_items())
-            checklist_height = 220.0 + checklist_rows * 62.0
+
+            # Narrow DataTable rows wrap into much taller records than they do
+            # on desktop. Estimate from the actual phone layout rather than the
+            # compact desktop row height.
+            checklist_height = 250.0 + checklist_rows * 145.0
+
+            page_intro_height = 90.0
+            section_spacing = 24.0
+            top_row_height = TOP_JOURNEY_CARD_HEIGHT * 2 + 20.0
+
+            # Includes the map card title, subtitle, divider, marker filter,
+            # spacing, and padding above the image itself.
+            map_card_header_height = 300.0
+
             map_top = (
-                460.0
-                + TOP_JOURNEY_CARD_HEIGHT * 2
-                + 110.0
+                page_intro_height
+                + section_spacing
+                + top_row_height
+                + section_spacing
                 + checklist_height
+                + section_spacing
+                + map_card_header_height
             )
 
         target_offset = max(
             0.0,
-            map_top + marker_y * MAP_RENDER_HEIGHT - viewport_height * 0.50,
+            map_top
+            + marker_y * self._map_render_height
+            - viewport_height * 0.50,
         )
 
         await self.page.scroll_to(
@@ -1280,22 +1392,19 @@ class MyJourneyView:
     def _marker_asset_for_record(
         record: dict[str, Any],
     ) -> str | None:
-        """Resolve the sprite asset used as the marker's main visual."""
+        """Resolve a marker sprite entirely from Journey data."""
 
-        kind = str(record.get("kind", ""))
-        objective_id = str(record.get("objective_id", ""))
-        raw_id = objective_id.split(":", 1)[-1]
+        explicit_asset = str(record.get("marker_asset") or "").strip()
+        if explicit_asset:
+            return explicit_asset
 
-        if kind == "pokemon":
-            return POKEMON_MARKER_ASSETS.get(raw_id)
+        category = str(record.get("category", "")).strip().lower()
+        move_type = str(record.get("move_type") or "").strip().lower()
 
-        category = str(record.get("category", ""))
-        if category in {"tm", "tr"}:
-            move_type = MOVE_TYPE_BY_ITEM_ID.get(raw_id)
-            if move_type:
-                return f"raw/pokesprite/items/{category}/{move_type}.png"
+        if category in {"tm", "tr"} and move_type:
+            return f"raw/pokesprite/items/{category}/{move_type}.png"
 
-        return ITEM_MARKER_ASSETS.get(raw_id)
+        return None
 
     def _show_map_marker_details(
         self,
@@ -1329,6 +1438,18 @@ class MyJourneyView:
                     f"Status: {str(record.get('status', '')).title()}",
                     size=13,
                     color=TEXT_SECONDARY,
+                ),
+                *(
+                    [
+                        ft.Text(
+                            "Representative location; additional sources are available.",
+                            size=12,
+                            color=TEXT_MUTED,
+                            italic=True,
+                        )
+                    ]
+                    if record.get("map_display_mode") == "representative"
+                    else []
                 ),
             ],
             spacing=8,
@@ -1373,15 +1494,22 @@ class MyJourneyView:
 
                 map_location_ids = self._map_location_ids(source)
 
-                representative_locations = TR_REPRESENTATIVE_LOCATIONS.get(
-                    item_id,
-                    {},
+                raw_display_locations = source.get(
+                    "map_display_locations",
+                    [],
                 )
-                representative_location = representative_locations.get(
-                    source_method
-                )
-                if representative_location is not None:
-                    map_location_ids = [representative_location]
+                if isinstance(raw_display_locations, list):
+                    display_locations = [
+                        str(location_id).strip()
+                        for location_id in raw_display_locations
+                        if str(location_id).strip()
+                    ]
+                    if display_locations:
+                        map_location_ids = display_locations
+
+                map_display_mode = str(
+                    source.get("map_display_mode") or "all"
+                ).strip()
 
                 for location_id in map_location_ids:
                     if location_id in seen_locations:
@@ -1403,9 +1531,12 @@ class MyJourneyView:
                         ),
                         "detail": str(source.get("location_detail", "")),
                         "source_method": source_method,
+                        "map_display_mode": map_display_mode,
                         "status": marker_status,
                         "kind": "item",
                         "category": category,
+                        "move_type": str(item.get("move_type") or ""),
+                        "marker_asset": str(item.get("marker_asset") or ""),
                         "x": x,
                         "y": y,
                     })
@@ -1449,11 +1580,31 @@ class MyJourneyView:
                     "status": marker_status,
                     "kind": "pokemon",
                     "category": "pokemon",
+                    "marker_pokemon": str(
+                        pokemon.get("marker_pokemon")
+                        or pokemon.get("acquire_as")
+                        or pokemon.get("pokemon")
+                        or ""
+                    ),
+                    "marker_asset": str(pokemon.get("marker_asset") or ""),
                     "x": x,
                     "y": y,
                 })
 
         return records
+
+    @staticmethod
+    def _map_marker_shadow(selected: bool) -> ft.BoxShadow:
+        """Return the persistent visual treatment for a map marker."""
+
+        return ft.BoxShadow(
+            blur_radius=20 if selected else 7,
+            spread_radius=4 if selected else 0,
+            color=ft.Colors.with_opacity(
+                0.72 if selected else 0.30,
+                PRIMARY_BLUE if selected else ft.Colors.BLACK,
+            ),
+        )
 
     def _build_map_marker(
         self,
@@ -1534,10 +1685,10 @@ class MyJourneyView:
                         height=marker_size,
                         alignment=ft.Alignment.CENTER,
                         shadow=ft.BoxShadow(
-                            blur_radius=14 if selected else 7,
-                            spread_radius=2 if selected else 0,
+                            blur_radius=7,
+                            spread_radius=0,
                             color=ft.Colors.with_opacity(
-                                0.58 if selected else 0.30,
+                                0.30,
                                 ft.Colors.BLACK,
                             ),
                         ),
@@ -1565,17 +1716,18 @@ class MyJourneyView:
             width=marker_size + 5,
             height=marker_size + 5,
             left=(
-                float(record["x"]) * MAP_RENDER_WIDTH
+                float(record["x"]) * self._map_render_width
                 - marker_size / 2
                 + collision_x
             ),
             top=(
-                float(record["y"]) * MAP_RENDER_HEIGHT
+                float(record["y"]) * self._map_render_height
                 - marker_size / 2
                 + collision_y
             ),
             opacity=1.0,
             scale=1.16 if selected else 1.0,
+            shadow=self._map_marker_shadow(selected),
             animate_scale=ft.Animation(
                 220,
                 ft.AnimationCurve.EASE_OUT_BACK,
@@ -2100,14 +2252,23 @@ class MyJourneyView:
             item_id,
         )
 
-    def _build_map_card(self) -> ft.Control:
-        """Build the base-game Galar map and persistent objective markers."""
-
-        self._map_markers_by_objective = {}
-        self._selected_marker_y = None
+    def _prepare_map_marker_records(self) -> list[dict[str, Any]]:
+        """Build visible marker records and assign collision fan-out metadata."""
 
         marker_records = self._marker_records()
-        marker_controls: list[ft.Control] = []
+
+        if self._map_marker_filter == "items":
+            marker_records = [
+                record
+                for record in marker_records
+                if record.get("kind") == "item"
+            ]
+        elif self._map_marker_filter == "pokemon":
+            marker_records = [
+                record
+                for record in marker_records
+                if record.get("kind") == "pokemon"
+            ]
 
         location_groups: dict[str, list[dict[str, Any]]] = {}
         for record in marker_records:
@@ -2120,7 +2281,16 @@ class MyJourneyView:
                 record["collision_index"] = collision_index
                 record["collision_count"] = collision_count
 
-        for marker_index, record in enumerate(marker_records):
+        return marker_records
+
+    def _build_responsive_map_stack(self) -> ft.Stack:
+        """Build the map and markers against one shared measured canvas."""
+
+        self._map_markers_by_objective = {}
+        self._selected_marker_y = None
+
+        marker_controls: list[ft.Control] = []
+        for marker_index, record in enumerate(self._map_marker_records):
             marker_controls.append(
                 self._build_map_marker(record, marker_index)
             )
@@ -2131,42 +2301,136 @@ class MyJourneyView:
             ):
                 self._selected_marker_y = float(record["y"])
 
-        self._map_stack = ft.Stack(
-            controls=[
-                ft.Image(
-                    src="Galar_Map_Base.png",
-                    width=MAP_RENDER_WIDTH,
-                    height=MAP_RENDER_HEIGHT,
-                    fit=ft.BoxFit.FILL,
-                    semantics_label="Base-game map of the Galar region",
-                ),
-                *marker_controls,
-            ],
-            width=MAP_RENDER_WIDTH,
-            height=MAP_RENDER_HEIGHT,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        self._map_image = ft.Image(
+            src="Galar_Map_Base.png",
+            width=self._map_render_width,
+            height=self._map_render_height,
+            fit=ft.BoxFit.FILL,
+            semantics_label="Base-game map of the Galar region",
         )
 
-        mapped_count = len(marker_records)
+        self._map_stack = ft.Stack(
+            controls=[
+                self._map_image,
+                *marker_controls,
+            ],
+            width=self._map_render_width,
+            height=self._map_render_height,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        )
+        return self._map_stack
+
+    def _handle_map_size_change(
+        self,
+        event: ft.LayoutSizeChangeEvent[ft.LayoutControl],
+    ) -> None:
+        """Keep the marker canvas synchronized with the rendered map width."""
+
+        measured_width = min(float(event.width), float(MAP_RENDER_WIDTH))
+        if measured_width <= 0:
+            return
+
+        measured_height = (
+            measured_width * MAP_IMAGE_HEIGHT / MAP_IMAGE_WIDTH
+        )
+
+        if (
+            abs(measured_width - self._map_render_width) < 0.5
+            and abs(measured_height - self._map_render_height) < 0.5
+        ):
+            return
+
+        self._map_render_width = measured_width
+        self._map_render_height = measured_height
+
+        if self._map_host is None:
+            return
+
+        self._map_host.height = measured_height
+        self._map_host.content = self._build_responsive_map_stack()
+        self._map_host.update()
+
+    def _handle_map_marker_filter(
+        self,
+        event: ft.Event[ft.Dropdown],
+    ) -> None:
+        """Apply the selected map-marker visibility filter."""
+
+        selected_filter = str(event.control.value or "all")
+        if selected_filter not in {"all", "items", "pokemon"}:
+            selected_filter = "all"
+
+        if selected_filter == self._map_marker_filter:
+            return
+
+        self._map_marker_filter = selected_filter
+        self._refresh()
+
+    def _build_map_card(self) -> ft.Control:
+        """Build the responsive Galar map and persistent objective markers."""
+
+        self._map_marker_records = self._prepare_map_marker_records()
+
+        # Start at the desktop cap. The host's measured-size event immediately
+        # recalculates the canvas when the card is narrower.
+        self._map_render_width = float(MAP_RENDER_WIDTH)
+        self._map_render_height = float(MAP_RENDER_HEIGHT)
+
+        self._map_host = ft.Container(
+            key="journey-map-anchor",
+            content=self._build_responsive_map_stack(),
+            width=MAP_RENDER_WIDTH,
+            height=MAP_RENDER_HEIGHT,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=12,
+            alignment=ft.Alignment.TOP_CENTER,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            size_change_interval=80,
+            on_size_change=self._handle_map_size_change,
+        )
+
+        mapped_count = len(self._map_marker_records)
         subtitle = (
             f"{mapped_count} objective marker"
             f"{'' if mapped_count == 1 else 's'} shown. "
             "Select a row or marker to focus it."
         )
 
+        marker_filter = ft.Dropdown(
+            label="Show markers",
+            value=self._map_marker_filter,
+            options=[
+                ft.DropdownOption(
+                    key="all",
+                    text="Everything",
+                ),
+                ft.DropdownOption(
+                    key="items",
+                    text="Items",
+                ),
+                ft.DropdownOption(
+                    key="pokemon",
+                    text="Pokémon",
+                ),
+            ],
+            width=220,
+            on_select=self._handle_map_marker_filter,
+        )
+
         return self._build_card(
             title="Galar Map",
             icon=ft.Icons.MAP_OUTLINED,
             subtitle=subtitle,
-            body=ft.Container(
-                key="journey-map-anchor",
-                content=self._map_stack,
-                width=MAP_RENDER_WIDTH,
-                height=MAP_RENDER_HEIGHT,
-                border=ft.Border.all(1, BORDER_DEFAULT),
-                border_radius=12,
-                alignment=ft.Alignment.TOP_CENTER,
-                clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            body=ft.Column(
+                controls=[
+                    ft.Container(
+                        content=marker_filter,
+                        alignment=ft.Alignment.CENTER_LEFT,
+                    ),
+                    self._map_host,
+                ],
+                spacing=12,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             col={"xs": 12, "lg": 6},
         )

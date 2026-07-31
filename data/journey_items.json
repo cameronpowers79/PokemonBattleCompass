@@ -3,6 +3,7 @@
     "id": "dusk_stone",
     "name": "Dusk Stone",
     "category": "evolution_item",
+    "marker_asset": "raw/pokesprite/items/evo-item/dusk-stone.png",
     "quantity_required": 2,
     "required_by": [
       "aegislash",
@@ -36,6 +37,7 @@
     "id": "dawn_stone",
     "name": "Dawn Stone",
     "category": "evolution_item",
+    "marker_asset": "raw/pokesprite/items/evo-item/dawn-stone.png",
     "quantity_required": 1,
     "required_by": [
       "froslass"
@@ -68,6 +70,7 @@
     "id": "tr99_body_press",
     "name": "TR99 Body Press",
     "category": "tr",
+    "move_type": "Fighting",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -83,7 +86,11 @@
           "east_lake_axewell",
           "giants_cap",
           "hammerlocke_hills"
-        ]
+        ],
+        "map_display_locations": [
+          "meetup_spot"
+        ],
+        "map_display_mode": "representative"
       },
       {
         "id": "tr99_max_raids",
@@ -96,7 +103,11 @@
           "north_lake_miloch",
           "stony_wilderness",
           "west_lake_axewell"
-        ]
+        ],
+        "map_display_locations": [
+          "west_lake_axewell"
+        ],
+        "map_display_mode": "representative"
       }
     ],
     "source_url": "https://www.serebii.net/itemdex/tr99.shtml"
@@ -105,6 +116,7 @@
     "id": "tm53_mud_shot",
     "name": "TM53 Mud Shot",
     "category": "tm",
+    "move_type": "Ground",
     "quantity_required": 1,
     "required_by": [],
     "fixture_quantity_obtained": 1,
@@ -126,6 +138,7 @@
     "id": "tm74_venoshock",
     "name": "TM74 Venoshock",
     "category": "tm",
+    "move_type": "Poison",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -146,6 +159,7 @@
     "id": "tm69_psycho_cut",
     "name": "TM69 Psycho Cut",
     "category": "tm",
+    "move_type": "Psychic",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -166,6 +180,7 @@
     "id": "black_sludge",
     "name": "Black Sludge",
     "category": "held_item",
+    "marker_asset": "raw/pokesprite/items/hold-item/black-sludge.png",
     "quantity_required": 1,
     "required_by": [],
     "sources": [

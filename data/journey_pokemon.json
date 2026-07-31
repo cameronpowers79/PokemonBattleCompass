@@ -3,6 +3,8 @@
     "id": "aegislash",
     "pokemon": "Aegislash",
     "acquire_as": "Honedge",
+    "marker_pokemon": "Honedge",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/honedge.png",
     "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
@@ -55,6 +57,8 @@
     "id": "chandelure",
     "pokemon": "Chandelure",
     "acquire_as": "Litwick",
+    "marker_pokemon": "Litwick",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/litwick.png",
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wandering_encounter",
@@ -100,6 +104,8 @@
     "id": "dhelmise",
     "pokemon": "Dhelmise",
     "acquire_as": "Dhelmise",
+    "marker_pokemon": "Dhelmise",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/dhelmise.png",
     "required_badge": 3,
     "primary_acquisition": {
       "method": "max_raid_battle",
@@ -144,6 +150,8 @@
     "id": "froslass",
     "pokemon": "Froslass",
     "acquire_as": "Snorunt",
+    "marker_pokemon": "Snorunt",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/snorunt.png",
     "required_badge": 0,
     "acquisition_requirement": "Female Snorunt",
     "primary_acquisition": {
@@ -185,6 +193,8 @@
     "id": "mimikyu",
     "pokemon": "Mimikyu",
     "acquire_as": "Mimikyu",
+    "marker_pokemon": "Mimikyu",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/mimikyu.png",
     "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
@@ -215,6 +225,8 @@
     "id": "runerigus",
     "pokemon": "Runerigus",
     "acquire_as": "Galarian Yamask",
+    "marker_pokemon": "Galarian Yamask",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/yamask-galar.png",
     "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
