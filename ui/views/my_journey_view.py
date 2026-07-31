@@ -30,7 +30,7 @@ from ui.theme import (
     TEXT_SECONDARY,
 )
 
-from ui.viewmodels.app_state import AppState
+from ..viewmodels.app_state import AppState
 
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -222,6 +222,8 @@ class MyJourneyView:
         self._map_render_height = float(MAP_RENDER_HEIGHT)
         self._map_marker_records: list[dict[str, Any]] = []
         self._map_marker_filter = "all"
+        self._objective_row_containers: dict[str, list[ft.Container]] = {}
+        self._objective_data_rows: dict[str, list[ft.DataRow]] = {}
         self._move_to_map_overlay: ft.Container | None = None
         self._map_markers_by_objective: dict[str, list[ft.Container]] = {}
         self._selected_marker_y: float | None = None
@@ -383,6 +385,9 @@ class MyJourneyView:
         return self._root
 
     def _build_page_controls(self) -> list[ft.Control]:
+        self._objective_row_containers = {}
+        self._objective_data_rows = {}
+
         return [
             self._build_page_intro(),
             ft.ResponsiveRow(
@@ -1193,6 +1198,7 @@ class MyJourneyView:
         )
 
         overlay = ft.Container(
+            key="my-journey-move-to-map-overlay",
             content=move_to_map_toggle,
             padding=ft.Padding.symmetric(horizontal=14, vertical=8),
             bgcolor=ft.Colors.with_opacity(0.94, SURFACE_RAISED),
@@ -1241,19 +1247,38 @@ class MyJourneyView:
 
         # Update only the existing marker controls. Rebuilding the complete page
         # here briefly replaces the map image and causes a visible flash.
-        for marker in self._map_markers_by_objective.get(
-            previous_objective_id or "",
-            [],
-        ):
+        previous_id = previous_objective_id or ""
+
+        for marker in self._map_markers_by_objective.get(previous_id, []):
             marker.scale = 1.0
             marker.shadow = self._map_marker_shadow(False)
 
-        for marker in self._map_markers_by_objective.get(
+        for marker in self._map_markers_by_objective.get(objective_id, []):
+            marker.scale = 1.16
+            marker.shadow = self._map_marker_shadow(True)
+
+        for row_container in self._objective_row_containers.get(
+            previous_id,
+            [],
+        ):
+            row_container.bgcolor = self._selected_row_color(False)
+            row_container.border = self._selected_row_border(False)
+
+        for row_container in self._objective_row_containers.get(
             objective_id,
             [],
         ):
-            marker.scale = 1.16
-            marker.shadow = self._map_marker_shadow(True)
+            row_container.bgcolor = self._selected_row_color(True)
+            row_container.border = self._selected_row_border(True)
+
+        for data_row in self._objective_data_rows.get(previous_id, []):
+            data_row.color = None
+
+        for data_row in self._objective_data_rows.get(objective_id, []):
+            data_row.color = ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
+
+        if self._map_marker_filter == "highlighted":
+            self._refresh_visible_map_markers()
 
         self.page.update()
         self.page.run_task(self._focus_selected_map_objective)
@@ -1966,8 +1991,11 @@ class MyJourneyView:
                     ),
                 )
 
+            objective_id = f"item:{item_id}"
             rows.append(
-                ft.DataRow(
+                self._register_objective_data_row(
+                    objective_id,
+                    ft.DataRow(
                     cells=[
                         ft.DataCell(
                             self._status_icon(
@@ -1997,9 +2025,15 @@ class MyJourneyView:
                         ),
                         ft.DataCell(remove_control),
                     ],
+                    color=(
+                        ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
+                        if objective_id == self._selected_map_objective_id
+                        else None
+                    ),
                     on_select_change=(
-                        lambda event, objective_id=f"item:{item_id}":
+                        lambda event, objective_id=objective_id:
                         self._select_objective_for_map(objective_id)
+                    ),
                     ),
                 )
             )
@@ -2269,6 +2303,13 @@ class MyJourneyView:
                 for record in marker_records
                 if record.get("kind") == "pokemon"
             ]
+        elif self._map_marker_filter == "highlighted":
+            marker_records = [
+                record
+                for record in marker_records
+                if record.get("objective_id")
+                == self._selected_map_objective_id
+            ]
 
         location_groups: dict[str, list[dict[str, Any]]] = {}
         for record in marker_records:
@@ -2350,6 +2391,34 @@ class MyJourneyView:
         self._map_host.content = self._build_responsive_map_stack()
         self._map_host.update()
 
+    def _refresh_visible_map_markers(self) -> None:
+        """Rebuild only marker controls while preserving the rendered map."""
+
+        if self._map_stack is None or self._map_image is None:
+            return
+
+        self._map_marker_records = self._prepare_map_marker_records()
+        self._map_markers_by_objective = {}
+        self._selected_marker_y = None
+
+        marker_controls: list[ft.Control] = []
+        for marker_index, record in enumerate(self._map_marker_records):
+            marker_controls.append(
+                self._build_map_marker(record, marker_index)
+            )
+            if (
+                record.get("objective_id")
+                == self._selected_map_objective_id
+                and self._selected_marker_y is None
+            ):
+                self._selected_marker_y = float(record["y"])
+
+        self._map_stack.controls = [
+            self._map_image,
+            *marker_controls,
+        ]
+        self._map_stack.update()
+
     def _handle_map_marker_filter(
         self,
         event: ft.Event[ft.Dropdown],
@@ -2357,14 +2426,20 @@ class MyJourneyView:
         """Apply the selected map-marker visibility filter."""
 
         selected_filter = str(event.control.value or "all")
-        if selected_filter not in {"all", "items", "pokemon"}:
+        if selected_filter not in {
+            "all",
+            "items",
+            "pokemon",
+            "highlighted",
+        }:
             selected_filter = "all"
 
         if selected_filter == self._map_marker_filter:
             return
 
         self._map_marker_filter = selected_filter
-        self._refresh()
+        self._refresh_visible_map_markers()
+        self.page.update()
 
     def _build_map_card(self) -> ft.Control:
         """Build the responsive Galar map and persistent objective markers."""
@@ -2411,6 +2486,10 @@ class MyJourneyView:
                 ft.DropdownOption(
                     key="pokemon",
                     text="Pokémon",
+                ),
+                ft.DropdownOption(
+                    key="highlighted",
+                    text="Highlighted Marker Only",
                 ),
             ],
             width=220,
@@ -2469,8 +2548,11 @@ class MyJourneyView:
                 ),
             ]
 
+            objective_id = f"pokemon:{pokemon_id}"
             rows.append(
-                ft.DataRow(
+                self._register_objective_data_row(
+                    objective_id,
+                    ft.DataRow(
                     cells=[
                         ft.DataCell(
                             ft.Row(
@@ -2522,9 +2604,15 @@ class MyJourneyView:
                             )
                         ),
                     ],
+                    color=(
+                        ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
+                        if objective_id == self._selected_map_objective_id
+                        else None
+                    ),
                     on_select_change=(
-                        lambda event, objective_id=f"pokemon:{pokemon_id}":
+                        lambda event, objective_id=objective_id:
                         self._select_objective_for_map(objective_id)
+                    ),
                     ),
                 )
             )
@@ -2571,6 +2659,37 @@ class MyJourneyView:
             )
         )
 
+    @staticmethod
+    def _selected_row_color(selected: bool) -> str:
+        """Return the persistent background used for the selected objective."""
+
+        return (
+            ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
+            if selected
+            else SURFACE_RAISED
+        )
+
+    @staticmethod
+    def _selected_row_border(selected: bool) -> ft.Border:
+        """Return a subtle blue border for the selected objective."""
+
+        return ft.Border.all(
+            2 if selected else 1,
+            (
+                ft.Colors.with_opacity(0.85, PRIMARY_BLUE)
+                if selected
+                else BORDER_DEFAULT
+            ),
+        )
+
+    def _register_objective_data_row(
+        self,
+        objective_id: str,
+        row: ft.DataRow,
+    ) -> ft.DataRow:
+        self._objective_data_rows.setdefault(objective_id, []).append(row)
+        return row
+
     def _build_objective_row(
         self,
         *,
@@ -2582,7 +2701,9 @@ class MyJourneyView:
     ) -> ft.Control:
         """Build a selectable Current Objectives row."""
 
-        return ft.Container(
+        selected = objective_id == self._selected_map_objective_id
+
+        row_container = ft.Container(
             content=ft.Row(
                 controls=[
                     self._status_icon(status),
@@ -2609,13 +2730,19 @@ class MyJourneyView:
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=12,
-            bgcolor=SURFACE_RAISED,
+            bgcolor=self._selected_row_color(selected),
+            border=self._selected_row_border(selected),
             border_radius=12,
             ink=True,
             on_click=lambda: self._select_objective_for_map(
                 objective_id
             ),
         )
+        self._objective_row_containers.setdefault(
+            objective_id,
+            [],
+        ).append(row_container)
+        return row_container
 
     def _item_display_name(self, item: dict[str, Any]) -> str:
         item_id = str(item.get("id", ""))

@@ -163,6 +163,7 @@ class AppShell:
         )
 
         self.update_navigation_style()
+        self._sync_my_journey_overlay_visibility()
 
         self.apply_responsive_layout(
             self.page.width or 1000
@@ -318,6 +319,19 @@ class AppShell:
 
         self.page.update()
 
+    def _sync_my_journey_overlay_visibility(self) -> None:
+        """Show the Move to Map pill only while My Journey is active."""
+
+        should_show = self.active_view == "my_journey"
+
+        for overlay_control in self.page.overlay:
+            if (
+                isinstance(overlay_control, ft.Container)
+                and overlay_control.key
+                == "my-journey-move-to-map-overlay"
+            ):
+                overlay_control.visible = should_show
+
     def show_view(
         self,
         view_name: str,
@@ -344,6 +358,7 @@ class AppShell:
         )
 
         self.update_navigation_style()
+        self._sync_my_journey_overlay_visibility()
         self.page.update()
 
     def update_navigation_style(self) -> None:
