@@ -70,6 +70,7 @@ class AppShell:
             else "battle_compass"
         )
         self.pending_view: str | None = None
+        self._my_journey_overlay_controls: list[ft.Control] = []
 
         self.content_host = ft.Container(
             content=self.view_builders[
@@ -320,17 +321,35 @@ class AppShell:
         self.page.update()
 
     def _sync_my_journey_overlay_visibility(self) -> None:
-        """Show the Move to Map pill only while My Journey is active."""
+        """Attach the Move to Map pill only while My Journey is active.
 
-        should_show = self.active_view == "my_journey"
+        Mounted Flet controls are frozen, so visibility is controlled by
+        adding or removing the overlay control from ``page.overlay`` rather
+        than mutating its ``visible`` property after it has been mounted.
+        """
 
-        for overlay_control in self.page.overlay:
+        overlay_key = "my-journey-move-to-map-overlay"
+        live_controls = [
+            control
+            for control in self.page.overlay
             if (
-                isinstance(overlay_control, ft.Container)
-                and overlay_control.key
-                == "my-journey-move-to-map-overlay"
-            ):
-                overlay_control.visible = should_show
+                isinstance(control, ft.Container)
+                and control.key == overlay_key
+            )
+        ]
+
+        for control in live_controls:
+            if control not in self._my_journey_overlay_controls:
+                self._my_journey_overlay_controls.append(control)
+
+        if self.active_view == "my_journey":
+            for control in self._my_journey_overlay_controls:
+                if control not in self.page.overlay:
+                    self.page.overlay.append(control)
+            return
+
+        for control in live_controls:
+            self.page.overlay.remove(control)
 
     def show_view(
         self,

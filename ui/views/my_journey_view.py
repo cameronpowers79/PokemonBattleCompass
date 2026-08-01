@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Callable
@@ -174,6 +175,8 @@ MAP_LOCATION_LABELS: dict[str, str] = {
     "wyndon": "Wyndon",
 }
 
+ITEM_MARKER_ASSETS: dict[str, str] = {'absorb_bulb': 'raw/pokesprite/items/hold-item/absorb-bulb.png', 'air_balloon': 'raw/pokesprite/items/hold-item/air-balloon.png', 'amulet_coin': 'raw/pokesprite/items/hold-item/amulet-coin.png', 'assault_vest': 'raw/pokesprite/items/hold-item/assault-vest.png', 'berry_sweet': 'raw/pokesprite/items/evo-item/berry-sweet.png', 'big_root': 'raw/pokesprite/items/hold-item/big-root.png', 'binding_band': 'raw/pokesprite/items/hold-item/binding-band.png', 'black_belt': 'raw/pokesprite/items/hold-item/black-belt.png', 'black_glasses': 'raw/pokesprite/items/hold-item/black-glasses.png', 'black_sludge': 'raw/pokesprite/items/hold-item/black-sludge.png', 'blunder_policy': 'raw/pokesprite/items/hold-item/blunder-policy.png', 'bright_powder': 'raw/pokesprite/items/hold-item/bright-powder.png', 'cell_battery': 'raw/pokesprite/items/hold-item/cell-battery.png', 'charcoal': 'raw/pokesprite/items/hold-item/charcoal.png', 'chipped_pot': 'raw/pokesprite/items/evo-item/chipped-pot.png', 'choice_band': 'raw/pokesprite/items/hold-item/choice-band.png', 'choice_scarf': 'raw/pokesprite/items/hold-item/choice-scarf.png', 'choice_specs': 'raw/pokesprite/items/hold-item/choice-specs.png', 'cleanse_tag': 'raw/pokesprite/items/hold-item/cleanse-tag.png', 'clover_sweet': 'raw/pokesprite/items/evo-item/clover-sweet.png', 'cracked_pot': 'raw/pokesprite/items/evo-item/cracked-pot.png', 'damp_rock': 'raw/pokesprite/items/hold-item/damp-rock.png', 'dawn_stone': 'raw/pokesprite/items/evo-item/dawn-stone.png', 'destiny_knot': 'raw/pokesprite/items/hold-item/destiny-knot.png', 'dusk_stone': 'raw/pokesprite/items/evo-item/dusk-stone.png', 'eject_button': 'raw/pokesprite/items/hold-item/eject-button.png', 'eject_pack': 'raw/pokesprite/items/hold-item/eject-pack.png', 'electric_seed': 'raw/pokesprite/items/hold-item/electric-seed.png', 'everstone': 'raw/pokesprite/items/hold-item/everstone.png', 'eviolite': 'raw/pokesprite/items/hold-item/eviolite.png', 'expert_belt': 'raw/pokesprite/items/hold-item/expert-belt.png', 'fire_stone': 'raw/pokesprite/items/evo-item/fire-stone.png', 'flame_orb': 'raw/pokesprite/items/hold-item/flame-orb.png', 'float_stone': 'raw/pokesprite/items/hold-item/float-stone.png', 'flower_sweet': 'raw/pokesprite/items/evo-item/flower-sweet.png', 'focus_band': 'raw/pokesprite/items/hold-item/focus-band.png', 'focus_sash': 'raw/pokesprite/items/hold-item/focus-sash.png', 'full_incense': 'raw/pokesprite/items/incense/full.png', 'grip_claw': 'raw/pokesprite/items/hold-item/grip-claw.png', 'hard_stone': 'raw/pokesprite/items/hold-item/hard-stone.png', 'heat_rock': 'raw/pokesprite/items/hold-item/heat-rock.png', 'heavy_duty_boots': 'raw/pokesprite/items/hold-item/heavy-duty-boots.png', 'ice_stone': 'raw/pokesprite/items/evo-item/ice-stone.png', 'icy_rock': 'raw/pokesprite/items/hold-item/icy-rock.png', 'iron_ball': 'raw/pokesprite/items/hold-item/iron-ball.png', 'kings_rock': 'raw/pokesprite/items/hold-item/kings-rock.png', 'lagging_tail': 'raw/pokesprite/items/hold-item/lagging-tail.png', 'lax_incense': 'raw/pokesprite/items/incense/lax.png', 'leaf_stone': 'raw/pokesprite/items/evo-item/leaf-stone.png', 'leftovers': 'raw/pokesprite/items/hold-item/leftovers.png', 'life_orb': 'raw/pokesprite/items/hold-item/life-orb.png', 'light_ball': 'raw/pokesprite/items/hold-item/light-ball.png', 'light_clay': 'raw/pokesprite/items/hold-item/light-clay.png', 'love_sweet': 'raw/pokesprite/items/evo-item/love-sweet.png', 'luck_incense': 'raw/pokesprite/items/incense/luck.png', 'lucky_egg': 'raw/pokesprite/items/hold-item/lucky-egg.png', 'luminous_moss': 'raw/pokesprite/items/hold-item/luminous-moss.png', 'macho_brace': 'raw/pokesprite/items/ev-item/macho-brace.png', 'magnet': 'raw/pokesprite/items/hold-item/magnet.png', 'mental_herb': 'raw/pokesprite/items/hold-item/mental-herb.png', 'metal_coat': 'raw/pokesprite/items/hold-item/metal-coat.png', 'metronome': 'raw/pokesprite/items/hold-item/metronome.png', 'miracle_seed': 'raw/pokesprite/items/hold-item/miracle-seed.png', 'moon_stone': 'raw/pokesprite/items/evo-item/moon-stone.png', 'muscle_band': 'raw/pokesprite/items/hold-item/muscle-band.png', 'mystic_water': 'raw/pokesprite/items/hold-item/mystic-water.png', 'never_melt_ice': 'raw/pokesprite/items/hold-item/never-melt-ice.png', 'normal_gem': 'raw/pokesprite/items/gem/normal.png', 'odd_incense': 'raw/pokesprite/items/incense/odd.png', 'pixie_plate': 'raw/pokesprite/items/plate/pixie.png', 'poison_barb': 'raw/pokesprite/items/hold-item/poison-barb.png', 'power_anklet': 'raw/pokesprite/items/ev-item/power-anklet.png', 'power_band': 'raw/pokesprite/items/ev-item/power-band.png', 'power_belt': 'raw/pokesprite/items/ev-item/power-belt.png', 'power_bracer': 'raw/pokesprite/items/ev-item/power-bracer.png', 'power_lens': 'raw/pokesprite/items/ev-item/power-lens.png', 'power_weight': 'raw/pokesprite/items/ev-item/power-weight.png', 'prism_scale': 'raw/pokesprite/items/evo-item/prism-scale.png', 'protective_pads': 'raw/pokesprite/items/hold-item/protective-pads.png', 'protector': 'raw/pokesprite/items/evo-item/protector.png', 'pure_incense': 'raw/pokesprite/items/incense/pure.png', 'quick_claw': 'raw/pokesprite/items/hold-item/quick-claw.png', 'quick_powder': 'raw/pokesprite/items/hold-item/quick-powder.png', 'razor_claw': 'raw/pokesprite/items/evo-item/razor-claw.png', 'reaper_cloth': 'raw/pokesprite/items/evo-item/reaper-cloth.png', 'red_card': 'raw/pokesprite/items/hold-item/red-card.png', 'ring_target': 'raw/pokesprite/items/hold-item/ring-target.png', 'rock_incense': 'raw/pokesprite/items/incense/rock.png', 'rocky_helmet': 'raw/pokesprite/items/hold-item/rocky-helmet.png', 'room_service': 'raw/pokesprite/items/hold-item/room-service.png', 'rose_incense': 'raw/pokesprite/items/incense/rose.png', 'rusted_sword': 'raw/pokesprite/items/hold-item/rusted-sword.png', 'sachet': 'raw/pokesprite/items/evo-item/sachet.png', 'safety_goggles': 'raw/pokesprite/items/hold-item/safety-goggles.png', 'scope_lens': 'raw/pokesprite/items/hold-item/scope-lens.png', 'sea_incense': 'raw/pokesprite/items/incense/sea.png', 'sharp_beak': 'raw/pokesprite/items/hold-item/sharp-beak.png', 'shed_shell': 'raw/pokesprite/items/hold-item/shed-shell.png', 'shell_bell': 'raw/pokesprite/items/hold-item/shell-bell.png', 'shiny_stone': 'raw/pokesprite/items/evo-item/shiny-stone.png', 'silk_scarf': 'raw/pokesprite/items/hold-item/silk-scarf.png', 'silver_powder': 'raw/pokesprite/items/hold-item/silver-powder.png', 'smoke_ball': 'raw/pokesprite/items/hold-item/smoke-ball.png', 'smooth_rock': 'raw/pokesprite/items/hold-item/smooth-rock.png', 'soft_sand': 'raw/pokesprite/items/hold-item/soft-sand.png', 'soothe_bell': 'raw/pokesprite/items/other-item/soothe-bell.png', 'spell_tag': 'raw/pokesprite/items/hold-item/spell-tag.png', 'sticky_barb': 'raw/pokesprite/items/hold-item/sticky-barb.png', 'strawberry_sweet': 'raw/pokesprite/items/evo-item/strawberry-sweet.png', 'sun_stone': 'raw/pokesprite/items/evo-item/sun-stone.png', 'tart_apple': 'raw/pokesprite/items/evo-item/tart-apple.png', 'terrain_extender': 'raw/pokesprite/items/hold-item/terrain-extender.png', 'throat_spray': 'raw/pokesprite/items/hold-item/throat-spray.png', 'thunder_stone': 'raw/pokesprite/items/evo-item/thunder-stone.png', 'toxic_orb': 'raw/pokesprite/items/hold-item/toxic-orb.png', 'twisted_spoon': 'raw/pokesprite/items/hold-item/twisted-spoon.png', 'utility_umbrella': 'raw/pokesprite/items/hold-item/utility-umbrella.png', 'water_stone': 'raw/pokesprite/items/evo-item/water-stone.png', 'wave_incense': 'raw/pokesprite/items/incense/wave.png', 'weakness_policy': 'raw/pokesprite/items/hold-item/weakness-policy.png', 'whipped_dream': 'raw/pokesprite/items/evo-item/whipped-dream.png', 'white_herb': 'raw/pokesprite/items/hold-item/white-herb.png', 'wide_lens': 'raw/pokesprite/items/hold-item/wide-lens.png', 'wise_glasses': 'raw/pokesprite/items/hold-item/wise-glasses.png', 'zoom_lens': 'raw/pokesprite/items/hold-item/zoom-lens.png'}
+
 class MyJourneyView:
     """Render My Journey fixture data with saved badge progression."""
 
@@ -210,8 +213,12 @@ class MyJourneyView:
         }
         self._root: ft.Column | None = None
         self._caught_stage_selector: ft.Dropdown | None = None
-        self._add_item_selector: ft.Dropdown | None = None
+        self._add_item_selector: ft.AutoComplete | None = None
         self._add_item_quantity: ft.TextField | None = None
+        self._add_item_button: ft.Button | None = None
+        self._add_item_validation_text: ft.Text | None = None
+        self._add_item_name_to_id: dict[str, str] = {}
+        self._move_type_by_name = self._load_move_type_lookup()
         self._add_pokemon_selector: ft.AutoComplete | None = None
         self._add_pokemon_button: ft.Button | None = None
         self._add_pokemon_validation_text: ft.Text | None = None
@@ -247,6 +254,45 @@ class MyJourneyView:
         if not isinstance(data, list):
             raise ValueError(f"Expected a list in {path.name}.")
         return data
+
+    def _load_move_type_lookup(self) -> dict[str, str]:
+        """Load move types so TM/TR marker sprites do not depend on duplicate JSON fields."""
+
+        path = DATA_DIR / "moves.json"
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return {}
+
+        records: list[dict[str, Any]] = []
+        if isinstance(raw, list):
+            records = [row for row in raw if isinstance(row, dict)]
+        elif isinstance(raw, dict):
+            for key, value in raw.items():
+                if isinstance(value, dict):
+                    row = dict(value)
+                    row.setdefault("name", key)
+                    records.append(row)
+
+        lookup: dict[str, str] = {}
+        for row in records:
+            name = str(
+                row.get("name")
+                or row.get("Name")
+                or row.get("move")
+                or row.get("Move")
+                or ""
+            ).strip()
+            move_type = str(
+                row.get("type")
+                or row.get("Type")
+                or row.get("move_type")
+                or row.get("Move Type")
+                or ""
+            ).strip().lower()
+            if name and move_type:
+                lookup[name.casefold()] = move_type
+        return lookup
 
     def _load_planned_pokemon_ids(self) -> list[str]:
         """Load the saved planner roster or initialize from the catalog."""
@@ -1472,22 +1518,32 @@ class MyJourneyView:
             return "available"
         return "unavailable"
 
-    @staticmethod
     def _marker_asset_for_record(
+        self,
         record: dict[str, Any],
     ) -> str | None:
-        """Resolve a marker sprite entirely from Journey data."""
+        """Resolve a sprite from the catalog ID, or derive TM/TR type at runtime."""
 
         explicit_asset = str(record.get("marker_asset") or "").strip()
         if explicit_asset:
             return explicit_asset
 
+        item_id = str(record.get("item_id") or "").strip()
+        if item_id in ITEM_MARKER_ASSETS:
+            return ITEM_MARKER_ASSETS[item_id]
+
         category = str(record.get("category", "")).strip().lower()
+        if category not in {"tm", "tr"}:
+            return None
+
         move_type = str(record.get("move_type") or "").strip().lower()
+        if not move_type:
+            title = str(record.get("title") or "").strip()
+            move_name = re.sub(r"^(?:TM|TR)\d{2}\s+", "", title).strip()
+            move_type = self._move_type_by_name.get(move_name.casefold(), "")
 
-        if category in {"tm", "tr"} and move_type:
+        if move_type:
             return f"raw/pokesprite/items/{category}/{move_type}.png"
-
         return None
 
     def _show_map_marker_details(
@@ -1618,6 +1674,7 @@ class MyJourneyView:
                         "map_display_mode": map_display_mode,
                         "status": marker_status,
                         "kind": "item",
+                        "item_id": item_id,
                         "category": category,
                         "move_type": str(item.get("move_type") or ""),
                         "marker_asset": str(item.get("marker_asset") or ""),
@@ -2159,22 +2216,34 @@ class MyJourneyView:
     ) -> None:
         del event
 
-        options = [
-            ft.DropdownOption(
-                key=str(item.get("id", "")),
-                text=str(item.get("name", "Unknown item")),
-            )
-            for item in self.items
-            if item.get("id")
+        available_items = [
+            item for item in self.items
+            if str(item.get("id", "")).strip()
         ]
-        if not options:
+        if not available_items:
             return
 
-        self._add_item_selector = ft.Dropdown(
-            label="Item, TM, or TR",
-            value=options[0].key,
-            options=options,
-            width=360,
+        self._add_item_name_to_id = {
+            str(item.get("name", "")).strip().casefold():
+            str(item.get("id", "")).strip()
+            for item in available_items
+            if str(item.get("name", "")).strip()
+        }
+        suggestions = [
+            ft.AutoCompleteSuggestion(
+                key=str(item.get("name", "Unknown item")),
+                value=str(item.get("name", "Unknown item")),
+            )
+            for item in available_items
+        ]
+
+        self._add_item_selector = ft.AutoComplete(
+            value="",
+            suggestions=suggestions,
+            suggestions_max_height=280,
+            width=420,
+            on_change=self._handle_add_item_search_change,
+            on_select=self._handle_add_item_search_select,
         )
         self._add_item_quantity = ft.TextField(
             label="Quantity",
@@ -2182,53 +2251,100 @@ class MyJourneyView:
             keyboard_type=ft.KeyboardType.NUMBER,
             width=120,
         )
+        self._add_item_validation_text = ft.Text(
+            "Choose an exact match from the suggestions.",
+            color=TEXT_MUTED,
+            size=12,
+        )
+        self._add_item_button = ft.Button(
+            content="Add Objective",
+            icon=ft.Icons.ADD_ROUNDED,
+            bgcolor=SUCCESS,
+            color="#07120B",
+            icon_color="#07120B",
+            disabled=True,
+            on_click=self._confirm_add_item_objective,
+        )
 
         dialog = ft.AlertDialog()
         dialog.modal = True
-        dialog.title = ft.Text(
-            "Add Journey Objective",
-            weight=ft.FontWeight.BOLD,
-        )
+        dialog.title = ft.Text("Add Journey Objective", weight=ft.FontWeight.BOLD)
         dialog.content = ft.Column(
             controls=[
                 ft.Text(
-                    (
-                        "Choose an objective from the current Sword "
-                        "reference catalog. Adding an item already on the "
-                        "checklist increases its required quantity."
-                    ),
+                    "Search the current Sword item catalog. Start typing an item, TM, or TR name, then choose an exact suggestion. Adding an item already on the checklist increases its required quantity.",
                     color=TEXT_SECONDARY,
                 ),
+                ft.Text(
+                    "Start typing an item, TM, or TR name here",
+                    color=TEXT_PRIMARY,
+                    size=13,
+                    weight=ft.FontWeight.W_600,
+                ),
                 self._add_item_selector,
+                self._add_item_validation_text,
                 self._add_item_quantity,
             ],
-            spacing=14,
+            spacing=10,
             tight=True,
         )
         dialog.actions = [
-            ft.Button(
-                content="Cancel",
-                on_click=self._close_add_item_dialog,
-            ),
-            ft.Button(
-                content="Add Objective",
-                icon=ft.Icons.ADD_ROUNDED,
-                bgcolor=SUCCESS,
-                color="#07120B",
-                icon_color="#07120B",
-                on_click=self._confirm_add_item_objective,
-            ),
+            ft.Button(content="Cancel", on_click=self._close_add_item_dialog),
+            self._add_item_button,
         ]
         dialog.actions_alignment = ft.MainAxisAlignment.END
         self.page.show_dialog(dialog)
+
+    def _selected_add_item_id(self) -> str:
+        if self._add_item_selector is None:
+            return ""
+        entered_name = str(self._add_item_selector.value or "").strip().casefold()
+        return self._add_item_name_to_id.get(entered_name, "")
+
+    def _sync_add_item_validation(self) -> None:
+        item_id = self._selected_add_item_id()
+        has_input = bool(
+            self._add_item_selector
+            and str(self._add_item_selector.value or "").strip()
+        )
+        if self._add_item_button is not None:
+            self._add_item_button.disabled = not bool(item_id)
+        if self._add_item_validation_text is not None:
+            if item_id:
+                self._add_item_validation_text.value = "Ready to add to the Journey Checklist."
+                self._add_item_validation_text.color = SUCCESS
+            elif has_input:
+                self._add_item_validation_text.value = "Choose an exact item name from the suggestions."
+                self._add_item_validation_text.color = TEXT_MUTED
+            else:
+                self._add_item_validation_text.value = "Choose an exact match from the suggestions."
+                self._add_item_validation_text.color = TEXT_MUTED
+        if self._add_item_button is not None:
+            self._add_item_button.update()
+        if self._add_item_validation_text is not None:
+            self._add_item_validation_text.update()
+
+    def _handle_add_item_search_change(self, event: ft.Event[ft.AutoComplete]) -> None:
+        del event
+        self._sync_add_item_validation()
+
+    def _handle_add_item_search_select(self, event: ft.AutoCompleteSelectEvent) -> None:
+        del event
+        self._sync_add_item_validation()
+
+    def _clear_add_item_dialog_state(self) -> None:
+        self._add_item_selector = None
+        self._add_item_quantity = None
+        self._add_item_button = None
+        self._add_item_validation_text = None
+        self._add_item_name_to_id = {}
 
     def _close_add_item_dialog(
         self,
         event: ft.Event[ft.Button] | None = None,
     ) -> None:
         del event
-        self._add_item_selector = None
-        self._add_item_quantity = None
+        self._clear_add_item_dialog_state()
         self.page.pop_dialog()
         self.page.update()
 
@@ -2237,43 +2353,24 @@ class MyJourneyView:
         event: ft.Event[ft.Button],
     ) -> None:
         del event
-
-        item_id = ""
-        if self._add_item_selector is not None:
-            item_id = str(
-                self._add_item_selector.value or ""
-            ).strip()
-
-        quantity_text = "1"
-        if self._add_item_quantity is not None:
-            quantity_text = str(
-                self._add_item_quantity.value or "1"
-            ).strip()
-
+        item_id = self._selected_add_item_id()
+        quantity_text = str(
+            self._add_item_quantity.value if self._add_item_quantity else "1"
+        ).strip()
         try:
             quantity = int(quantity_text)
         except ValueError:
             quantity = 0
 
         if not item_id or quantity <= 0:
-            self.page.show_dialog(
-                ft.SnackBar(
-                    content=ft.Text(
-                        "Choose an objective and enter a quantity "
-                        "greater than zero."
-                    )
-                )
-            )
+            self.page.show_dialog(ft.SnackBar(content=ft.Text(
+                "Choose an exact objective and enter a quantity greater than zero."
+            )))
             return
 
-        self._add_item_selector = None
-        self._add_item_quantity = None
+        self._clear_add_item_dialog_state()
         self.page.pop_dialog()
-        self.page.run_task(
-            self._add_item_objective,
-            item_id,
-            quantity,
-        )
+        self.page.run_task(self._add_item_objective, item_id, quantity)
 
     def _request_remove_item_objective(
         self,
@@ -2676,17 +2773,6 @@ class MyJourneyView:
                     color=TEXT_SECONDARY,
                 ),
                 ft.Text(
-                    (
-                        "Search by either the Pokémon you want on your final "
-                        "team or the Pokémon you will catch. Suggestions show "
-                        "the fully evolved team member—for example, Eevee may "
-                        "return the Eeveelutions, while Pikachu returns Raichu."
-                    ),
-                    color=TEXT_MUTED,
-                    size=13,
-                    italic=True,
-                ),
-                ft.Text(
                     "Start typing a Pokémon name here",
                     color=TEXT_PRIMARY,
                     size=13,
@@ -2989,7 +3075,6 @@ class MyJourneyView:
                         ),
                     ],
                     spacing=2,
-                    alignment=ft.MainAxisAlignment.CENTER,
                 ),
             ]
 
@@ -3000,16 +3085,12 @@ class MyJourneyView:
                     ft.DataRow(
                         cells=[
                             ft.DataCell(
-                                ft.Container(
-                                    content=ft.Row(
-                                        controls=pokemon_cell_controls,
-                                        spacing=10,
-                                        vertical_alignment=(
-                                            ft.CrossAxisAlignment.CENTER
-                                        ),
+                                ft.Row(
+                                    controls=pokemon_cell_controls,
+                                    spacing=10,
+                                    vertical_alignment=(
+                                        ft.CrossAxisAlignment.CENTER
                                     ),
-                                    height=136,
-                                    alignment=ft.Alignment.CENTER_LEFT,
                                 )
                             ),
                             ft.DataCell(

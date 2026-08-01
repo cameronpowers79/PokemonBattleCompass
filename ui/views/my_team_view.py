@@ -1,3 +1,4 @@
+
 """
 My Team view.
 
@@ -307,6 +308,9 @@ class MyTeamView:
         on_journey_loaded: (
             Callable[[], None] | None
         ) = None,
+        on_journey_updated: (
+            Callable[[], None] | None
+        ) = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
@@ -427,6 +431,7 @@ class MyTeamView:
         ]
         self.on_team_updated = on_team_updated
         self.on_journey_loaded = on_journey_loaded
+        self.on_journey_updated = on_journey_updated
         self.pending_import_journey: dict | None = None
 
         self.file_picker = ft.FilePicker()
@@ -867,7 +872,7 @@ class MyTeamView:
         # Give AppShell one frame to swap views before resetting the page scroll.
         await asyncio.sleep(0.10)
         await self.page.scroll_to(
-            offset=350,
+            offset=0,
             duration=360,
             curve=ft.AnimationCurve.EASE_OUT_CUBIC,
         )
@@ -4865,6 +4870,15 @@ class MyTeamView:
             self._normalize_item_name(recommendation.item)
         )
         checklist_available = catalog_item is not None
+        checklist_item_id = (
+            str(catalog_item.get("id", "")).strip()
+            if catalog_item is not None
+            else ""
+        )
+        already_on_checklist = (
+            bool(checklist_item_id)
+            and self._journey_checklist_contains_item(checklist_item_id)
+        )
 
         action_controls: list[ft.Control] = [
             ft.Button(
@@ -4882,15 +4896,29 @@ class MyTeamView:
                 ),
             ),
             ft.Button(
-                content="Add to Journey Checklist",
-                icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
-                disabled=not checklist_available,
+                content=(
+                    "Already in Journey Checklist"
+                    if already_on_checklist
+                    else "Add to Journey Checklist"
+                ),
+                icon=(
+                    ft.Icons.CHECK_CIRCLE_ROUNDED
+                    if already_on_checklist
+                    else ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED
+                ),
+                disabled=(
+                    not checklist_available or already_on_checklist
+                ),
                 tooltip=(
-                    None
-                    if checklist_available
+                    "This item is already in the Journey Checklist."
+                    if already_on_checklist
                     else (
-                        "This item is not yet available in the "
-                        "Journey item catalog."
+                        None
+                        if checklist_available
+                        else (
+                            "This item is not yet available in the "
+                            "Journey item catalog."
+                        )
                     )
                 ),
                 on_click=(
@@ -4901,7 +4929,7 @@ class MyTeamView:
                             item_name,
                         )
                     )
-                    if checklist_available
+                    if checklist_available and not already_on_checklist
                     else None
                 ),
             ),
@@ -4956,6 +4984,32 @@ class MyTeamView:
             ),
             border_radius=12,
         )
+
+    def _journey_checklist_contains_item(
+        self,
+        item_id: str,
+    ) -> bool:
+        """Return whether saved Journey state currently requires this item."""
+
+        normalized_id = item_id.strip()
+        if not normalized_id:
+            return False
+
+        for record in self.app_state.my_journey_data.get(
+            "item_objectives",
+            [],
+        ):
+            if not isinstance(record, dict):
+                continue
+            if str(record.get("id", "")).strip() != normalized_id:
+                continue
+
+            # AppState only persists item-objective rows whose total required
+            # quantity is greater than zero, including Team Planner-derived
+            # requirements. The matching row itself is therefore sufficient.
+            return True
+
+        return False
 
     def _request_add_recommended_item_to_pokemon(
         self,
@@ -5104,6 +5158,54 @@ class MyTeamView:
 
         self.page.show_dialog(dialog)
 
+        catalog_item = self.journey_item_by_name.get(
+            self._normalize_item_name(item_name)
+        )
+        if catalog_item is not None:
+            checklist_item_id = str(
+                catalog_item.get("id", "")
+            ).strip()
+            if (
+                checklist_item_id
+                and self._journey_checklist_contains_item(
+                    checklist_item_id
+                )
+            ):
+                self.page.run_task(
+                    self._remove_equipped_item_from_checklist,
+                    checklist_item_id,
+                )
+
+    async def _remove_equipped_item_from_checklist(
+        self,
+        item_id: str,
+    ) -> None:
+        """Remove an equipped recommended item from checklist state."""
+
+        my_journey = self.app_state.my_journey_data
+        raw_records = my_journey.get("item_objectives", [])
+        if not isinstance(raw_records, list):
+            return
+
+        updated_records = [
+            dict(record)
+            for record in raw_records
+            if (
+                isinstance(record, dict)
+                and str(record.get("id", "")).strip() != item_id
+            )
+        ]
+
+        try:
+            succeeded = await self.app_state.save_item_checklist(
+                updated_records
+            )
+        except (RuntimeError, ValueError):
+            return
+
+        if succeeded and self.on_journey_updated is not None:
+            self.on_journey_updated()
+
     async def _dismiss_held_item_added_dialog(
         self,
         event: ft.Event[ft.Button],
@@ -5162,16 +5264,61 @@ class MyTeamView:
             )
             return
 
-        message = (
-            f"{item_name} added to Journey Checklist."
-            if succeeded
-            else f"{item_name} could not be added to Journey Checklist."
-        )
-        self.page.show_dialog(
-            ft.SnackBar(
-                content=ft.Text(message)
+        if not succeeded:
+            self.page.show_dialog(
+                ft.AlertDialog(
+                    modal=True,
+                    title=ft.Text(
+                        "Journey Checklist Not Updated",
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                    content=ft.Text(
+                        f"{item_name} could not be added to the Journey Checklist.",
+                        color=TEXT_SECONDARY,
+                    ),
+                    actions=[
+                        ft.Button(
+                            content="Close",
+                            on_click=lambda: self.page.pop_dialog(),
+                        )
+                    ],
+                    actions_alignment=ft.MainAxisAlignment.END,
+                )
             )
+            return
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Journey Checklist Updated",
+            weight=ft.FontWeight.BOLD,
         )
+        dialog.content = ft.Text(
+            f"{item_name} has been added to the Journey Checklist.",
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Got It",
+                on_click=self._dismiss_checklist_updated_dialog,
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _dismiss_checklist_updated_dialog(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close confirmation and rebuild views from current Journey state."""
+
+        del event
+        self.page.pop_dialog()
+
+        if self.on_journey_updated is not None:
+            self.on_journey_updated()
+
+        self.page.update()
 
     def _close_item_recommendations(
         self,

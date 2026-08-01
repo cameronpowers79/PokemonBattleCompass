@@ -151,6 +151,9 @@ async def main(page: ft.Page) -> None:
             moves_data=app_state.moves_data,
             on_team_updated=refresh_after_team_update,
             on_journey_loaded=show_loaded_application,
+            on_journey_updated=(
+                my_journey_view.refresh_from_app_state
+            ),
         )
 
         about_view = AboutView(
