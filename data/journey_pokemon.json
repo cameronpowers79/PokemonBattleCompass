@@ -8588,7 +8588,7 @@
     "source_url": "https://www.serebii.net/pokedex-swsh/jangmo-o/locations.shtml",
     "encounter_data_status": "verified_batch_8"
   },
-  {
+    {
     "id": "dragapult",
     "pokemon": "Dragapult",
     "acquire_as": "Dreepy",
@@ -8596,11 +8596,15 @@
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/dreepy.png",
     "required_badge": 6,
     "primary_acquisition": {
-      "method": "wild_encounter",
-      "location": "Lake of Outrage",
+      "method": "max_raid_battle",
+      "location": "Rolling Fields, Lake of Outrage",
       "map_locations": [
+        "rolling_fields",
         "lake_of_outrage"
       ],
+      "raid_dens": [
+          64
+        ],
       "encounters": [
         {
           "location": "Lake of Outrage",
@@ -8618,8 +8622,9 @@
           "level_min": 50,
           "level_max": 52
         }
+        
       ],
-      "availability_note": "Catch Dreepy in Lake of Outrage, evolve it into Drakloak at Level 50, then Dragapult at Level 60."
+      "availability_note": "Catch Dreepy in Lake of Outrage or Rare Raid Den in Dappled Grove, evolve it into Drakloak at Level 50, then Dragapult at Level 60."
     },
     "evolution_summary": "Evolve 2 times",
     "evolution_steps": [
