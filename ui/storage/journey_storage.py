@@ -120,7 +120,9 @@ def create_journey(
         },
         "my_journey": {
             "earned_badges": 0,
-            "checklist_initialized": False,
+            "checklist_initialized": True,
+            "planner_initialized": True,
+            "planned_pokemon_ids": [],
             "item_objectives": [],
             "pokemon_objectives": [],
         },
@@ -219,6 +221,32 @@ def _validate_journey(
             return (
                 "Stored My Journey checklist initialization "
                 "state is invalid."
+            )
+
+        planner_initialized = my_journey.get(
+            "planner_initialized",
+            False,
+        )
+        if not isinstance(planner_initialized, bool):
+            return (
+                "Stored My Journey planner initialization "
+                "state is invalid."
+            )
+
+        planned_pokemon_ids = my_journey.get(
+            "planned_pokemon_ids",
+            [],
+        )
+        if (
+            not isinstance(planned_pokemon_ids, list)
+            or not all(
+                isinstance(pokemon_id, str)
+                and pokemon_id.strip()
+                for pokemon_id in planned_pokemon_ids
+            )
+        ):
+            return (
+                "Stored My Journey planned Pokémon list is invalid."
             )
 
         for field_name in (

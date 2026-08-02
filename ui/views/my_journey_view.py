@@ -295,7 +295,7 @@ class MyJourneyView:
         return lookup
 
     def _load_planned_pokemon_ids(self) -> list[str]:
-        """Load the saved planner roster or initialize from the catalog."""
+        """Load the saved planner roster; a new Journey starts empty."""
 
         journey_state = self.app_state.my_journey_data
         catalog_ids = [
@@ -306,7 +306,7 @@ class MyJourneyView:
         catalog_id_set = set(catalog_ids)
 
         if journey_state.get("planner_initialized") is not True:
-            return catalog_ids
+            return []
 
         raw_ids = journey_state.get("planned_pokemon_ids", [])
         if not isinstance(raw_ids, list):
@@ -385,13 +385,10 @@ class MyJourneyView:
         return requirements
 
     def _load_item_objectives(self) -> dict[str, dict[str, int]]:
-        """Load persisted checklist rows or initialize the fixture checklist."""
+        """Load persisted checklist rows; a new Journey starts empty."""
 
         journey_state = self.app_state.my_journey_data
         stored_records = journey_state.get("item_objectives", [])
-        initialized = (
-            journey_state.get("checklist_initialized") is True
-        )
 
         stored_by_id: dict[str, dict[str, Any]] = {
             str(record.get("id")): record
@@ -401,56 +398,25 @@ class MyJourneyView:
 
         objectives: dict[str, dict[str, int]] = {}
 
-        if initialized:
-            for item_id, record in stored_by_id.items():
-                obtained = record.get("quantity_obtained", 0)
-                manual = record.get("manual_quantity_required", 0)
-                objectives[item_id] = {
-                    "quantity_obtained": (
-                        obtained
-                        if isinstance(obtained, int)
-                        and not isinstance(obtained, bool)
-                        and obtained >= 0
-                        else 0
-                    ),
-                    "manual_quantity_required": (
-                        manual
-                        if isinstance(manual, int)
-                        and not isinstance(manual, bool)
-                        and manual >= 0
-                        else 0
-                    ),
-                }
-        else:
-            # Backward-compatible fixture initialization: preserve the
-            # checklist that existed before editing was introduced.
-            for item in self.items:
-                item_id = str(item.get("id", "")).strip()
-                if not item_id:
-                    continue
-                catalog_required = max(
-                    1,
-                    int(item.get("quantity_required", 1)),
-                )
-                derived = self.derived_item_requirements.get(
-                    item_id,
-                    0,
-                )
-                legacy = stored_by_id.get(item_id, {})
-                obtained = legacy.get("quantity_obtained", 0)
-                objectives[item_id] = {
-                    "quantity_obtained": (
-                        obtained
-                        if isinstance(obtained, int)
-                        and not isinstance(obtained, bool)
-                        and obtained >= 0
-                        else 0
-                    ),
-                    "manual_quantity_required": max(
-                        0,
-                        catalog_required - derived,
-                    ),
-                }
+        for item_id, record in stored_by_id.items():
+            obtained = record.get("quantity_obtained", 0)
+            manual = record.get("manual_quantity_required", 0)
+            objectives[item_id] = {
+                "quantity_obtained": (
+                    obtained
+                    if isinstance(obtained, int)
+                    and not isinstance(obtained, bool)
+                    and obtained >= 0
+                    else 0
+                ),
+                "manual_quantity_required": (
+                    manual
+                    if isinstance(manual, int)
+                    and not isinstance(manual, bool)
+                    and manual >= 0
+                    else 0
+                ),
+            }
 
         # Team-planner requirements always keep their linked item present.
         for item_id in self.derived_item_requirements:
