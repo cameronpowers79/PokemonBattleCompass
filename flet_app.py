@@ -54,6 +54,7 @@ async def main(page: ft.Page) -> None:
         """
 
         page.on_resize = None
+        page.scroll = ft.ScrollMode.AUTO
 
         onboarding_view = OnboardingView(
             page,
@@ -115,6 +116,10 @@ async def main(page: ft.Page) -> None:
     def show_main_application() -> None:
         """Display the normal Battle Compass application shell."""
 
+        # AppShell owns scrolling so its on_scroll handler can drive the
+        # threshold-based Return to Top control.
+        page.scroll = None
+
         battle_compass_view = BattleCompassView(
             page,
             app_state=app_state,
@@ -133,10 +138,16 @@ async def main(page: ft.Page) -> None:
             )
             app_shell.show_view("my_team")
 
+        async def scroll_app_shell(
+            **scroll_kwargs,
+        ) -> None:
+            await app_shell.scroll_to(**scroll_kwargs)
+
         my_journey_view = MyJourneyView(
             page,
             app_state=app_state,
             on_go_to_my_team=go_to_my_team_with_prefill,
+            on_scroll_to=scroll_app_shell,
         )
 
         def refresh_after_team_update(

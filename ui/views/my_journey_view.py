@@ -12,7 +12,7 @@ import json
 import re
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 import flet as ft
 
@@ -186,10 +186,14 @@ class MyJourneyView:
         *,
         app_state: AppState,
         on_go_to_my_team: Callable[[str], None] | None = None,
+        on_scroll_to: (
+            Callable[..., Awaitable[None]] | None
+        ) = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
         self.on_go_to_my_team = on_go_to_my_team
+        self.on_scroll_to = on_scroll_to
         self.items = self._load_json(DATA_DIR / "journey_items.json")
         self.pokemon_catalog = self._load_json(
             DATA_DIR / "journey_pokemon.json"
@@ -964,6 +968,82 @@ class MyJourneyView:
             )
         )
 
+    def _request_item_completion(
+        self,
+        item: dict[str, Any],
+        quantity: int,
+    ) -> None:
+        """Confirm completion before removing an item's map marker."""
+
+        item_id = str(item.get("id", "")).strip()
+        if not item_id:
+            return
+
+        required = self._required_item_quantity(item_id)
+        current = min(
+            self.item_quantities.get(item_id, 0),
+            required,
+        )
+
+        # Only completion needs confirmation. Decrementing or clearing an
+        # obtained item restores its marker and remains immediate.
+        if quantity < required or current >= required:
+            self.page.run_task(
+                self._set_item_quantity,
+                item_id,
+                quantity,
+            )
+            return
+
+        objective_name = self._item_display_name(item)
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"You got the {objective_name}!",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                "Its marker will be removed from the map, but the objective "
+                "will remain in your Journey Checklist."
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Not Yet",
+                on_click=lambda: self.page.pop_dialog(),
+            ),
+            ft.Button(
+                content="Mark as Obtained",
+                icon=ft.Icons.CHECK_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=lambda: self._confirm_item_completion(
+                    item_id,
+                    quantity,
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_item_completion(
+        self,
+        item_id: str,
+        quantity: int,
+    ) -> None:
+        """Close the confirmation and persist completed item progress."""
+
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._set_item_quantity,
+            item_id,
+            quantity,
+        )
+
     def _item_checkbox_handler(
         self,
         checkbox: ft.Checkbox,
@@ -973,9 +1053,19 @@ class MyJourneyView:
         """Persist a single-quantity item's checked or unchecked state."""
 
         quantity = required if checkbox.value is True else 0
-        self.page.run_task(
-            self._set_item_quantity,
-            item_id,
+        item = next(
+            (
+                candidate
+                for candidate in self.items
+                if str(candidate.get("id", "")) == item_id
+            ),
+            None,
+        )
+        if item is None:
+            return
+
+        self._request_item_completion(
+            item,
             quantity,
         )
 
@@ -1046,7 +1136,9 @@ class MyJourneyView:
                 ft.Text(
                     (
                         "Saving the Pokémon to either your active party or "
-                        "My Box will mark this Journey objective as acquired."
+                        "My Box will mark this Journey objective as acquired. "
+                        "Its marker will then be removed from the map, but the "
+                        "objective will remain in your Team Planner."
                     ),
                     color=TEXT_MUTED,
                     size=12,
@@ -1230,22 +1322,75 @@ class MyJourneyView:
             tooltip=tooltip or "Unavailable",
         )
 
-    def _build_current_objectives_card(self) -> ft.Control:
-        """Build the six highest-priority objectives available right now."""
+    def _current_objective_ids(self) -> list[str]:
+        """Return the prioritized objective IDs shown in Current Objectives."""
 
-        objectives: list[ft.Control] = []
+        objective_ids: list[str] = []
 
         # 1. Currently catchable Pokémon.
         for pokemon in self.pokemon:
             if self._pokemon_status(pokemon) != "available":
                 continue
 
+            objective_ids.append(
+                f"pokemon:{pokemon.get('id', '')}"
+            )
+
+        available_items = [
+            item
+            for item in self._checklist_items()
+            if self._item_status(item) == "available"
+        ]
+
+        prioritized_item_groups = [
+            [
+                item
+                for item in available_items
+                if str(item.get("category", "")) == "evolution_item"
+            ],
+            [
+                item
+                for item in available_items
+                if str(item.get("category", "")) == "held_item"
+            ],
+            [
+                item
+                for item in available_items
+                if str(item.get("category", ""))
+                not in {"evolution_item", "held_item"}
+            ],
+        ]
+
+        for item_group in prioritized_item_groups:
+            for item in item_group:
+                objective_ids.append(
+                    f"item:{item.get('id', '')}"
+                )
+
+        return objective_ids[:6]
+
+    def _build_current_objectives_card(self) -> ft.Control:
+        """Build the six highest-priority objectives available right now."""
+
+        objectives: list[ft.Control] = []
+        current_objective_ids = set(self._current_objective_ids())
+
+        # 1. Currently catchable Pokémon.
+        for pokemon in self.pokemon:
+            objective_id = f"pokemon:{pokemon.get('id', '')}"
+            if objective_id not in current_objective_ids:
+                continue
+
             objectives.append(
                 self._build_objective_row(
-                    objective_id=f"pokemon:{pokemon.get('id', '')}",
+                    objective_id=objective_id,
                     status="available",
                     title=str(pokemon.get("pokemon", "Unknown Pokémon")),
                     detail=self._pokemon_acquisition_text(pokemon),
+                    sprite_asset=(
+                        str(pokemon.get("marker_asset") or "").strip()
+                        or None
+                    ),
                     action=self._build_pokemon_obtained_action(
                         pokemon,
                         "available",
@@ -1283,12 +1428,25 @@ class MyJourneyView:
 
         for item_group in prioritized_item_groups:
             for item in item_group:
+                objective_id = f"item:{item.get('id', '')}"
+                if objective_id not in current_objective_ids:
+                    continue
+
                 objectives.append(
                     self._build_objective_row(
-                        objective_id=f"item:{item.get('id', '')}",
+                        objective_id=objective_id,
                         status="available",
                         title=self._item_display_name(item),
                         detail=self._current_item_source_text(item),
+                        sprite_asset=self._marker_asset_for_record(
+                            {
+                                "marker_asset": item.get("marker_asset"),
+                                "item_id": item.get("id"),
+                                "category": item.get("category"),
+                                "move_type": item.get("move_type"),
+                                "title": self._item_display_name(item),
+                            }
+                        ),
                         action=self._build_item_progress_control(
                             item,
                             compact=True,
@@ -1311,7 +1469,7 @@ class MyJourneyView:
             icon=ft.Icons.FACT_CHECK_OUTLINED,
             subtitle="Highest-priority goals available at your current Badge count.",
             body=ft.Column(
-                controls=objectives[:6],
+                controls=objectives,
                 spacing=10,
             ),
             col={"xs": 12, "lg": 6},
@@ -1500,7 +1658,8 @@ class MyJourneyView:
             - viewport_height * 0.50,
         )
 
-        await self.page.scroll_to(
+        scroll_to = self.on_scroll_to or self.page.scroll_to
+        await scroll_to(
             offset=target_offset,
             duration=520,
             curve=ft.AnimationCurve.EASE_OUT_CUBIC,
@@ -1727,6 +1886,9 @@ class MyJourneyView:
 
             objective_id = f"item:{item_id}"
             objective_status = self._item_status(item)
+            if objective_status == "obtained":
+                continue
+
             title = self._item_display_name(item)
             category = str(item.get("category", "item"))
             seen_locations: set[str] = set()
@@ -1860,6 +2022,9 @@ class MyJourneyView:
 
             objective_id = f"pokemon:{pokemon_id}"
             objective_status = self._pokemon_status(pokemon)
+            if objective_status == "obtained":
+                continue
+
             title = str(pokemon.get("pokemon", "Unknown Pokémon"))
 
             for acquisition in acquisitions:
@@ -2656,6 +2821,30 @@ class MyJourneyView:
                 for record in marker_records
                 if record.get("kind") == "pokemon"
             ]
+        elif self._map_marker_filter == "available":
+            marker_records = [
+                record
+                for record in marker_records
+                if record.get("status") == "available"
+            ]
+        elif self._map_marker_filter == "unavailable":
+            marker_records = [
+                record
+                for record in marker_records
+                if record.get("status") == "unavailable"
+            ]
+        elif self._map_marker_filter == "current":
+            current_objective_ids = set(
+                self._current_objective_ids()
+            )
+            marker_records = [
+                record
+                for record in marker_records
+                if any(
+                    objective_id in current_objective_ids
+                    for objective_id in self._record_objective_ids(record)
+                )
+            ]
         elif self._map_marker_filter == "highlighted":
             marker_records = [
                 record
@@ -2783,6 +2972,9 @@ class MyJourneyView:
             "all",
             "items",
             "pokemon",
+            "available",
+            "unavailable",
+            "current",
             "highlighted",
         }:
             selected_filter = "all"
@@ -2841,11 +3033,23 @@ class MyJourneyView:
                     text="Pokémon",
                 ),
                 ft.DropdownOption(
+                    key="available",
+                    text="All Available Objectives",
+                ),
+                ft.DropdownOption(
+                    key="unavailable",
+                    text="All Unavailable Objectives",
+                ),
+                ft.DropdownOption(
+                    key="current",
+                    text="Current Objectives Only",
+                ),
+                ft.DropdownOption(
                     key="highlighted",
                     text="Highlighted Marker Only",
                 ),
             ],
-            width=220,
+            width=280,
             on_select=self._handle_map_marker_filter,
         )
 
@@ -3243,29 +3447,68 @@ class MyJourneyView:
             pokemon_id = str(pokemon.get("id", ""))
             status = self._pokemon_status(pokemon)
 
+            marker_asset = str(
+                pokemon.get("marker_asset") or ""
+            ).strip()
+
+            pokemon_identity_controls: list[ft.Control] = []
+
+            if marker_asset:
+                pokemon_identity_controls.append(
+                    ft.Image(
+                        src=marker_asset,
+                        width=58,
+                        height=58,
+                        fit=ft.BoxFit.CONTAIN,
+                        semantics_label=(
+                            f"{pokemon.get('acquire_as') or pokemon.get('pokemon')}"
+                            " sprite"
+                        ),
+                    )
+                )
+
+            pokemon_identity_controls.extend(
+                [
+                    ft.Text(
+                        str(pokemon.get("pokemon", "Unknown")),
+                        color=TEXT_PRIMARY,
+                        weight=ft.FontWeight.BOLD,
+                        size=15,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Text(
+                        self._pokemon_acquisition_text(pokemon),
+                        color=TEXT_SECONDARY,
+                        size=13,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Text(
+                        str(pokemon.get("evolution_summary", "")),
+                        color=TEXT_MUTED,
+                        size=12,
+                        italic=True,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ]
+            )
+
             pokemon_cell_controls: list[ft.Control] = [
-                self._status_icon(status),
-                ft.Column(
-                    controls=[
-                        ft.Text(
-                            str(pokemon.get("pokemon", "Unknown")),
-                            color=TEXT_PRIMARY,
-                            weight=ft.FontWeight.BOLD,
-                            size=15,
+                ft.Container(
+                    content=self._status_icon(status),
+                    width=52,
+                    alignment=ft.Alignment.CENTER,
+                ),
+                ft.Container(
+                    content=ft.Column(
+                        controls=pokemon_identity_controls,
+                        spacing=2,
+                        horizontal_alignment=(
+                            ft.CrossAxisAlignment.CENTER
                         ),
-                        ft.Text(
-                            self._pokemon_acquisition_text(pokemon),
-                            color=TEXT_SECONDARY,
-                            size=13,
-                        ),
-                        ft.Text(
-                            str(pokemon.get("evolution_summary", "")),
-                            color=TEXT_MUTED,
-                            size=12,
-                            italic=True,
-                        ),
-                    ],
-                    spacing=2,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                    ),
+                    width=300,
+                    alignment=ft.Alignment.CENTER,
                 ),
             ]
 
@@ -3276,12 +3519,17 @@ class MyJourneyView:
                     ft.DataRow(
                         cells=[
                             ft.DataCell(
-                                ft.Row(
-                                    controls=pokemon_cell_controls,
-                                    spacing=10,
-                                    vertical_alignment=(
-                                        ft.CrossAxisAlignment.CENTER
+                                ft.Container(
+                                    content=ft.Row(
+                                        controls=pokemon_cell_controls,
+                                        spacing=8,
+                                        vertical_alignment=(
+                                            ft.CrossAxisAlignment.CENTER
+                                        ),
                                     ),
+                                    width=360,
+                                    height=150,
+                                    alignment=ft.Alignment.CENTER_LEFT,
                                 )
                             ),
                             ft.DataCell(
@@ -3356,8 +3604,8 @@ class MyJourneyView:
             border_radius=12,
             heading_row_color=SURFACE_RAISED,
             column_spacing=24,
-            data_row_min_height=88,
-            data_row_max_height=160,
+            data_row_min_height=150,
+            data_row_max_height=220,
             show_checkbox_column=False,
         )
 
@@ -3441,6 +3689,7 @@ class MyJourneyView:
         status: str,
         title: str,
         detail: str,
+        sprite_asset: str | None = None,
         action: ft.Control | None = None,
     ) -> ft.Control:
         """Build a selectable Current Objectives row."""
@@ -3450,7 +3699,27 @@ class MyJourneyView:
         row_container = ft.Container(
             content=ft.Row(
                 controls=[
-                    self._status_icon(status),
+                    ft.Container(
+                        content=self._status_icon(status),
+                        width=34,
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                    ft.Container(
+                        content=(
+                            ft.Image(
+                                src=sprite_asset,
+                                width=42,
+                                height=42,
+                                fit=ft.BoxFit.CONTAIN,
+                                semantics_label=f"{title} sprite",
+                            )
+                            if sprite_asset
+                            else ft.Container(width=42, height=42)
+                        ),
+                        width=48,
+                        height=48,
+                        alignment=ft.Alignment.CENTER,
+                    ),
                     ft.Column(
                         controls=[
                             ft.Text(
@@ -3467,10 +3736,11 @@ class MyJourneyView:
                         ],
                         spacing=2,
                         expand=True,
+                        alignment=ft.MainAxisAlignment.CENTER,
                     ),
                     *([action] if action is not None else []),
                 ],
-                spacing=10,
+                spacing=8,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             padding=12,
@@ -3575,8 +3845,9 @@ class MyJourneyView:
             icon_size=16,
             tooltip="Mark one obtained",
             disabled=not enabled or obtained >= required,
-            on_click=lambda: self.page.run_task(
-                self._set_item_quantity, item_id, obtained + 1
+            on_click=lambda: self._request_item_completion(
+                item,
+                obtained + 1,
             ),
         )
         progress = ft.Text(
@@ -3744,20 +4015,25 @@ class MyJourneyView:
         )
 
         if encounters:
-            return ft.Column(
-                controls=[
-                    ft.Text(
-                        cls._pokemon_encounter_option_line(
-                            pokemon,
-                            encounter,
-                        ),
-                        color=TEXT_SECONDARY,
-                        size=13,
-                    )
-                    for encounter in encounters
-                ],
-                spacing=5,
-                tight=True,
+            return ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Text(
+                            cls._pokemon_encounter_option_line(
+                                pokemon,
+                                encounter,
+                            ),
+                            color=TEXT_SECONDARY,
+                            size=13,
+                            width=380,
+                        )
+                        for encounter in encounters
+                    ],
+                    spacing=5,
+                    tight=True,
+                ),
+                width=400,
+                alignment=ft.Alignment.CENTER_LEFT,
             )
 
         raw_method = str(acquisition.get("method") or "").strip()
@@ -3778,6 +4054,7 @@ class MyJourneyView:
                 color=TEXT_SECONDARY,
                 size=13,
                 weight=ft.FontWeight.W_600,
+                width=380,
             )
         ]
         if availability_note:
@@ -3787,13 +4064,18 @@ class MyJourneyView:
                     color=TEXT_MUTED,
                     size=12,
                     italic=True,
+                    width=380,
                 )
             )
 
-        return ft.Column(
-            controls=controls,
-            spacing=4,
-            tight=True,
+        return ft.Container(
+            content=ft.Column(
+                controls=controls,
+                spacing=4,
+                tight=True,
+            ),
+            width=400,
+            alignment=ft.Alignment.CENTER_LEFT,
         )
 
     @staticmethod

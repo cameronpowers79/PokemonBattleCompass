@@ -71,6 +71,9 @@ class AppShell:
         )
         self.pending_view: str | None = None
         self._my_journey_overlay_controls: list[ft.Control] = []
+        self._return_to_top_threshold = 600.0
+        self._return_to_top_overlay = self._build_return_to_top_overlay()
+        self._return_to_top_is_attached = False
 
         self.content_host = ft.Container(
             content=self.view_builders[
@@ -163,6 +166,14 @@ class AppShell:
             alignment=ft.Alignment.TOP_CENTER,
         )
 
+        self.scroll_host = ft.Column(
+            controls=[self.page_container],
+            expand=True,
+            scroll=ft.ScrollMode.AUTO,
+            on_scroll=self._handle_shell_scroll,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
         self.update_navigation_style()
         self._sync_my_journey_overlay_visibility()
 
@@ -170,11 +181,97 @@ class AppShell:
             self.page.width or 1000
         )
 
+    def _build_return_to_top_overlay(self) -> ft.Container:
+        """Build the floating Return to Top control."""
+
+        overlay = ft.Container(
+            key="app-return-to-top-overlay",
+            content=ft.IconButton(
+                icon=ft.Icons.ARROW_UPWARD_ROUNDED,
+                icon_color=TEXT_PRIMARY,
+                tooltip="Return to top",
+                on_click=lambda: self.page.run_task(
+                    self._scroll_to_top
+                ),
+            ),
+            width=52,
+            height=52,
+            alignment=ft.Alignment.CENTER,
+            bgcolor=ft.Colors.with_opacity(0.96, SURFACE),
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=26,
+            shadow=ft.BoxShadow(
+                blur_radius=18,
+                spread_radius=1,
+                color=ft.Colors.with_opacity(
+                    0.35,
+                    ft.Colors.BLACK,
+                ),
+                offset=ft.Offset(0, 6),
+            ),
+        )
+        overlay.right = 24
+        overlay.bottom = 92
+        return overlay
+
+    def _set_return_to_top_attached(
+        self,
+        should_attach: bool,
+    ) -> None:
+        """Attach or remove the button only when its state changes."""
+
+        if should_attach == self._return_to_top_is_attached:
+            return
+
+        if should_attach:
+            if self._return_to_top_overlay not in self.page.overlay:
+                self.page.overlay.append(self._return_to_top_overlay)
+        elif self._return_to_top_overlay in self.page.overlay:
+            self.page.overlay.remove(self._return_to_top_overlay)
+
+        self._return_to_top_is_attached = should_attach
+        self.page.update()
+
+    def _handle_shell_scroll(
+        self,
+        event: ft.OnScrollEvent,
+    ) -> None:
+        """Toggle Return to Top after meaningful scrolling."""
+
+        self._set_return_to_top_attached(
+            float(event.pixels) >= self._return_to_top_threshold
+        )
+
+    async def scroll_to(
+        self,
+        *,
+        offset: float | None = None,
+        duration: int = 0,
+        curve: ft.AnimationCurve = ft.AnimationCurve.EASE,
+    ) -> None:
+        """Scroll the shell's shared content area."""
+
+        await self.scroll_host.scroll_to(
+            offset=offset,
+            duration=duration,
+            curve=curve,
+        )
+
+    async def _scroll_to_top(self) -> None:
+        """Smoothly return the active page to its top."""
+
+        await self.scroll_to(
+            offset=0,
+            duration=450,
+            curve=ft.AnimationCurve.EASE_OUT_CUBIC,
+        )
+        self._set_return_to_top_attached(False)
+
     def build(self) -> ft.Control:
         """Return the complete application shell."""
 
         return ft.Container(
-            content=self.page_container,
+            content=self.scroll_host,
             expand=True,
             bgcolor=APP_BACKGROUND,
             alignment=ft.Alignment.TOP_CENTER,
@@ -376,6 +473,12 @@ class AppShell:
             ]()
         )
 
+        self.page.run_task(
+            self.scroll_to,
+            offset=0,
+            duration=0,
+        )
+        self._set_return_to_top_attached(False)
         self.update_navigation_style()
         self._sync_my_journey_overlay_visibility()
         self.page.update()
