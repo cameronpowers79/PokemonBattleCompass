@@ -904,7 +904,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         )
 
         best_hp_ratio = best_score / opponent_hp if opponent_hp else None
-        incoming_hp_ratio = worst_score / pokemon["HP"] if pokemon.get("HP") else None
 
         (
             offensive_min_damage,
@@ -915,6 +914,27 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             best_move,
             items,
             ability_rules,
+        )
+
+        (
+            incoming_min_damage,
+            incoming_average_damage,
+        ) = calculate_damage_range(
+            opponent,
+            pokemon,
+            worst_move,
+            items,
+            ability_rules,
+        )
+
+        team_member_hp = get_stat(pokemon, "HP")
+        incoming_hp_ratio = (
+            incoming_average_damage / team_member_hp
+            if (
+                incoming_average_damage is not None
+                and team_member_hp > 0
+            )
+            else None
         )
 
         effective_team_speed = (
@@ -930,11 +950,11 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             < opponent_spe
         )
 
-        # Workbook intent: Survival OHKO only appears when the team member moves second
-        # and is not itself likely to be KO'd first.
+        # Survival OHKO only appears when the team member moves second
+        # and the opponent's minimum modeled roll does not KO first.
         likely_survives_first_hit = (
-            incoming_hp_ratio is None
-            or incoming_hp_ratio < 2
+            incoming_min_damage is None
+            or incoming_min_damage < team_member_hp
         )
 
         attacker_moves = get_moves(
@@ -964,6 +984,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             offensive_min_damage,
             offensive_average_damage,
             offensive_target_hp,
+            incoming_min_damage,
+            incoming_average_damage,
+            team_member_hp,
         )
 
         incoming_type_multiplier = get_type_multiplier(
@@ -1049,6 +1072,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 offensive_min_damage,
                 offensive_average_damage,
                 offensive_target_hp,
+                incoming_min_damage,
+                incoming_average_damage,
+                team_member_hp,
             )
         })
 

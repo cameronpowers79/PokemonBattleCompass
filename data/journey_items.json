@@ -34,7 +34,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6063,7 +6063,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6084,7 +6084,7 @@
         "method": "fixed_pickup",
         "location": "Bridge Field",
         "location_detail": "In the grass near the Nursery building.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6104,7 +6104,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6145,7 +6145,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6186,7 +6186,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6207,7 +6207,7 @@
         "method": "fixed_pickup",
         "location": "Dusty Bowl",
         "location_detail": "At the base of the northern rock wall.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "dusty_bowl"
         ]
@@ -6217,7 +6217,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from either member of the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6238,7 +6238,7 @@
         "method": "fixed_pickup",
         "location": "Dusty Bowl",
         "location_detail": "Near the large stone arch on the southern side.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "dusty_bowl"
         ]
@@ -6248,7 +6248,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from either member of the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6289,7 +6289,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6330,7 +6330,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -6537,7 +6537,7 @@
         "method": "fixed_pickup",
         "location": "Dusty Bowl",
         "location_detail": "On the small island in the central pond.",
-        "required_badge": 6,
+        "required_badge": 0,
         "map_locations": [
           "dusty_bowl"
         ]
@@ -7246,7 +7246,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -7369,7 +7369,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -7618,7 +7618,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -7670,7 +7670,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -7911,7 +7911,7 @@
         "method": "wild_held_item",
         "location": "Giant's Mirror",
         "location_detail": "Possible held item on compatible wild Pokémon.",
-        "required_badge": 6,
+        "required_badge": 0,
         "map_locations": [
           "giants_mirror"
         ]
@@ -8967,7 +8967,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -8998,7 +8998,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]
@@ -9061,7 +9061,7 @@
         "method": "digging_duo",
         "location": "Bridge Field",
         "location_detail": "Possible reward from the Digging Duo.",
-        "required_badge": 3,
+        "required_badge": 0,
         "map_locations": [
           "bridge_field"
         ]

@@ -683,14 +683,27 @@ def build_offensive_ohko_note(
     return None
 
 
-def build_incoming_ohko_note(is_immune, incoming_hp_ratio):
-    if is_immune or incoming_hp_ratio is None:
+def build_incoming_ohko_note(
+    is_immune,
+    minimum_damage,
+    average_damage,
+    target_hp,
+):
+    """Build an incoming OHKO note from modeled damage rather than Move Score."""
+
+    if (
+        is_immune
+        or minimum_damage is None
+        or average_damage is None
+        or target_hp is None
+        or target_hp <= 0
+    ):
         return None
 
-    if incoming_hp_ratio >= 3:
+    if minimum_damage >= target_hp:
         return note(NOTE_WARNING, "Likely Incoming OHKO")
 
-    if incoming_hp_ratio >= 2:
+    if average_damage >= target_hp:
         return note(NOTE_CAUTION, "Possible Incoming OHKO")
 
     return None
@@ -720,6 +733,9 @@ def build_battle_notes(
     offensive_min_damage=None,
     offensive_average_damage=None,
     offensive_target_hp=None,
+    incoming_min_damage=None,
+    incoming_average_damage=None,
+    incoming_target_hp=None,
 ):
     if ability_rules is None:
         ability_rules = []
@@ -751,7 +767,9 @@ def build_battle_notes(
 
     incoming_ohko_note = build_incoming_ohko_note(
         is_immune,
-        incoming_hp_ratio
+        incoming_min_damage,
+        incoming_average_damage,
+        incoming_target_hp,
     )
 
     has_ohko_note = offensive_ohko_note is not None

@@ -1144,11 +1144,63 @@ class MyJourneyView:
             return "available"
         return "unavailable"
 
+    @staticmethod
+    def _pokemon_acquisitions(
+        pokemon: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Return primary and alternate acquisition sources."""
+
+        acquisitions: list[dict[str, Any]] = []
+
+        primary = pokemon.get("primary_acquisition")
+        if isinstance(primary, dict):
+            acquisitions.append(primary)
+
+        alternates = pokemon.get("alternate_acquisitions", [])
+        if isinstance(alternates, list):
+            acquisitions.extend(
+                acquisition
+                for acquisition in alternates
+                if isinstance(acquisition, dict)
+            )
+
+        return acquisitions
+
+    @staticmethod
+    def _pokemon_acquisition_required_badge(
+        pokemon: dict[str, Any],
+        acquisition: dict[str, Any],
+    ) -> int:
+        """Resolve one acquisition source's badge requirement."""
+
+        source_badge = acquisition.get("required_badge")
+        if (
+            isinstance(source_badge, int)
+            and not isinstance(source_badge, bool)
+        ):
+            return source_badge
+
+        return int(pokemon.get("required_badge", 0))
+
     def _pokemon_status(self, pokemon: dict[str, Any]) -> str:
         pokemon_id = str(pokemon.get("id", ""))
         if self.pokemon_obtained.get(pokemon_id, False):
             return "obtained"
-        required_badge = int(pokemon.get("required_badge", 0))
+
+        acquisitions = self._pokemon_acquisitions(pokemon)
+        required_badges = [
+            self._pokemon_acquisition_required_badge(
+                pokemon,
+                acquisition,
+            )
+            for acquisition in acquisitions
+        ]
+        required_badge = (
+            min(required_badges)
+            if required_badges
+            else int(pokemon.get("required_badge", 0))
+        )
+
         return (
             "available"
             if required_badge <= self.earned_badges
@@ -1512,6 +1564,49 @@ class MyJourneyView:
             return f"raw/pokesprite/items/{category}/{move_type}.png"
         return None
 
+    @staticmethod
+    def _record_objective_ids(
+        record: dict[str, Any],
+    ) -> list[str]:
+        """Return every objective represented by one map marker."""
+
+        raw_ids = record.get("objective_ids")
+        if isinstance(raw_ids, list):
+            objective_ids = [
+                str(objective_id).strip()
+                for objective_id in raw_ids
+                if str(objective_id).strip()
+            ]
+            if objective_ids:
+                return objective_ids
+
+        objective_id = str(record.get("objective_id", "")).strip()
+        return [objective_id] if objective_id else []
+
+    def _record_matches_selected_objective(
+        self,
+        record: dict[str, Any],
+    ) -> bool:
+        """Return whether a marker represents the selected objective."""
+
+        selected_id = self._selected_map_objective_id
+        return bool(
+            selected_id
+            and selected_id in self._record_objective_ids(record)
+        )
+
+    @staticmethod
+    def _watt_price_from_source(source: dict[str, Any]) -> str:
+        """Extract a display-ready Watt price from a trader source."""
+
+        detail = str(source.get("location_detail", ""))
+        match = re.search(
+            r"(?:costs?|for)\s+([\d,]+)\s*W\b",
+            detail,
+            flags=re.IGNORECASE,
+        )
+        return f"{match.group(1)} W" if match else "Price varies"
+
     def _show_map_marker_details(
         self,
         record: dict[str, Any],
@@ -1527,37 +1622,86 @@ class MyJourneyView:
             weight=ft.FontWeight.BOLD,
             color=TEXT_PRIMARY,
         )
-        dialog.content = ft.Column(
-            controls=[
+        dialog_controls: list[ft.Control] = [
+            ft.Text(
+                str(record.get("location", "Location unavailable")),
+                size=15,
+                weight=ft.FontWeight.W_600,
+                color=TEXT_SECONDARY,
+            ),
+            ft.Text(
+                str(record.get("detail", "")),
+                size=13,
+                color=TEXT_MUTED,
+            ),
+        ]
+
+        watts_trader_items = record.get("watts_trader_items")
+        if isinstance(watts_trader_items, list) and watts_trader_items:
+            dialog_controls.append(ft.Divider(height=10))
+            dialog_controls.append(
                 ft.Text(
-                    str(record.get("location", "Location unavailable")),
-                    size=15,
+                    "Journey Checklist TRs",
+                    size=13,
                     weight=ft.FontWeight.W_600,
                     color=TEXT_SECONDARY,
-                ),
+                )
+            )
+            for trader_item in watts_trader_items:
+                if not isinstance(trader_item, dict):
+                    continue
+                dialog_controls.append(
+                    ft.Text(
+                        (
+                            f"{str(trader_item.get('title', 'TR'))}"
+                            f" — {str(trader_item.get('price', 'Price varies'))}"
+                        ),
+                        size=13,
+                        color=TEXT_PRIMARY,
+                    )
+                )
+        else:
+            status = str(record.get("status", "")).strip().lower()
+            required_badge = record.get("required_badge", 0)
+
+            if (
+                status == "unavailable"
+                and isinstance(required_badge, int)
+                and not isinstance(required_badge, bool)
+                and required_badge > self.earned_badges
+            ):
+                badge_word = (
+                    "Gym Badge"
+                    if required_badge == 1
+                    else "Gym Badges"
+                )
+                status_text = (
+                    f"Status: Unavailable — "
+                    f"{required_badge} {badge_word} required"
+                )
+            else:
+                status_text = f"Status: {status.title()}"
+
+            dialog_controls.append(
                 ft.Text(
-                    str(record.get("detail", "")),
-                    size=13,
-                    color=TEXT_MUTED,
-                ),
-                ft.Text(
-                    f"Status: {str(record.get('status', '')).title()}",
+                    status_text,
                     size=13,
                     color=TEXT_SECONDARY,
-                ),
-                *(
-                    [
-                        ft.Text(
-                            "Representative location; additional sources are available.",
-                            size=12,
-                            color=TEXT_MUTED,
-                            italic=True,
-                        )
-                    ]
-                    if record.get("map_display_mode") == "representative"
-                    else []
-                ),
-            ],
+                )
+            )
+
+        if record.get("map_display_mode") == "representative":
+            dialog_controls.append(
+                ft.Text(
+                    "Representative location; additional sources are available.",
+                    size=12,
+                    color=TEXT_MUTED,
+                    italic=True,
+                )
+            )
+
+        dialog.content = ft.Column(
+            controls=dialog_controls,
             spacing=8,
             tight=True,
         )
@@ -1574,6 +1718,7 @@ class MyJourneyView:
         """Build markers directly from canonical map_locations IDs."""
 
         records: list[dict[str, Any]] = []
+        watts_trader_items: list[dict[str, str]] = []
 
         for item in self._checklist_items():
             item_id = str(item.get("id", "")).strip()
@@ -1597,6 +1742,18 @@ class MyJourneyView:
                     self.earned_badges,
                 )
                 source_method = str(source.get("method", ""))
+
+                if (
+                    category.lower() == "tr"
+                    and source_method == "watt_trader"
+                ):
+                    watts_trader_items.append({
+                        "objective_id": objective_id,
+                        "title": title,
+                        "price": self._watt_price_from_source(source),
+                        "status": marker_status,
+                    })
+                    continue
 
                 map_location_ids = self._map_location_ids(source)
 
@@ -1639,6 +1796,7 @@ class MyJourneyView:
                         "source_method": source_method,
                         "map_display_mode": map_display_mode,
                         "status": marker_status,
+                        "required_badge": required_badge,
                         "kind": "item",
                         "item_id": item_id,
                         "category": category,
@@ -1648,55 +1806,114 @@ class MyJourneyView:
                         "y": y,
                     })
 
+        if watts_trader_items:
+            coordinates = MAP_LOCATION_COORDINATES.get("meetup_spot")
+            if coordinates is not None:
+                x, y = coordinates
+                represented_ids = [
+                    item["objective_id"]
+                    for item in watts_trader_items
+                ]
+                statuses = {
+                    item["status"]
+                    for item in watts_trader_items
+                }
+                shared_status = (
+                    "available"
+                    if "available" in statuses
+                    else "unavailable"
+                    if "unavailable" in statuses
+                    else "obtained"
+                )
+                records.append({
+                    "objective_id": "group:watts_traders",
+                    "objective_ids": represented_ids,
+                    "title": "Watts Traders",
+                    "location_id": "meetup_spot",
+                    "location": "Meetup Spot",
+                    "detail": (
+                        "Available from Watts Traders, located at the "
+                        "Meetup Spot, Dappled Grove, East Lake Axewell, "
+                        "Giant's Seat, Bridge Field, Giant's Cap, and "
+                        "Hammerlocke Hills."
+                    ),
+                    "source_method": "watt_trader_group",
+                    "map_display_mode": "representative",
+                    "status": shared_status,
+                    "required_badge": 0,
+                    "kind": "item",
+                    "category": "tr",
+                    "marker_asset": "",
+                    "watts_trader_items": watts_trader_items,
+                    "x": x,
+                    "y": y,
+                })
+
         for pokemon in self.pokemon:
             pokemon_id = str(pokemon.get("id", "")).strip()
             if not pokemon_id:
                 continue
 
-            acquisition = pokemon.get("primary_acquisition", {})
-            if not isinstance(acquisition, dict):
+            acquisitions = self._pokemon_acquisitions(pokemon)
+            if not acquisitions:
                 continue
 
             objective_id = f"pokemon:{pokemon_id}"
             objective_status = self._pokemon_status(pokemon)
             title = str(pokemon.get("pokemon", "Unknown Pokémon"))
-            required_badge = int(pokemon.get("required_badge", 0))
-            marker_status = self._source_marker_status(
-                objective_status,
-                required_badge,
-                self.earned_badges,
-            )
 
-            for location_id in self._map_location_ids(acquisition):
-                coordinates = MAP_LOCATION_COORDINATES.get(location_id)
-                if coordinates is None:
-                    continue
+            for acquisition in acquisitions:
+                required_badge = (
+                    self._pokemon_acquisition_required_badge(
+                        pokemon,
+                        acquisition,
+                    )
+                )
+                marker_status = self._source_marker_status(
+                    objective_status,
+                    required_badge,
+                    self.earned_badges,
+                )
 
-                x, y = coordinates
-                records.append({
-                    "objective_id": objective_id,
-                    "title": title,
-                    "location_id": location_id,
-                    "location": MAP_LOCATION_LABELS.get(
-                        location_id,
-                        location_id.replace("_", " ").title(),
-                    ),
-                    "detail": str(
-                        acquisition.get("availability_note", "")
-                    ),
-                    "status": marker_status,
-                    "kind": "pokemon",
-                    "category": "pokemon",
-                    "marker_pokemon": str(
-                        pokemon.get("marker_pokemon")
-                        or pokemon.get("acquire_as")
-                        or pokemon.get("pokemon")
-                        or ""
-                    ),
-                    "marker_asset": str(pokemon.get("marker_asset") or ""),
-                    "x": x,
-                    "y": y,
-                })
+                for location_id in self._map_location_ids(acquisition):
+                    coordinates = MAP_LOCATION_COORDINATES.get(location_id)
+                    if coordinates is None:
+                        continue
+
+                    x, y = coordinates
+                    records.append({
+                        "objective_id": objective_id,
+                        "title": title,
+                        "location_id": location_id,
+                        "location": MAP_LOCATION_LABELS.get(
+                            location_id,
+                            location_id.replace("_", " ").title(),
+                        ),
+                        "detail": str(
+                            acquisition.get("availability_note", "")
+                        ),
+                        "status": marker_status,
+                        "required_badge": required_badge,
+                        "kind": "pokemon",
+                        "category": "pokemon",
+                        "source_method": str(
+                            acquisition.get("method", "")
+                        ),
+                        "minimum_star_level": acquisition.get(
+                            "minimum_star_level"
+                        ),
+                        "marker_pokemon": str(
+                            pokemon.get("marker_pokemon")
+                            or pokemon.get("acquire_as")
+                            or pokemon.get("pokemon")
+                            or ""
+                        ),
+                        "marker_asset": str(
+                            pokemon.get("marker_asset") or ""
+                        ),
+                        "x": x,
+                        "y": y,
+                    })
 
         return records
 
@@ -1722,7 +1939,7 @@ class MyJourneyView:
 
         objective_id = str(record["objective_id"])
         status = str(record["status"])
-        selected = objective_id == self._selected_map_objective_id
+        selected = self._record_matches_selected_objective(record)
 
         if status == "obtained":
             status_icon = ft.Icons.CHECK_ROUNDED
@@ -1763,8 +1980,14 @@ class MyJourneyView:
                 collision_index % len(collision_offsets)
             ]
 
-        if marker_asset is not None:
-            main_visual: ft.Control = ft.Image(
+        if record.get("source_method") == "watt_trader_group":
+            main_visual: ft.Control = ft.Icon(
+                ft.Icons.BOLT_ROUNDED,
+                size=28,
+                color="#FFD54F",
+            )
+        elif marker_asset is not None:
+            main_visual = ft.Image(
                 src=marker_asset,
                 width=sprite_size,
                 height=sprite_size,
@@ -1846,10 +2069,11 @@ class MyJourneyView:
             on_click=lambda: self._handle_map_marker_click(record),
         )
 
-        self._map_markers_by_objective.setdefault(
-            objective_id,
-            [],
-        ).append(marker)
+        for represented_objective_id in self._record_objective_ids(record):
+            self._map_markers_by_objective.setdefault(
+                represented_objective_id,
+                [],
+            ).append(marker)
 
         return marker
 
@@ -1859,7 +2083,10 @@ class MyJourneyView:
     ) -> None:
         """Select a marker and open its mobile-friendly details."""
 
-        self._select_objective_for_map(str(record["objective_id"]))
+        represented_ids = self._record_objective_ids(record)
+        selected_id = self._selected_map_objective_id
+        if selected_id not in represented_ids and represented_ids:
+            self._select_objective_for_map(represented_ids[0])
         self._show_map_marker_details(record)
 
     def _build_badge_tracker_card(self) -> ft.Control:
@@ -2433,8 +2660,7 @@ class MyJourneyView:
             marker_records = [
                 record
                 for record in marker_records
-                if record.get("objective_id")
-                == self._selected_map_objective_id
+                if self._record_matches_selected_objective(record)
             ]
 
         location_groups: dict[str, list[dict[str, Any]]] = {}
@@ -2464,7 +2690,7 @@ class MyJourneyView:
             )
 
             if (
-                record["objective_id"] == self._selected_map_objective_id
+                self._record_matches_selected_objective(record)
                 and self._selected_marker_y is None
             ):
                 self._selected_marker_y = float(record["y"])
@@ -2535,8 +2761,7 @@ class MyJourneyView:
                 self._build_map_marker(record, marker_index)
             )
             if (
-                record.get("objective_id")
-                == self._selected_map_objective_id
+                self._record_matches_selected_objective(record)
                 and self._selected_marker_y is None
             ):
                 self._selected_marker_y = float(record["y"])

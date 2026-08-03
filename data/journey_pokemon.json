@@ -6430,7 +6430,8 @@
           "level_max": 28
         }
       ],
-      "availability_note": "Fog in the base-game Wild Area is unlocked after becoming Champion."
+      "availability_note": "Fog in the base-game Wild Area is unlocked after becoming Champion.",
+      "required_badge": 8
     },
     "alternate_acquisitions": [
       {
@@ -6461,7 +6462,8 @@
         "raid_dens": [
           62
         ],
-        "availability_note": "Base-game Mimikyu is a 5★ result in Den 62."
+        "availability_note": "Base-game Mimikyu appears only as a 5★ result in Den 62, which becomes available after earning all 8 Gym Badges.",
+        "minimum_star_level": 5
       }
     ],
     "evolution_summary": "No evolution required",
@@ -7866,7 +7868,8 @@
           "level_min": 40,
           "level_max": 44
         }
-      ]
+      ],
+      "required_badge": 6
     },
     "alternate_acquisitions": [
       {
@@ -7883,7 +7886,8 @@
           28,
           59
         ],
-        "availability_note": "Dhelmise appears only as a 5★ raid in its base-game den tables, so the Route 9 encounter becomes available earlier in normal progression."
+        "availability_note": "Base-game Dhelmise appears only as a 5★ result in Dens 28 and 59, which becomes available after earning all 8 Gym Badges.",
+        "minimum_star_level": 5
       },
       {
         "method": "wild_encounter",
@@ -8588,43 +8592,25 @@
     "source_url": "https://www.serebii.net/pokedex-swsh/jangmo-o/locations.shtml",
     "encounter_data_status": "verified_batch_8"
   },
-    {
+  {
     "id": "dragapult",
     "pokemon": "Dragapult",
     "acquire_as": "Dreepy",
     "marker_pokemon": "Dreepy",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/dreepy.png",
-    "required_badge": 6,
+    "required_badge": 1,
     "primary_acquisition": {
       "method": "max_raid_battle",
-      "location": "Rolling Fields, Lake of Outrage",
+      "location": "Rolling Fields",
       "map_locations": [
-        "rolling_fields",
-        "lake_of_outrage"
+        "rolling_fields"
       ],
       "raid_dens": [
-          64
-        ],
-      "encounters": [
-        {
-          "location": "Lake of Outrage",
-          "method": "Random",
-          "weather": "Overcast",
-          "rarity_percent": 1,
-          "level_min": 50,
-          "level_max": 52
-        },
-        {
-          "location": "Lake of Outrage",
-          "method": "Random",
-          "weather": "Thunderstorm",
-          "rarity_percent": 2,
-          "level_min": 50,
-          "level_max": 52
-        }
-        
+        64
       ],
-      "availability_note": "Catch Dreepy in Lake of Outrage or Rare Raid Den in Dappled Grove, evolve it into Drakloak at Level 50, then Dragapult at Level 60."
+      "availability_note": "Rare Max Raid Battle in Den 64. Dreepy first appears at 2★, available after earning 1 Gym Badge.",
+      "minimum_star_level": 2,
+      "required_badge": 1
     },
     "evolution_summary": "Evolve 2 times",
     "evolution_steps": [
@@ -8643,7 +8629,36 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dreepy/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "alternate_acquisitions": [
+      {
+        "method": "wild_encounter",
+        "location": "Lake of Outrage",
+        "required_badge": 6,
+        "map_locations": [
+          "lake_of_outrage"
+        ],
+        "encounters": [
+          {
+            "location": "Lake of Outrage",
+            "method": "Random",
+            "weather": "Overcast",
+            "rarity_percent": 1,
+            "level_min": 50,
+            "level_max": 52
+          },
+          {
+            "location": "Lake of Outrage",
+            "method": "Random",
+            "weather": "Thunderstorm",
+            "rarity_percent": 2,
+            "level_min": 50,
+            "level_max": 52
+          }
+        ],
+        "availability_note": "Wild Dreepy at Lake of Outrage requires 6 Gym Badges."
+      }
+    ]
   },
   {
     "id": "zacian",
