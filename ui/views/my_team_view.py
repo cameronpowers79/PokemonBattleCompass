@@ -1,4 +1,3 @@
-
 """
 My Team view.
 
@@ -61,6 +60,7 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 DATA_DIR = PROJECT_ROOT / "data"
 
 AUTOCOMPLETE_DEBOUNCE_SECONDS = 0.45
+AUTOCOMPLETE_SUGGESTION_LIMIT = 30
 
 # My Team action-button colors.
 ADD_BUTTON_ACTIVE = "#4DA56A"
@@ -363,14 +363,6 @@ class MyTeamView:
             self.pokemon_options
         )
 
-        self.pokemon_suggestions = [
-            ft.AutoCompleteSuggestion(
-                key=pokemon_name,
-                value=pokemon_name,
-            )
-            for pokemon_name in self.pokemon_options
-        ]
-
         self.type_options = list(
             POKEMON_TYPES
         )
@@ -399,13 +391,6 @@ class MyTeamView:
             self.item_options
         )
 
-        self.item_suggestions = [
-            ft.AutoCompleteSuggestion(
-                key=item_name,
-                value=item_name,
-            )
-            for item_name in self.item_options
-        ]
         raw_abilities = app_state.reference_data.get(
             "abilities",
             [],
@@ -422,13 +407,6 @@ class MyTeamView:
             self.ability_options
         )
 
-        self.ability_suggestions = [
-            ft.AutoCompleteSuggestion(
-                key=ability_name,
-                value=ability_name,
-            )
-            for ability_name in self.ability_options
-        ]
         self.on_team_updated = on_team_updated
         self.on_journey_loaded = on_journey_loaded
         self.on_journey_updated = on_journey_updated
@@ -444,13 +422,6 @@ class MyTeamView:
             and move["Move"]
         }
         self.move_options = sorted(self.move_lookup)
-        self.move_suggestions = [
-            ft.AutoCompleteSuggestion(
-                key=move_name,
-                value=move_name,
-            )
-            for move_name in self.move_options
-        ]
         self.working_team = deepcopy(self.team_data)
         self.saved_team_snapshot = deepcopy(self.team_data)
         self.working_box = deepcopy(self.box_data)
@@ -2148,6 +2119,79 @@ class MyTeamView:
             self.on_team_updated(self.app_state.team_data)
         self.page.update()
 
+    def _autocomplete_options_for_column(
+        self,
+        column: str,
+    ) -> list[str]:
+        """Return the validation catalog used by one autocomplete column."""
+
+        if column == "Pokemon":
+            return self.pokemon_options
+        if column in {"Type1", "Type2"}:
+            return self.type_options
+        if column == "Ability":
+            return self.ability_options
+        if column == "Held Item":
+            return self.item_options
+        if column.startswith("Move"):
+            return self.move_options
+        return []
+
+    def _filtered_autocomplete_suggestions(
+        self,
+        column: str,
+        query: str,
+    ) -> list[ft.AutoCompleteSuggestion]:
+        """Build a small suggestion list instead of attaching a full catalog."""
+
+        normalized_query = query.strip().casefold()
+        if not normalized_query:
+            return []
+
+        options = self._autocomplete_options_for_column(column)
+
+        prefix_matches: list[str] = []
+        contains_matches: list[str] = []
+
+        for option in options:
+            normalized_option = option.casefold()
+            if normalized_option.startswith(normalized_query):
+                prefix_matches.append(option)
+            elif normalized_query in normalized_option:
+                contains_matches.append(option)
+
+            if (
+                len(prefix_matches) + len(contains_matches)
+                >= AUTOCOMPLETE_SUGGESTION_LIMIT * 2
+            ):
+                break
+
+        matches = (
+            prefix_matches + contains_matches
+        )[:AUTOCOMPLETE_SUGGESTION_LIMIT]
+
+        return [
+            ft.AutoCompleteSuggestion(
+                key=option,
+                value=option,
+            )
+            for option in matches
+        ]
+
+    def _refresh_autocomplete_suggestions(
+        self,
+        control: ft.AutoComplete,
+        column: str,
+        query: str,
+    ) -> None:
+        """Refresh only the edited autocomplete's compact suggestion list."""
+
+        control.suggestions = self._filtered_autocomplete_suggestions(
+            column,
+            query,
+        )
+        control.update()
+
     def _build_editor_table(self) -> ft.Control:
         table = ft.DataTable(
             columns=[
@@ -2221,7 +2265,10 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                suggestions=self.pokemon_suggestions,
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
                 suggestions_max_height=240,
                 width=165,
                 on_change=(
@@ -2302,13 +2349,10 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                suggestions=[
-                    ft.AutoCompleteSuggestion(
-                        key=pokemon_type,
-                        value=pokemon_type,
-                    )
-                    for pokemon_type in self.type_options
-                ],
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
                 suggestions_max_height=240,
                 width=125,
                 on_change=(
@@ -2339,7 +2383,10 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                suggestions=self.ability_suggestions,
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
                 suggestions_max_height=240,
                 width=165,
                 on_change=(
@@ -2370,7 +2417,10 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                suggestions=self.item_suggestions,
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
                 suggestions_max_height=240,
                 width=165,
                 on_change=(
@@ -2401,7 +2451,10 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                suggestions=self.move_suggestions,
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
                 suggestions_max_height=240,
                 width=165,
                 on_change=(
@@ -2536,6 +2589,12 @@ class MyTeamView:
         pending_value = (
             event.control.value or ""
         ).strip()
+
+        self._refresh_autocomplete_suggestions(
+            event.control,
+            column,
+            pending_value,
+        )
 
         self.page.run_task(
             self._commit_autocomplete_after_delay,
