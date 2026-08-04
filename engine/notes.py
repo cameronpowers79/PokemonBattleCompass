@@ -627,7 +627,7 @@ def get_status_boosted_move_notes(attacker, team_status_effects):
 
 def build_offensive_ohko_note(
     minimum_damage,
-    average_damage,
+    maximum_damage,
     target_hp,
     team_moves_second,
     likely_survives_first_hit,
@@ -636,7 +636,7 @@ def build_offensive_ohko_note(
     """Build an OHKO note from a modeled damage range.
 
     "Likely" means the minimum modeled roll reaches the target's modeled HP.
-    "Possible" means the average modeled roll reaches the target's modeled HP,
+    "Possible" means the maximum modeled roll reaches the target's modeled HP,
     but the minimum roll does not.
 
     The language remains intentionally non-promissory because the Compass
@@ -645,7 +645,7 @@ def build_offensive_ohko_note(
 
     if (
         minimum_damage is None
-        or average_damage is None
+        or maximum_damage is None
         or target_hp is None
         or target_hp <= 0
     ):
@@ -654,7 +654,7 @@ def build_offensive_ohko_note(
     meets_likely_ohko = minimum_damage >= target_hp
     meets_possible_ohko = (
         not meets_likely_ohko
-        and average_damage >= target_hp
+        and maximum_damage >= target_hp
     )
 
     if (
@@ -686,15 +686,15 @@ def build_offensive_ohko_note(
 def build_incoming_ohko_note(
     is_immune,
     minimum_damage,
-    average_damage,
+    maximum_damage,
     target_hp,
 ):
-    """Build an incoming OHKO note from modeled damage rather than Move Score."""
+    """Build an incoming OHKO note from modeled minimum and maximum damage."""
 
     if (
         is_immune
         or minimum_damage is None
-        or average_damage is None
+        or maximum_damage is None
         or target_hp is None
         or target_hp <= 0
     ):
@@ -703,7 +703,7 @@ def build_incoming_ohko_note(
     if minimum_damage >= target_hp:
         return note(NOTE_WARNING, "Likely Incoming OHKO")
 
-    if average_damage >= target_hp:
+    if maximum_damage >= target_hp:
         return note(NOTE_CAUTION, "Possible Incoming OHKO")
 
     return None
@@ -731,10 +731,10 @@ def build_battle_notes(
     items=None,
     attacker_moves=None,
     offensive_min_damage=None,
-    offensive_average_damage=None,
+    offensive_max_damage=None,
     offensive_target_hp=None,
     incoming_min_damage=None,
-    incoming_average_damage=None,
+    incoming_max_damage=None,
     incoming_target_hp=None,
 ):
     if ability_rules is None:
@@ -758,7 +758,7 @@ def build_battle_notes(
     has_incoming_damage = worst_score > 0
     offensive_ohko_note = build_offensive_ohko_note(
         offensive_min_damage,
-        offensive_average_damage,
+        offensive_max_damage,
         offensive_target_hp,
         team_moves_second,
         likely_survives_first_hit,
@@ -768,7 +768,7 @@ def build_battle_notes(
     incoming_ohko_note = build_incoming_ohko_note(
         is_immune,
         incoming_min_damage,
-        incoming_average_damage,
+        incoming_max_damage,
         incoming_target_hp,
     )
 

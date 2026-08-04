@@ -187,7 +187,7 @@ def calculate_damage_range(
     items=None,
     ability_rules=None,
 ):
-    """Estimate minimum and average damage using the in-game formula shape.
+    """Estimate minimum and maximum damage using the in-game formula shape.
 
     The estimate uses the same modeled stats and multipliers as Move Score,
     then applies the Gen VIII random damage range. It intentionally assumes
@@ -302,14 +302,14 @@ def calculate_damage_range(
         int(base_damage * fixed_modifier * 0.85),
         1,
     )
-    average_per_hit = max(
-        int(base_damage * fixed_modifier * 0.925),
+    maximum_per_hit = max(
+        int(base_damage * fixed_modifier),
         1,
     )
 
     return (
         minimum_per_hit * hits,
-        average_per_hit * hits,
+        maximum_per_hit * hits,
     )
 
 
@@ -907,7 +907,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         (
             offensive_min_damage,
-            offensive_average_damage,
+            offensive_max_damage,
         ) = calculate_damage_range(
             pokemon,
             opponent,
@@ -918,7 +918,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         (
             incoming_min_damage,
-            incoming_average_damage,
+            incoming_max_damage,
         ) = calculate_damage_range(
             opponent,
             pokemon,
@@ -929,9 +929,14 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         team_member_hp = get_stat(pokemon, "HP")
         incoming_hp_ratio = (
-            incoming_average_damage / team_member_hp
+            (
+                incoming_min_damage + incoming_max_damage
+            )
+            / 2
+            / team_member_hp
             if (
-                incoming_average_damage is not None
+                incoming_min_damage is not None
+                and incoming_max_damage is not None
                 and team_member_hp > 0
             )
             else None
@@ -982,10 +987,10 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             attacker_moves,
             offensive_min_damage,
-            offensive_average_damage,
+            offensive_max_damage,
             offensive_target_hp,
             incoming_min_damage,
-            incoming_average_damage,
+            incoming_max_damage,
             team_member_hp,
         )
 
@@ -1070,10 +1075,10 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 items,
                 attacker_moves,
                 offensive_min_damage,
-                offensive_average_damage,
+                offensive_max_damage,
                 offensive_target_hp,
                 incoming_min_damage,
-                incoming_average_damage,
+                incoming_max_damage,
                 team_member_hp,
             )
         })

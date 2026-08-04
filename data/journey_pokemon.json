@@ -7102,24 +7102,17 @@
     "acquire_as": "Galarian Yamask",
     "marker_pokemon": "Galarian Yamask",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/yamask-galar.png",
-    "required_badge": 3,
+    "required_badge": 0,
     "primary_acquisition": {
-      "method": "wild_encounter",
-      "location": "Route 6",
+      "method": "max_raid_battle",
+      "location": "Watchtower Ruins",
       "map_locations": [
-        "route_6"
+        "watchtower_ruins"
       ],
-      "encounters": [
-        {
-          "location": "Route 6",
-          "method": "Overworld",
-          "weather": "All Weather",
-          "rarity_percent": 35,
-          "level_min": 29,
-          "level_max": 33
-        }
+      "raid_dens": [
+        47
       ],
-      "availability_note": "Catch Galarian Yamask on Route 6. To evolve it into Runerigus, have it lose at least 49 HP without fainting, then walk beneath the stone arch in Dusty Bowl."
+      "availability_note": "Catch Galarian Yamask in Max Raid Battle in Watchtower Ruins or on Route 6. To evolve it into Runerigus, have it lose at least 49 HP without fainting, then walk beneath the stone arch in Dusty Bowl."
     },
     "evolution_summary": "Special evolution method",
     "evolution_steps": [
@@ -7128,6 +7121,26 @@
         "to": "Runerigus",
         "method": "special",
         "condition": "Take at least 49 HP of damage without fainting, then pass beneath the large stone arch in Dusty Bowl."
+      }
+    ],
+    "alternate_acquisitions": [
+      {
+        "method": "wild_encounter",
+        "location": "Route 6",
+        "required_badge": 3,
+        "map_locations": [
+          "route_6"
+        ],
+        "encounters": [
+          {
+          "location": "Route 6",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 35,
+          "level_min": 29,
+          "level_max": 33
+          }
+        ]
       }
     ],
     "required_items": [],
