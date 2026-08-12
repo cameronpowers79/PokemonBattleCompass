@@ -15,8 +15,8 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-import flet as ft
 
+from ui.storage.storage_backend import StorageBackend
 from ui.storage.journey_storage import (
     JourneyLoadResult,
     clear_journey,
@@ -41,11 +41,11 @@ class AppState:
 
     def __init__(
         self,
-        page: ft.Page,
         *,
+        storage: StorageBackend,
         reference_data: ReferenceData,
     ) -> None:
-        self.page = page
+        self.storage = storage
         self.reference_data = reference_data
 
         self.journey: dict | None = None
@@ -320,7 +320,7 @@ class AppState:
         """Load persistent Journey state during application startup."""
 
         result = await load_journey(
-            self.page
+            self.storage
         )
 
         self._apply_load_result(result)
@@ -402,7 +402,7 @@ class AppState:
         )
 
         save_succeeded = await save_journey(
-            self.page,
+            self.storage,
             replacement_journey,
         )
 
@@ -447,7 +447,7 @@ class AppState:
         imported_journey = deepcopy(journey)
 
         save_succeeded = await save_journey(
-            self.page,
+            self.storage,
             imported_journey,
         )
 
@@ -502,7 +502,7 @@ class AppState:
         self.journey["team"] = updated_team
 
         save_succeeded = await save_journey(
-            self.page,
+            self.storage,
             self.journey,
         )
 
@@ -643,7 +643,7 @@ class AppState:
         )
 
         save_succeeded = await save_journey(
-            self.page,
+            self.storage,
             self.journey,
         )
 
@@ -690,7 +690,7 @@ class AppState:
         }
 
         save_succeeded = await save_journey(
-            self.page,
+            self.storage,
             self.journey,
         )
 
@@ -721,7 +721,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -768,7 +768,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -826,7 +826,7 @@ class AppState:
         self.journey["my_journey"] = updated_my_journey
 
         try:
-            save_succeeded = await save_journey(self.page, self.journey)
+            save_succeeded = await save_journey(self.storage, self.journey)
         except ValueError:
             if previous_my_journey is None:
                 self.journey.pop("my_journey", None)
@@ -900,7 +900,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -1093,7 +1093,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -1146,7 +1146,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -1195,7 +1195,7 @@ class AppState:
         self.journey["my_journey"] = updated_my_journey
 
         try:
-            save_succeeded = await save_journey(self.page, self.journey)
+            save_succeeded = await save_journey(self.storage, self.journey)
         except ValueError:
             if previous_my_journey is None:
                 self.journey.pop("my_journey", None)
@@ -1229,7 +1229,7 @@ class AppState:
 
         try:
             save_succeeded = await save_journey(
-                self.page,
+                self.storage,
                 self.journey,
             )
         except ValueError:
@@ -1265,7 +1265,7 @@ class AppState:
         """Clear persistent and in-memory Journey state."""
 
         clear_succeeded = await clear_journey(
-            self.page
+            self.storage
         )
 
         if not clear_succeeded:

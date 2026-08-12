@@ -629,15 +629,21 @@ def build_offensive_ohko_note(
     minimum_damage,
     maximum_damage,
     target_hp,
+    possible_minimum_damage,
+    possible_maximum_damage,
+    possible_target_hp,
     team_moves_second,
     likely_survives_first_hit,
     has_incoming_damage,
 ):
     """Build an OHKO note from a modeled damage range.
 
-    "Likely" means the minimum modeled roll reaches the target's modeled HP.
-    "Possible" means the maximum modeled roll reaches the target's modeled HP,
-    but the minimum roll does not.
+    "Likely" remains conservative: the minimum modeled roll must reach the
+    target's modeled HP using the opponent record's full 31-IV approximation.
+
+    "Possible" is intentionally a little less strict so high-HP targets do
+    not suppress every useful KO note. For that branch, the Compass checks the
+    maximum modeled roll against an average-IV bulk estimate (16 IVs).
 
     The language remains intentionally non-promissory because the Compass
     cannot know every live battle-state choice, including defensive boosts.
@@ -652,10 +658,22 @@ def build_offensive_ohko_note(
         return None
 
     meets_likely_ohko = minimum_damage >= target_hp
-    meets_possible_ohko = (
-        not meets_likely_ohko
-        and maximum_damage >= target_hp
-    )
+
+    if (
+        possible_minimum_damage is None
+        or possible_maximum_damage is None
+        or possible_target_hp is None
+        or possible_target_hp <= 0
+    ):
+        meets_possible_ohko = (
+            not meets_likely_ohko
+            and maximum_damage >= target_hp
+        )
+    else:
+        meets_possible_ohko = (
+            not meets_likely_ohko
+            and possible_maximum_damage >= possible_target_hp
+        )
 
     if (
         team_moves_second
@@ -733,6 +751,9 @@ def build_battle_notes(
     offensive_min_damage=None,
     offensive_max_damage=None,
     offensive_target_hp=None,
+    offensive_possible_min_damage=None,
+    offensive_possible_max_damage=None,
+    offensive_possible_target_hp=None,
     incoming_min_damage=None,
     incoming_max_damage=None,
     incoming_target_hp=None,
@@ -760,6 +781,9 @@ def build_battle_notes(
         offensive_min_damage,
         offensive_max_damage,
         offensive_target_hp,
+        offensive_possible_min_damage,
+        offensive_possible_max_damage,
+        offensive_possible_target_hp,
         team_moves_second,
         likely_survives_first_hit,
         has_incoming_damage,

@@ -46,6 +46,8 @@ class StrongOptionData:
     best_move: str
     best_move_type: str
     best_move_type_badge_src: str
+    effectiveness_label: str
+    effectiveness_color: str
     notes: list[StrongOptionNote]
 
 
@@ -329,6 +331,20 @@ class OtherStrongOptions(ft.Container):
                         vertical_alignment=(
                             ft.CrossAxisAlignment.CENTER
                         ),
+                    ),
+                    ft.Container(
+                        content=ft.Text(
+                            option.effectiveness_label,
+                            size=13,
+                            weight=ft.FontWeight.BOLD,
+                            color=option.effectiveness_color,
+                        ),
+                        padding=ft.Padding.symmetric(
+                            horizontal=12,
+                            vertical=7,
+                        ),
+                        bgcolor="#182A24",
+                        border_radius=9,
                     ),
                 ],
             ),

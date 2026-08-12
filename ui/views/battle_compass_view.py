@@ -1343,6 +1343,18 @@ class BattleCompassView:
                     )
                 )
             ),
+            effectiveness_label=(
+                get_effectiveness_label(
+                    matchup.best_move_type_multiplier,
+                    mode="offense",
+                )
+            ),
+            effectiveness_color=(
+                self._effectiveness_color(
+                    matchup.best_move_type_multiplier,
+                    mode="offense",
+                )
+            ),
             notes=[
                 StrongOptionNote(
                     icon=note.icon,

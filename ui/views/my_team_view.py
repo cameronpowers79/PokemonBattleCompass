@@ -17,7 +17,7 @@ from ui.storage.journey_storage import (
     parse_journey_export,
     serialize_journey_export,
 )
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
 from pathlib import Path
 from typing import cast
@@ -311,9 +311,13 @@ class MyTeamView:
         on_journey_updated: (
             Callable[[], None] | None
         ) = None,
+        on_scroll_to: (
+            Callable[..., Awaitable[None]] | None
+        ) = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
+        self.on_scroll_to = on_scroll_to
         self.team_data = app_state.team_data
         self.box_data = app_state.box_data
         self.moves_data = moves_data
@@ -464,6 +468,41 @@ class MyTeamView:
             and str(item.get("name", "")).strip()
             and str(item.get("id", "")).strip()
         }
+
+        try:
+            raw_journey_pokemon = json.loads(
+                (DATA_DIR / "journey_pokemon.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            raw_journey_pokemon = []
+
+        self.pokemon_type_lookup: dict[str, tuple[str, str]] = {}
+        for family in raw_journey_pokemon:
+            if not isinstance(family, dict):
+                continue
+            stage_types = family.get("types", {})
+            if not isinstance(stage_types, dict):
+                continue
+            for pokemon_name, pokemon_types in stage_types.items():
+                if (
+                    not isinstance(pokemon_name, str)
+                    or not isinstance(pokemon_types, list)
+                    or not pokemon_types
+                ):
+                    continue
+                type1 = str(pokemon_types[0] or "").strip()
+                type2 = (
+                    str(pokemon_types[1] or "").strip()
+                    if len(pokemon_types) > 1
+                    else ""
+                )
+                if type1:
+                    self.pokemon_type_lookup[pokemon_name.strip()] = (
+                        type1,
+                        type2,
+                    )
 
         self.box_table_host = ft.Container()
         self.move_to_party_button: ft.Button | None = None
@@ -728,6 +767,23 @@ class MyTeamView:
         del event
         self.discard_unsaved_changes()
 
+    def _apply_known_pokemon_types(
+        self,
+        record: dict,
+        pokemon_name: str,
+    ) -> bool:
+        """Populate Type1/Type2 when the selected Pokémon is known."""
+
+        known_types = self.pokemon_type_lookup.get(
+            pokemon_name.strip()
+        )
+        if known_types is None:
+            return False
+
+        record["Type1"] = known_types[0]
+        record["Type2"] = known_types[1]
+        return True
+
     def begin_prefilled_pokemon_entry(
         self,
         pokemon_name: str,
@@ -741,6 +797,10 @@ class MyTeamView:
         if len(self.working_team) < 6:
             record = self._blank_pokemon_record()
             record["Pokemon"] = normalized_name
+            self._apply_known_pokemon_types(
+                record,
+                normalized_name,
+            )
             self.working_team.append(record)
             self._refresh_after_prefilled_entry()
             return
@@ -814,6 +874,10 @@ class MyTeamView:
         outgoing = self.working_team[party_index]
         record = self._blank_pokemon_record()
         record["Pokemon"] = pokemon_name
+        self._apply_known_pokemon_types(
+            record,
+            pokemon_name,
+        )
 
         self.working_team[party_index] = record
         self.working_box.append(outgoing)
@@ -836,14 +900,22 @@ class MyTeamView:
         self.page.update()
         self.page.run_task(self._scroll_to_team_editor)
 
-    async def _scroll_to_team_editor(self) -> None:
-        """Place a Journey-prefilled Pokémon editor row in view."""
+    async def _scroll_to_team_editor(
+        self,
+        *,
+        offset: float = 0,
+        delay: float = 0.10,
+    ) -> None:
+        """Place the Team Editor in view using the AppShell scroll host."""
 
-        # Navigation to My Team happens immediately after the prefill call.
-        # Give AppShell one frame to swap views before resetting the page scroll.
-        await asyncio.sleep(0.10)
-        await self.page.scroll_to(
-            offset=0,
+        if self.on_scroll_to is None:
+            return
+
+        # Give AppShell one frame to finish any view/dialog transition before
+        # moving the shell-owned scroll host.
+        await asyncio.sleep(delay)
+        await self.on_scroll_to(
+            offset=offset,
             duration=360,
             curve=ft.AnimationCurve.EASE_OUT_CUBIC,
         )
@@ -955,7 +1027,8 @@ class MyTeamView:
                 ),
                 content=ft.Container(
                     content=self.party_management_host,
-                    width=520,
+                    width=560,
+                    height=690,
                 ),
                 actions=cast(
                     list[ft.Control],
@@ -1025,6 +1098,7 @@ class MyTeamView:
             controls=controls,
             spacing=10,
             tight=True,
+            scroll=ft.ScrollMode.AUTO,
         )
 
     def _build_party_member_row(
@@ -2343,38 +2417,16 @@ class MyTeamView:
                 ),
             )
         elif column in {"Type1", "Type2"}:
-            control = ft.AutoComplete(
+            control = ft.TextField(
                 value=(
                     str(value)
                     if value
                     else ""
                 ),
-                suggestions=self._filtered_autocomplete_suggestions(
-                    column,
-                    str(value) if value else "",
-                ),
-                suggestions_max_height=240,
                 width=125,
-                on_change=(
-                    lambda event,
-                    row=row_index,
-                    field=column:
-                    self._handle_autocomplete_change(
-                        event,
-                        row,
-                        field,
-                    )
-                ),
-                on_select=(
-                    lambda event,
-                    row=row_index,
-                    field=column:
-                    self._handle_autocomplete_select(
-                        event,
-                        row,
-                        field,
-                    )
-                ),
+                text_size=13,
+                dense=True,
+                read_only=True,
             )
         elif column == "Ability":
             control = ft.AutoComplete(
@@ -2707,6 +2759,19 @@ class MyTeamView:
         self.working_team[
             row_index
         ][column] = value
+
+        if column == "Pokemon" and isinstance(value, str):
+            record = self.working_team[row_index]
+            if self._apply_known_pokemon_types(
+                record,
+                value,
+            ):
+                for type_column in ("Type1", "Type2"):
+                    type_control = self.editor_controls.get(
+                        (row_index, type_column)
+                    )
+                    if type_control is not None:
+                        type_control.value = record[type_column]
 
         self._update_dirty_state()
         self.page.update()
@@ -4782,11 +4847,15 @@ class MyTeamView:
             items_data=self.items_data,
         )
 
+        current_item_name = str(
+            recommendation_record.get("Held Item") or ""
+        ).strip()
         equipped_item = self._normalize_item_name(
-            str(recommendation_record.get("Held Item") or "")
+            current_item_name
         )
         if equipped_item in {"", "none", "—", "-"}:
             equipped_item = ""
+            current_item_name = ""
 
         if equipped_item:
             recommendations = [
@@ -4814,6 +4883,7 @@ class MyTeamView:
                     content=self._build_item_recommendation_content(
                         pokemon_name,
                         recommendations,
+                        current_item_name=current_item_name,
                         had_equipped_item=bool(equipped_item),
                     ),
                     width=620,
@@ -4837,6 +4907,7 @@ class MyTeamView:
         pokemon_name: str,
         recommendations: list[ItemRecommendation],
         *,
+        current_item_name: str,
         had_equipped_item: bool,
     ) -> ft.Control:
         """Build the scrollable recommendation-dialog content."""
@@ -4881,7 +4952,8 @@ class MyTeamView:
         else:
             controls.extend(
                 self._build_item_recommendation_card(
-                    recommendation
+                    recommendation,
+                    current_item_name=current_item_name,
                 )
                 for recommendation in recommendations
             )
@@ -4892,9 +4964,241 @@ class MyTeamView:
             scroll=ft.ScrollMode.AUTO,
         )
 
+    def _modeled_item_record(self, item_name: str) -> dict | None:
+        """Return one modeled held-item record by normalized name."""
+
+        normalized_name = self._normalize_item_name(item_name)
+        if not normalized_name:
+            return None
+        for item in self.items_data:
+            if not isinstance(item, dict):
+                continue
+            modeled_name = str(item.get("Item") or "").strip()
+            if self._normalize_item_name(modeled_name) == normalized_name:
+                return item
+        return None
+
+    @staticmethod
+    def _format_percent(value: float) -> str:
+        rounded = round(value, 2)
+        return (
+            f"{int(rounded)}%"
+            if float(rounded).is_integer()
+            else f"{rounded:g}%"
+        )
+
+    @staticmethod
+    def _item_effect_dimensions(item: dict) -> dict[str, dict[str, object]]:
+        """Translate modeled item metadata into comparable effects."""
+
+        effects: dict[str, dict[str, object]] = {}
+        item_name = str(item.get("Item") or "").strip()
+        effect_type = str(item.get("EffectType") or "").strip()
+        stat = str(item.get("StatAffected") or "").strip()
+        move_type = str(item.get("MoveTypeAffected") or "").strip()
+        move_category = str(item.get("MoveCategoryAffected") or "").strip()
+        condition = str(item.get("Condition") or "").strip()
+        try:
+            multiplier = float(item.get("Multiplier", 1) or 1)
+        except (TypeError, ValueError):
+            multiplier = 1.0
+
+        if effect_type == "DamageMultiplier":
+            amount = (multiplier - 1.0) * 100
+            if move_type and move_type != "None":
+                key = f"damage:type:{move_type.casefold()}"
+                label = f"{move_type} attack damage"
+            elif move_category and move_category != "None":
+                key = f"damage:category:{move_category.casefold()}"
+                label = f"{move_category} attack damage"
+            elif condition == "SuperEffective":
+                key = "damage:super_effective"
+                label = "Super-effective attack damage"
+            elif condition == "DamagingMove":
+                key = "damage:all_damaging"
+                label = "Damaging move damage"
+            else:
+                key = "damage:general"
+                label = "Attack damage"
+            effects[key] = {"label": label, "amount": amount, "beneficial": True}
+
+        elif effect_type == "StatMultiplier":
+            amount = (multiplier - 1.0) * 100
+            stat_labels = {
+                "ATK": "Attack", "DEF": "Defense",
+                "SPA": "Special Attack", "SPD": "Special Defense",
+                "SPE": "Speed", "DEF/SPD": "Defense and Special Defense",
+            }
+            label = stat_labels.get(stat, stat or "Stat")
+            effects[f"stat:{stat.casefold()}"] = {
+                "label": label, "amount": amount, "beneficial": True
+            }
+
+        elif effect_type == "Healing":
+            amount = multiplier * 100
+            if condition in {"EndOfTurn", "PoisonType"}:
+                effects["healing:end_turn"] = {
+                    "label": "End-of-turn HP recovery",
+                    "amount": amount, "beneficial": True, "suffix": " max HP",
+                }
+            elif condition == "DamageDealt":
+                effects["healing:damage_dealt"] = {
+                    "label": "HP recovered from damage dealt",
+                    "amount": amount, "beneficial": True,
+                }
+
+        elif effect_type == "Immunity" and move_type and move_type != "None":
+            effects[f"immunity:{move_type.casefold()}"] = {
+                "label": (
+                    f"{move_type} immunity until the holder is hit"
+                    if condition == "UntilHit"
+                    else f"{move_type} immunity"
+                ),
+                "amount": None, "beneficial": True,
+            }
+
+        elif effect_type == "Tactical":
+            if item_name == "Rocky Helmet":
+                effects["tactical:contact_damage"] = {
+                    "label": "Damages the opponent when contacted (1/6 max HP)",
+                    "amount": None, "beneficial": True,
+                }
+            elif item_name == "Focus Sash":
+                effects["tactical:focus_sash"] = {
+                    "label": "Can survive an otherwise lethal hit at full HP",
+                    "amount": None, "beneficial": True,
+                }
+
+        if item_name in {"Choice Band", "Choice Scarf", "Choice Specs"}:
+            effects["drawback:move_lock"] = {
+                "label": "Locked into the first selected move",
+                "reverse_label": "Can freely change moves",
+                "amount": None, "beneficial": False,
+            }
+        if item_name == "Assault Vest":
+            effects["drawback:no_status_moves"] = {
+                "label": "Cannot select status moves",
+                "reverse_label": "Can use status moves",
+                "amount": None, "beneficial": False,
+            }
+        if item_name == "Life Orb":
+            effects["drawback:life_orb_recoil"] = {
+                "label": "Loses 10% max HP after dealing damage",
+                "reverse_label": "No Life Orb recoil",
+                "amount": None, "beneficial": False,
+            }
+        return effects
+
+    def _item_comparison_lines(
+        self,
+        current_item_name: str,
+        recommended_item_name: str,
+    ) -> list[tuple[str, str]]:
+        """Return concise gains/losses when switching modeled items."""
+
+        if not current_item_name:
+            return []
+        current_item = self._modeled_item_record(current_item_name)
+        recommended_item = self._modeled_item_record(recommended_item_name)
+        if current_item is None or recommended_item is None:
+            return []
+        current_effects = self._item_effect_dimensions(current_item)
+        recommended_effects = self._item_effect_dimensions(recommended_item)
+        lines: list[tuple[str, str]] = []
+        all_keys = list(dict.fromkeys([*current_effects, *recommended_effects]))
+
+        for key in all_keys:
+            current = current_effects.get(key)
+            recommended = recommended_effects.get(key)
+            if current is not None and recommended is not None:
+                ca, ra = current.get("amount"), recommended.get("amount")
+                if isinstance(ca, (int, float)) and isinstance(ra, (int, float)):
+                    delta = float(ra) - float(ca)
+                    if abs(delta) < 0.005:
+                        continue
+                    beneficial = bool(recommended.get("beneficial", True))
+                    improves = delta > 0 if beneficial else delta < 0
+                    direction = "up" if improves else "down"
+                    sign = "+" if delta > 0 else "−"
+                    label = str(recommended.get("label") or current.get("label") or "Effect")
+                    suffix = str(recommended.get("suffix") or current.get("suffix") or "")
+                    lines.append((
+                        direction,
+                        f"{label} {sign}{self._format_percent(abs(delta))}{suffix}",
+                    ))
+                continue
+
+            effect = recommended or current
+            if effect is None:
+                continue
+            beneficial = bool(effect.get("beneficial", True))
+            is_added = recommended is not None
+            if beneficial:
+                direction = "up" if is_added else "down"
+                label = str(effect.get("label") or "Effect")
+                amount = effect.get("amount")
+                if isinstance(amount, (int, float)):
+                    sign = "+" if is_added else "−"
+                    suffix = str(effect.get("suffix") or "")
+                    label = f"{label} {sign}{self._format_percent(abs(float(amount)))}{suffix}"
+            else:
+                direction = "down" if is_added else "up"
+                label = str(
+                    (effect.get("label") if is_added else effect.get("reverse_label"))
+                    or effect.get("label") or "Effect"
+                )
+            lines.append((direction, label))
+        return lines
+
+    def _build_item_comparison(
+        self,
+        current_item_name: str,
+        recommended_item_name: str,
+    ) -> ft.Control | None:
+        """Build the contextual tradeoff summary for a suggested item."""
+
+        if not current_item_name:
+            return None
+        lines = self._item_comparison_lines(
+            current_item_name, recommended_item_name
+        )
+        controls: list[ft.Control] = [
+            ft.Text(
+                f"Compared with {current_item_name}",
+                size=14, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY,
+            )
+        ]
+        if not lines:
+            controls.append(ft.Text(
+                "No modeled effect change.", size=13, color=TEXT_MUTED, italic=True
+            ))
+        else:
+            for direction, line_text in lines:
+                is_gain = direction == "up"
+                controls.append(ft.Row(
+                    controls=[
+                        ft.Icon(
+                            ft.Icons.ARROW_UPWARD_ROUNDED if is_gain
+                            else ft.Icons.ARROW_DOWNWARD_ROUNDED,
+                            size=17, color=SUCCESS if is_gain else "#F59E7A",
+                        ),
+                        ft.Text(line_text, size=13, color=TEXT_SECONDARY, expand=True),
+                    ],
+                    spacing=7, vertical_alignment=ft.CrossAxisAlignment.START,
+                ))
+        return ft.Container(
+            content=ft.Column(controls=controls, spacing=6),
+            padding=ft.Padding.symmetric(horizontal=12, vertical=10),
+            bgcolor=SURFACE_RAISED,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=10,
+        )
+
     def _build_item_recommendation_card(
         self,
         recommendation: ItemRecommendation,
+        *,
+        current_item_name: str,
     ) -> ft.Control:
         """Build one unranked recommendation with actionable choices."""
 
@@ -4923,6 +5227,11 @@ class MyTeamView:
                 )
                 for reason in recommendation.reasons
             ],
+        )
+
+        comparison_control = self._build_item_comparison(
+            current_item_name,
+            recommendation.item,
         )
 
         catalog_item = self.journey_item_by_name.get(
@@ -5016,6 +5325,11 @@ class MyTeamView:
                             color=TEXT_PRIMARY,
                         ),
                         *reason_controls,
+                        *(
+                            [comparison_control]
+                            if comparison_control is not None
+                            else []
+                        ),
                         ft.Row(
                             controls=action_controls,
                             spacing=10,
@@ -5269,17 +5583,16 @@ class MyTeamView:
         self,
         event: ft.Event[ft.Button],
     ) -> None:
-        """Close the confirmation and briskly return to the Team Editor."""
+        """Close the confirmation and return to the Team Editor to save."""
 
         del event
 
         self.page.pop_dialog()
         self.page.update()
 
-        await self.page.scroll_to(
+        await self._scroll_to_team_editor(
             offset=350,
-            duration=450,
-            curve=ft.AnimationCurve.EASE_OUT_CUBIC,
+            delay=0.05,
         )
 
     def _add_recommended_item_to_checklist(

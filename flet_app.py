@@ -12,6 +12,7 @@ from pathlib import Path
 import flet as ft
 
 from ui.components.app_shell import AppShell
+from ui.storage.flet_preferences_backend import FletPreferencesBackend
 from ui.theme import configure_page
 from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import load_reference_data
@@ -35,8 +36,10 @@ async def main(page: ft.Page) -> None:
 
     reference_data = load_reference_data()
 
+    storage = FletPreferencesBackend(page)
+
     app_state = AppState(
-        page,
+        storage=storage,
         reference_data=reference_data,
     )
 
@@ -165,6 +168,7 @@ async def main(page: ft.Page) -> None:
             on_journey_updated=(
                 my_journey_view.refresh_from_app_state
             ),
+            on_scroll_to=scroll_app_shell,
         )
 
         about_view = AboutView(

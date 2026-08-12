@@ -40,7 +40,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/grookey/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Grookey": [
+        "Grass"
+      ],
+      "Thwackey": [
+        "Grass"
+      ],
+      "Rillaboom": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "cinderace",
@@ -83,7 +94,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/scorbunny/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Scorbunny": [
+        "Fire"
+      ],
+      "Raboot": [
+        "Fire"
+      ],
+      "Cinderace": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "inteleon",
@@ -126,7 +148,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sobble/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Sobble": [
+        "Water"
+      ],
+      "Drizzile": [
+        "Water"
+      ],
+      "Inteleon": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "orbeetle",
@@ -177,7 +210,20 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/blipbug/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Blipbug": [
+        "Bug"
+      ],
+      "Dottler": [
+        "Bug",
+        "Psychic"
+      ],
+      "Orbeetle": [
+        "Bug",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "butterfree",
@@ -220,7 +266,19 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/caterpie/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Caterpie": [
+        "Bug"
+      ],
+      "Metapod": [
+        "Bug"
+      ],
+      "Butterfree": [
+        "Bug",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "vikavolt",
@@ -269,7 +327,20 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/grubbin/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Grubbin": [
+        "Bug"
+      ],
+      "Charjabug": [
+        "Bug",
+        "Electric"
+      ],
+      "Vikavolt": [
+        "Bug",
+        "Electric"
+      ]
+    }
   },
   {
     "id": "noctowl",
@@ -314,7 +385,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/hoothoot/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Hoothoot": [
+        "Normal",
+        "Flying"
+      ],
+      "Noctowl": [
+        "Normal",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "corviknight",
@@ -365,7 +446,19 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/rookidee/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Rookidee": [
+        "Flying"
+      ],
+      "Corvisquire": [
+        "Flying"
+      ],
+      "Corviknight": [
+        "Flying",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "greedent",
@@ -410,7 +503,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/skwovet/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Skwovet": [
+        "Normal"
+      ],
+      "Greedent": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "unfezant",
@@ -461,7 +562,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pidove/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Pidove": [
+        "Normal",
+        "Flying"
+      ],
+      "Tranquill": [
+        "Normal",
+        "Flying"
+      ],
+      "Unfezant": [
+        "Normal",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "thievul",
@@ -506,7 +621,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/nickit/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Nickit": [
+        "Dark"
+      ],
+      "Thievul": [
+        "Dark"
+      ]
+    }
   },
   {
     "id": "obstagoon",
@@ -558,7 +681,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/zigzagoon/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Galarian Zigzagoon": [
+        "Dark",
+        "Normal"
+      ],
+      "Galarian Linoone": [
+        "Dark",
+        "Normal"
+      ],
+      "Obstagoon": [
+        "Dark",
+        "Normal"
+      ]
+    }
   },
   {
     "id": "dubwool",
@@ -603,7 +740,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wooloo/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Wooloo": [
+        "Normal"
+      ],
+      "Dubwool": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "shiftry",
@@ -660,7 +805,20 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/seedot/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Seedot": [
+        "Grass"
+      ],
+      "Nuzleaf": [
+        "Grass",
+        "Dark"
+      ],
+      "Shiftry": [
+        "Grass",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "drednaw",
@@ -705,7 +863,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/chewtle/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Chewtle": [
+        "Water"
+      ],
+      "Drednaw": [
+        "Water",
+        "Rock"
+      ]
+    }
   },
   {
     "id": "liepard",
@@ -750,7 +917,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/purrloin/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Purrloin": [
+        "Dark"
+      ],
+      "Liepard": [
+        "Dark"
+      ]
+    }
   },
   {
     "id": "boltund",
@@ -795,7 +970,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/yamper/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Yamper": [
+        "Electric"
+      ],
+      "Boltund": [
+        "Electric"
+      ]
+    }
   },
   {
     "id": "diggersby",
@@ -840,7 +1023,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/bunnelby/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Bunnelby": [
+        "Normal"
+      ],
+      "Diggersby": [
+        "Normal",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "cinccino",
@@ -891,7 +1083,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/minccino/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Minccino": [
+        "Normal"
+      ],
+      "Cinccino": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "tsareena",
@@ -942,7 +1142,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/bounsweet/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Bounsweet": [
+        "Grass"
+      ],
+      "Steenee": [
+        "Grass"
+      ],
+      "Tsareena": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "vileplume",
@@ -999,7 +1210,21 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/oddish/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Oddish": [
+        "Grass",
+        "Poison"
+      ],
+      "Gloom": [
+        "Grass",
+        "Poison"
+      ],
+      "Vileplume": [
+        "Grass",
+        "Poison"
+      ]
+    }
   },
   {
     "id": "bellossom",
@@ -1056,7 +1281,20 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/oddish/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Oddish": [
+        "Grass",
+        "Poison"
+      ],
+      "Gloom": [
+        "Grass",
+        "Poison"
+      ],
+      "Bellossom": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "roserade",
@@ -1113,7 +1351,21 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/budew/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Budew": [
+        "Grass",
+        "Poison"
+      ],
+      "Roselia": [
+        "Grass",
+        "Poison"
+      ],
+      "Roserade": [
+        "Grass",
+        "Poison"
+      ]
+    }
   },
   {
     "id": "pelipper",
@@ -1158,7 +1410,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wingull/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Wingull": [
+        "Water",
+        "Flying"
+      ],
+      "Pelipper": [
+        "Water",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "galvantula",
@@ -1203,7 +1465,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/joltik/locations.shtml",
-    "encounter_data_status": "verified_batch_1"
+    "encounter_data_status": "verified_batch_1",
+    "types": {
+      "Joltik": [
+        "Bug",
+        "Electric"
+      ],
+      "Galvantula": [
+        "Bug",
+        "Electric"
+      ]
+    }
   },
   {
     "id": "manectric",
@@ -1248,7 +1520,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/electrike/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Electrike": [
+        "Electric"
+      ],
+      "Manectric": [
+        "Electric"
+      ]
+    }
   },
   {
     "id": "ninetales",
@@ -1299,7 +1579,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/vulpix/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Vulpix": [
+        "Fire"
+      ],
+      "Ninetales": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "arcanine",
@@ -1350,7 +1638,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/growlithe/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Growlithe": [
+        "Fire"
+      ],
+      "Arcanine": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "vanilluxe",
@@ -1401,7 +1697,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/vanillite/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Vanillite": [
+        "Ice"
+      ],
+      "Vanillish": [
+        "Ice"
+      ],
+      "Vanilluxe": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "mamoswine",
@@ -1452,7 +1759,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/swinub/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Swinub": [
+        "Ice",
+        "Ground"
+      ],
+      "Piloswine": [
+        "Ice",
+        "Ground"
+      ],
+      "Mamoswine": [
+        "Ice",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "delibird",
@@ -1490,7 +1811,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/delibird/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Delibird": [
+        "Ice",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "glalie",
@@ -1535,7 +1862,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/snorunt/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Snorunt": [
+        "Ice"
+      ],
+      "Glalie": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "froslass",
@@ -1588,7 +1923,16 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/snorunt/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Snorunt": [
+        "Ice"
+      ],
+      "Froslass": [
+        "Ice",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "claydol",
@@ -1633,7 +1977,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/baltoy/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Baltoy": [
+        "Ground",
+        "Psychic"
+      ],
+      "Claydol": [
+        "Ground",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "mudsdale",
@@ -1678,7 +2032,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mudbray/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Mudbray": [
+        "Ground"
+      ],
+      "Mudsdale": [
+        "Ground"
+      ]
+    }
   },
   {
     "id": "crustle",
@@ -1723,7 +2085,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dwebble/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Dwebble": [
+        "Bug",
+        "Rock"
+      ],
+      "Crustle": [
+        "Bug",
+        "Rock"
+      ]
+    }
   },
   {
     "id": "golurk",
@@ -1768,7 +2140,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/golett/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Golett": [
+        "Ground",
+        "Ghost"
+      ],
+      "Golurk": [
+        "Ground",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "musharna",
@@ -1819,7 +2201,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/munna/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Munna": [
+        "Psychic"
+      ],
+      "Musharna": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "xatu",
@@ -1864,7 +2254,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/natu/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Natu": [
+        "Psychic"
+      ],
+      "Xatu": [
+        "Psychic",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "bewear",
@@ -1909,7 +2308,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/stufful/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Stufful": [
+        "Normal",
+        "Fighting"
+      ],
+      "Bewear": [
+        "Normal",
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "abomasnow",
@@ -1954,7 +2363,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/snover/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Snover": [
+        "Grass",
+        "Ice"
+      ],
+      "Abomasnow": [
+        "Grass",
+        "Ice"
+      ]
+    }
   },
   {
     "id": "kingler",
@@ -1999,7 +2418,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/krabby/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Krabby": [
+        "Water"
+      ],
+      "Kingler": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "quagsire",
@@ -2044,7 +2471,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wooper/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Wooper": [
+        "Water",
+        "Ground"
+      ],
+      "Quagsire": [
+        "Water",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "crawdaunt",
@@ -2089,7 +2526,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/corphish/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Corphish": [
+        "Water"
+      ],
+      "Crawdaunt": [
+        "Water",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "ninjask",
@@ -2134,7 +2580,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/nincada/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Nincada": [
+        "Bug",
+        "Ground"
+      ],
+      "Ninjask": [
+        "Bug",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "shedinja",
@@ -2180,7 +2636,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/nincada/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Nincada": [
+        "Bug",
+        "Ground"
+      ],
+      "Shedinja": [
+        "Bug",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "hitmonlee",
@@ -2226,7 +2692,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/tyrogue/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Tyrogue": [
+        "Fighting"
+      ],
+      "Hitmonlee": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "hitmonchan",
@@ -2272,7 +2746,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/tyrogue/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Tyrogue": [
+        "Fighting"
+      ],
+      "Hitmonchan": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "hitmontop",
@@ -2318,7 +2800,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/tyrogue/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Tyrogue": [
+        "Fighting"
+      ],
+      "Hitmontop": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "pangoro",
@@ -2363,7 +2853,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pancham/locations.shtml",
-    "encounter_data_status": "verified_batch_2"
+    "encounter_data_status": "verified_batch_2",
+    "types": {
+      "Pancham": [
+        "Fighting"
+      ],
+      "Pangoro": [
+        "Fighting",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "klinklang",
@@ -2414,7 +2913,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/klink/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Klink": [
+        "Steel"
+      ],
+      "Klang": [
+        "Steel"
+      ],
+      "Klinklang": [
+        "Steel"
+      ]
+    }
   },
   {
     "id": "vespiquen",
@@ -2459,7 +2969,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/combee/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Combee": [
+        "Bug",
+        "Flying"
+      ],
+      "Vespiquen": [
+        "Bug",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "bronzong",
@@ -2504,7 +3024,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/bronzor/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Bronzor": [
+        "Steel",
+        "Psychic"
+      ],
+      "Bronzong": [
+        "Steel",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "gardevoir",
@@ -2555,7 +3085,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/ralts/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Ralts": [
+        "Psychic",
+        "Fairy"
+      ],
+      "Kirlia": [
+        "Psychic",
+        "Fairy"
+      ],
+      "Gardevoir": [
+        "Psychic",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "gallade",
@@ -2612,7 +3156,21 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/ralts/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Ralts": [
+        "Psychic",
+        "Fairy"
+      ],
+      "Kirlia": [
+        "Psychic",
+        "Fairy"
+      ],
+      "Gallade": [
+        "Psychic",
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "drifblim",
@@ -2658,7 +3216,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/drifloon/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Drifloon": [
+        "Ghost",
+        "Flying"
+      ],
+      "Drifblim": [
+        "Ghost",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "eldegoss",
@@ -2704,7 +3272,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/gossifleur/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Gossifleur": [
+        "Grass"
+      ],
+      "Eldegoss": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "cherrim",
@@ -2750,7 +3326,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/cherubi/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Cherubi": [
+        "Grass"
+      ],
+      "Cherrim": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "skuntank",
@@ -2796,7 +3380,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/stunky/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Stunky": [
+        "Poison",
+        "Dark"
+      ],
+      "Skuntank": [
+        "Poison",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "seismitoad",
@@ -2847,7 +3441,20 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/tympole/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Tympole": [
+        "Water"
+      ],
+      "Palpitoad": [
+        "Water",
+        "Ground"
+      ],
+      "Seismitoad": [
+        "Water",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "dusknoir",
@@ -2898,7 +3505,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/duskull/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Duskull": [
+        "Ghost"
+      ],
+      "Dusclops": [
+        "Ghost"
+      ],
+      "Dusknoir": [
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "machamp",
@@ -2950,7 +3568,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/machop/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Machop": [
+        "Fighting"
+      ],
+      "Machoke": [
+        "Fighting"
+      ],
+      "Machamp": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "gengar",
@@ -3002,7 +3631,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/gastly/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Gastly": [
+        "Ghost",
+        "Poison"
+      ],
+      "Haunter": [
+        "Ghost",
+        "Poison"
+      ],
+      "Gengar": [
+        "Ghost",
+        "Poison"
+      ]
+    }
   },
   {
     "id": "gyarados",
@@ -3048,7 +3691,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/magikarp/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Magikarp": [
+        "Water"
+      ],
+      "Gyarados": [
+        "Water",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "seaking",
@@ -3094,7 +3746,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/goldeen/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Goldeen": [
+        "Water"
+      ],
+      "Seaking": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "octillery",
@@ -3140,7 +3800,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/remoraid/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Remoraid": [
+        "Water"
+      ],
+      "Octillery": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "cloyster",
@@ -3191,7 +3859,16 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/shellder/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Shellder": [
+        "Water"
+      ],
+      "Cloyster": [
+        "Water",
+        "Ice"
+      ]
+    }
   },
   {
     "id": "milotic",
@@ -3228,7 +3905,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/feebas/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Feebas": [
+        "Water"
+      ],
+      "Milotic": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "basculin",
@@ -3266,7 +3951,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/basculin/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Basculin": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "wishiwashi",
@@ -3305,7 +3995,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wishiwashi/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Wishiwashi": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "pyukumuku",
@@ -3343,7 +4038,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pyukumuku/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Pyukumuku": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "garbodor",
@@ -3388,7 +4088,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/trubbish/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Trubbish": [
+        "Poison"
+      ],
+      "Garbodor": [
+        "Poison"
+      ]
+    }
   },
   {
     "id": "centiskorch",
@@ -3434,7 +4142,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sizzlipede/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Sizzlipede": [
+        "Fire",
+        "Bug"
+      ],
+      "Centiskorch": [
+        "Fire",
+        "Bug"
+      ]
+    }
   },
   {
     "id": "coalossal",
@@ -3486,7 +4204,20 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/rolycoly/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Rolycoly": [
+        "Rock"
+      ],
+      "Carkol": [
+        "Rock",
+        "Fire"
+      ],
+      "Coalossal": [
+        "Rock",
+        "Fire"
+      ]
+    }
   },
   {
     "id": "dugtrio",
@@ -3531,7 +4262,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/diglett/locations.shtml",
-    "encounter_data_status": "verified_batch_3"
+    "encounter_data_status": "verified_batch_3",
+    "types": {
+      "Diglett": [
+        "Ground"
+      ],
+      "Dugtrio": [
+        "Ground"
+      ]
+    }
   },
   {
     "id": "excadrill",
@@ -3576,7 +4315,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/drilbur/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Drilbur": [
+        "Ground"
+      ],
+      "Excadrill": [
+        "Ground",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "gigalith",
@@ -3627,7 +4375,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/roggenrola/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Roggenrola": [
+        "Rock"
+      ],
+      "Boldore": [
+        "Rock"
+      ],
+      "Gigalith": [
+        "Rock"
+      ]
+    }
   },
   {
     "id": "conkeldurr",
@@ -3678,7 +4437,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/timburr/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Timburr": [
+        "Fighting"
+      ],
+      "Gurdurr": [
+        "Fighting"
+      ],
+      "Conkeldurr": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "swoobat",
@@ -3723,7 +4493,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/woobat/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Woobat": [
+        "Psychic",
+        "Flying"
+      ],
+      "Swoobat": [
+        "Psychic",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "noivern",
@@ -3768,7 +4548,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/noibat/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Noibat": [
+        "Flying",
+        "Dragon"
+      ],
+      "Noivern": [
+        "Flying",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "steelix",
@@ -3813,7 +4603,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/onix/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Onix": [
+        "Rock",
+        "Ground"
+      ],
+      "Steelix": [
+        "Steel",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "barraskewda",
@@ -3858,7 +4658,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/arrokuda/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Arrokuda": [
+        "Water"
+      ],
+      "Barraskewda": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "perrserker",
@@ -3904,7 +4712,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/meowth/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Galarian Meowth": [
+        "Steel"
+      ],
+      "Perrserker": [
+        "Steel"
+      ]
+    }
   },
   {
     "id": "persian",
@@ -3942,7 +4758,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/meowth/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Kantonian Meowth": [
+        "Normal"
+      ],
+      "Persian": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "alcremie",
@@ -3987,7 +4811,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/milcery/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Milcery": [
+        "Fairy"
+      ],
+      "Alcremie": [
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "ribombee",
@@ -4032,7 +4864,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/cutiefly/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Cutiefly": [
+        "Bug",
+        "Fairy"
+      ],
+      "Ribombee": [
+        "Bug",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "ferrothorn",
@@ -4077,7 +4919,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/ferroseed/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Ferroseed": [
+        "Grass",
+        "Steel"
+      ],
+      "Ferrothorn": [
+        "Grass",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "gourgeist",
@@ -4122,7 +4974,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pumpkaboo/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Pumpkaboo": [
+        "Ghost",
+        "Grass"
+      ],
+      "Gourgeist": [
+        "Ghost",
+        "Grass"
+      ]
+    }
   },
   {
     "id": "raichu",
@@ -4173,7 +5035,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/pikachu/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Pikachu": [
+        "Electric"
+      ],
+      "Raichu": [
+        "Electric"
+      ]
+    }
   },
   {
     "id": "vaporeon",
@@ -4216,7 +5086,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Vaporeon": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "jolteon",
@@ -4259,7 +5137,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Jolteon": [
+        "Electric"
+      ]
+    }
   },
   {
     "id": "flareon",
@@ -4302,7 +5188,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Flareon": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "espeon",
@@ -4339,7 +5233,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Espeon": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "umbreon",
@@ -4376,7 +5278,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Umbreon": [
+        "Dark"
+      ]
+    }
   },
   {
     "id": "leafeon",
@@ -4419,7 +5329,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Leafeon": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "glaceon",
@@ -4462,7 +5380,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Glaceon": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "sylveon",
@@ -4499,7 +5425,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/eevee/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Eevee": [
+        "Normal"
+      ],
+      "Sylveon": [
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "flapple",
@@ -4550,7 +5484,17 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/applin/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Applin": [
+        "Grass",
+        "Dragon"
+      ],
+      "Flapple": [
+        "Grass",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "meowstic",
@@ -4595,7 +5539,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/espurr/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Espurr": [
+        "Psychic"
+      ],
+      "Meowstic": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "slurpuff",
@@ -4640,7 +5592,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/swirlix/locations.shtml",
-    "encounter_data_status": "verified_batch_4"
+    "encounter_data_status": "verified_batch_4",
+    "types": {
+      "Swirlix": [
+        "Fairy"
+      ],
+      "Slurpuff": [
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "araquanid",
@@ -4685,7 +5645,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dewpider/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Dewpider": [
+        "Water",
+        "Bug"
+      ],
+      "Araquanid": [
+        "Water",
+        "Bug"
+      ]
+    }
   },
   {
     "id": "wynaut",
@@ -4717,7 +5687,12 @@
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wynaut/locations.shtml",
     "encounter_data_status": "verified_batch_5",
-    "acquisition_requirement": "Breed Wobbuffet while it is holding Lax Incense."
+    "acquisition_requirement": "Breed Wobbuffet while it is holding Lax Incense.",
+    "types": {
+      "Wynaut": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "wobbuffet",
@@ -4755,7 +5730,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wobbuffet/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Wobbuffet": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "sirfetch_d",
@@ -4800,7 +5780,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/farfetch'd/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Galarian Farfetch'd": [
+        "Fighting"
+      ],
+      "Sirfetch'd": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "lanturn",
@@ -4845,7 +5833,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/chinchou/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Chinchou": [
+        "Water",
+        "Electric"
+      ],
+      "Lanturn": [
+        "Water",
+        "Electric"
+      ]
+    }
   },
   {
     "id": "scrafty",
@@ -4890,7 +5888,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/scraggy/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Scraggy": [
+        "Dark",
+        "Fighting"
+      ],
+      "Scrafty": [
+        "Dark",
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "stunfisk",
@@ -4928,7 +5936,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/stunfisk/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Galarian Stunfisk": [
+        "Ground",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "shuckle",
@@ -4966,7 +5980,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/shuckle/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Shuckle": [
+        "Bug",
+        "Rock"
+      ]
+    }
   },
   {
     "id": "whiscash",
@@ -5011,7 +6031,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/barboach/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Barboach": [
+        "Water",
+        "Ground"
+      ],
+      "Whiscash": [
+        "Water",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "gastrodon",
@@ -5056,7 +6086,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/shellos/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Shellos": [
+        "Water",
+        "Ground"
+      ],
+      "Gastrodon": [
+        "Water",
+        "Ground"
+      ]
+    }
   },
   {
     "id": "golisopod",
@@ -5101,7 +6141,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wimpod/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Wimpod": [
+        "Bug",
+        "Water"
+      ],
+      "Golisopod": [
+        "Bug",
+        "Water"
+      ]
+    }
   },
   {
     "id": "barbaracle",
@@ -5146,7 +6196,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/binacle/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Binacle": [
+        "Rock",
+        "Water"
+      ],
+      "Barbaracle": [
+        "Rock",
+        "Water"
+      ]
+    }
   },
   {
     "id": "grimmsnarl",
@@ -5197,7 +6257,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/impidimp/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Impidimp": [
+        "Dark",
+        "Fairy"
+      ],
+      "Morgrem": [
+        "Dark",
+        "Fairy"
+      ],
+      "Grimmsnarl": [
+        "Dark",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "hatterene",
@@ -5248,7 +6322,19 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/hatenna/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Hatenna": [
+        "Psychic"
+      ],
+      "Hattrem": [
+        "Psychic"
+      ],
+      "Hatterene": [
+        "Psychic",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "salazzle",
@@ -5293,7 +6379,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/salandit/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Salandit": [
+        "Poison",
+        "Fire"
+      ],
+      "Salazzle": [
+        "Poison",
+        "Fire"
+      ]
+    }
   },
   {
     "id": "bisharp",
@@ -5338,7 +6434,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pawniard/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Pawniard": [
+        "Dark",
+        "Steel"
+      ],
+      "Bisharp": [
+        "Dark",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "throh",
@@ -5369,7 +6475,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/throh/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Throh": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "sawk",
@@ -5407,7 +6518,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sawk/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Sawk": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "weezing",
@@ -5452,7 +6568,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/koffing/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Koffing": [
+        "Poison"
+      ],
+      "Weezing": [
+        "Poison",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "sudowoodo",
@@ -5497,7 +6622,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/bonsly/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Bonsly": [
+        "Rock"
+      ],
+      "Sudowoodo": [
+        "Rock"
+      ]
+    }
   },
   {
     "id": "clefable",
@@ -5548,7 +6681,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/clefairy/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Clefairy": [
+        "Fairy"
+      ],
+      "Clefable": [
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "togekiss",
@@ -5605,7 +6746,20 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/togepi/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Togepi": [
+        "Fairy"
+      ],
+      "Togetic": [
+        "Fairy",
+        "Flying"
+      ],
+      "Togekiss": [
+        "Fairy",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "snorlax",
@@ -5642,7 +6796,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/munchlax/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Munchlax": [
+        "Normal"
+      ],
+      "Snorlax": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "whimsicott",
@@ -5685,7 +6847,17 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/cottonee/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Cottonee": [
+        "Grass",
+        "Fairy"
+      ],
+      "Whimsicott": [
+        "Grass",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "rhyperior",
@@ -5736,7 +6908,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/rhyhorn/locations.shtml",
-    "encounter_data_status": "verified_batch_5"
+    "encounter_data_status": "verified_batch_5",
+    "types": {
+      "Rhyhorn": [
+        "Ground",
+        "Rock"
+      ],
+      "Rhydon": [
+        "Ground",
+        "Rock"
+      ],
+      "Rhyperior": [
+        "Ground",
+        "Rock"
+      ]
+    }
   },
   {
     "id": "gothitelle",
@@ -5787,7 +6973,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/gothita/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Gothita": [
+        "Psychic"
+      ],
+      "Gothorita": [
+        "Psychic"
+      ],
+      "Gothitelle": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "escavalier",
@@ -5834,7 +7031,16 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/karrablast/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Karrablast": [
+        "Bug"
+      ],
+      "Escavalier": [
+        "Bug",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "accelgor",
@@ -5881,7 +7087,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/shelmet/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Shelmet": [
+        "Bug"
+      ],
+      "Accelgor": [
+        "Bug"
+      ]
+    }
   },
   {
     "id": "beheeyem",
@@ -5927,7 +7141,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/elgyem/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Elgyem": [
+        "Psychic"
+      ],
+      "Beheeyem": [
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "beartic",
@@ -5972,7 +7194,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/cubchoo/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Cubchoo": [
+        "Ice"
+      ],
+      "Beartic": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "braviary",
@@ -6018,7 +7248,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/rufflet/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Rufflet": [
+        "Normal",
+        "Flying"
+      ],
+      "Braviary": [
+        "Normal",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "drapion",
@@ -6064,7 +7304,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/skorupi/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Skorupi": [
+        "Poison",
+        "Bug"
+      ],
+      "Drapion": [
+        "Poison",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "chandelure",
@@ -6122,7 +7372,21 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/litwick/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Litwick": [
+        "Ghost",
+        "Fire"
+      ],
+      "Lampent": [
+        "Ghost",
+        "Fire"
+      ],
+      "Chandelure": [
+        "Ghost",
+        "Fire"
+      ]
+    }
   },
   {
     "id": "malamar",
@@ -6168,7 +7432,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/inkay/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Inkay": [
+        "Dark",
+        "Psychic"
+      ],
+      "Malamar": [
+        "Dark",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "weavile",
@@ -6214,7 +7488,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sneasel/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Sneasel": [
+        "Dark",
+        "Ice"
+      ],
+      "Weavile": [
+        "Dark",
+        "Ice"
+      ]
+    }
   },
   {
     "id": "mawile",
@@ -6244,7 +7528,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mawile/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Mawile": [
+        "Steel",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "maractus",
@@ -6282,7 +7572,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/maractus/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Maractus": [
+        "Grass"
+      ]
+    }
   },
   {
     "id": "sigilyph",
@@ -6321,7 +7616,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sigilyph/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Sigilyph": [
+        "Psychic",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "lucario",
@@ -6366,7 +7667,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/riolu/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Riolu": [
+        "Fighting",
+        "Steel"
+      ],
+      "Lucario": [
+        "Fighting",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "torkoal",
@@ -6405,7 +7716,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/torkoal/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Torkoal": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "mimikyu",
@@ -6470,7 +7786,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mimikyu/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Mimikyu": [
+        "Ghost",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "copperajah",
@@ -6515,7 +7837,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/cufant/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Cufant": [
+        "Steel"
+      ],
+      "Copperajah": [
+        "Steel"
+      ]
+    }
   },
   {
     "id": "qwilfish",
@@ -6553,7 +7883,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/qwilfish/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Qwilfish": [
+        "Water",
+        "Poison"
+      ]
+    }
   },
   {
     "id": "jellicent",
@@ -6599,7 +7935,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/frillish/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Frillish": [
+        "Water",
+        "Ghost"
+      ],
+      "Jellicent": [
+        "Water",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "toxapex",
@@ -6645,7 +7991,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mareanie/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Mareanie": [
+        "Poison",
+        "Water"
+      ],
+      "Toxapex": [
+        "Poison",
+        "Water"
+      ]
+    }
   },
   {
     "id": "cramorant",
@@ -6683,7 +8039,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/cramorant/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Cramorant": [
+        "Flying",
+        "Water"
+      ]
+    }
   },
   {
     "id": "toxtricity",
@@ -6741,7 +8103,17 @@
         ]
       }
     ],
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Toxel": [
+        "Electric",
+        "Poison"
+      ],
+      "Toxtricity": [
+        "Electric",
+        "Poison"
+      ]
+    }
   },
   {
     "id": "sandaconda",
@@ -6786,7 +8158,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/silicobra/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Silicobra": [
+        "Ground"
+      ],
+      "Sandaconda": [
+        "Ground"
+      ]
+    }
   },
   {
     "id": "hippowdon",
@@ -6831,7 +8211,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/hippopotas/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Hippopotas": [
+        "Ground"
+      ],
+      "Hippowdon": [
+        "Ground"
+      ]
+    }
   },
   {
     "id": "durant",
@@ -6869,7 +8257,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/durant/locations.shtml",
-    "encounter_data_status": "verified_batch_6"
+    "encounter_data_status": "verified_batch_6",
+    "types": {
+      "Durant": [
+        "Bug",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "heatmor",
@@ -6908,7 +8302,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/heatmor/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Heatmor": [
+        "Fire"
+      ]
+    }
   },
   {
     "id": "heliolisk",
@@ -6960,7 +8359,17 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/helioptile/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Helioptile": [
+        "Electric",
+        "Normal"
+      ],
+      "Heliolisk": [
+        "Electric",
+        "Normal"
+      ]
+    }
   },
   {
     "id": "hawlucha",
@@ -6999,7 +8408,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/hawlucha/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Hawlucha": [
+        "Fighting",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "flygon",
@@ -7042,7 +8457,20 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/trapinch/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Trapinch": [
+        "Ground"
+      ],
+      "Vibrava": [
+        "Ground",
+        "Dragon"
+      ],
+      "Flygon": [
+        "Ground",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "haxorus",
@@ -7094,7 +8522,18 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/axew/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Axew": [
+        "Dragon"
+      ],
+      "Fraxure": [
+        "Dragon"
+      ],
+      "Haxorus": [
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "runerigus",
@@ -7133,19 +8572,29 @@
         ],
         "encounters": [
           {
-          "location": "Route 6",
-          "method": "Overworld",
-          "weather": "All Weather",
-          "rarity_percent": 35,
-          "level_min": 29,
-          "level_max": 33
+            "location": "Route 6",
+            "method": "Overworld",
+            "weather": "All Weather",
+            "rarity_percent": 35,
+            "level_min": 29,
+            "level_max": 33
           }
         ]
       }
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/yamask/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Galarian Yamask": [
+        "Ground",
+        "Ghost"
+      ],
+      "Runerigus": [
+        "Ground",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "cofagrigus",
@@ -7183,7 +8632,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/yamask/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Unovan Yamask": [
+        "Ghost"
+      ],
+      "Cofagrigus": [
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "aegislash",
@@ -7240,7 +8697,21 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/honedge/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Honedge": [
+        "Steel",
+        "Ghost"
+      ],
+      "Doublade": [
+        "Steel",
+        "Ghost"
+      ],
+      "Aegislash": [
+        "Steel",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "polteageist",
@@ -7292,7 +8763,15 @@
       }
     ],
     "source_url": "https://www.serebii.net/pokedex-swsh/sinistea/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Sinistea": [
+        "Ghost"
+      ],
+      "Polteageist": [
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "indeedee",
@@ -7322,7 +8801,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/indeedee/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Indeedee": [
+        "Psychic",
+        "Normal"
+      ]
+    }
   },
   {
     "id": "trevenant",
@@ -7360,7 +8845,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/phantump/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Phantump": [
+        "Ghost",
+        "Grass"
+      ],
+      "Trevenant": [
+        "Ghost",
+        "Grass"
+      ]
+    }
   },
   {
     "id": "shiinotic",
@@ -7406,7 +8901,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/morelull/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Morelull": [
+        "Grass",
+        "Fairy"
+      ],
+      "Shiinotic": [
+        "Grass",
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "passimian",
@@ -7436,7 +8941,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/passimian/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Passimian": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "morpeko",
@@ -7475,7 +8985,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/morpeko/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Morpeko": [
+        "Electric",
+        "Dark"
+      ]
+    }
   },
   {
     "id": "falinks",
@@ -7513,7 +9029,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/falinks/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Falinks": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "turtonator",
@@ -7543,7 +9064,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/turtonator/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Turtonator": [
+        "Fire",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "togedemaru",
@@ -7582,7 +9109,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/togedemaru/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Togedemaru": [
+        "Electric",
+        "Steel"
+      ]
+    }
   },
   {
     "id": "frosmoth",
@@ -7627,7 +9160,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/snom/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Snom": [
+        "Ice",
+        "Bug"
+      ],
+      "Frosmoth": [
+        "Ice",
+        "Bug"
+      ]
+    }
   },
   {
     "id": "grapploct",
@@ -7673,7 +9216,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/clobbopus/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Clobbopus": [
+        "Fighting"
+      ],
+      "Grapploct": [
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "pincurchin",
@@ -7712,7 +9263,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/pincurchin/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Pincurchin": [
+        "Electric"
+      ]
+    }
   },
   {
     "id": "mantine",
@@ -7757,7 +9313,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mantyke/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Mantyke": [
+        "Water",
+        "Flying"
+      ],
+      "Mantine": [
+        "Water",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "wailord",
@@ -7802,7 +9368,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/wailmer/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Wailmer": [
+        "Water"
+      ],
+      "Wailord": [
+        "Water"
+      ]
+    }
   },
   {
     "id": "avalugg",
@@ -7848,7 +9422,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/bergmite/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Bergmite": [
+        "Ice"
+      ],
+      "Avalugg": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "dhelmise",
@@ -7980,7 +9562,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dhelmise/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Dhelmise": [
+        "Ghost",
+        "Grass"
+      ]
+    }
   },
   {
     "id": "lapras",
@@ -8019,7 +9607,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/lapras/locations.shtml",
-    "encounter_data_status": "verified_batch_7"
+    "encounter_data_status": "verified_batch_7",
+    "types": {
+      "Lapras": [
+        "Water",
+        "Ice"
+      ]
+    }
   },
   {
     "id": "solrock",
@@ -8058,7 +9652,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/solrock/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Solrock": [
+        "Rock",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "mr_rime",
@@ -8104,7 +9704,17 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/mrmime/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Galarian Mr. Mime": [
+        "Ice",
+        "Psychic"
+      ],
+      "Mr. Rime": [
+        "Ice",
+        "Psychic"
+      ]
+    }
   },
   {
     "id": "darmanitan",
@@ -8151,7 +9761,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/darumaka/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Galarian Darumaka": [
+        "Ice"
+      ],
+      "Galarian Darmanitan": [
+        "Ice"
+      ]
+    }
   },
   {
     "id": "stonjourner",
@@ -8190,7 +9808,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/stonjourner/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Stonjourner": [
+        "Rock"
+      ]
+    }
   },
   {
     "id": "duraludon",
@@ -8229,7 +9852,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/duraludon/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Duraludon": [
+        "Steel",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "rotom",
@@ -8267,7 +9896,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/rotom/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Rotom": [
+        "Electric",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "ditto",
@@ -8305,7 +9940,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/ditto/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Ditto": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "dracozolt",
@@ -8335,7 +9975,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dracozolt/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Dracozolt": [
+        "Electric",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "arctozolt",
@@ -8365,7 +10011,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/arctozolt/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Arctozolt": [
+        "Electric",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "dracovish",
@@ -8395,7 +10047,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/dracovish/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Dracovish": [
+        "Water",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "arctovish",
@@ -8425,7 +10083,13 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/arctovish/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Arctovish": [
+        "Water",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "charizard",
@@ -8469,7 +10133,19 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/charmander/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Charmander": [
+        "Fire"
+      ],
+      "Charmeleon": [
+        "Fire"
+      ],
+      "Charizard": [
+        "Fire",
+        "Flying"
+      ]
+    }
   },
   {
     "id": "silvally",
@@ -8507,7 +10183,15 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/type:null/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Type: Null": [
+        "Normal"
+      ],
+      "Silvally": [
+        "Normal"
+      ]
+    }
   },
   {
     "id": "hydreigon",
@@ -8551,7 +10235,21 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/deino/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Deino": [
+        "Dark",
+        "Dragon"
+      ],
+      "Zweilous": [
+        "Dark",
+        "Dragon"
+      ],
+      "Hydreigon": [
+        "Dark",
+        "Dragon"
+      ]
+    }
   },
   {
     "id": "kommo_o",
@@ -8603,7 +10301,20 @@
     ],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/jangmo-o/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Jangmo-o": [
+        "Dragon"
+      ],
+      "Hakamo-o": [
+        "Dragon",
+        "Fighting"
+      ],
+      "Kommo-o": [
+        "Dragon",
+        "Fighting"
+      ]
+    }
   },
   {
     "id": "dragapult",
@@ -8671,7 +10382,21 @@
         ],
         "availability_note": "Wild Dreepy at Lake of Outrage requires 6 Gym Badges."
       }
-    ]
+    ],
+    "types": {
+      "Dreepy": [
+        "Dragon",
+        "Ghost"
+      ],
+      "Drakloak": [
+        "Dragon",
+        "Ghost"
+      ],
+      "Dragapult": [
+        "Dragon",
+        "Ghost"
+      ]
+    }
   },
   {
     "id": "zacian",
@@ -8702,7 +10427,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/zacian/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Zacian": [
+        "Fairy"
+      ]
+    }
   },
   {
     "id": "eternatus",
@@ -8733,6 +10463,12 @@
     "evolution_steps": [],
     "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/eternatus/locations.shtml",
-    "encounter_data_status": "verified_batch_8"
+    "encounter_data_status": "verified_batch_8",
+    "types": {
+      "Eternatus": [
+        "Poison",
+        "Dragon"
+      ]
+    }
   }
 ]

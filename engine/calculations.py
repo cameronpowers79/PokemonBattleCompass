@@ -22,25 +22,37 @@ def is_opponent_record(pokemon):
     return pokemon.get("Trainer") is not None and pokemon.get("Battle") is not None
 
 
-def approximate_stat(base_stat, level):
-    return ((2 * base_stat + 31) * level / 100) + 5
+CONSERVATIVE_OPPONENT_IV = 31
+AVERAGE_OPPONENT_IV = 16
 
 
-def approximate_hp(base_hp, level):
-    return ((2 * base_hp + 31) * level / 100) + level + 10
+def approximate_stat(base_stat, level, iv=CONSERVATIVE_OPPONENT_IV):
+    return ((2 * base_stat + iv) * level / 100) + 5
 
 
-def get_stat(pokemon, stat_name):
+def approximate_hp(base_hp, level, iv=CONSERVATIVE_OPPONENT_IV):
+    return ((2 * base_hp + iv) * level / 100) + level + 10
+
+
+def get_stat(pokemon, stat_name, opponent_iv_override=None):
     if is_opponent_record(pokemon):
+        iv = (
+            CONSERVATIVE_OPPONENT_IV
+            if opponent_iv_override is None
+            else opponent_iv_override
+        )
+
         if stat_name == "HP":
             return approximate_hp(
                 pokemon[stat_name],
-                pokemon["Level"]
+                pokemon["Level"],
+                iv,
             )
 
         return approximate_stat(
             pokemon[stat_name],
-            pokemon["Level"]
+            pokemon["Level"],
+            iv,
         )
 
     value = pokemon.get(stat_name, 1)
@@ -51,32 +63,32 @@ def get_stat(pokemon, stat_name):
     return value
 
 
-def get_relevant_attack_stat(attacker, move):
+def get_relevant_attack_stat(attacker, move, opponent_iv_override=None):
     damage_method = move.get("DamageMethod")
 
     if damage_method == "UseDEF":
-        return get_stat(attacker, "DEF")
+        return get_stat(attacker, "DEF", opponent_iv_override)
 
     if move.get("Category") == "Physical":
-        return get_stat(attacker, "ATK")
+        return get_stat(attacker, "ATK", opponent_iv_override)
 
     if move.get("Category") == "Special":
-        return get_stat(attacker, "SPA")
+        return get_stat(attacker, "SPA", opponent_iv_override)
 
     return 0
 
 
-def get_relevant_defense_stat(defender, move):
+def get_relevant_defense_stat(defender, move, opponent_iv_override=None):
     damage_method = move.get("DamageMethod")
 
     if damage_method == "TargetDEFasSPD":
-        return get_stat(defender, "DEF")
+        return get_stat(defender, "DEF", opponent_iv_override)
 
     if move.get("Category") == "Physical":
-        return get_stat(defender, "DEF")
+        return get_stat(defender, "DEF", opponent_iv_override)
 
     if move.get("Category") == "Special":
-        return get_stat(defender, "SPD")
+        return get_stat(defender, "SPD", opponent_iv_override)
 
     return 1
 
@@ -186,6 +198,8 @@ def calculate_damage_range(
     move,
     items=None,
     ability_rules=None,
+    attacker_opponent_iv_override=None,
+    defender_opponent_iv_override=None,
 ):
     """Estimate minimum and maximum damage using the in-game formula shape.
 
@@ -247,6 +261,7 @@ def calculate_damage_range(
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
+        attacker_opponent_iv_override,
     )
     attack_stat *= get_attack_stat_multiplier(
         attacker,
@@ -261,7 +276,11 @@ def calculate_damage_range(
     )
 
     defense_stat = max(
-        get_relevant_defense_stat(defender, move),
+        get_relevant_defense_stat(
+            defender,
+            move,
+            defender_opponent_iv_override,
+        ),
         1,
     )
     level = max(int(attacker.get("Level") or 1), 1)
@@ -916,6 +935,23 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             ability_rules,
         )
 
+        offensive_possible_target_hp = get_stat(
+            opponent,
+            "HP",
+            AVERAGE_OPPONENT_IV,
+        )
+        (
+            offensive_possible_min_damage,
+            offensive_possible_max_damage,
+        ) = calculate_damage_range(
+            pokemon,
+            opponent,
+            best_move,
+            items,
+            ability_rules,
+            defender_opponent_iv_override=AVERAGE_OPPONENT_IV,
+        )
+
         (
             incoming_min_damage,
             incoming_max_damage,
@@ -989,6 +1025,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             offensive_min_damage,
             offensive_max_damage,
             offensive_target_hp,
+            offensive_possible_min_damage,
+            offensive_possible_max_damage,
+            offensive_possible_target_hp,
             incoming_min_damage,
             incoming_max_damage,
             team_member_hp,
@@ -1077,6 +1116,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 offensive_min_damage,
                 offensive_max_damage,
                 offensive_target_hp,
+                offensive_possible_min_damage,
+                offensive_possible_max_damage,
+                offensive_possible_target_hp,
                 incoming_min_damage,
                 incoming_max_damage,
                 team_member_hp,

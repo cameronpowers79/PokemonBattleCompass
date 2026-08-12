@@ -228,6 +228,11 @@ class MyJourneyView:
         self._add_pokemon_validation_text: ft.Text | None = None
         self._add_pokemon_name_to_id: dict[str, str] = {}
 
+        # Section-local display filters. These affect only the rendered
+        # Journey Checklist / Team Planner rows; saved objectives remain intact.
+        self._hide_obtained_items = False
+        self._hide_obtained_pokemon = False
+
         self._badge_celebration_badge: ft.Container | None = None
         self._badge_celebration_shine: ft.Container | None = None
         self._badge_celebration_sparkles: list[ft.Container] = []
@@ -1074,6 +1079,16 @@ class MyJourneyView:
         pokemon: dict[str, Any],
     ) -> list[str]:
         """Return catchable/evolution stages in acquisition order."""
+
+        typed_stages = pokemon.get("types", {})
+        if isinstance(typed_stages, dict) and typed_stages:
+            stages_from_types = [
+                str(stage_name).strip()
+                for stage_name in typed_stages
+                if str(stage_name).strip()
+            ]
+            if stages_from_types:
+                return stages_from_types
 
         stages: list[str] = []
 
@@ -2429,11 +2444,33 @@ class MyJourneyView:
             height=TOP_JOURNEY_CARD_HEIGHT
         )
 
+    def _toggle_hide_obtained_items(
+        self,
+        event: ft.Event[ft.Checkbox],
+    ) -> None:
+        """Show or hide completed Journey Checklist item rows."""
+
+        self._hide_obtained_items = bool(event.control.value)
+        self._refresh()
+
+    def _toggle_hide_obtained_pokemon(
+        self,
+        event: ft.Event[ft.Checkbox],
+    ) -> None:
+        """Show or hide acquired Team Planner Pokémon rows."""
+
+        self._hide_obtained_pokemon = bool(event.control.value)
+        self._refresh()
+
     def _build_journey_checklist_card(self) -> ft.Control:
         rows: list[ft.DataRow] = []
         for item in self._checklist_items():
             item_id = str(item.get("id", ""))
             status = self._item_status(item)
+
+            if self._hide_obtained_items and status == "obtained":
+                continue
+
             manual_quantity = int(
                 self.item_objectives.get(item_id, {}).get(
                     "manual_quantity_required",
@@ -2537,6 +2574,11 @@ class MyJourneyView:
         body_controls: list[ft.Control] = [
             ft.Row(
                 controls=[
+                    ft.Checkbox(
+                        label="Hide Obtained Items",
+                        value=self._hide_obtained_items,
+                        on_change=self._toggle_hide_obtained_items,
+                    ),
                     ft.Button(
                         content="Add Objective",
                         icon=ft.Icons.ADD_ROUNDED,
@@ -2544,9 +2586,10 @@ class MyJourneyView:
                         color="#07120B",
                         icon_color="#07120B",
                         on_click=self._show_add_item_dialog,
-                    )
+                    ),
                 ],
-                alignment=ft.MainAxisAlignment.END,
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             ft.Row(
                 controls=[table],
@@ -3447,6 +3490,9 @@ class MyJourneyView:
             pokemon_id = str(pokemon.get("id", ""))
             status = self._pokemon_status(pokemon)
 
+            if self._hide_obtained_pokemon and status == "obtained":
+                continue
+
             marker_asset = str(
                 pokemon.get("marker_asset") or ""
             ).strip()
@@ -3620,6 +3666,11 @@ class MyJourneyView:
                 controls=[
                     ft.Row(
                         controls=[
+                            ft.Checkbox(
+                                label="Hide Obtained Pokémon",
+                                value=self._hide_obtained_pokemon,
+                                on_change=self._toggle_hide_obtained_pokemon,
+                            ),
                             ft.Button(
                                 content="Add Pokémon",
                                 icon=ft.Icons.ADD_ROUNDED,
@@ -3627,9 +3678,10 @@ class MyJourneyView:
                                 color="#07120B",
                                 icon_color="#07120B",
                                 on_click=self._show_add_pokemon_dialog,
-                            )
+                            ),
                         ],
-                        alignment=ft.MainAxisAlignment.END,
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
                     ft.Row(
                         controls=[table],

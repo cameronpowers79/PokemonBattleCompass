@@ -20,14 +20,14 @@
 - [x] Implement durable local storage.
 - [x] Add first-use Journey onboarding.
 - [x] Retain explicit team saving as a proofreading checkpoint.
-- [ ] Implement optional backup/export.
-- [ ] Implement restore/import.
-- [ ] Verify desktop packaging.
+- [x] Implement optional backup/export.
+- [x] Implement restore/import.
+- [x] Verify desktop packaging.
 - [ ] Verify installable PWA.
 - [ ] Verify offline behavior.
 - [ ] Verify iPhone PWA behavior.
 - [x] Migrate Battle Compass.
-- [ ] Migrate Trainer's Guide.
+- [x] Migrate Trainer's Guide.
 - [ ] Retire the Streamlit implementation.
 
 
@@ -53,7 +53,7 @@
 - [ ] Review Full Analysis behavior on narrow mobile screens.
 - [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
 - [ ] Freeze "Pokemon" column in My Team editor?
-- [ ] Add move effectiveness to Other Strong Options cards
+- [x] Add move effectiveness to Other Strong Options cards
 
 ---
 
@@ -74,9 +74,9 @@
 - [x] Type colors.
 - [x] Worst Incoming Move displays category.
 - [ ] Typography:
-  - Exo 2 for headers.
-  - Aptos for body text.
-  - Bahnschrift for metrics.
+  - Exo 2 for headers.
+  - Aptos for body text.
+  - Bahnschrift for metrics.
 - [x] Blue active-page selector.
 - [x] Application branding: logo and wordmark.
 - [x] Extend branding colors to the Recommendation card.
@@ -87,23 +87,23 @@
 - [x] Reduce the size of the ♂/♀ gender symbols slightly.
 - [x] Reuse My Team’s move-card visual language during onboarding.
 - [x] Tap or click move cards for full move details.
-- [/] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
+- [x] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
 - [x] Add compact opponent moveset to the Opponent card.
 - [x] Improve move details popup with plain-language effect descriptions.
 - [x] Add Additional Navigation Aids section to move details.
 - [x] Ensure Matchup Strength text matches the highlighted color in the graphic
 - [x] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
 - [x] Reuse My Team's move-card visual language for opponent movesets.
-- [ ] Optional: tap type badges to show weaknesses and resistances.
-- [ ] Add held-item sprites to the boosted-attack popover.
-- [ ] Recreate branding, typography, cards, and interactions in the new UI.
+- [x] Optional: tap type badges to show weaknesses and resistances.
+- [x] Add held-item sprites to the boosted-attack popover.
+- [x] Recreate branding, typography, cards, and interactions in the new UI.
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
-- [ ] Complete plain-language move effect         translations.
-    - Healing (Giga Drain, Drain Punch, etc.)
-    - Alternate damage calculations (Psyshock, Body Press, Foul Play, etc.)
-    - Stat stage changes
-    - Remaining activation conditions
+- [ ] Complete plain-language move effect         translations.
+    - Healing (Giga Drain, Drain Punch, etc.)
+    - Alternate damage calculations (Psyshock, Body Press, Foul Play, etc.)
+    - Stat stage changes
+    - Remaining activation conditions
 
 
 ---
@@ -149,17 +149,17 @@
 - [x]Add unsaved-change awareness and confirmation before leaving My Team.
 - [x] Allow adding Pokémon during an active Journey.
 - [x] Add Box / Release Pokémon workflow.
-- [ ] Add guidance beside starter selector explaining how to begin a new Journey.
-- [ ] Add optional manual backup/export.
-- [ ] Add restore/import.
-- [ ] Add ability validation.
-- [ ] Add held-item validation after the modeled item list expands.
-- [ ] Add Pokémon name dropdown and validation.
-- [ ] Add clear “new team” and “reset team” actions.
-- [ ] Add confirmation before destructive actions.
-- [ ] Add multiple teams or save slots.
-- [ ] Add page or section jump navigation where useful.
-- [ ] Build Pokémon option list from available sprite assets.
+- [x] Add guidance beside starter selector explaining how to begin a new Journey.
+- [x] Add optional manual backup/export.
+- [x] Add restore/import.
+- [x] Add ability validation.
+- [x] Add held-item validation after the modeled item list expands.
+- [x] Add Pokémon name dropdown and validation.
+- [x] Add clear “new team” and “reset team” actions. (Not sure this is needed since the explanation helper for choosing a new starter has been implemented)
+- [x] Add confirmation before destructive actions.
+- [x] Add multiple teams or save slots. (Not needed; user can just export/load)
+- [x] Add page or section jump navigation where useful.
+- [x] Build Pokémon option list from available sprite assets.
 
 ---
 
@@ -181,8 +181,8 @@
 - [x] Order battles by `BattleOrder`.
 - [x] Order opponent Pokémon by `Slot`.
 - [x] Support starter-dependent trainer lineups.
-- [ ] Preserve battle selections locally between launches.
-- [ ] Add optional recent-battle history.
+- [x] Preserve battle selections locally between launches.
+- [x] Add optional recent-battle history. (removed because we are not saving results or anything else worth going back to)
 
 ---
 
@@ -201,14 +201,14 @@
 
 ## Modeled Items and Guidance
 
-- [ ] Expand the modeled held-item list.
-- [ ] Add held-item data validation.
+- [x] Expand the modeled held-item list.
+- [x] Add held-item data validation.
 - [x] Recommend a modeled held item for the selected matchup.
-- [ ] Compare the current item with the recommended item.
-- [ ] Show estimated Move Score change from switching.
-- [ ] Distinguish offensive, defensive, and sustain recommendations.
+- [x] Compare the current item with the recommended item.
+- [x] Show estimated Move Score change from switching. (Unnecessary, user can model by simply "giving" the item in the Compass and checking the Compass)
+- [x] Distinguish offensive, defensive, and sustain recommendations. (Jnnecessary, the nature is in the description)
 - [x] Explain why the item is recommended.
-- [/] Add held-item sprites and descriptions. (Need sprites 7/15)
+- [x] Add held-item sprites and descriptions. (Need sprites 7/15)
 
 ---
 
@@ -217,7 +217,7 @@
 - [x] Fix null `Slot` values for Bede’s Ballonlea/Wyndon postgame battle.
 - [x] Prevent incomplete or status-only Pokémon from bricking the Battle Compass.
 - [ ] Add validation for incomplete Pokémon records.
-- [ ] Add graceful handling for empty teams.
+- [x] Add graceful handling for empty teams.
 - [ ] Add graceful handling for missing assets.
 - [ ] Add user-facing error recovery instead of raw exceptions.
 - [ ] Add logging suitable for standalone and PWA builds.
@@ -225,8 +225,6 @@
 - [ ] Test suspend/resume behavior on iOS.
 - [ ] Test offline startup and reconnection.
 - [ ] Test corrupted or outdated save files.
-
----
 
 ## Documentation
 
@@ -246,46 +244,42 @@
 - [ ] Add fan-project and intellectual-property disclaimer.
 - [ ] Architecture overview.
 
----
-
-# Trainer's Guide
+# My Journey
 
 ## Team Planning
 
-- [ ] Pokémon acquisition planner.
-- [ ] Earliest obtainable route or area.
-- [ ] Earliest obtainable level.
+- [x] Pokémon acquisition planner.
+- [x] Earliest obtainable route or area.
+- [x] Earliest obtainable level.
 - [ ] Version-exclusive indicators.
-- [ ] Planned team builder.
-- [ ] Save multiple planned runs.
+- [x] Planned team builder.
+- [x] Save multiple planned runs. (Export/Load does this)
 
 ## Shopping and Preparation
 
-- [ ] TM/TR shopping checklist.
-- [ ] Held-item shopping checklist.
-- [ ] Evolution-item checklist.
-- [ ] Berry checklist.
-- [ ] Optional completion tracking.
+- [x] TM/TR shopping checklist.
+- [x] Held-item shopping checklist.
+- [x] Evolution-item checklist.
+- [x] Berry checklist. (Removed; unnecessary)
+- [x] Optional completion tracking.
 
 ## Progress Tracking
 
-- [ ] Gym progress tracker.
-- [ ] Badge progress.
-- [ ] Story milestone tracker.
-- [ ] Optional route-completion tracker.
+- [x] Gym progress tracker.
+- [x] Badge progress.
+- [x] Story milestone tracker. (not needed)
+- [x] Optional route-completion tracker. (not needed)
 
 ## Reference
 
-- [ ] Location lookup.
-- [ ] Evolution requirements.
-- [ ] Held-item locations.
-- [ ] TM/TR locations.
-- [ ] NPC gift Pokémon.
-- [ ] Optional Max Raid availability.
+- [x] Location lookup.
+- [x] Evolution requirements.
+- [x] Held-item locations.
+- [x] TM/TR locations.
+- [x] NPC gift Pokémon.
+- [x] Optional Max Raid availability.
 
 ## Future Ideas
 
-- [ ] Wild Area weather planner.
-- [ ] Watt vendor rotation helper.
-- [ ] Daily event tracker.
-- [ ] Optional battle history / battle journal.
+- [ ] Pokemon Movepool Validation
+- [ ] Add Shield support
