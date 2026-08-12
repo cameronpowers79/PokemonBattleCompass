@@ -12,12 +12,13 @@ import json
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Literal
+from typing import Callable, Literal
 
-import flet as ft
+from ui.storage.storage_backend import StorageBackend
 
 
 JOURNEY_STORAGE_KEY = "pokemon_battle_compass.journey.v1"
+JOURNEY_BACKUP_STORAGE_KEY = "pokemon_battle_compass.journey.backup.v1"
 JOURNEY_SCHEMA_VERSION = 1
 
 JOURNEY_EXPORT_FORMAT = "pokemon-battle-compass-journey"
@@ -55,6 +56,7 @@ class JourneyLoadResult:
     status: JourneyLoadStatus
     journey: dict | None = None
     error: str | None = None
+    recovered_from_backup: bool = False
 
 
 @dataclass(frozen=True)
@@ -70,27 +72,6 @@ def _utc_timestamp() -> str:
     """Return the current UTC time in ISO-8601 format."""
 
     return datetime.now(timezone.utc).isoformat()
-
-
-def _get_preferences(
-    page: ft.Page,
-) -> ft.SharedPreferences:
-    """
-    Return the SharedPreferences service registered to this page.
-
-    The service must be created during the active Flet session and added
-    to the page before its methods can be invoked.
-    """
-
-    for service in page.services:
-        if isinstance(service, ft.SharedPreferences):
-            return service
-
-    preferences = ft.SharedPreferences()
-    page.services.append(preferences)
-    page.update()
-
-    return preferences
 
 
 def create_journey(
@@ -120,15 +101,106 @@ def create_journey(
         },
         "my_journey": {
             "earned_badges": 0,
-            "checklist_initialized": True,
-            "planner_initialized": True,
-            "planned_pokemon_ids": [],
+            "checklist_initialized": False,
             "item_objectives": [],
             "pokemon_objectives": [],
         },
         "created_at": timestamp,
         "updated_at": timestamp,
     }
+
+
+def _migrate_journey_to_current(
+    journey: object,
+) -> tuple[dict | None, str | None]:
+    """
+    Return Journey data upgraded to the current schema version.
+
+    Version 1 is currently the only released schema, so there are no
+    historical migration steps yet. The migration pipeline is intentionally
+    in place before a future schema bump so load/import behavior does not need
+    to be redesigned when version 2 is introduced.
+    """
+
+    if not isinstance(journey, dict):
+        return None, "Stored Journey data is not an object."
+
+    schema_version = journey.get("schema_version")
+
+    if (
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+    ):
+        return (
+            None,
+            "Stored Journey schema version is missing or invalid.",
+        )
+
+    if schema_version > JOURNEY_SCHEMA_VERSION:
+        return (
+            None,
+            (
+                "Stored Journey uses a newer schema version "
+                f"({schema_version}) than this version of Pokémon "
+                "Battle Compass supports."
+            ),
+        )
+
+    migrated_journey = deepcopy(journey)
+    current_version = schema_version
+
+    while current_version < JOURNEY_SCHEMA_VERSION:
+        migration = JOURNEY_MIGRATIONS.get(current_version)
+        if migration is None:
+            return (
+                None,
+                (
+                    "Stored Journey uses an older schema version "
+                    f"({current_version}) that cannot be migrated by "
+                    "this version of Pokémon Battle Compass."
+                ),
+            )
+
+        try:
+            migrated_journey = migration(migrated_journey)
+        except (TypeError, ValueError, KeyError) as error:
+            return (
+                None,
+                (
+                    "Stored Journey could not be migrated from "
+                    f"schema version {current_version}: {error}"
+                ),
+            )
+
+        next_version = migrated_journey.get("schema_version")
+        if (
+            not isinstance(next_version, int)
+            or isinstance(next_version, bool)
+            or next_version <= current_version
+        ):
+            return (
+                None,
+                (
+                    "Stored Journey migration did not advance "
+                    "to a newer schema version."
+                ),
+            )
+
+        current_version = next_version
+
+    if current_version != JOURNEY_SCHEMA_VERSION:
+        return (
+            None,
+            "Stored Journey could not be migrated to the current schema.",
+        )
+
+    return migrated_journey, None
+
+
+# Maps a Journey schema version to the function that upgrades that version
+# to its immediate successor. Version 1 is the first released schema, so the
+# registry is intentionally empty until a future schema version is introduced.
+JOURNEY_MIGRATIONS: dict[int, Callable[[dict], dict]] = {}
 
 
 def _validate_journey(
@@ -221,32 +293,6 @@ def _validate_journey(
             return (
                 "Stored My Journey checklist initialization "
                 "state is invalid."
-            )
-
-        planner_initialized = my_journey.get(
-            "planner_initialized",
-            False,
-        )
-        if not isinstance(planner_initialized, bool):
-            return (
-                "Stored My Journey planner initialization "
-                "state is invalid."
-            )
-
-        planned_pokemon_ids = my_journey.get(
-            "planned_pokemon_ids",
-            [],
-        )
-        if (
-            not isinstance(planned_pokemon_ids, list)
-            or not all(
-                isinstance(pokemon_id, str)
-                and pokemon_id.strip()
-                for pokemon_id in planned_pokemon_ids
-            )
-        ):
-            return (
-                "Stored My Journey planned Pokémon list is invalid."
             )
 
         for field_name in (
@@ -419,8 +465,21 @@ def parse_journey_export(
 
     journey = export_record.get("journey")
 
+    migrated_journey, migration_error = (
+        _migrate_journey_to_current(journey)
+    )
+
+    if migration_error or migrated_journey is None:
+        return JourneyImportResult(
+            status="invalid",
+            error=(
+                migration_error
+                or "The Journey could not be migrated."
+            ),
+        )
+
     validation_error = _validate_journey(
-        journey
+        migrated_journey
     )
 
     if validation_error:
@@ -431,7 +490,7 @@ def parse_journey_export(
 
     return JourneyImportResult(
         status="valid",
-        journey=deepcopy(journey),
+        journey=deepcopy(migrated_journey),
     )
 
 
@@ -448,65 +507,131 @@ def journey_export_filename() -> str:
     )
 
 
+def _prepare_stored_journey(
+    serialized_journey: str,
+    *,
+    source_label: str,
+) -> tuple[dict | None, str | None]:
+    """Decode, migrate, and validate one serialized Journey copy."""
+
+    try:
+        journey = json.loads(serialized_journey)
+    except json.JSONDecodeError as error:
+        return (
+            None,
+            f"{source_label} Journey JSON could not be read: {error}",
+        )
+
+    migrated_journey, migration_error = (
+        _migrate_journey_to_current(journey)
+    )
+
+    if migration_error or migrated_journey is None:
+        return (
+            None,
+            migration_error
+            or f"{source_label} Journey could not be migrated.",
+        )
+
+    validation_error = _validate_journey(
+        migrated_journey
+    )
+
+    if validation_error:
+        return None, validation_error
+
+    return migrated_journey, None
+
+
 async def load_journey(
-    page: ft.Page,
+    storage: StorageBackend,
 ) -> JourneyLoadResult:
-    """Load and validate the locally saved Journey."""
+    """
+    Load the saved Journey, recovering from the last-known-good backup
+    when the primary copy is missing or unusable.
+    """
 
-    preferences = _get_preferences(page)
-
-    stored_value = await preferences.get(
+    stored_value = await storage.get(
         JOURNEY_STORAGE_KEY
     )
+
+    primary_error: str | None = None
+
+    if stored_value is not None:
+        primary_journey, primary_error = (
+            _prepare_stored_journey(
+                stored_value,
+                source_label="Stored",
+            )
+        )
+
+        if primary_journey is not None:
+            return JourneyLoadResult(
+                status="valid",
+                journey=primary_journey,
+            )
+
+    backup_value = await storage.get(
+        JOURNEY_BACKUP_STORAGE_KEY
+    )
+
+    if backup_value is not None:
+        backup_journey, backup_error = (
+            _prepare_stored_journey(
+                backup_value,
+                source_label="Backup",
+            )
+        )
+
+        if backup_journey is not None:
+            restored_value = json.dumps(
+                backup_journey,
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+
+            # Best-effort repair of the primary copy. Even if this write
+            # fails, the validated backup can safely be used for this session.
+            await storage.set(
+                JOURNEY_STORAGE_KEY,
+                restored_value,
+            )
+
+            return JourneyLoadResult(
+                status="valid",
+                journey=backup_journey,
+                recovered_from_backup=True,
+            )
+
+        if stored_value is None:
+            return JourneyLoadResult(
+                status="invalid",
+                error=backup_error,
+            )
 
     if stored_value is None:
         return JourneyLoadResult(
             status="missing",
         )
 
-    if not isinstance(stored_value, str):
-        return JourneyLoadResult(
-            status="invalid",
-            error=(
-                "Stored Journey data is not "
-                "valid JSON text."
-            ),
-        )
-
-    try:
-        journey = json.loads(stored_value)
-    except json.JSONDecodeError as error:
-        return JourneyLoadResult(
-            status="invalid",
-            error=(
-                "Stored Journey JSON could not be read: "
-                f"{error}"
-            ),
-        )
-
-    validation_error = _validate_journey(
-        journey
-    )
-
-    if validation_error:
-        return JourneyLoadResult(
-            status="invalid",
-            error=validation_error,
-        )
-
     return JourneyLoadResult(
-        status="valid",
-        journey=journey,
+        status="invalid",
+        error=(
+            primary_error
+            or "Stored Journey could not be loaded."
+        ),
     )
 
 
 async def save_journey(
-    page: ft.Page,
+    storage: StorageBackend,
     journey: dict,
 ) -> bool:
-    """Save a valid Journey to persistent local storage."""
+    """
+    Save a valid Journey while preserving the previous valid primary copy
+    as the last-known-good backup.
+    """
 
-    preferences = _get_preferences(page)
     journey_to_save = deepcopy(journey)
 
     journey_to_save["schema_version"] = (
@@ -534,7 +659,28 @@ async def save_journey(
         separators=(",", ":"),
     )
 
-    save_succeeded = await preferences.set(
+    current_value = await storage.get(
+        JOURNEY_STORAGE_KEY
+    )
+
+    if current_value is not None:
+        current_journey, _ = _prepare_stored_journey(
+            current_value,
+            source_label="Stored",
+        )
+
+        if current_journey is not None:
+            backup_succeeded = await storage.set(
+                JOURNEY_BACKUP_STORAGE_KEY,
+                current_value,
+            )
+
+            # Do not risk replacing the known-good primary if we were unable
+            # to preserve it first.
+            if not backup_succeeded:
+                return False
+
+    save_succeeded = await storage.set(
         JOURNEY_STORAGE_KEY,
         serialized_journey,
     )
@@ -547,19 +693,21 @@ async def save_journey(
 
 
 async def clear_journey(
-    page: ft.Page,
+    storage: StorageBackend,
 ) -> bool:
-    """Remove the locally saved Journey."""
+    """Remove both the active Journey and its recovery backup."""
 
-    preferences = _get_preferences(page)
+    primary_succeeded = True
+    backup_succeeded = True
 
-    journey_exists = await preferences.contains_key(
-        JOURNEY_STORAGE_KEY
-    )
+    if await storage.contains(JOURNEY_STORAGE_KEY):
+        primary_succeeded = await storage.remove(
+            JOURNEY_STORAGE_KEY
+        )
 
-    if not journey_exists:
-        return True
+    if await storage.contains(JOURNEY_BACKUP_STORAGE_KEY):
+        backup_succeeded = await storage.remove(
+            JOURNEY_BACKUP_STORAGE_KEY
+        )
 
-    return await preferences.remove(
-        JOURNEY_STORAGE_KEY
-    )
+    return primary_succeeded and backup_succeeded

@@ -122,7 +122,7 @@
 - [ ] Create a shared storage interface for desktop and PWA.
 - [x] Add save-data schema versioning.
 - [ ] Add save-data validation and migration support.
-- [ ] Add automatic recovery from interrupted writes.
+- [x] Add automatic recovery from interrupted writes.
 - [ ] Add lightweight automated tests for core calculations.
 - [x] Keep the battle engine UI-framework agnostic.
 

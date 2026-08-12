@@ -1,2 +1,3 @@
-flet==0.85.3S
+flet==0.85.3
+flet-datatable2==0.85.3
 pillow

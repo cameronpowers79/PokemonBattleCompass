@@ -30,6 +30,9 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 async def main(page: ft.Page) -> None:
     configure_page(page)
 
+    page.window.width = 402
+    page.window.height = 874
+
     page.window.icon = str(
         ASSETS_DIR / "icon_windows.ico"
     )
@@ -85,6 +88,39 @@ async def main(page: ft.Page) -> None:
         del event
         page.pop_dialog()
         page.update()
+
+    def close_recovery_dialog(
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close the successful automatic-recovery notice."""
+
+        del event
+        page.pop_dialog()
+        page.update()
+
+    def show_recovery_dialog() -> None:
+        """Tell the player that the last known good Journey was restored."""
+
+        recovery_dialog = ft.AlertDialog()
+        recovery_dialog.modal = True
+        recovery_dialog.title = ft.Text(
+            "Journey Recovered",
+            weight=ft.FontWeight.BOLD,
+        )
+        recovery_dialog.content = ft.Text(
+            "Your saved Journey couldn’t be read, so Pokémon Battle "
+            "Compass restored the last known good copy."
+        )
+        recovery_dialog.actions = [
+            ft.Button(
+                content="Got It",
+                icon=ft.Icons.CHECK_ROUNDED,
+                on_click=close_recovery_dialog,
+            ),
+        ]
+        recovery_dialog.actions_alignment = ft.MainAxisAlignment.END
+
+        page.show_dialog(recovery_dialog)
 
     def show_loaded_application() -> None:
         """
@@ -220,6 +256,9 @@ async def main(page: ft.Page) -> None:
 
     if app_state.is_ready:
         show_main_application()
+
+        if app_state.recovered_from_backup:
+            show_recovery_dialog()
     else:
         show_onboarding(show_welcome=not app_state.has_journey)
 

@@ -5432,7 +5432,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Pressure",
+    "Ability": "Unnerve",
     "AbilityNotes": "Species default"
   },
   {
@@ -5984,7 +5984,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Pressure",
+    "Ability": "Unnerve",
     "AbilityNotes": "Species default"
   },
   {
@@ -6299,7 +6299,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 85,
-    "Ability": "Pressure",
+    "Ability": "Unnerve",
     "AbilityNotes": "Species default"
   },
   {
@@ -6653,7 +6653,7 @@
     "Move4Category": "Status",
     "Move4Power": 0,
     "Move4Accuracy": 100,
-    "Ability": "Pressure",
+    "Ability": "Unnerve",
     "AbilityNotes": "Species default"
   },
   {

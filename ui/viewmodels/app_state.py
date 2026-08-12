@@ -53,6 +53,7 @@ class AppState:
             "needs_onboarding"
         )
         self.load_error: str | None = None
+        self.recovered_from_backup = False
 
     @property
     def starter(self) -> str | None:
@@ -334,6 +335,9 @@ class AppState:
         """Apply a Journey storage result to application state."""
 
         self.load_error = result.error
+        self.recovered_from_backup = (
+            result.recovered_from_backup
+        )
 
         if (
             result.status == "valid"
@@ -382,6 +386,7 @@ class AppState:
         )
 
         self.load_error = None
+        self.recovered_from_backup = False
 
     async def replace_journey(
         self,
@@ -416,6 +421,7 @@ class AppState:
             else "needs_onboarding"
         )
         self.load_error = None
+        self.recovered_from_backup = False
 
         return True
 

@@ -1,3 +1,4 @@
+
 """
 My Team view.
 
@@ -23,6 +24,7 @@ from pathlib import Path
 from typing import cast
 
 import flet as ft
+import flet_datatable2 as fdt
 
 from engine.item_recommendations import (
     ItemRecommendation,
@@ -104,6 +106,15 @@ EDITABLE_COLUMNS = [
     "Held Item",
 ]
 
+DISPLAY_COLUMN_LABELS = {
+    "Type1": "Primary Type",
+    "Type2": "Secondary Type",
+    "Move1": "Move 1",
+    "Move2": "Move 2",
+    "Move3": "Move 3",
+    "Move4": "Move 4",
+}
+
 NUMERIC_COLUMNS = {
     "Level",
     "HP",
@@ -113,6 +124,16 @@ NUMERIC_COLUMNS = {
     "SPD",
     "SPE",
 }
+
+NUMERIC_FOCUS_ORDER = [
+    "Level",
+    "HP",
+    "ATK",
+    "DEF",
+    "SPA",
+    "SPD",
+    "SPE",
+]
 
 STAT_COLUMNS = [
     "HP",
@@ -1466,6 +1487,12 @@ class MyTeamView:
                             size=14,
                             color=TEXT_SECONDARY,
                         ),
+                        ft.Text(
+                            "Swipe left or right to view more columns.",
+                            size=12,
+                            color=TEXT_MUTED,
+                            italic=True,
+                        ),
                         self.table_host,
                         ft.Row(
                             controls=cast(
@@ -2267,15 +2294,48 @@ class MyTeamView:
         control.update()
 
     def _build_editor_table(self) -> ft.Control:
-        table = ft.DataTable(
+        """Build the editor as one horizontally scrollable table with Pokémon sticky."""
+
+        column_widths = {
+            "Pokemon": 134,
+            "Gender": 120,
+            "Nature": 130,
+            "Type1": 116,
+            "Type2": 116,
+            "Level": 76,
+            "HP": 76,
+            "ATK": 76,
+            "DEF": 76,
+            "SPA": 76,
+            "SPD": 76,
+            "SPE": 76,
+            "Move1": 166,
+            "Move2": 166,
+            "Move3": 166,
+            "Move4": 166,
+            "Ability": 166,
+            "Held Item": 166,
+        }
+
+        table_min_width = sum(
+            column_widths[column]
+            for column in EDITABLE_COLUMNS
+        )
+
+        # DataTable2 owns the horizontal scrolling. Keeping every column in
+        # one table means a swipe can begin anywhere on the table while the
+        # Pokémon column stays pinned on the left.
+        return fdt.DataTable2(
             columns=[
-                ft.DataColumn(
+                fdt.DataColumn2(
                     label=ft.Text(
-                        column,
+                        DISPLAY_COLUMN_LABELS.get(column, column),
+                        size=14,
                         weight=ft.FontWeight.BOLD,
                         color=TEXT_PRIMARY,
-                    )
-)
+                    ),
+                    fixed_width=column_widths[column],
+                )
                 for column in EDITABLE_COLUMNS
             ],
             rows=[
@@ -2287,9 +2347,14 @@ class MyTeamView:
                     self.working_team
                 )
             ],
-            column_spacing=12,
-            data_row_min_height=58,
-            data_row_max_height=58,
+            fixed_left_columns=1,
+            fixed_top_rows=1,
+            fixed_columns_color=SURFACE,
+            fixed_corner_color=SURFACE_RAISED,
+            min_width=table_min_width,
+            column_spacing=8,
+            horizontal_margin=8,
+            data_row_height=58,
             heading_row_height=46,
             border=ft.Border.all(
                 1,
@@ -2299,31 +2364,39 @@ class MyTeamView:
             heading_row_color=SURFACE_RAISED,
         )
 
-        return ft.Row(
-            controls=cast(
-                list[ft.Control],
-                [table],
-            ),
-            scroll=ft.ScrollMode.AUTO,
-        )
-
     def _build_editor_row(
         self,
         row_index: int,
         pokemon: dict,
     ) -> ft.DataRow:
-        return ft.DataRow(
-            cells=[
-                ft.DataCell(
-                    self._build_editor_control(
-                        row_index=row_index,
-                        column=column,
-                        value=pokemon.get(column),
-                    )
+        cells: list[ft.DataCell] = []
+
+        for column in EDITABLE_COLUMNS:
+            editor_control = self._build_editor_control(
+                row_index=row_index,
+                column=column,
+                value=pokemon.get(column),
+            )
+
+            if column == "Pokemon":
+                cell_content: ft.Control = ft.Container(
+                    content=editor_control,
+                    padding=ft.Padding.only(right=7),
+                    border=ft.Border.only(
+                        right=ft.BorderSide(
+                            1,
+                            BORDER_DEFAULT,
+                        )
+                    ),
                 )
-                for column in EDITABLE_COLUMNS
-            ],
-        )
+            else:
+                cell_content = editor_control
+
+            cells.append(
+                ft.DataCell(cell_content)
+            )
+
+        return ft.DataRow(cells=cells)
 
     def _build_editor_control(
         self,
@@ -2344,7 +2417,7 @@ class MyTeamView:
                     str(value) if value else "",
                 ),
                 suggestions_max_height=240,
-                width=165,
+                width=134,
                 on_change=(
                     lambda event,
                     row=row_index,
@@ -2380,8 +2453,8 @@ class MyTeamView:
                     )
                     for option in GENDER_OPTIONS
                 ],
-                width=125,
-                text_size=13,
+                width=115,
+                text_size=12,
                 dense=True,
                 on_select=lambda event, row=row_index, field=column: (
                     self._handle_dropdown_change(
@@ -2405,8 +2478,8 @@ class MyTeamView:
                     )
                     for nature in NATURE_OPTIONS
                 ],
-                width=125,
-                text_size=13,
+                width=115,
+                text_size=12,
                 dense=True,
                 on_select=lambda event, row=row_index, field=column: (
                     self._handle_dropdown_change(
@@ -2423,8 +2496,8 @@ class MyTeamView:
                     if value
                     else ""
                 ),
-                width=125,
-                text_size=13,
+                width=105,
+                text_size=12,
                 dense=True,
                 read_only=True,
             )
@@ -2440,7 +2513,7 @@ class MyTeamView:
                     str(value) if value else "",
                 ),
                 suggestions_max_height=240,
-                width=165,
+                width=145,
                 on_change=(
                     lambda event,
                     row=row_index,
@@ -2474,7 +2547,7 @@ class MyTeamView:
                     str(value) if value else "",
                 ),
                 suggestions_max_height=240,
-                width=165,
+                width=140,
                 on_change=(
                     lambda event,
                     row=row_index,
@@ -2508,7 +2581,7 @@ class MyTeamView:
                     str(value) if value else "",
                 ),
                 suggestions_max_height=240,
-                width=165,
+                width=150,
                 on_change=(
                     lambda event,
                     row=row_index,
@@ -2541,7 +2614,7 @@ class MyTeamView:
                     else str(value)
                 ),
                 width=width,
-                text_size=13,
+                text_size=12,
                 dense=True,
                 text_align=(
                     ft.TextAlign.RIGHT
@@ -2561,7 +2634,7 @@ class MyTeamView:
                     )
                 ),
                 on_submit=lambda event, row=row_index, field=column: (
-                    self._handle_text_commit(
+                    self._handle_text_submit(
                         event,
                         row,
                         field,
@@ -2584,7 +2657,7 @@ class MyTeamView:
             return 100
 
         if column in NUMERIC_COLUMNS:
-            return 72
+            return 64
 
         if column == "Ability":
             return 145
@@ -2593,6 +2666,59 @@ class MyTeamView:
             return 145
 
         return 120
+
+    def _handle_text_submit(
+        self,
+        event: ft.Event[ft.TextField],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Commit Enter/Next and advance through the common numeric fields."""
+
+        self._handle_text_commit(
+            event,
+            row_index,
+            column,
+        )
+
+        if column in NUMERIC_FOCUS_ORDER:
+            self.page.run_task(
+                self._focus_next_numeric_field,
+                row_index,
+                column,
+            )
+
+    async def _focus_next_numeric_field(
+        self,
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Move focus to the next Level/stat field after Enter/Next."""
+
+        try:
+            column_index = NUMERIC_FOCUS_ORDER.index(column)
+        except ValueError:
+            return
+
+        next_row = row_index
+        next_column_index = column_index + 1
+
+        if next_column_index >= len(NUMERIC_FOCUS_ORDER):
+            next_row += 1
+            next_column_index = 0
+
+        if next_row >= len(self.working_team):
+            return
+
+        next_control = self.editor_controls.get(
+            (
+                next_row,
+                NUMERIC_FOCUS_ORDER[next_column_index],
+            )
+        )
+
+        if isinstance(next_control, ft.TextField):
+            await next_control.focus()
 
     def _handle_text_commit(
         self,

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable
 
 import flet as ft
+import flet_datatable2 as fdt
 
 from ui.theme import (
     BORDER_DEFAULT,
@@ -62,7 +63,7 @@ BADGE_CROP_BOUNDS = {
 
 BADGE_FRAME_ASSET = "badges/badge_coin_frame.png"
 
-TOP_JOURNEY_CARD_HEIGHT = 650
+TOP_JOURNEY_CARD_HEIGHT = 710
 
 MAP_IMAGE_WIDTH = 1025
 MAP_IMAGE_HEIGHT = 2490
@@ -216,6 +217,8 @@ class MyJourneyView:
             for pokemon in self.pokemon_catalog
         }
         self._root: ft.Column | None = None
+        self._top_journey_row: ft.ResponsiveRow | None = None
+        self._checklist_table: fdt.DataTable2 | None = None
         self._caught_stage_selector: ft.Dropdown | None = None
         self._add_item_selector: ft.AutoComplete | None = None
         self._add_item_quantity: ft.TextField | None = None
@@ -237,7 +240,6 @@ class MyJourneyView:
         self._badge_celebration_shine: ft.Container | None = None
         self._badge_celebration_sparkles: list[ft.Container] = []
 
-        self._move_to_map_enabled = True
         self._selected_map_objective_id: str | None = None
         self._map_stack: ft.Stack | None = None
         self._map_host: ft.Container | None = None
@@ -248,13 +250,14 @@ class MyJourneyView:
         self._map_marker_filter = "all"
         self._objective_row_containers: dict[str, list[ft.Container]] = {}
         self._objective_data_rows: dict[str, list[ft.DataRow]] = {}
-        self._move_to_map_overlay: ft.Container | None = None
         self._map_markers_by_objective: dict[str, list[ft.Container]] = {}
         self._map_marker_generation = 0
         self._map_marker_pulse_token = 0
         self._selected_marker_pulse_scale = 1.16
         self._selected_marker_y: float | None = None
         self._selected_marker_record: dict[str, Any] | None = None
+        self._selected_marker_scroll_key: str | None = None
+        self._selected_marker_anchor_key: str | None = None
 
     @staticmethod
     def _load_json(path: Path) -> list[dict[str, Any]]:
@@ -474,8 +477,6 @@ class MyJourneyView:
         return records
 
     def build(self) -> ft.Control:
-        self._ensure_move_to_map_overlay()
-
         self._root = ft.Column(
             controls=self._build_page_controls(),
             spacing=24,
@@ -488,17 +489,19 @@ class MyJourneyView:
         self._objective_row_containers = {}
         self._objective_data_rows = {}
 
+        self._top_journey_row = ft.ResponsiveRow(
+            controls=[
+                self._build_current_objectives_card(),
+                self._build_badge_tracker_card(),
+            ],
+            columns=12,
+            spacing=20,
+            run_spacing=20,
+        )
+
         return [
             self._build_page_intro(),
-            ft.ResponsiveRow(
-                controls=[
-                    self._build_current_objectives_card(),
-                    self._build_badge_tracker_card(),
-                ],
-                columns=12,
-                spacing=20,
-                run_spacing=20,
-            ),
+            self._top_journey_row,
             ft.ResponsiveRow(
                 controls=[
                     self._build_journey_checklist_card(),
@@ -520,6 +523,39 @@ class MyJourneyView:
         if self._root is None:
             return
         self._root.controls = self._build_page_controls()
+        self.page.update()
+
+    def _refresh_after_item_progress_change(self) -> None:
+        """Refresh item-dependent UI without replacing the Checklist table."""
+
+        if self._root is None:
+            return
+
+        # Current Objectives can change when an item becomes obtained or is
+        # marked available again. Replace only that card, not the page tree.
+        if self._top_journey_row is not None:
+            self._objective_row_containers = {}
+            self._top_journey_row.controls[0] = (
+                self._build_current_objectives_card()
+            )
+
+        # Rebuild fresh row controls, but transplant them into the *mounted*
+        # DataTable2. Keeping that table instance alive preserves its internal
+        # horizontal scroll position while status/action cells update normally.
+        mounted_table = self._checklist_table
+        if mounted_table is not None:
+            for objective_id in list(self._objective_data_rows):
+                if objective_id.startswith("item:"):
+                    self._objective_data_rows.pop(objective_id, None)
+
+            self._build_journey_checklist_card()
+            rebuilt_table = self._checklist_table
+            if rebuilt_table is not None:
+                mounted_table.rows = rebuilt_table.rows
+            self._checklist_table = mounted_table
+
+        # Obtained state also changes which markers are visible/status-colored.
+        self._refresh_visible_map_markers()
         self.page.update()
 
     def refresh_from_app_state(self) -> None:
@@ -880,7 +916,7 @@ class MyJourneyView:
             return
 
         self.item_quantities[item_id] = bounded_quantity
-        self._refresh()
+        self._refresh_after_item_progress_change()
 
     async def _add_item_objective(
         self,
@@ -1482,7 +1518,10 @@ class MyJourneyView:
         return self._build_card(
             title="Current Objectives",
             icon=ft.Icons.FACT_CHECK_OUTLINED,
-            subtitle="Highest-priority goals available at your current Badge count.",
+            subtitle=(
+                "Highest-priority goals available at your current Badge count. "
+                "Tap once to select; tap again to move to its map marker."
+            ),
             body=ft.Column(
                 controls=objectives,
                 spacing=10,
@@ -1491,66 +1530,25 @@ class MyJourneyView:
             height=TOP_JOURNEY_CARD_HEIGHT,
         )
 
-    def _ensure_move_to_map_overlay(self) -> None:
-        """Add the persistent Move to Map control to the page overlay."""
-
-        if self._move_to_map_overlay is not None:
-            return
-
-        move_to_map_toggle = ft.Switch(
-            label="Move to Map",
-            value=self._move_to_map_enabled,
-            active_color=PRIMARY_BLUE,
-            tooltip=(
-                "When enabled, selecting an item or Pokémon moves the "
-                "page to its map location."
-            ),
-        )
-        move_to_map_toggle.on_change = lambda: (
-            self._set_move_to_map_enabled(move_to_map_toggle)
-        )
-
-        overlay = ft.Container(
-            key="my-journey-move-to-map-overlay",
-            content=move_to_map_toggle,
-            padding=ft.Padding.symmetric(horizontal=14, vertical=8),
-            bgcolor=ft.Colors.with_opacity(0.94, SURFACE_RAISED),
-            border=ft.Border.all(1, BORDER_DEFAULT),
-            border_radius=24,
-            shadow=ft.BoxShadow(
-                blur_radius=18,
-                spread_radius=1,
-                color=ft.Colors.with_opacity(0.35, ft.Colors.BLACK),
-                offset=ft.Offset(0, 6),
-            ),
-        )
-        overlay.right = 24
-        overlay.bottom = 24
-
-        self._move_to_map_overlay = overlay
-        self.page.overlay.append(overlay)
-
-    def _set_move_to_map_enabled(
-        self,
-        toggle: ft.Switch,
-    ) -> None:
-        """Remember whether objective selection should move to the map."""
-
-        self._move_to_map_enabled = toggle.value is True
-
     def _select_objective_for_map(
         self,
         objective_id: str,
     ) -> None:
-        """Select an item or Pokémon and rebuild the live marker controls."""
+        """Select an objective, or focus its map marker on a second tap."""
 
         if not objective_id:
+            return
+
+        # A second tap on the already-selected objective is an explicit request
+        # to navigate to its map marker. Selection itself never moves the page.
+        if objective_id == self._selected_map_objective_id:
+            self.page.run_task(self._focus_selected_map_objective)
             return
 
         previous_objective_id = self._selected_map_objective_id
         self._selected_map_objective_id = objective_id
         self._map_marker_pulse_token += 1
-        self._selected_marker_pulse_scale = 1.16
+        self._selected_marker_pulse_scale = 1.20
         previous_id = previous_objective_id or ""
 
         # Marker controls may be replaced by a filter change, a page refresh, or
@@ -1579,15 +1577,15 @@ class MyJourneyView:
             data_row.color = ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
 
         self.page.update()
-        self.page.run_task(self._focus_selected_map_objective)
+
+        # First tap gives immediate visual confirmation without navigating away.
+        self.page.run_task(self._pulse_selected_markers)
 
     async def _focus_selected_map_objective(self) -> None:
-        """Scroll to the selected marker, then animate the live controls."""
+        """Scroll to the selected marker, then animate it for re-orientation."""
 
-        if self._move_to_map_enabled:
-            await self._scroll_to_selected_marker()
-            await asyncio.sleep(0.10)
-
+        await self._scroll_to_selected_marker()
+        await asyncio.sleep(0.16)
         await self._pulse_selected_markers()
 
     async def _pulse_selected_markers(self) -> None:
@@ -1606,11 +1604,13 @@ class MyJourneyView:
 
         pulse_token = self._map_marker_pulse_token
         frames = [
-            (0.82, 0.18),
-            (1.38, 0.40),
-            (1.05, 0.18),
-            (1.24, 0.28),
-            (1.16, 0.0),
+            (0.76, 0.24),
+            (1.58, 0.52),
+            (0.96, 0.24),
+            (1.42, 0.42),
+            (1.08, 0.22),
+            (1.26, 0.30),
+            (1.20, 0.0),
         ]
 
         for scale, delay in frames:
@@ -1627,56 +1627,23 @@ class MyJourneyView:
                 await asyncio.sleep(delay)
 
     async def _scroll_to_selected_marker(self) -> None:
-        """Center the selected marker vertically as closely as possible."""
+        """Center the selected objective's marker in one scroll animation."""
 
-        marker_y = self._selected_marker_y
-        if marker_y is None:
+        scroll_key = self._selected_marker_anchor_key
+        if not self._selected_map_objective_id or not scroll_key:
             return
 
-        page_width = float(self.page.width or 0)
-        viewport_height = float(self.page.height or 760)
-
-        if page_width >= 1000:
-            # Includes the page intro, top row, second-row spacing, and
-            # the map card's heading/padding.
-            map_top = 1320.0
-        else:
-            checklist_rows = len(self._checklist_items())
-
-            # Narrow DataTable rows wrap into much taller records than they do
-            # on desktop. Estimate from the actual phone layout rather than the
-            # compact desktop row height.
-            checklist_height = 250.0 + checklist_rows * 145.0
-
-            page_intro_height = 90.0
-            section_spacing = 24.0
-            top_row_height = TOP_JOURNEY_CARD_HEIGHT * 2 + 20.0
-
-            # Includes the map card title, subtitle, divider, marker filter,
-            # spacing, and padding above the image itself.
-            map_card_header_height = 300.0
-
-            map_top = (
-                page_intro_height
-                + section_spacing
-                + top_row_height
-                + section_spacing
-                + checklist_height
-                + section_spacing
-                + map_card_header_height
+        if self.on_scroll_to is not None:
+            await self.on_scroll_to(
+                scroll_key=scroll_key,
+                duration=420,
+                curve=ft.AnimationCurve.EASE_OUT_CUBIC,
             )
+            return
 
-        target_offset = max(
-            0.0,
-            map_top
-            + marker_y * self._map_render_height
-            - viewport_height * 0.50,
-        )
-
-        scroll_to = self.on_scroll_to or self.page.scroll_to
-        await scroll_to(
-            offset=target_offset,
-            duration=520,
+        await self.page.scroll_to(
+            scroll_key=scroll_key,
+            duration=420,
             curve=ft.AnimationCurve.EASE_OUT_CUBIC,
         )
 
@@ -2110,6 +2077,77 @@ class MyJourneyView:
             ),
         )
 
+    @staticmethod
+    def _marker_scroll_key(
+        record: dict[str, Any],
+        marker_index: int,
+    ) -> str:
+        """Return a stable, unique scroll key for one rendered map marker."""
+
+        objective_part = "-".join(
+            MyJourneyView._record_objective_ids(record)
+        ) or "objective"
+        location_part = str(
+            record.get("location_id", "location")
+        ).strip() or "location"
+
+        return (
+            f"journey-marker-{objective_part}-"
+            f"{location_part}-{marker_index}"
+        )
+
+    @staticmethod
+    def _marker_collision_offset_y(
+        record: dict[str, Any],
+    ) -> float:
+        """Return the marker's vertical collision fan-out adjustment."""
+
+        collision_index = int(record.get("collision_index", 0))
+        collision_count = int(record.get("collision_count", 1))
+        if collision_count <= 1:
+            return 0.0
+
+        collision_offsets = [
+            (-23.0, -17.0),
+            (23.0, 17.0),
+            (23.0, -17.0),
+            (-23.0, 17.0),
+            (0.0, -26.0),
+            (0.0, 26.0),
+        ]
+        return collision_offsets[
+            collision_index % len(collision_offsets)
+        ][1]
+
+    def _marker_center_anchor(
+        self,
+        record: dict[str, Any],
+        marker_index: int,
+    ) -> ft.Container:
+        """Build an invisible scroll target that centers one map marker."""
+
+        viewport_height = float(self.page.height or 760)
+        marker_center_y = (
+            float(record["y"]) * self._map_render_height
+            + self._marker_collision_offset_y(record)
+        )
+        anchor_top = max(
+            0.0,
+            marker_center_y - viewport_height / 2,
+        )
+        anchor_key = (
+            f"{self._marker_scroll_key(record, marker_index)}-center"
+        )
+
+        return ft.Container(
+            key=ft.ScrollKey(anchor_key),
+            width=1,
+            height=1,
+            left=0,
+            top=anchor_top,
+            opacity=0.0,
+        )
+
     def _build_map_marker(
         self,
         record: dict[str, Any],
@@ -2186,7 +2224,9 @@ class MyJourneyView:
             )
 
         marker = ft.Container(
-            key=f"map-marker-{objective_id}-{marker_index}",
+            key=ft.ScrollKey(
+                self._marker_scroll_key(record, marker_index)
+            ),
             content=ft.Stack(
                 controls=[
                     ft.Container(
@@ -2243,7 +2283,7 @@ class MyJourneyView:
             ),
             shadow=self._map_marker_shadow(selected),
             animate_scale=ft.Animation(
-                220,
+                300,
                 ft.AnimationCurve.EASE_OUT_BACK,
             ),
             on_click=lambda: self._handle_map_marker_click(record),
@@ -2511,75 +2551,131 @@ class MyJourneyView:
                 self._register_objective_data_row(
                     objective_id,
                     ft.DataRow(
-                    cells=[
-                        ft.DataCell(
-                            self._status_icon(
-                                status,
-                                self._item_status_tooltip(item, status),
-                            )
+                        cells=[
+                            ft.DataCell(
+                                ft.Container(
+                                    content=ft.Text(
+                                        self._item_display_name(item),
+                                        color=TEXT_PRIMARY,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    padding=ft.Padding.only(right=7),
+                                    border=ft.Border.only(
+                                        right=ft.BorderSide(
+                                            1,
+                                            BORDER_DEFAULT,
+                                        )
+                                    ),
+                                )
+                            ),
+                            ft.DataCell(
+                                self._status_icon(
+                                    status,
+                                    self._item_status_tooltip(item, status),
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.Text(
+                                    self._item_location_text(item),
+                                    color=TEXT_SECONDARY,
+                                    size=13,
+                                )
+                            ),
+                            ft.DataCell(
+                                self._build_item_obtained_action(
+                                    item,
+                                    status,
+                                )
+                            ),
+                            ft.DataCell(remove_control),
+                        ],
+                        color=(
+                            ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
+                            if objective_id == self._selected_map_objective_id
+                            else None
                         ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._item_display_name(item),
-                                color=TEXT_PRIMARY,
-                                weight=ft.FontWeight.W_600,
-                            )
+                        on_select_change=(
+                            lambda event, objective_id=objective_id:
+                            self._select_objective_for_map(objective_id)
                         ),
-                        ft.DataCell(
-                            ft.Text(
-                                self._item_location_text(item),
-                                color=TEXT_SECONDARY,
-                                size=13,
-                            )
-                        ),
-                        ft.DataCell(
-                            self._build_item_obtained_action(
-                                item,
-                                status,
-                            )
-                        ),
-                        ft.DataCell(remove_control),
-                    ],
-                    color=(
-                        ft.Colors.with_opacity(0.16, PRIMARY_BLUE)
-                        if objective_id == self._selected_map_objective_id
-                        else None
-                    ),
-                    on_select_change=(
-                        lambda event, objective_id=objective_id:
-                        self._select_objective_for_map(objective_id)
-                    ),
                     ),
                 )
             )
 
-        table = ft.DataTable(
+        checklist_widths = [150, 88, 240, 190, 92]
+        table = fdt.DataTable2(
             columns=[
-                self._column("Status"),
-                self._column("Item"),
-                self._column("Location"),
-                self._column("Mark as obtained"),
-                self._column("Remove"),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Item",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=checklist_widths[0],
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Status",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=checklist_widths[1],
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Location",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=checklist_widths[2],
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Mark as obtained",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=checklist_widths[3],
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Remove",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=checklist_widths[4],
+                ),
             ],
             rows=rows,
+            fixed_left_columns=1,
+            fixed_top_rows=1,
+            fixed_columns_color=SURFACE,
+            fixed_corner_color=SURFACE_RAISED,
+            min_width=sum(checklist_widths),
             border=ft.Border.all(1, BORDER_DEFAULT),
             border_radius=12,
             heading_row_color=SURFACE_RAISED,
-            column_spacing=18,
-            data_row_min_height=52,
-            data_row_max_height=72,
+            column_spacing=12,
+            horizontal_margin=8,
+            data_row_height=72,
+            heading_row_height=52,
             show_checkbox_column=False,
         )
+        self._checklist_table = table
 
-        body_controls: list[ft.Control] = [
-            ft.Row(
-                controls=[
-                    ft.Checkbox(
+        toolbar = ft.ResponsiveRow(
+            controls=[
+                ft.Container(
+                    content=ft.Checkbox(
                         label="Hide Obtained Items",
                         value=self._hide_obtained_items,
                         on_change=self._toggle_hide_obtained_items,
                     ),
-                    ft.Button(
+                    col={"xs": 12, "sm": 6},
+                    alignment=ft.Alignment.CENTER_LEFT,
+                ),
+                ft.Container(
+                    content=ft.Button(
                         content="Add Objective",
                         icon=ft.Icons.ADD_ROUNDED,
                         bgcolor=SUCCESS,
@@ -2587,14 +2683,25 @@ class MyJourneyView:
                         icon_color="#07120B",
                         on_click=self._show_add_item_dialog,
                     ),
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    col={"xs": 12, "sm": 6},
+                    alignment=ft.Alignment.CENTER_LEFT,
+                ),
+            ],
+            columns=12,
+            spacing=8,
+            run_spacing=8,
+        )
+
+        body_controls: list[ft.Control] = [
+            toolbar,
+            ft.Text(
+                "Tap once to select; tap again to move to its map marker. "
+                "Swipe left or right to view more columns.",
+                size=12,
+                color=TEXT_MUTED,
+                italic=True,
             ),
-            ft.Row(
-                controls=[table],
-                scroll=ft.ScrollMode.AUTO,
-            ),
+            table,
         ]
 
         return self._build_card(
@@ -2914,6 +3021,8 @@ class MyJourneyView:
         self._map_marker_generation += 1
         self._map_markers_by_objective = {}
         self._selected_marker_y = None
+        self._selected_marker_scroll_key = None
+        self._selected_marker_anchor_key = None
 
         marker_controls: list[ft.Control] = []
         for marker_index, record in enumerate(self._map_marker_records):
@@ -2923,9 +3032,18 @@ class MyJourneyView:
 
             if (
                 self._record_matches_selected_objective(record)
-                and self._selected_marker_y is None
+                and self._selected_marker_scroll_key is None
             ):
                 self._selected_marker_y = float(record["y"])
+                self._selected_marker_scroll_key = (
+                    self._marker_scroll_key(record, marker_index)
+                )
+                self._selected_marker_anchor_key = (
+                    f"{self._selected_marker_scroll_key}-center"
+                )
+                marker_controls.append(
+                    self._marker_center_anchor(record, marker_index)
+                )
 
         self._map_image = ft.Image(
             src="Galar_Map_Base.png",
@@ -2986,6 +3104,8 @@ class MyJourneyView:
         self._map_marker_generation += 1
         self._map_markers_by_objective = {}
         self._selected_marker_y = None
+        self._selected_marker_scroll_key = None
+        self._selected_marker_anchor_key = None
 
         marker_controls: list[ft.Control] = []
         for marker_index, record in enumerate(self._map_marker_records):
@@ -2994,9 +3114,18 @@ class MyJourneyView:
             )
             if (
                 self._record_matches_selected_objective(record)
-                and self._selected_marker_y is None
+                and self._selected_marker_scroll_key is None
             ):
                 self._selected_marker_y = float(record["y"])
+                self._selected_marker_scroll_key = (
+                    self._marker_scroll_key(record, marker_index)
+                )
+                self._selected_marker_anchor_key = (
+                    f"{self._selected_marker_scroll_key}-center"
+                )
+                marker_controls.append(
+                    self._marker_center_anchor(record, marker_index)
+                )
 
         self._map_stack.controls = [
             self._map_image,
@@ -3040,7 +3169,7 @@ class MyJourneyView:
         self._map_render_height = float(MAP_RENDER_HEIGHT)
 
         self._map_host = ft.Container(
-            key="journey-map-anchor",
+            key=ft.ScrollKey("journey-map-anchor"),
             content=self._build_responsive_map_stack(),
             width=MAP_RENDER_WIDTH,
             height=MAP_RENDER_HEIGHT,
@@ -3479,6 +3608,8 @@ class MyJourneyView:
         if self._selected_map_objective_id == f"pokemon:{pokemon_id}":
             self._selected_map_objective_id = None
             self._selected_marker_y = None
+            self._selected_marker_scroll_key = None
+            self._selected_marker_anchor_key = None
 
         self._reload_planner_dependencies()
         self._refresh()
@@ -3503,8 +3634,8 @@ class MyJourneyView:
                 pokemon_identity_controls.append(
                     ft.Image(
                         src=marker_asset,
-                        width=58,
-                        height=58,
+                        width=48,
+                        height=48,
                         fit=ft.BoxFit.CONTAIN,
                         semantics_label=(
                             f"{pokemon.get('acquire_as') or pokemon.get('pokemon')}"
@@ -3525,38 +3656,37 @@ class MyJourneyView:
                     ft.Text(
                         self._pokemon_acquisition_text(pokemon),
                         color=TEXT_SECONDARY,
-                        size=13,
+                        size=12,
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
                         str(pokemon.get("evolution_summary", "")),
                         color=TEXT_MUTED,
-                        size=12,
+                        size=11,
                         italic=True,
                         text_align=ft.TextAlign.CENTER,
                     ),
                 ]
             )
 
-            pokemon_cell_controls: list[ft.Control] = [
-                ft.Container(
-                    content=self._status_icon(status),
-                    width=52,
-                    alignment=ft.Alignment.CENTER,
+            pokemon_cell = ft.Container(
+                content=ft.Column(
+                    controls=[
+                        self._status_icon(status),
+                        *pokemon_identity_controls,
+                    ],
+                    spacing=3,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                ft.Container(
-                    content=ft.Column(
-                        controls=pokemon_identity_controls,
-                        spacing=2,
-                        horizontal_alignment=(
-                            ft.CrossAxisAlignment.CENTER
-                        ),
-                        alignment=ft.MainAxisAlignment.CENTER,
-                    ),
-                    width=300,
-                    alignment=ft.Alignment.CENTER,
+                width=100,
+                height=170,
+                padding=ft.Padding.only(right=7),
+                alignment=ft.Alignment.CENTER,
+                border=ft.Border.only(
+                    right=ft.BorderSide(1, BORDER_DEFAULT)
                 ),
-            ]
+            )
 
             objective_id = f"pokemon:{pokemon_id}"
             rows.append(
@@ -3564,20 +3694,7 @@ class MyJourneyView:
                     objective_id,
                     ft.DataRow(
                         cells=[
-                            ft.DataCell(
-                                ft.Container(
-                                    content=ft.Row(
-                                        controls=pokemon_cell_controls,
-                                        spacing=8,
-                                        vertical_alignment=(
-                                            ft.CrossAxisAlignment.CENTER
-                                        ),
-                                    ),
-                                    width=360,
-                                    height=150,
-                                    alignment=ft.Alignment.CENTER_LEFT,
-                                )
-                            ),
+                            ft.DataCell(pokemon_cell),
                             ft.DataCell(
                                 ft.Text(
                                     self._pokemon_location_text(pokemon),
@@ -3636,23 +3753,101 @@ class MyJourneyView:
                 )
             )
 
-        table = ft.DataTable(
+        planner_widths = [110, 220, 210, 180, 175, 92]
+        table = fdt.DataTable2(
             columns=[
-                self._column("Pokémon"),
-                self._column("Location"),
-                self._column("Encounter Options"),
-                self._column("More Locations"),
-                self._column("Mark as acquired"),
-                self._column("Remove"),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Pokémon",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=planner_widths[0],
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Location",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    size=fdt.DataColumnSize.L,
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Encounter Options",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    size=fdt.DataColumnSize.L,
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "More Locations",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    size=fdt.DataColumnSize.M,
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Mark as acquired",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    size=fdt.DataColumnSize.M,
+                ),
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Remove",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    size=fdt.DataColumnSize.S,
+                ),
             ],
             rows=rows,
+            fixed_left_columns=1,
+            fixed_top_rows=1,
+            fixed_columns_color=SURFACE,
+            fixed_corner_color=SURFACE_RAISED,
+            min_width=sum(planner_widths),
             border=ft.Border.all(1, BORDER_DEFAULT),
             border_radius=12,
             heading_row_color=SURFACE_RAISED,
-            column_spacing=24,
-            data_row_min_height=150,
-            data_row_max_height=220,
+            column_spacing=12,
+            horizontal_margin=8,
+            data_row_height=180,
+            heading_row_height=52,
             show_checkbox_column=False,
+        )
+
+        toolbar = ft.ResponsiveRow(
+            controls=[
+                ft.Container(
+                    content=ft.Checkbox(
+                        label="Hide Obtained Pokémon",
+                        value=self._hide_obtained_pokemon,
+                        on_change=self._toggle_hide_obtained_pokemon,
+                    ),
+                    col={"xs": 12, "sm": 6},
+                    alignment=ft.Alignment.CENTER_LEFT,
+                ),
+                ft.Container(
+                    content=ft.Button(
+                        content="Add Pokémon",
+                        icon=ft.Icons.ADD_ROUNDED,
+                        bgcolor=SUCCESS,
+                        color="#07120B",
+                        icon_color="#07120B",
+                        on_click=self._show_add_pokemon_dialog,
+                    ),
+                    col={"xs": 12, "sm": 6},
+                    alignment=ft.Alignment.CENTER_LEFT,
+                ),
+            ],
+            columns=12,
+            spacing=8,
+            run_spacing=8,
         )
 
         return self._build_card(
@@ -3664,29 +3859,15 @@ class MyJourneyView:
             ),
             body=ft.Column(
                 controls=[
-                    ft.Row(
-                        controls=[
-                            ft.Checkbox(
-                                label="Hide Obtained Pokémon",
-                                value=self._hide_obtained_pokemon,
-                                on_change=self._toggle_hide_obtained_pokemon,
-                            ),
-                            ft.Button(
-                                content="Add Pokémon",
-                                icon=ft.Icons.ADD_ROUNDED,
-                                bgcolor=SUCCESS,
-                                color="#07120B",
-                                icon_color="#07120B",
-                                on_click=self._show_add_pokemon_dialog,
-                            ),
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    toolbar,
+                    ft.Text(
+                        "Tap once to select; tap again to move to its map marker. "
+                "Swipe left or right to view more columns.",
+                        size=12,
+                        color=TEXT_MUTED,
+                        italic=True,
                     ),
-                    ft.Row(
-                        controls=[table],
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
+                    table,
                 ],
                 spacing=12,
             ),

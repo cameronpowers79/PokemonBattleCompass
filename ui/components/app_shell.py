@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from collections.abc import Callable
 
 import flet as ft
@@ -74,6 +76,14 @@ class AppShell:
         self._return_to_top_threshold = 600.0
         self._return_to_top_overlay = self._build_return_to_top_overlay()
         self._return_to_top_is_attached = False
+
+        # Live metrics from the shell-owned scrollable Column. These let
+        # programmatic navigation center a real scroll target without making
+        # assumptions about screen width or the responsive layout above it.
+        self._scroll_pixels = 0.0
+        self._scroll_viewport_dimension = 0.0
+        self._scroll_min_extent = 0.0
+        self._scroll_max_extent = 0.0
 
         self.content_host = ft.Container(
             content=self.view_builders[
@@ -236,24 +246,69 @@ class AppShell:
         self,
         event: ft.OnScrollEvent,
     ) -> None:
-        """Toggle Return to Top after meaningful scrolling."""
+        """Track shell scroll metrics and toggle Return to Top."""
+
+        self._scroll_pixels = float(event.pixels)
+        self._scroll_viewport_dimension = float(event.viewport_dimension)
+        self._scroll_min_extent = float(event.min_scroll_extent)
+        self._scroll_max_extent = float(event.max_scroll_extent)
 
         self._set_return_to_top_attached(
-            float(event.pixels) >= self._return_to_top_threshold
+            self._scroll_pixels >= self._return_to_top_threshold
         )
 
     async def scroll_to(
         self,
         *,
         offset: float | None = None,
+        delta: float | None = None,
+        scroll_key: ft.ScrollKey | str | int | float | bool | None = None,
+        center_scroll_key: bool = False,
         duration: int = 0,
         curve: ft.AnimationCurve = ft.AnimationCurve.EASE,
     ) -> None:
-        """Scroll the shell's shared content area."""
+        """Scroll the shell's shared content area.
+
+        When ``center_scroll_key`` is True, first scroll to the real keyed
+        control, then use the actual post-scroll position and viewport extent
+        reported by ``on_scroll`` to center that target in the viewport.
+        """
 
         await self.scroll_host.scroll_to(
             offset=offset,
+            delta=delta,
+            scroll_key=scroll_key,
             duration=duration,
+            curve=curve,
+        )
+
+        if not center_scroll_key or scroll_key is None:
+            return
+
+        # Programmatic scrolling produces normal scroll notifications. Wait for
+        # the keyed animation to finish so the stored metrics describe its true
+        # landing position rather than an intermediate animation frame.
+        await asyncio.sleep(max(0.05, (duration / 1000) + 0.05))
+
+        viewport = self._scroll_viewport_dimension
+        if viewport <= 0:
+            viewport = float(self.page.height or 0)
+
+        if viewport <= 0:
+            return
+
+        centered_offset = self._scroll_pixels - (viewport / 2)
+        centered_offset = max(
+            self._scroll_min_extent,
+            min(centered_offset, self._scroll_max_extent),
+        )
+
+        # The first keyed jump gives us the target's real absolute position.
+        # This second scroll only converts that measured position into centered
+        # viewport placement; no responsive-layout dimensions are estimated.
+        await self.scroll_host.scroll_to(
+            offset=centered_offset,
+            duration=min(280, max(160, duration // 2)),
             curve=curve,
         )
 
