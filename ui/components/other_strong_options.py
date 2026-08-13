@@ -21,6 +21,9 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_SECTION_TITLE,
+    FONT_FAMILY_HEADER,
+    FONT_FAMILY_DISPLAY,
 )
 
 
@@ -82,8 +85,8 @@ class OtherStrongOptions(ft.Container):
                     [
                         ft.Text(
                             "Other Strong Options",
-                            size=26,
-                            weight=ft.FontWeight.BOLD,
+                            size=TEXT_SIZE_SECTION_TITLE,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                         ),
                         ft.Container(
@@ -149,8 +152,8 @@ class OtherStrongOptions(ft.Container):
                 [
                     ft.Text(
                         "Other Strong Options",
-                        size=26,
-                        weight=ft.FontWeight.BOLD,
+                        size=TEXT_SIZE_SECTION_TITLE,
+                        font_family=FONT_FAMILY_HEADER,
                         color=TEXT_PRIMARY,
                     ),
                     ft.ResponsiveRow(
@@ -170,8 +173,8 @@ class OtherStrongOptions(ft.Container):
                 [
                     ft.Text(
                         "Other Strong Options",
-                        size=26,
-                        weight=ft.FontWeight.BOLD,
+                        size=TEXT_SIZE_SECTION_TITLE,
+                        font_family=FONT_FAMILY_HEADER,
                         color=TEXT_PRIMARY,
                     ),
                     ft.ResponsiveRow(
@@ -239,7 +242,7 @@ class OtherStrongOptions(ft.Container):
                                 ft.Text(
                                     option.pokemon_name,
                                     size=25,
-                                    weight=ft.FontWeight.BOLD,
+                                    font_family=FONT_FAMILY_DISPLAY,
                                     color=TEXT_PRIMARY,
                                 ),
                                 ft.Row(

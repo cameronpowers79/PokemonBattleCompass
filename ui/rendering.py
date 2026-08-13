@@ -28,6 +28,14 @@ PLATE_SPRITE_DIR = (
     / "plate"
 )
 
+INCENSE_SPRITE_DIR = (
+    ASSETS_DIR
+    / "raw"
+    / "pokesprite"
+    / "items"
+    / "incense"
+)
+
 
 def image_to_base64(
     path,
@@ -256,16 +264,24 @@ def get_item_sprite_path(
     )
 
     candidates = [
-    HELD_ITEM_SPRITE_DIR
-    / f"{sprite_name}.png",
-    PLATE_SPRITE_DIR
-    / f"{sprite_name}.png",
-]
+        HELD_ITEM_SPRITE_DIR
+        / f"{sprite_name}.png",
+        PLATE_SPRITE_DIR
+        / f"{sprite_name}.png",
+        INCENSE_SPRITE_DIR
+        / f"{sprite_name}.png",
+    ]
 
     if sprite_name.endswith("-plate"):
         candidates.append(
             PLATE_SPRITE_DIR
             / f"{sprite_name.removesuffix('-plate')}.png"
+        )
+
+    if sprite_name.endswith("-incense"):
+        candidates.append(
+            INCENSE_SPRITE_DIR
+            / f"{sprite_name.removesuffix('-incense')}.png"
         )
 
     for candidate in candidates:

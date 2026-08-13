@@ -27,6 +27,10 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_CARD_TITLE,
+    TEXT_SIZE_METRIC_LARGE,
+    FONT_FAMILY_DISPLAY,
+    FONT_FAMILY_HEADER,
 )
 
 
@@ -130,8 +134,9 @@ class OpponentCard(ft.Container):
                 [
                     ft.Text(
                         "Opponent",
-                        size=22,
+                        size=TEXT_SIZE_CARD_TITLE,
                         weight=ft.FontWeight.BOLD,
+                        font_family=FONT_FAMILY_HEADER,
                         color=TEXT_PRIMARY,
                     ),
                     self._build_identity_section(),
@@ -293,8 +298,9 @@ class OpponentCard(ft.Container):
                     ),
                     ft.Text(
                         self.pokemon_name,
-                        size=34,
+                        size=TEXT_SIZE_METRIC_LARGE,
                         weight=ft.FontWeight.BOLD,
+                        font_family=FONT_FAMILY_DISPLAY,
                         color=TEXT_PRIMARY,
                         text_align=ft.TextAlign.CENTER,
                     ),

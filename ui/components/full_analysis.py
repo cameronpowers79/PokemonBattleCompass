@@ -18,6 +18,10 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_CARD_TITLE,
+    TEXT_SIZE_DETAIL,
+    TEXT_SIZE_CAPTION,
+    FONT_FAMILY_HEADER,
 )
 from ui.viewmodels.battle_compass_vm import MatchupViewModel
 
@@ -59,8 +63,9 @@ class FullAnalysis(ft.Container):
                 [
                     ft.Text(
                         "Full Analysis",
-                        size=22,
+                        size=TEXT_SIZE_CARD_TITLE,
                         weight=ft.FontWeight.BOLD,
+                        font_family=FONT_FAMILY_HEADER,
                         color=TEXT_PRIMARY,
                     ),
                     ft.Text(
@@ -68,7 +73,7 @@ class FullAnalysis(ft.Container):
                             "Compare every member of your team "
                             "against the selected opponent."
                         ),
-                        size=13,
+                        size=TEXT_SIZE_DETAIL,
                         color=TEXT_SECONDARY,
                     ),
                     self._build_table_host(),
@@ -177,7 +182,7 @@ class FullAnalysis(ft.Container):
         return fdt.DataColumn2(
             label=ft.Text(
                 label,
-                size=12,
+                size=TEXT_SIZE_CAPTION,
                 weight=ft.FontWeight.BOLD,
                 color=TEXT_PRIMARY,
             ),
@@ -284,7 +289,7 @@ class FullAnalysis(ft.Container):
         return ft.Container(
             content=ft.Text(
                 value,
-                size=12,
+                size=TEXT_SIZE_CAPTION,
                 weight=(
                     ft.FontWeight.BOLD
                     if bold
@@ -312,7 +317,7 @@ class FullAnalysis(ft.Container):
         return ft.Container(
             content=ft.Text(
                 f"{value:.2f}",
-                size=12,
+                size=TEXT_SIZE_CAPTION,
                 weight=ft.FontWeight.BOLD,
                 color=TEXT_PRIMARY,
                 text_align=ft.TextAlign.RIGHT,

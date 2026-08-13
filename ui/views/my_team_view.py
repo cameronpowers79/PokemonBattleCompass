@@ -54,6 +54,12 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_CAPTION,
+    TEXT_SIZE_DETAIL,
+    TEXT_SIZE_BODY,
+    TEXT_SIZE_FEATURED_TITLE,
+    FONT_FAMILY_DISPLAY,
+    FONT_FAMILY_HEADER,
 )
 
 
@@ -1470,8 +1476,9 @@ class MyTeamView:
                     [
                         ft.Text(
                             "Manage My Team",
-                            size=24,
+                            size=TEXT_SIZE_FEATURED_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                         ),
                         ft.Text(
@@ -1484,12 +1491,12 @@ class MyTeamView:
                                 "relies on these details to recommend your "
                                 "strongest matchups."
                             ),
-                            size=14,
+                            size=TEXT_SIZE_BODY,
                             color=TEXT_SECONDARY,
                         ),
                         ft.Text(
                             "Swipe left or right to view more columns.",
-                            size=12,
+                            size=TEXT_SIZE_CAPTION,
                             color=TEXT_MUTED,
                             italic=True,
                         ),
@@ -1521,7 +1528,7 @@ class MyTeamView:
                                 "correctly. A blue ⊕ beside the Move Score "
                                 "indicates an active held-item bonus."
                             ),
-                            size=13,
+                            size=TEXT_SIZE_DETAIL,
                             color=TEXT_MUTED,
                         ),
                     ],
@@ -1545,8 +1552,9 @@ class MyTeamView:
                     [
                         ft.Text(
                             "Pokémon Details",
-                            size=24,
+                            size=TEXT_SIZE_FEATURED_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                         ),
                         self.detail_notice,
@@ -1603,8 +1611,9 @@ class MyTeamView:
                     [
                         ft.Text(
                             "My Box",
-                            size=24,
+                            size=TEXT_SIZE_FEATURED_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                         ),
                         ft.Text(
@@ -1613,7 +1622,7 @@ class MyTeamView:
                                 "Use the controls below to move or release one; "
                                 "use Pokémon Details only when you want to inspect it."
                             ),
-                            size=14,
+                            size=TEXT_SIZE_BODY,
                             color=TEXT_SECONDARY,
                         ),
                         self.box_table_host,
@@ -3067,6 +3076,7 @@ class MyTeamView:
                     pokemon_name,
                     size=32,
                     weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_DISPLAY,
                     color=TEXT_PRIMARY,
                 ),
             ],
@@ -5003,6 +5013,7 @@ class MyTeamView:
                 title=ft.Text(
                     "Suggested Held Items",
                     weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
                     color=TEXT_PRIMARY,
                 ),
                 content=ft.Container(
@@ -5441,7 +5452,7 @@ class MyTeamView:
                         ),
                         ft.Text(
                             recommendation.description,
-                            size=14,
+                            size=TEXT_SIZE_BODY,
                             color=TEXT_SECONDARY,
                         ),
                         ft.Text(

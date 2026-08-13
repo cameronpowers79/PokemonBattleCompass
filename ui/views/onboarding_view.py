@@ -26,6 +26,10 @@ from ui.theme import (
     SURFACE_RAISED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_PAGE_TITLE,
+    TEXT_SIZE_LABEL,
+    TEXT_SIZE_BODY_LARGE,
+    FONT_FAMILY_HEADER,
 )
 from ui.viewmodels.app_state import AppState
 
@@ -157,8 +161,9 @@ class OnboardingView:
                     [
                         ft.Text(
                             "Welcome to Pokémon Battle Compass",
-                            size=28,
+                            size=TEXT_SIZE_PAGE_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                             text_align=ft.TextAlign.CENTER,
                         ),
@@ -167,7 +172,7 @@ class OnboardingView:
                                 "Start a new adventure, or restore a "
                                 "Journey you previously exported."
                             ),
-                            size=16,
+                            size=TEXT_SIZE_LABEL,
                             color=TEXT_SECONDARY,
                             text_align=ft.TextAlign.CENTER,
                         ),
@@ -292,7 +297,7 @@ class OnboardingView:
                                         "This Journey will become the active "
                                         "Journey on this device."
                                     ),
-                                    size=15,
+                                    size=TEXT_SIZE_BODY_LARGE,
                                     color=TEXT_SECONDARY,
                                 ),
                                 ft.Container(
@@ -410,7 +415,7 @@ class OnboardingView:
                         "Your saved Journey has been restored. Select OK "
                         "to continue from its last saved page."
                     ),
-                    size=15,
+                    size=TEXT_SIZE_BODY_LARGE,
                     color=TEXT_SECONDARY,
                 ),
                 actions=[
@@ -450,7 +455,7 @@ class OnboardingView:
                 ),
                 content=ft.Text(
                     message,
-                    size=15,
+                    size=TEXT_SIZE_BODY_LARGE,
                     color=TEXT_SECONDARY,
                 ),
                 actions=[

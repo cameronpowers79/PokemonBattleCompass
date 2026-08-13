@@ -39,6 +39,9 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_FEATURED_TITLE,
+    TEXT_SIZE_CARD_TITLE,
+    FONT_FAMILY_HEADER,
 )
 from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import (
@@ -201,8 +204,9 @@ class BattleCompassView:
                     [
                         ft.Text(
                             "Battle Settings",
-                            size=24,
+                            size=TEXT_SIZE_FEATURED_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                         ),
                         ft.ResponsiveRow(
@@ -888,8 +892,9 @@ class BattleCompassView:
                         ),
                         ft.Text(
                             "No Battle Recommendation Yet",
-                            size=22,
+                            size=TEXT_SIZE_CARD_TITLE,
                             weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER,
                             color=TEXT_PRIMARY,
                             text_align=ft.TextAlign.CENTER,
                         ),

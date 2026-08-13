@@ -28,6 +28,15 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_BODY,
+    TEXT_SIZE_BODY_LARGE,
+    TEXT_SIZE_DETAIL,
+    TEXT_SIZE_FEATURED_TITLE,
+    TEXT_SIZE_HERO_MOVE,
+    TEXT_SIZE_HERO_NAME,
+    TEXT_SIZE_METRIC,
+    FONT_FAMILY_DISPLAY,
+    FONT_FAMILY_HEADER,
 )
 
 
@@ -151,8 +160,9 @@ class RecommendationCard(ft.Container):
                 ),
                 ft.Text(
                     "Recommended Pokémon",
-                    size=23,
+                    size=TEXT_SIZE_FEATURED_TITLE,
                     weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
                     color=TEXT_PRIMARY,
                     no_wrap=False,
                     overflow=ft.TextOverflow.VISIBLE,
@@ -186,8 +196,9 @@ class RecommendationCard(ft.Container):
             [
                 ft.Text(
                     self.pokemon_name,
-                    size=40,
+                    size=TEXT_SIZE_HERO_NAME,
                     weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_DISPLAY,
                     color=TEXT_PRIMARY,
                 ),
             ],
@@ -337,7 +348,7 @@ class RecommendationCard(ft.Container):
             [
                 ft.Text(
                     f"{self.move_score:.2f}",
-                    size=30,
+                    size=TEXT_SIZE_METRIC,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
@@ -355,7 +366,7 @@ class RecommendationCard(ft.Container):
                 [
                     ft.Text(
                         "Best Move",
-                        size=14,
+                        size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),
                     ft.Row(
@@ -364,7 +375,7 @@ class RecommendationCard(ft.Container):
                             [
                                 ft.Text(
                                     self.best_move,
-                                    size=32,
+                                    size=TEXT_SIZE_HERO_MOVE,
                                     weight=ft.FontWeight.BOLD,
                                     color=TEXT_PRIMARY,
                                 ),
@@ -396,7 +407,7 @@ class RecommendationCard(ft.Container):
                     ft.Container(
                         content=ft.Text(
                             self.effectiveness_label,
-                            size=15,
+                            size=TEXT_SIZE_BODY_LARGE,
                             weight=ft.FontWeight.BOLD,
                             color=self.effectiveness_color,
                         ),
@@ -409,7 +420,7 @@ class RecommendationCard(ft.Container):
                     ),
                     ft.Text(
                         "Move Score",
-                        size=14,
+                        size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),
                     ft.Row(
@@ -456,13 +467,13 @@ class RecommendationCard(ft.Container):
                     [
                         ft.Text(
                             self.held_item,
-                            size=14,
+                            size=TEXT_SIZE_BODY,
                             weight=ft.FontWeight.BOLD,
                             color=PRIMARY_BLUE,
                         ),
                         ft.Text(
                             f"Move bonus: +{boost_percent}%",
-                            size=13,
+                            size=TEXT_SIZE_DETAIL,
                             color=TEXT_SECONDARY,
                         ),
                     ],
@@ -477,7 +488,7 @@ class RecommendationCard(ft.Container):
             [
                 ft.Text(
                     "Held Item Bonus Active!",
-                    size=15,
+                    size=TEXT_SIZE_BODY_LARGE,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
@@ -494,17 +505,17 @@ class RecommendationCard(ft.Container):
                 ),
                 ft.Text(
                     f"Base score: {self.base_move_score:.2f}",
-                    size=13,
+                    size=TEXT_SIZE_DETAIL,
                     color=TEXT_SECONDARY,
                 ),
                 ft.Text(
                     f"Item boost: +{self.item_bonus_amount:.2f}",
-                    size=13,
+                    size=TEXT_SIZE_DETAIL,
                     color=TEXT_SECONDARY,
                 ),
                 ft.Text(
                     f"Final score: {self.move_score:.2f}",
-                    size=13,
+                    size=TEXT_SIZE_DETAIL,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
@@ -592,7 +603,7 @@ class RecommendationCard(ft.Container):
                 [
                     ft.Text(
                         "Matchup Strength",
-                        size=14,
+                        size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),
                     ft.Row(
@@ -611,7 +622,7 @@ class RecommendationCard(ft.Container):
                         else [
                             ft.Text(
                                 f"Ratio {self.matchup_ratio:.2f}",
-                                size=13,
+                                size=TEXT_SIZE_DETAIL,
                                 color=TEXT_MUTED,
                             ),
                         ]

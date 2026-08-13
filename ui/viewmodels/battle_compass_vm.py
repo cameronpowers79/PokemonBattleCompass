@@ -120,7 +120,7 @@ def get_effectiveness_label(
             return "⚪ Neutral (1×)"
         if multiplier < 4:
             return f"🟢 Super Effective ({multiplier:g}×)"
-        return f"🔥 4× Weakness ({multiplier:g}×)"
+        return f"🔥 4× Effective"
 
     if multiplier == 0:
         return "🛡️ No Effect (0×)"
@@ -130,7 +130,7 @@ def get_effectiveness_label(
         return "⚪ Neutral (1×)"
     if multiplier < 4:
         return f"🔺 Super Effective ({multiplier:g}×)"
-    return f"🔥 4× Weakness ({multiplier:g}×)"
+    return f"🔥 4× Weakness"
 
 
 def _build_move_lookup(

@@ -1,4 +1,4 @@
-import streamlit as st
+'''import streamlit as st
 
 from engine.data_loader import save_json
 from engine.moves import apply_move_metadata
@@ -288,4 +288,4 @@ def render_my_team_editor(team_data, moves_data):
         render_selected_pokemon_details(
             selected_pokemon,
             move_lookup
-        )
+        )'''

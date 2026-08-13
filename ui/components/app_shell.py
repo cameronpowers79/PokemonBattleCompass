@@ -17,6 +17,8 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_BODY_LARGE,
+    FONT_FAMILY_HEADER,
 )
 
 
@@ -94,7 +96,10 @@ class AppShell:
         )
 
         self.battle_compass_button = ft.Button(
-            content="Battle Compass",
+            content=ft.Text(
+                "Battle Compass",
+                font_family=FONT_FAMILY_HEADER,
+            ),
             icon=ft.Icons.EXPLORE_OUTLINED,
             on_click=(
                 lambda event:
@@ -106,7 +111,10 @@ class AppShell:
         )
 
         self.my_team_button = ft.Button(
-            content="My Team",
+            content=ft.Text(
+                "My Team",
+                font_family=FONT_FAMILY_HEADER,
+            ),
             icon=ft.Icons.GROUP_OUTLINED,
             on_click=(
                 lambda event:
@@ -118,7 +126,10 @@ class AppShell:
         )
 
         self.my_journey_button = ft.Button(
-            content="My Journey",
+            content=ft.Text(
+                "My Journey",
+                font_family=FONT_FAMILY_HEADER,
+            ),
             icon=ft.Icons.ROUTE_OUTLINED,
             on_click=(
                 lambda event:
@@ -130,7 +141,10 @@ class AppShell:
         )
 
         self.about_button = ft.Button(
-            content="About",
+            content=ft.Text(
+                "About",
+                font_family=FONT_FAMILY_HEADER,
+            ),
             icon=ft.Icons.INFO_OUTLINE_ROUNDED,
             on_click=(
                 lambda event:
@@ -412,7 +426,7 @@ class AppShell:
                     "and keep the last saved version of your "
                     "team in the Battle Compass."
                 ),
-                size=15,
+                size=TEXT_SIZE_BODY_LARGE,
                 color=TEXT_SECONDARY,
             ),
             actions=[

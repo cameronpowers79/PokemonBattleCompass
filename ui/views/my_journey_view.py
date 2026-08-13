@@ -30,6 +30,11 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    TEXT_SIZE_PAGE_TITLE,
+    TEXT_SIZE_CARD_TITLE,
+    TEXT_SIZE_BODY,
+    TEXT_SIZE_BODY_LARGE,
+    FONT_FAMILY_HEADER,
 )
 
 from ..viewmodels.app_state import AppState
@@ -1256,14 +1261,15 @@ class MyJourneyView:
             controls=[
                 ft.Text(
                     "My Journey",
-                    size=30,
+                    size=TEXT_SIZE_PAGE_TITLE,
                     weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
                     color=TEXT_PRIMARY,
                 ),
                 ft.Text(
                     "Plan what matters before the next battle: track progress, "
                     "review active objectives, and prepare future team additions.",
-                    size=15,
+                    size=TEXT_SIZE_BODY_LARGE,
                     color=TEXT_SECONDARY,
                     text_align=ft.TextAlign.CENTER,
                 ),
@@ -4381,8 +4387,9 @@ class MyJourneyView:
                     ft.Icon(icon, size=25, color=PRIMARY_BLUE),
                     ft.Text(
                         title,
-                        size=23,
+                        size=TEXT_SIZE_CARD_TITLE,
                         weight=ft.FontWeight.BOLD,
+                        font_family=FONT_FAMILY_HEADER,
                         color=TEXT_PRIMARY,
                         expand=True,
                     ),
@@ -4390,7 +4397,7 @@ class MyJourneyView:
                 spacing=10,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            ft.Text(subtitle, size=14, color=TEXT_SECONDARY),
+            ft.Text(subtitle, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
             ft.Divider(color=BORDER_DEFAULT, height=1),
             body,
         ]
