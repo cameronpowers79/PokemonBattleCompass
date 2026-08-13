@@ -108,6 +108,7 @@ def attacker_ignores_defender_ability(
     attacker,
     defender,
     ability_rules,
+    move=None,
 ):
     if not attacker:
         return False
@@ -115,11 +116,13 @@ def attacker_ignores_defender_ability(
     attacker_ability = attacker.get("Ability")
     defender_ability = defender.get("Ability")
 
-    if (
-        not attacker_ability
-        or defender_ability
-        in NON_IGNORABLE_DEFENSIVE_ABILITIES
-    ):
+    if defender_ability in NON_IGNORABLE_DEFENSIVE_ABILITIES:
+        return False
+
+    if move and move.get("IgnoresDefenderAbility"):
+        return True
+
+    if not attacker_ability:
         return False
 
     if attacker_ability in ABILITY_BYPASS_NAMES:
@@ -214,6 +217,7 @@ def get_item_damage_multiplier(
     move,
     items,
     effectiveness=1,
+    effective_power=None,
 ):
     item = get_item_record(
         attacker.get("Held Item"),
@@ -243,14 +247,18 @@ def get_item_damage_multiplier(
     ):
         return 1
 
-    if (
-        condition == "DamagingMove"
-        and (
-            move.get("Category") == "Status"
-            or not move.get("Power")
+    if condition == "DamagingMove":
+        if move.get("Category") == "Status":
+            return 1
+
+        modeled_power = (
+            effective_power
+            if effective_power is not None
+            else move.get("Power")
         )
-    ):
-        return 1
+
+        if not modeled_power:
+            return 1
 
     return item.get(
         "Multiplier",
@@ -421,6 +429,7 @@ def get_item_multiplier(
     item_name,
     move,
     items,
+    effective_power=None,
 ):
     """Backward-compatible alias for simple offensive item boosts."""
 
@@ -434,6 +443,7 @@ def get_item_multiplier(
         move,
         items,
         effectiveness=1,
+        effective_power=effective_power,
     )
 
 
@@ -526,6 +536,7 @@ def get_applicable_ability_rules(
         attacker,
         defender,
         ability_rules,
+        move,
     ):
         return []
 

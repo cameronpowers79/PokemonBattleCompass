@@ -63,6 +63,110 @@ def get_stat(pokemon, stat_name, opponent_iv_override=None):
     return value
 
 
+
+def get_move_type_multiplier(move, defender_types):
+    """Return matchup-aware type effectiveness for special move rules."""
+    multiplier = get_type_multiplier(
+        move.get("Type"),
+        defender_types,
+    )
+
+    damage_method = move.get("DamageMethod")
+
+    if (
+        damage_method == "WaterSuperEffective"
+        and "Water" in defender_types
+    ):
+        # Ordinary Ice vs Water contributes 0.5x. Freeze-Dry replaces that
+        # component with 2x, a net 4x adjustment before the second type.
+        multiplier *= 4
+
+    if damage_method == "DualTypeEffectiveness":
+        secondary_type = move.get("SecondaryDamageType")
+        if secondary_type:
+            multiplier *= get_type_multiplier(
+                secondary_type,
+                defender_types,
+            )
+
+    return multiplier
+
+
+def resolve_move_for_matchup(
+    attacker,
+    defender,
+    move,
+    attacker_opponent_iv_override=None,
+    defender_opponent_iv_override=None,
+):
+    """Return a matchup-specific move copy for deterministic custom rules."""
+    resolved = dict(move)
+    damage_method = move.get("DamageMethod")
+
+    if damage_method == "HigherOffensiveStat":
+        attack = get_stat(
+            attacker,
+            "ATK",
+            attacker_opponent_iv_override,
+        )
+        special_attack = get_stat(
+            attacker,
+            "SPA",
+            attacker_opponent_iv_override,
+        )
+        resolved["Category"] = (
+            "Physical"
+            if attack > special_attack
+            else "Special"
+        )
+
+    elif damage_method == "BestRawDamageCategory":
+        attack = get_stat(
+            attacker,
+            "ATK",
+            attacker_opponent_iv_override,
+        )
+        special_attack = get_stat(
+            attacker,
+            "SPA",
+            attacker_opponent_iv_override,
+        )
+        defense = max(
+            get_stat(
+                defender,
+                "DEF",
+                defender_opponent_iv_override,
+            ),
+            1,
+        )
+        special_defense = max(
+            get_stat(
+                defender,
+                "SPD",
+                defender_opponent_iv_override,
+            ),
+            1,
+        )
+
+        physical_forecast = attack / defense
+        special_forecast = special_attack / special_defense
+
+        # In-game ties are random. The Compass uses the move's listed
+        # Special category as the deterministic tie-break approximation.
+        resolved["Category"] = (
+            "Physical"
+            if physical_forecast > special_forecast
+            else "Special"
+        )
+
+        # Shell Side Arm makes contact only when it resolves as Physical.
+        resolved["MakesContact"] = (
+            resolved["Category"] == "Physical"
+        )
+
+    return resolved
+
+
 def get_relevant_attack_stat(
     attacker,
     move,
@@ -240,8 +344,8 @@ def fixed_damage_can_hit(
         defender.get("Type2"),
     ]
 
-    type_multiplier = get_type_multiplier(
-        move["Type"],
+    type_multiplier = get_move_type_multiplier(
+        move,
         defender_types,
     )
 
@@ -293,6 +397,12 @@ def calculate_move_score(
     items=None,
     ability_rules=None,
 ):
+    move = resolve_move_for_matchup(
+        attacker,
+        defender,
+        move,
+    )
+
     if move["Category"] == "Status":
         return 0
 
@@ -340,8 +450,8 @@ def calculate_move_score(
         defender.get("Type2"),
     ]
 
-    effectiveness = get_type_multiplier(
-        move["Type"],
+    effectiveness = get_move_type_multiplier(
+        move,
         defender_types,
     )
     ability_multiplier = get_ability_multiplier(
@@ -364,6 +474,7 @@ def calculate_move_score(
         attacker.get("Held Item"),
         move,
         items,
+        effective_power=effective_power,
     )
     power_multiplier = get_move_power_multiplier(
         attacker,
@@ -436,6 +547,14 @@ def calculate_damage_range(
     the defender's currently modeled, unboosted defensive stat.
     """
 
+    move = resolve_move_for_matchup(
+        attacker,
+        defender,
+        move,
+        attacker_opponent_iv_override,
+        defender_opponent_iv_override,
+    )
+
     if move["Category"] == "Status":
         return None, None
 
@@ -482,8 +601,8 @@ def calculate_damage_range(
         defender.get("Type2"),
     ]
 
-    effectiveness = get_type_multiplier(
-        move["Type"],
+    effectiveness = get_move_type_multiplier(
+        move,
         defender_types,
     )
     effectiveness *= get_ability_multiplier(
@@ -507,6 +626,7 @@ def calculate_damage_range(
         attacker.get("Held Item"),
         move,
         items,
+        effective_power=effective_power,
     )
     power_multiplier = get_move_power_multiplier(
         attacker,
@@ -626,6 +746,8 @@ def get_moves(pokemon, moves_data=None):
             "MakesContact": move_info.get("MakesContact"),
             "Priority": move_info.get("Priority"),
             "DamageMethod": move_info.get("DamageMethod"),
+            "SecondaryDamageType": move_info.get("SecondaryDamageType"),
+            "IgnoresDefenderAbility": move_info.get("IgnoresDefenderAbility", False),
             "FixedDamageMethod": move_info.get("FixedDamageMethod"),
             "FixedDamage": move_info.get("FixedDamage"),
             "MechanicsNotes": move_info.get("MechanicsNotes"),
@@ -846,14 +968,19 @@ def build_no_recommendation_reason(
             pokemon,
             moves_data,
         ):
-            if (
-                move.get("Category") == "Status"
-                or not move.get("Power")
-            ):
+            if move.get("Category") == "Status":
                 continue
 
-            type_multiplier = get_type_multiplier(
-                move.get("Type"),
+            effective_power = get_effective_move_power(
+                pokemon,
+                opponent,
+                move,
+            )
+            if effective_power <= 0:
+                continue
+
+            type_multiplier = get_move_type_multiplier(
+                move,
                 opponent_types,
             )
 
@@ -1034,12 +1161,21 @@ def calculate_offensive_multiplier(
     if ability_rules is None:
         ability_rules = []
 
+    move = resolve_move_for_matchup(
+        attacker,
+        defender,
+        move,
+    )
+
     defender_types = [
         defender.get("Type1"),
         defender.get("Type2")
     ]
 
-    type_multiplier = get_type_multiplier(move["Type"], defender_types)
+    type_multiplier = get_move_type_multiplier(
+        move,
+        defender_types,
+    )
 
     ability_multiplier = get_ability_multiplier(
         defender,
@@ -1074,12 +1210,21 @@ def calculate_incoming_multiplier(
     if ability_rules is None:
         ability_rules = []
 
+    move = resolve_move_for_matchup(
+        opponent,
+        defender,
+        move,
+    )
+
     defender_types = [
         defender.get("Type1"),
         defender.get("Type2")
     ]
 
-    type_multiplier = get_type_multiplier(move["Type"], defender_types)
+    type_multiplier = get_move_type_multiplier(
+        move,
+        defender_types,
+    )
 
     ability_multiplier = get_ability_multiplier(
         defender,
@@ -1135,12 +1280,30 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 f"{opponent.get('Pokemon', 'Unknown opponent')}."
             )
 
-        type_effectiveness = get_type_multiplier(
-            best_move["Type"],
+        best_move = resolve_move_for_matchup(
+            pokemon,
+            opponent,
+            best_move,
+        )
+        worst_move = resolve_move_for_matchup(
+            opponent,
+            pokemon,
+            worst_move,
+        )
+
+        type_effectiveness = get_move_type_multiplier(
+            best_move,
             [
                 opponent.get("Type1"),
                 opponent.get("Type2"),
             ],
+        )
+
+        best_effective_power = get_effective_move_power(
+            pokemon,
+            opponent,
+            best_move,
+            items,
         )
 
         item_damage_multiplier = (
@@ -1150,6 +1313,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 best_move,
                 items,
                 type_effectiveness,
+                effective_power=best_effective_power,
             )
         )
 
@@ -1295,8 +1459,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             team_member_hp,
         )
 
-        incoming_type_multiplier = get_type_multiplier(
-            worst_move["Type"],
+        incoming_type_multiplier = get_move_type_multiplier(
+            worst_move,
             [
                 pokemon.get("Type1"),
                 pokemon.get("Type2"),
@@ -1311,8 +1475,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             ability_rules,
         )
 
-        offensive_type_multiplier = get_type_multiplier(
-            best_move["Type"],
+        offensive_type_multiplier = get_move_type_multiplier(
+            best_move,
             [
                 opponent.get("Type1"),
                 opponent.get("Type2"),
