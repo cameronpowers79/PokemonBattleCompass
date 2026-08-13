@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import cast
 
 import flet as ft
+import flet_datatable2 as fdt
 
 from ui.theme import (
     BORDER_DEFAULT,
@@ -93,28 +94,69 @@ class FullAnalysis(ft.Container):
                 border_radius=10,
             )
 
-        table = ft.DataTable(
-            columns=cast(
-                list[ft.DataColumn],
-                [
-                    self._column("Pokémon"),
-                    self._column("Best Move"),
-                    self._column("Type Effectiveness"),
-                    self._column("Move Score"),
-                    self._column("Worst Incoming Move"),
-                    self._column("Incoming Type Effectiveness"),
-                    self._column("IWS"),
-                    self._column("Ratio"),
-                    self._column("Notes"),
-                ],
-            ),
+        column_widths = [
+            105,
+            115,
+            112,
+            72,
+            160,
+            150,
+            56,
+            56,
+            300,
+        ]
+
+        table = fdt.DataTable2(
+            columns=[
+                self._column(
+                    "Pokémon",
+                    fixed_width=column_widths[0],
+                ),
+                self._column(
+                    "Best Move",
+                    fixed_width=column_widths[1],
+                ),
+                self._column(
+                    "Type Effectiveness",
+                    fixed_width=column_widths[2],
+                ),
+                self._column(
+                    "Move Score",
+                    fixed_width=column_widths[3],
+                ),
+                self._column(
+                    "Worst Incoming Move",
+                    fixed_width=column_widths[4],
+                ),
+                self._column(
+                    "Incoming Type Effectiveness",
+                    fixed_width=column_widths[5],
+                ),
+                self._column(
+                    "IWS",
+                    fixed_width=column_widths[6],
+                ),
+                self._column(
+                    "Ratio",
+                    fixed_width=column_widths[7],
+                ),
+                self._column(
+                    "Notes",
+                    fixed_width=column_widths[8],
+                ),
+            ],
             rows=[
                 self._build_row(matchup)
                 for matchup in self.matchups
             ],
+            fixed_left_columns=1,
+            fixed_top_rows=1,
+            fixed_columns_color=SURFACE,
+            fixed_corner_color=SURFACE_RAISED,
+            min_width=sum(column_widths),
             column_spacing=12,
-            data_row_min_height=52,
-            data_row_max_height=82,
+            horizontal_margin=8,
+            data_row_height=82,
             heading_row_height=44,
             heading_row_color=SURFACE_RAISED,
             border=ft.Border.all(
@@ -124,25 +166,22 @@ class FullAnalysis(ft.Container):
             border_radius=10,
         )
 
-        return ft.Row(
-            controls=cast(
-                list[ft.Control],
-                [table],
-            ),
-            scroll=ft.ScrollMode.AUTO,
-        )
+        return table
 
     @staticmethod
     def _column(
         label: str,
-    ) -> ft.DataColumn:
-        return ft.DataColumn(
+        *,
+        fixed_width: int,
+    ) -> fdt.DataColumn2:
+        return fdt.DataColumn2(
             label=ft.Text(
                 label,
                 size=12,
                 weight=ft.FontWeight.BOLD,
                 color=TEXT_PRIMARY,
-            )
+            ),
+            fixed_width=fixed_width,
         )
 
     def _build_row(

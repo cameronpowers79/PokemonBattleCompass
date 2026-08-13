@@ -729,6 +729,46 @@ def build_incoming_ohko_note(
 
 # ---------- Battle Notes ----------
 
+def build_unmodeled_incoming_damage_note(
+    attacker,
+    defender,
+    worst_move,
+    worst_score,
+):
+    """Explain a 1-BP opponent placeholder when it drives the matchup.
+
+    A 1-BP value in opponents.json is a sentinel for a damaging move whose
+    actual power depends on battle state or other data the Compass does not
+    model. It prevents a false immunity result without pretending to know
+    the move's real damage.
+    """
+    if not worst_move or worst_score <= 0:
+        return None
+
+    if worst_move.get("Power") != 1:
+        return None
+
+    if worst_move.get("DamageMethod") not in {"Variable", "Fixed"}:
+        return None
+
+    move_name = worst_move.get("Move", "This move")
+    target_name = attacker.get("Pokemon", "this Pokémon")
+    condition = worst_move.get("ActivationCondition")
+
+    if condition and condition != "Always":
+        text = (
+            f"{move_name} can hit {target_name} if triggered, but its "
+            "actual damage is not modeled; Matchup Strength is approximate"
+        )
+    else:
+        text = (
+            f"{move_name} can hit {target_name}, but its actual damage is "
+            "not modeled; Matchup Strength is approximate"
+        )
+
+    return note(NOTE_CAUTION, text)
+
+
 def build_battle_notes(
     attacker,
     defender,
@@ -803,6 +843,15 @@ def build_battle_notes(
 
     if is_immune:
         notes.append(note(NOTE_INFO, "Immune to opponent's attacks"))
+
+    unmodeled_incoming_note = build_unmodeled_incoming_damage_note(
+        attacker,
+        defender,
+        worst_move,
+        worst_score,
+    )
+    if unmodeled_incoming_note:
+        notes.append(unmodeled_incoming_note)
 
     if offensive_ohko_note:
         notes.append(offensive_ohko_note)

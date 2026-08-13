@@ -63,11 +63,24 @@ def get_stat(pokemon, stat_name, opponent_iv_override=None):
     return value
 
 
-def get_relevant_attack_stat(attacker, move, opponent_iv_override=None):
+def get_relevant_attack_stat(
+    attacker,
+    move,
+    opponent_iv_override=None,
+    target=None,
+    target_opponent_iv_override=None,
+):
     damage_method = move.get("DamageMethod")
 
     if damage_method == "UseDEF":
         return get_stat(attacker, "DEF", opponent_iv_override)
+
+    if damage_method == "TargetATK" and target is not None:
+        return get_stat(
+            target,
+            "ATK",
+            target_opponent_iv_override,
+        )
 
     if move.get("Category") == "Physical":
         return get_stat(attacker, "ATK", opponent_iv_override)
@@ -93,6 +106,63 @@ def get_relevant_defense_stat(defender, move, opponent_iv_override=None):
     return 1
 
 
+def get_effective_move_power(
+    attacker,
+    defender,
+    move,
+    items=None,
+    attacker_opponent_iv_override=None,
+    defender_opponent_iv_override=None,
+):
+    """Return the modeled base power for the current matchup.
+
+    Most moves use the stored Power value directly. Damage methods that can
+    be derived from information the Compass already has may calculate their
+    power here without requiring additional battle-state input.
+    """
+    if items is None:
+        items = []
+
+    damage_method = move.get("DamageMethod")
+
+    if damage_method == "SpeedRatioInverse":
+        user_speed = (
+            get_stat(
+                attacker,
+                "SPE",
+                attacker_opponent_iv_override,
+            )
+            * get_item_speed_multiplier(attacker, items)
+        )
+        target_speed = (
+            get_stat(
+                defender,
+                "SPE",
+                defender_opponent_iv_override,
+            )
+            * get_item_speed_multiplier(defender, items)
+        )
+
+        # Generation VI onward sets Gyro Ball to 1 BP if the user's
+        # effective Speed rounds down to 0. get_stat() normally keeps
+        # modeled Speed positive, but retain the guard for completeness.
+        if user_speed <= 0:
+            return 1
+
+        return min(
+            150,
+            max(
+                1,
+                int(25 * target_speed / user_speed) + 1,
+            ),
+        )
+
+    try:
+        return float(move.get("Power") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def calculate_move_score(
     attacker,
     defender,
@@ -100,11 +170,21 @@ def calculate_move_score(
     items=None,
     ability_rules=None,
 ):
-    if move["Category"] == "Status" or not move["Power"]:
+    if move["Category"] == "Status":
         return 0
 
     if items is None:
         items = []
+
+    effective_power = get_effective_move_power(
+        attacker,
+        defender,
+        move,
+        items,
+    )
+
+    if effective_power <= 0:
+        return 0
 
     if ability_rules is None:
         ability_rules = []
@@ -152,18 +232,24 @@ def calculate_move_score(
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
+        target=defender,
     )
     attack_stat *= get_attack_stat_multiplier(
         attacker,
         move,
         ability_rules,
     )
-    attack_stat *= get_attack_reduction_multiplier(
-        attacker,
-        defender,
-        move,
-        ability_rules,
-    )
+
+    # Foul Play-style moves use the target's Attack stat. Defender-side
+    # AttackReduction rules such as Intimidate represent lowering the user's
+    # own Attack, so they do not reduce a TargetATK calculation.
+    if move.get("DamageMethod") != "TargetATK":
+        attack_stat *= get_attack_reduction_multiplier(
+            attacker,
+            defender,
+            move,
+            ability_rules,
+        )
 
     defense_stat = get_relevant_defense_stat(
         defender,
@@ -181,7 +267,7 @@ def calculate_move_score(
         hits = 1
 
     return (
-        move["Power"]
+        effective_power
         * hits
         * power_multiplier
         * effectiveness
@@ -208,11 +294,23 @@ def calculate_damage_range(
     the defender's currently modeled, unboosted defensive stat.
     """
 
-    if move["Category"] == "Status" or not move["Power"]:
+    if move["Category"] == "Status":
         return None, None
 
     if items is None:
         items = []
+
+    effective_power = get_effective_move_power(
+        attacker,
+        defender,
+        move,
+        items,
+        attacker_opponent_iv_override,
+        defender_opponent_iv_override,
+    )
+
+    if effective_power <= 0:
+        return None, None
 
     if ability_rules is None:
         ability_rules = []
@@ -262,18 +360,22 @@ def calculate_damage_range(
         attacker,
         move,
         attacker_opponent_iv_override,
+        target=defender,
+        target_opponent_iv_override=defender_opponent_iv_override,
     )
     attack_stat *= get_attack_stat_multiplier(
         attacker,
         move,
         ability_rules,
     )
-    attack_stat *= get_attack_reduction_multiplier(
-        attacker,
-        defender,
-        move,
-        ability_rules,
-    )
+
+    if move.get("DamageMethod") != "TargetATK":
+        attack_stat *= get_attack_reduction_multiplier(
+            attacker,
+            defender,
+            move,
+            ability_rules,
+        )
 
     defense_stat = max(
         get_relevant_defense_stat(
@@ -286,7 +388,7 @@ def calculate_damage_range(
     level = max(int(attacker.get("Level") or 1), 1)
 
     effective_power = max(
-        float(move["Power"]) * power_multiplier,
+        effective_power * power_multiplier,
         1,
     )
 

@@ -4693,7 +4693,7 @@
     "Hits": 1,
     "MakesContact": false,
     "Priority": 0,
-    "DamageMethod": "Variable",
+    "DamageMethod": "SpeedRatioInverse",
     "ActivationCondition": "Always",
     "StatusEffect": null,
     "ActivationPowerMultiplier": 1,
@@ -14070,7 +14070,9 @@
     "SpAStageChange": 0,
     "SpDStageChange": 0,
     "SpeStageChange": 0,
-    "MechanicsTags": ["RecoveryMove"],
+    "MechanicsTags": [
+      "RecoveryMove"
+    ],
     "EffectDescription": "The user plants roots in the ground, allowing it to restore 1/16th of its maximum HP at the end of every turn. The user cannot switch out.",
     "StageChangeTarget": null
   },
