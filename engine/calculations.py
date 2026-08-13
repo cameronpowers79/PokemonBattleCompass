@@ -157,10 +157,133 @@ def get_effective_move_power(
             ),
         )
 
+    if damage_method == "SpeedRatioDirect":
+        user_speed = (
+            get_stat(
+                attacker,
+                "SPE",
+                attacker_opponent_iv_override,
+            )
+            * get_item_speed_multiplier(attacker, items)
+        )
+        target_speed = (
+            get_stat(
+                defender,
+                "SPE",
+                defender_opponent_iv_override,
+            )
+            * get_item_speed_multiplier(defender, items)
+        )
+
+        # Electro Ball uses discrete power brackets based on the target's
+        # effective Speed as a proportion of the user's effective Speed.
+        # Battle-state Speed changes are intentionally outside the Compass's
+        # limited-input model, but modeled held-item Speed multipliers apply.
+        if user_speed <= 0:
+            return 40
+
+        speed_ratio = target_speed / user_speed
+
+        if speed_ratio > 0.5:
+            return 60 if speed_ratio <= 1 else 40
+        if speed_ratio > (1 / 3):
+            return 80
+        if speed_ratio > 0.25:
+            return 120
+        return 150
+
     try:
         return float(move.get("Power") or 0)
     except (TypeError, ValueError):
         return 0
+
+
+
+def get_deterministic_fixed_damage(attacker, move):
+    """Return modeled fixed HP damage, or None when damage remains tactical-only."""
+    if move.get("DamageMethod") != "Fixed":
+        return None
+
+    fixed_method = move.get("FixedDamageMethod")
+
+    if fixed_method == "UserLevel":
+        return max(float(attacker.get("Level") or 1), 1.0)
+
+    if fixed_method == "Constant":
+        try:
+            return max(float(move.get("FixedDamage") or 0), 0.0)
+        except (TypeError, ValueError):
+            return None
+
+    return None
+
+
+def fixed_damage_can_hit(
+    attacker,
+    defender,
+    move,
+    items=None,
+    ability_rules=None,
+):
+    """Return whether a deterministic fixed-damage move can affect the target.
+
+    Fixed-damage moves ignore resistance/weakness multipliers for their damage
+    amount, but Gen VIII type, Ability, and held-item immunities still matter.
+    """
+    if items is None:
+        items = []
+    if ability_rules is None:
+        ability_rules = []
+
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
+
+    type_multiplier = get_type_multiplier(
+        move["Type"],
+        defender_types,
+    )
+
+    if type_multiplier == 0:
+        return False
+
+    ability_multiplier = get_ability_multiplier(
+        defender,
+        move,
+        ability_rules,
+        type_multiplier,
+        attacker,
+    )
+    if ability_multiplier == 0:
+        return False
+
+    item_multiplier = get_item_immunity_multiplier(
+        defender,
+        move,
+        items,
+    )
+    return item_multiplier != 0
+
+
+def fixed_damage_to_move_score(attacker, fixed_damage):
+    """Convert fixed HP loss to the comparable internal Move Score scale.
+
+    Normal damage range estimation is based on:
+        floor((level_factor * MoveScore) / 50) + 2
+    before the random modifier. Inverting that shape gives fixed-damage moves
+    a score that can be ranked alongside ordinary moves without inventing BP.
+    """
+    level = max(int(attacker.get("Level") or 1), 1)
+    level_factor = (2 * level) // 5 + 2
+
+    if fixed_damage <= 0 or level_factor <= 0:
+        return 0
+
+    return max(
+        ((float(fixed_damage) - 2.0) * 50.0) / level_factor,
+        0.01,
+    )
 
 
 def calculate_move_score(
@@ -176,6 +299,28 @@ def calculate_move_score(
     if items is None:
         items = []
 
+    if ability_rules is None:
+        ability_rules = []
+
+    fixed_damage = get_deterministic_fixed_damage(
+        attacker,
+        move,
+    )
+    if fixed_damage is not None:
+        if not fixed_damage_can_hit(
+            attacker,
+            defender,
+            move,
+            items,
+            ability_rules,
+        ):
+            return 0
+
+        return fixed_damage_to_move_score(
+            attacker,
+            fixed_damage,
+        )
+
     effective_power = get_effective_move_power(
         attacker,
         defender,
@@ -185,9 +330,6 @@ def calculate_move_score(
 
     if effective_power <= 0:
         return 0
-
-    if ability_rules is None:
-        ability_rules = []
 
     attacker_types = [
         attacker.get("Type1"),
@@ -300,6 +442,25 @@ def calculate_damage_range(
     if items is None:
         items = []
 
+    if ability_rules is None:
+        ability_rules = []
+
+    fixed_damage = get_deterministic_fixed_damage(
+        attacker,
+        move,
+    )
+    if fixed_damage is not None:
+        if not fixed_damage_can_hit(
+            attacker,
+            defender,
+            move,
+            items,
+            ability_rules,
+        ):
+            return 0, 0
+
+        return fixed_damage, fixed_damage
+
     effective_power = get_effective_move_power(
         attacker,
         defender,
@@ -311,9 +472,6 @@ def calculate_damage_range(
 
     if effective_power <= 0:
         return None, None
-
-    if ability_rules is None:
-        ability_rules = []
 
     attacker_types = [
         attacker.get("Type1"),
@@ -468,6 +626,8 @@ def get_moves(pokemon, moves_data=None):
             "MakesContact": move_info.get("MakesContact"),
             "Priority": move_info.get("Priority"),
             "DamageMethod": move_info.get("DamageMethod"),
+            "FixedDamageMethod": move_info.get("FixedDamageMethod"),
+            "FixedDamage": move_info.get("FixedDamage"),
             "MechanicsNotes": move_info.get("MechanicsNotes"),
             "ActivationCondition": move_info.get("ActivationCondition"),
             "StatusEffect": move_info.get("StatusEffect"),
