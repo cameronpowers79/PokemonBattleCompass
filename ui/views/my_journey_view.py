@@ -238,8 +238,19 @@ class MyJourneyView:
 
         # Section-local display filters. These affect only the rendered
         # Journey Checklist / Team Planner rows; saved objectives remain intact.
-        self._hide_obtained_items = False
-        self._hide_obtained_pokemon = False
+        journey_display_state = app_state.my_journey_data
+        self._hide_obtained_items = bool(
+            journey_display_state.get(
+                "hide_obtained_items",
+                False,
+            )
+        )
+        self._hide_obtained_pokemon = bool(
+            journey_display_state.get(
+                "hide_obtained_pokemon",
+                False,
+            )
+        )
 
         self._badge_celebration_badge: ft.Container | None = None
         self._badge_celebration_shine: ft.Container | None = None
@@ -2490,7 +2501,7 @@ class MyJourneyView:
             height=TOP_JOURNEY_CARD_HEIGHT
         )
 
-    def _toggle_hide_obtained_items(
+    async def _toggle_hide_obtained_items(
         self,
         event: ft.Event[ft.Checkbox],
     ) -> None:
@@ -2498,8 +2509,12 @@ class MyJourneyView:
 
         self._hide_obtained_items = bool(event.control.value)
         self._refresh()
+        await self.app_state.save_journey_filter_preferences(
+            hide_obtained_items=self._hide_obtained_items,
+            hide_obtained_pokemon=self._hide_obtained_pokemon,
+        )
 
-    def _toggle_hide_obtained_pokemon(
+    async def _toggle_hide_obtained_pokemon(
         self,
         event: ft.Event[ft.Checkbox],
     ) -> None:
@@ -2507,6 +2522,10 @@ class MyJourneyView:
 
         self._hide_obtained_pokemon = bool(event.control.value)
         self._refresh()
+        await self.app_state.save_journey_filter_preferences(
+            hide_obtained_items=self._hide_obtained_items,
+            hide_obtained_pokemon=self._hide_obtained_pokemon,
+        )
 
     def _build_journey_checklist_card(self) -> ft.Control:
         rows: list[ft.DataRow] = []

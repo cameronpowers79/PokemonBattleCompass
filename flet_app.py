@@ -30,9 +30,6 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 async def main(page: ft.Page) -> None:
     configure_page(page)
 
-    page.window.width = 402
-    page.window.height = 874
-
     page.window.icon = str(
         ASSETS_DIR / "icon_windows.ico"
     )

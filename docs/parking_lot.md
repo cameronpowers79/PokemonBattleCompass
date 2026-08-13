@@ -8,10 +8,23 @@
 - [x] Tag Streamlit Alpha.
 - [x] Create migration branch.
 - [x] Restore `main` to the stable Streamlit Alpha.
+- [x] Remove retired Streamlit UI and obsolete migration/reference artifacts from the active Flet branch.
 
 ## Data Quality
 
-- [ ] Audit move metadata for missing or incorrect mechanics.
+- [x] Audit move metadata for missing or incorrect mechanics.
+
+Audit zero/conditional-power opponent moves and eliminate false immunity results.
+
+Model Foul Play using the target's Attack.
+
+Model Gyro Ball and Electro Ball dynamic power from Speed.
+
+Model deterministic fixed-damage moves (Night Shade, Seismic Toss, Dragon Rage, Sonic Boom).
+
+Model Freeze-Dry and Flying Press special effectiveness.
+
+Model Shell Side Arm and Photon Geyser category/ability behavior.
 
 ## Desktop + PWA Migration
 
@@ -28,8 +41,7 @@
 - [ ] Verify iPhone PWA behavior.
 - [x] Migrate Battle Compass.
 - [x] Migrate Trainer's Guide.
-- [ ] Retire the Streamlit implementation.
-
+- [x] Retire the Streamlit implementation.
 
 ---
 
@@ -50,10 +62,12 @@
 - [x] Permanently visible Full Analysis.
 - [x] Add jump link from Why? to Full Analysis.
 - [x] Recreate responsive desktop and PWA layouts in the new UI.
-- [ ] Review Full Analysis behavior on narrow mobile screens.
-- [ ] Look into sizing down the team editing table in My Team for Mobile (browser may do this for us?)
-- [ ] Freeze "Pokemon" column in My Team editor?
-- [x] Add move effectiveness to Other Strong Options cards
+- [x] Review Full Analysis behavior on narrow mobile screens.
+- [x] Improve My Team table usability on narrow/mobile layouts.
+- [x] Freeze the Pokémon column in the My Team editor.
+- [x] Add move effectiveness to Other Strong Options cards.
+- [x] Freeze the Pokémon/item identifier columns in My Journey tables.
+- [x] Preserve Checklist horizontal scroll position when progress changes.
 
 ---
 
@@ -73,10 +87,15 @@
 - [x] Type badges.
 - [x] Type colors.
 - [x] Worst Incoming Move displays category.
-- [ ] Typography:
-  - Exo 2 for headers.
-  - Aptos for body text.
-  - Bahnschrift for metrics.
+- [x] Typography:
+
+Exo 2 SemiBold for structural headers and main navigation.
+
+Exo 2 ExtraBold for Pokémon identity names.
+
+Yu Gothic UI for body/interface text.
+
+Centralized semantic text-size hierarchy in ui/theme.py.
 - [x] Blue active-page selector.
 - [x] Application branding: logo and wordmark.
 - [x] Extend branding colors to the Recommendation card.
@@ -87,24 +106,26 @@
 - [x] Reduce the size of the ♂/♀ gender symbols slightly.
 - [x] Reuse My Team’s move-card visual language during onboarding.
 - [x] Tap or click move cards for full move details.
-- [x] Tap or click Ability and Held Item for descriptions. (Still needs ability done 7/15/26)
+- [x] Tap or click Ability and Held Item for descriptions.
 - [x] Add compact opponent moveset to the Opponent card.
 - [x] Improve move details popup with plain-language effect descriptions.
 - [x] Add Additional Navigation Aids section to move details.
-- [x] Ensure Matchup Strength text matches the highlighted color in the graphic
+- [x] Ensure Matchup Strength text matches the highlighted color in the graphic.
 - [x] Show an empty-state message in Other Strong Options when fewer than two team members are available. "Catch a few more Pokémon! As your team grows, your other strongest matchup recommendations will appear here."
 - [x] Reuse My Team's move-card visual language for opponent movesets.
 - [x] Optional: tap type badges to show weaknesses and resistances.
 - [x] Add held-item sprites to the boosted-attack popover.
 - [x] Recreate branding, typography, cards, and interactions in the new UI.
+- [x] Add Exo 2 branding hierarchy across page headers, navigation, and Pokémon names.
+- [x] Add Incense held-item sprite resolution.
+- [x] Clean up offensive/defensive 4× effectiveness wording.
 - [ ] Add desktop-specific window and scaling polish.
 - [ ] Add PWA-specific mobile polish.
-- [ ] Complete plain-language move effect         translations.
+- [ ] Complete plain-language move effect translations.
     - Healing (Giga Drain, Drain Punch, etc.)
     - Alternate damage calculations (Psyshock, Body Press, Foul Play, etc.)
     - Stat stage changes
     - Remaining activation conditions
-
 
 ---
 
@@ -146,7 +167,7 @@
 - [x] Replace the current Journey only after onboarding is completed and confirmed.
 - [x] Resume the last-used team automatically.
 - [x] Add starter-change confirmation dialog with Explore and Start New Journey options.
-- [x]Add unsaved-change awareness and confirmation before leaving My Team.
+- [x] Add unsaved-change awareness and confirmation before leaving My Team.
 - [x] Allow adding Pokémon during an active Journey.
 - [x] Add Box / Release Pokémon workflow.
 - [x] Add guidance beside starter selector explaining how to begin a new Journey.
@@ -160,6 +181,10 @@
 - [x] Add multiple teams or save slots. (Not needed; user can just export/load)
 - [x] Add page or section jump navigation where useful.
 - [x] Build Pokémon option list from available sprite assets.
+- [x] Make Type 1 / Type 2 read-only and populate them from Journey Pokémon data.
+- [x] Add Enter/Next navigation across numeric stat fields.
+- [x] Migrate My Team editor to DataTable2 with a frozen Pokémon column.
+- [x] Keep My Team helper text visible while horizontally scrolling.
 
 ---
 
@@ -171,7 +196,7 @@
 - [ ] Handle display-name cleanup for sprite slugs.
 - [ ] Expand the texture hierarchy for regional forms and other variants.
 - [ ] Preserve sprite lookup as framework-independent logic.
-- [ ] Verify sprite packaging in the desktop build.
+- [x] Verify sprite packaging in the desktop build.
 - [ ] Verify sprite caching and offline use in the PWA.
 
 ---
@@ -206,9 +231,9 @@
 - [x] Recommend a modeled held item for the selected matchup.
 - [x] Compare the current item with the recommended item.
 - [x] Show estimated Move Score change from switching. (Unnecessary, user can model by simply "giving" the item in the Compass and checking the Compass)
-- [x] Distinguish offensive, defensive, and sustain recommendations. (Jnnecessary, the nature is in the description)
+- [x] Distinguish offensive, defensive, and sustain recommendations. (Unnecessary; the nature is in the description)
 - [x] Explain why the item is recommended.
-- [x] Add held-item sprites and descriptions. (Need sprites 7/15)
+- [x] Add held-item sprites and descriptions.
 
 ---
 
@@ -224,7 +249,8 @@
 - [ ] Test multiple simultaneous PWA users.
 - [ ] Test suspend/resume behavior on iOS.
 - [ ] Test offline startup and reconnection.
-- [ ] Test corrupted or outdated save files.
+- [x] Test corrupted Journey save recovery.
+- [ ] Test outdated save migration.
 
 ## Documentation
 
@@ -254,6 +280,8 @@
 - [ ] Version-exclusive indicators.
 - [x] Planned team builder.
 - [x] Save multiple planned runs. (Export/Load does this)
+- [x] Gate Pokémon availability with the shared required_badge progression rule.
+- [x] Add Hide Obtained Pokémon filter.
 
 ## Shopping and Preparation
 
@@ -262,11 +290,15 @@
 - [x] Evolution-item checklist.
 - [x] Berry checklist. (Removed; unnecessary)
 - [x] Optional completion tracking.
+- [x] Add Hide Obtained Items filter.
+- [x] Preserve checklist scroll position while marking objectives complete.
 
 ## Progress Tracking
 
 - [x] Gym progress tracker.
 - [x] Badge progress.
+- [x] Use Badge Tracker as the single progression source of truth for objective availability.
+- [x] Add persistent map markers with select-once / move-to-marker-on-second-tap behavior.
 - [x] Story milestone tracker. (not needed)
 - [x] Optional route-completion tracker. (not needed)
 

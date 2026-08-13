@@ -146,6 +146,8 @@ class AppState:
             "planned_pokemon_ids": [],
             "item_objectives": [],
             "pokemon_objectives": [],
+            "hide_obtained_items": False,
+            "hide_obtained_pokemon": False,
         }
 
         if self.journey is None:
@@ -200,6 +202,20 @@ class AppState:
         if not isinstance(pokemon_objectives, list):
             pokemon_objectives = []
 
+        hide_obtained_items = my_journey.get(
+            "hide_obtained_items",
+            False,
+        )
+        if not isinstance(hide_obtained_items, bool):
+            hide_obtained_items = False
+
+        hide_obtained_pokemon = my_journey.get(
+            "hide_obtained_pokemon",
+            False,
+        )
+        if not isinstance(hide_obtained_pokemon, bool):
+            hide_obtained_pokemon = False
+
         return {
             "earned_badges": earned_badges,
             "checklist_initialized": checklist_initialized,
@@ -207,6 +223,8 @@ class AppState:
             "planned_pokemon_ids": planned_pokemon_ids,
             "item_objectives": item_objectives,
             "pokemon_objectives": pokemon_objectives,
+            "hide_obtained_items": hide_obtained_items,
+            "hide_obtained_pokemon": hide_obtained_pokemon,
         }
 
     @property
@@ -744,6 +762,59 @@ class AppState:
                 self.journey["active_view"] = previous_view
 
         return save_succeeded
+
+    async def save_journey_filter_preferences(
+        self,
+        *,
+        hide_obtained_items: bool,
+        hide_obtained_pokemon: bool,
+    ) -> bool:
+        """Persist My Journey display-filter preferences."""
+
+        if self.journey is None:
+            return False
+
+        if not isinstance(hide_obtained_items, bool):
+            raise ValueError(
+                "Hide Obtained Items preference must be boolean."
+            )
+        if not isinstance(hide_obtained_pokemon, bool):
+            raise ValueError(
+                "Hide Obtained Pokémon preference must be boolean."
+            )
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey["hide_obtained_items"] = (
+            hide_obtained_items
+        )
+        updated_my_journey["hide_obtained_pokemon"] = (
+            hide_obtained_pokemon
+        )
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.storage,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
+
 
     async def save_earned_badges(
         self,

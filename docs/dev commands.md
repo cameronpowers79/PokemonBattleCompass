@@ -17,3 +17,28 @@
 # Normalize Textures
     python tools/normalize_texture_artwork.py --apply 
 
+
+# Set up virtual environment
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+    .\.venv\Scripts\Activate.ps1
+
+# Remove packaging files for repackaging
+    Remove-Item ".\build" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item ".\dist" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Package
+    python -m PyInstaller flet_app.py `
+    --noconfirm `
+    --clean `
+    --onedir `
+    --windowed `
+    --name PokemonBattleCompass `
+    --icon "assets\icon_windows.ico" `
+    --add-data "data;data"
+
+    Copy-Item `
+    ".\assets" `
+    ".\dist\PokemonBattleCompass\_internal\" `
+    -Recurse -Force
+
+.\dist\PokemonBattleCompass\PokemonBattleCompass.exe
