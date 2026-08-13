@@ -7,3 +7,4 @@ dist/
 .flutter/
 project_tree.txt
 *.log
+dist-web/

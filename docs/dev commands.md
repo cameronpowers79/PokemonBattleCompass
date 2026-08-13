@@ -42,3 +42,10 @@
     -Recurse -Force
 
 .\dist\PokemonBattleCompass\PokemonBattleCompass.exe
+
+# Web App Dev Commands
+flet run --web --host 127.0.0.1 --port 51427 flet_app.py
+
+flet publish flet_app.py --distpath dist-web
+flet serve dist-web
+http://localhost:8000

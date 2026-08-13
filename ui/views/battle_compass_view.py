@@ -28,6 +28,7 @@ from ui.components.reference_dialogs import (
     show_type_matchup_dialog,
 )
 from ui.rendering import (
+    asset_exists,
     get_sprite_path,
     opponent_uses_gmax,
 )
@@ -1458,7 +1459,7 @@ class BattleCompassView:
             / filename
         )
 
-        if not trainer_path.exists():
+        if not asset_exists(trainer_path):
             raise FileNotFoundError(
                 "No trainer texture found for "
                 f"{trainer_name}: {trainer_path}"

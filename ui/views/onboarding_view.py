@@ -234,7 +234,9 @@ class OnboardingView:
             selected_files = await self.file_picker.pick_files(
                 dialog_title="Load Journey",
                 allow_multiple=False,
+                file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["json"],
+                with_data=True,
             )
 
             if not selected_files:
@@ -242,15 +244,17 @@ class OnboardingView:
 
             selected_file = selected_files[0]
 
-            if not selected_file.path:
+            if selected_file.bytes is not None:
+                serialized_export = selected_file.bytes.decode("utf-8")
+            elif selected_file.path:
+                serialized_export = Path(selected_file.path).read_text(
+                    encoding="utf-8"
+                )
+            else:
                 self._show_load_error(
                     "The selected file could not be accessed."
                 )
                 return
-
-            serialized_export = Path(selected_file.path).read_text(
-                encoding="utf-8"
-            )
         except (OSError, UnicodeError) as error:
             self._show_load_error(
                 f"The selected Journey file could not be read: {error}"

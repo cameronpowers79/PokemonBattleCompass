@@ -1,16 +1,19 @@
-'''ui/rendering.py'''
-
 import base64
+import re
+import sys
+from functools import lru_cache
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image
 
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
-import re 
-from pathlib import Path
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ASSETS_DIR = PROJECT_ROOT / "assets"
+
+IS_WEB = sys.platform == "emscripten"
 
 HELD_ITEM_SPRITE_DIR = (
     ASSETS_DIR
@@ -35,6 +38,51 @@ INCENSE_SPRITE_DIR = (
     / "items"
     / "incense"
 )
+
+
+def _asset_src(path: Path) -> str:
+    """Return a browser/Flet asset path relative to the asset root."""
+
+    return path.relative_to(ASSETS_DIR).as_posix()
+
+
+@lru_cache(maxsize=None)
+def _web_asset_exists(asset_src: str) -> bool:
+    """Check whether a published static-web asset exists.
+
+    Flet publishes the contents of ``assets/`` beside the web app rather than
+    inside Pyodide's Python filesystem. A normal ``Path.exists()`` therefore
+    cannot discover those files in static web builds.
+
+    Python runs in Flet's web worker, so a synchronous same-origin HEAD request
+    preserves the existing candidate/fallback ordering without downloading
+    image bodies. Results are cached for the life of the app.
+    """
+
+    try:
+        js = __import__("js")
+
+        request = js.XMLHttpRequest.new()
+        request.open("HEAD", asset_src, False)
+        request.send()
+
+        return 200 <= int(request.status) < 400
+    except Exception:
+        return False
+
+
+def asset_exists(path: Path) -> bool:
+    """Return whether an app asset exists on the active platform."""
+
+    if not IS_WEB:
+        return path.exists()
+
+    try:
+        asset_src = _asset_src(path)
+    except ValueError:
+        return False
+
+    return _web_asset_exists(asset_src)
 
 
 def image_to_base64(
@@ -71,8 +119,19 @@ def image_to_base64(
 def get_badge_img_html(pokemon_type, height=22):
     badge = TYPE_BADGE_DIR / f"{pokemon_type}.png"
 
-    if not badge.exists():
+    if not asset_exists(badge):
         return f"<span>{pokemon_type}</span>"
+
+    if IS_WEB:
+        badge_src = _asset_src(badge)
+        return (
+            f"<img "
+            f"src='{badge_src}' "
+            f"alt='{pokemon_type}' "
+            f"class='type-badge' "
+            f"style='height:{height}px;width:auto;' "
+            f"/>"
+        )
 
     encoded = image_to_base64(badge)
 
@@ -157,7 +216,7 @@ def get_sprite_path(
     ])
 
     for candidate in candidates:
-        if candidate.exists():
+        if asset_exists(candidate):
             return candidate
 
     return None
@@ -173,10 +232,10 @@ def get_sprite_img_html(
 ):
 
     sprite_path = get_sprite_path(
-    pokemon_name,
-    gender=gender,
-    use_gmax=use_gmax,
-    use_texture=use_texture
+        pokemon_name,
+        gender=gender,
+        use_gmax=use_gmax,
+        use_texture=use_texture
     )
 
     if sprite_path is None:
@@ -190,12 +249,16 @@ def get_sprite_img_html(
     if is_texture:
         display_size = texture_size or size
 
-        encoded = image_to_base64(
-            sprite_path,
-            crop_transparency=True,
-            output_size=display_size,
-            resampling=Image.Resampling.LANCZOS
-        )
+        if IS_WEB:
+            image_src = _asset_src(sprite_path)
+        else:
+            encoded = image_to_base64(
+                sprite_path,
+                crop_transparency=True,
+                output_size=display_size,
+                resampling=Image.Resampling.LANCZOS
+            )
+            image_src = f"data:image/png;base64,{encoded}"
 
         image_style = (
             f"width:{display_size}px;"
@@ -206,7 +269,11 @@ def get_sprite_img_html(
         )
 
     else:
-        encoded = image_to_base64(sprite_path)
+        if IS_WEB:
+            image_src = _asset_src(sprite_path)
+        else:
+            encoded = image_to_base64(sprite_path)
+            image_src = f"data:image/png;base64,{encoded}"
 
         image_style = (
             f"max-width:{size}px;"
@@ -217,12 +284,13 @@ def get_sprite_img_html(
 
     return (
         f"<img "
-        f"src='data:image/png;base64,{encoded}' "
+        f"src='{image_src}' "
         f"alt='{pokemon_name}' "
         f"class='pokemon-sprite' "
         f"style='{image_style}' "
         f"/>"
     )
+
 
 def slugify_item_name(
     item_name: str,
@@ -285,7 +353,7 @@ def get_item_sprite_path(
         )
 
     for candidate in candidates:
-        if candidate.exists():
+        if asset_exists(candidate):
             return candidate
 
     return None
@@ -303,9 +371,8 @@ def get_item_sprite_src(
     if sprite_path is None:
         return None
 
-    return sprite_path.relative_to(
-        ASSETS_DIR
-    ).as_posix()
+    return _asset_src(sprite_path)
+
 
 def opponent_uses_gmax(opponent):
     return any(
