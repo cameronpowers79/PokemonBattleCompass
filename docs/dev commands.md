@@ -27,7 +27,7 @@
     Remove-Item ".\dist" -Recurse -Force -ErrorAction SilentlyContinue
 
 # Package
-   python tools\package_desktop.py
+   .\tools\package_desktop.ps1
    
     python -m PyInstaller flet_app.py `
     --noconfirm `
