@@ -230,6 +230,21 @@ class OnboardingView:
 
         del event
 
+        if self.page.web:
+            try:
+                await ft.UrlLauncher().launch_url(
+                    ft.Url(
+                        url="./import.html",
+                        target=ft.UrlTarget.SELF,
+                    )
+                )
+            except (RuntimeError, ValueError) as error:
+                self._show_load_error(
+                    "The Journey import helper could not be opened: "
+                    f"{error}"
+                )
+            return
+
         try:
             selected_files = await self.file_picker.pick_files(
                 dialog_title="Load Journey",

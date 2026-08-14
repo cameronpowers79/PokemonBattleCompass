@@ -32,8 +32,8 @@ class VersionEntry:
 
 
 HERO_TITLE = "Pokémon Battle Compass"
-HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword & Shield"
-HERO_VERSION = "v0.1.1"
+HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword"
+HERO_VERSION = "v0.2.0 Beta"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
 
@@ -133,10 +133,15 @@ ABOUT_SECTIONS = (
                 "Journey."
             ),
             (
-                "Manual backup/export and restore/import are planned but not "
-                "yet available. Until then, clearing browser or application "
-                "storage may remove the saved Journey. Technology: still "
-                "finding new ways to make ‘locally stored’ sound threatening."
+                "You can export a portable Journey backup and load it again "
+                "later. Browser storage still belongs to that browser and "
+                "device, so backups are strongly recommended if you would be "
+                "annoyed by your carefully assembled team vanishing into the void."
+            ),
+            (
+                "On iPhone and iPad, use Battle Compass as a normal browser site. "
+                "Installed Home Screen Web App mode is not currently supported "
+                "because Journey file import does not work reliably there."
             ),
         ),
         accent="green",
@@ -146,8 +151,8 @@ ABOUT_SECTIONS = (
         icon="target",
         paragraphs=(
             (
-                "Battle Compass currently focuses on Pokémon Sword & Shield "
-                "story play and singles battles."
+                "Battle Compass currently focuses on Pokémon Sword story play "
+                "and singles battles."
             ),
             (
                 "It intentionally does not attempt to recreate the entire "
@@ -157,7 +162,7 @@ ABOUT_SECTIONS = (
             ),
         ),
         bullets=(
-            "Pokémon Sword & Shield",
+            "Pokémon Sword",
             "Singles battles",
             "Story and challenge-run decision support",
             "Player-entered team stats, moves, Abilities, and held items",
@@ -171,8 +176,8 @@ ABOUT_SECTIONS = (
         paragraphs=(
             (
                 "The project began as an Excel workbook, became a Streamlit "
-                "Alpha, and now runs in Flet as a desktop application, with "
-                "PWA support still planned."
+                "Alpha, and now runs in Flet as both a packaged Windows desktop "
+                "application and a static browser application."
             ),
             (
                 "The validated battle engine remains framework-independent. "
@@ -199,19 +204,19 @@ ABOUT_SECTIONS = (
         icon="route",
         paragraphs=(
             (
-                "The current priority is strengthening the features that make "
-                "Journeys safe, portable, and easier to manage over a full "
-                "playthrough."
+                "With the core Flet migration and Beta feature set complete, "
+                "the next phase is release hardening, broader testing, and the "
+                "remaining quality-of-life work that survives contact with actual players."
             ),
         ),
         bullets=(
-            "Manual backup/export and restore/import",
-            "Save-data validation, migration, and interrupted-write recovery",
-            "Installable and offline-capable PWA verification",
-            "Additional error handling and automated engine tests",
+            "Save-data validation and migration support",
+            "Additional recovery and error handling",
+            "Broader automated engine regression tests",
             "More complete move-effect data and mechanics",
-            "Trainer’s Guide planning and progress tools",
-            "Documentation, screenshots, and release notes",
+            "Shield support",
+            "Additional Journey and team-planning refinements",
+            "Revisit offline/PWA support when the Flet toolchain is less dramatic",
         ),
         accent="purple",
     ),
@@ -309,9 +314,9 @@ NERD_STUFF_GROUPS = (
 VERSION_HISTORY = (
     VersionEntry(
     name="v0.1.1",
-        status="Current",
+        status="Previous Alpha",
         summary=(
-            "The current desktop Alpha release, built around the validated "
+            "The final pre-Beta desktop Alpha, built around the validated "
             "battle engine and durable local Journeys."
         ),
         bullets=(
@@ -356,10 +361,6 @@ VERSION_HISTORY = (
             "Validated the core engine through full playthroughs",
             "Introduced Battle Notes and Full Analysis",
             "Retained as the historical reference during migration",
-            (
-                "Known quirk: iOS Safari may ignore the custom favicon and "
-                "display a default letter icon. Safari has chosen its truth."
-            ),
         ),
     ),
     VersionEntry(
