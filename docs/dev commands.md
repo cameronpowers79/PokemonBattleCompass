@@ -53,3 +53,6 @@ http://localhost:8002
 
 python -m http.server 8005 --bind 0.0.0.0 --directory dist-web (iPhone/mobile)
 
+
+
+Web address: https://cameronpowers-pokemon-battle-compass.static.hf.space/index.html
