@@ -37,6 +37,7 @@ from ui.theme import (
     FONT_FAMILY_HEADER,
 )
 
+from ..rendering import get_sprite_src
 from ..viewmodels.app_state import AppState
 
 
@@ -1455,10 +1456,16 @@ class MyJourneyView:
                     status="available",
                     title=str(pokemon.get("pokemon", "Unknown Pokémon")),
                     detail=self._pokemon_acquisition_text(pokemon),
-                    sprite_asset=(
-                        str(pokemon.get("marker_asset") or "").strip()
-                        or None
+                    sprite_asset=self._normalized_pokemon_sprite_asset(
+                        (
+                            pokemon.get("marker_pokemon")
+                            or pokemon.get("acquire_as")
+                            or pokemon.get("pokemon")
+                        ),
+                        pokemon.get("marker_asset"),
                     ),
+                    sprite_size=52,
+                    sprite_box_size=56,
                     action=self._build_pokemon_obtained_action(
                         pokemon,
                         "available",
@@ -1694,6 +1701,26 @@ class MyJourneyView:
             return "available"
         return "unavailable"
 
+    @staticmethod
+    def _normalized_pokemon_sprite_asset(
+        pokemon_name: object,
+        fallback_asset: object = None,
+    ) -> str | None:
+        """Return a tightly cropped runtime sprite for a Pokémon."""
+
+        name = str(pokemon_name or "").strip()
+        if name:
+            normalized_asset = get_sprite_src(
+                name,
+                use_texture=False,
+                normalized=True,
+            )
+            if normalized_asset:
+                return normalized_asset
+
+        fallback = str(fallback_asset or "").strip()
+        return fallback or None
+
     def _marker_asset_for_record(
         self,
         record: dict[str, Any],
@@ -1701,6 +1728,13 @@ class MyJourneyView:
         """Resolve a sprite from the catalog ID, or derive TM/TR type at runtime."""
 
         explicit_asset = str(record.get("marker_asset") or "").strip()
+
+        if str(record.get("kind") or "").strip().lower() == "pokemon":
+            return self._normalized_pokemon_sprite_asset(
+                record.get("marker_pokemon") or record.get("title"),
+                explicit_asset,
+            )
+
         if explicit_asset:
             return explicit_asset
 
@@ -2188,11 +2222,11 @@ class MyJourneyView:
 
         marker_asset = self._marker_asset_for_record(record)
 
-        # Pokémon sprites generally occupy less of their source canvas than
-        # item sprites, so give them a larger rendered footprint.
+        # Normalized Pokémon sprites have transparent padding cropped away,
+        # so they no longer need oversized marker boxes to look substantial.
         if record["kind"] == "pokemon":
-            marker_size = 56
-            sprite_size = 52
+            marker_size = 60
+            sprite_size = 56
         else:
             marker_size = 48
             sprite_size = 42
@@ -2801,7 +2835,11 @@ class MyJourneyView:
 
         dialog = ft.AlertDialog()
         dialog.modal = True
-        dialog.title = ft.Text("Add Journey Objective", weight=ft.FontWeight.BOLD)
+        dialog.title = ft.Text(
+            "Add Journey Objective",
+            weight=ft.FontWeight.BOLD,
+            font_family=FONT_FAMILY_HEADER,
+        )
         dialog.content = ft.Column(
             controls=[
                 ft.Text(
@@ -2817,15 +2855,25 @@ class MyJourneyView:
                 self._add_item_selector,
                 self._add_item_validation_text,
                 self._add_item_quantity,
+                ft.Row(
+                    controls=[
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._close_add_item_dialog,
+                        ),
+                        self._add_item_button,
+                    ],
+                    spacing=12,
+                    wrap=True,
+                    alignment=ft.MainAxisAlignment.END,
+                ),
             ],
             spacing=10,
             tight=True,
+            scroll=ft.ScrollMode.AUTO,
+            height=390,
         )
-        dialog.actions = [
-            ft.Button(content="Cancel", on_click=self._close_add_item_dialog),
-            self._add_item_button,
-        ]
-        dialog.actions_alignment = ft.MainAxisAlignment.END
+        dialog.actions = []
         self.page.show_dialog(dialog)
 
     def _selected_add_item_id(self) -> str:
@@ -3353,6 +3401,7 @@ class MyJourneyView:
         dialog.title = ft.Text(
             "Add Pokémon to Team Planner",
             weight=ft.FontWeight.BOLD,
+            font_family=FONT_FAMILY_HEADER,
         )
         dialog.content = ft.Column(
             controls=[
@@ -3372,18 +3421,25 @@ class MyJourneyView:
                 ),
                 self._add_pokemon_selector,
                 self._add_pokemon_validation_text,
+                ft.Row(
+                    controls=[
+                        ft.Button(
+                            content="Cancel",
+                            on_click=self._close_add_pokemon_dialog,
+                        ),
+                        self._add_pokemon_button,
+                    ],
+                    spacing=12,
+                    wrap=True,
+                    alignment=ft.MainAxisAlignment.END,
+                ),
             ],
             spacing=10,
             tight=True,
+            scroll=ft.ScrollMode.AUTO,
+            height=330,
         )
-        dialog.actions = [
-            ft.Button(
-                content="Cancel",
-                on_click=self._close_add_pokemon_dialog,
-            ),
-            self._add_pokemon_button,
-        ]
-        dialog.actions_alignment = ft.MainAxisAlignment.END
+        dialog.actions = []
         self.page.show_dialog(dialog)
 
     def _selected_add_pokemon_id(self) -> str:
@@ -3649,9 +3705,14 @@ class MyJourneyView:
             if self._hide_obtained_pokemon and status == "obtained":
                 continue
 
-            marker_asset = str(
-                pokemon.get("marker_asset") or ""
-            ).strip()
+            marker_asset = self._normalized_pokemon_sprite_asset(
+                (
+                    pokemon.get("marker_pokemon")
+                    or pokemon.get("acquire_as")
+                    or pokemon.get("pokemon")
+                ),
+                pokemon.get("marker_asset"),
+            )
 
             pokemon_identity_controls: list[ft.Control] = []
 
@@ -3659,8 +3720,8 @@ class MyJourneyView:
                 pokemon_identity_controls.append(
                     ft.Image(
                         src=marker_asset,
-                        width=48,
-                        height=48,
+                        width=52,
+                        height=52,
                         fit=ft.BoxFit.CONTAIN,
                         semantics_label=(
                             f"{pokemon.get('acquire_as') or pokemon.get('pokemon')}"
@@ -3948,6 +4009,8 @@ class MyJourneyView:
         title: str,
         detail: str,
         sprite_asset: str | None = None,
+        sprite_size: int = 42,
+        sprite_box_size: int = 48,
         action: ft.Control | None = None,
     ) -> ft.Control:
         """Build a selectable Current Objectives row."""
@@ -3966,16 +4029,19 @@ class MyJourneyView:
                         content=(
                             ft.Image(
                                 src=sprite_asset,
-                                width=42,
-                                height=42,
+                                width=sprite_size,
+                                height=sprite_size,
                                 fit=ft.BoxFit.CONTAIN,
                                 semantics_label=f"{title} sprite",
                             )
                             if sprite_asset
-                            else ft.Container(width=42, height=42)
+                            else ft.Container(
+                                width=sprite_size,
+                                height=sprite_size,
+                            )
                         ),
-                        width=48,
-                        height=48,
+                        width=sprite_box_size,
+                        height=sprite_box_size,
                         alignment=ft.Alignment.CENTER,
                     ),
                     ft.Column(
@@ -4059,11 +4125,22 @@ class MyJourneyView:
                 size=12,
                 weight=ft.FontWeight.W_600,
             )
-        return ft.Button(
-            content="I caught one!",
-            icon=ft.Icons.CATCHING_POKEMON_ROUNDED,
-            on_click=lambda: self._show_pokemon_acquired_prompt(pokemon),
+        checkbox = ft.Checkbox(
+            value=False,
+            tooltip="I caught one!",
+            active_color=PRIMARY_BLUE,
         )
+
+        def handle_caught() -> None:
+            # The actual acquisition is confirmed in the existing prompt.
+            # Reset this transient checkbox immediately so Cancel never leaves
+            # a misleading checked state behind.
+            checkbox.value = False
+            checkbox.update()
+            self._show_pokemon_acquired_prompt(pokemon)
+
+        checkbox.on_change = handle_caught
+        return checkbox
 
     def _build_item_progress_control(
         self,

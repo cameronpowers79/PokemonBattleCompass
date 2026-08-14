@@ -39,6 +39,7 @@ from ui.theme import (
     TEXT_MUTED,
     TEXT_PRIMARY,
     TEXT_SECONDARY,
+    FONT_FAMILY_HEADER,
 )
 
 
@@ -155,6 +156,7 @@ class AboutView:
                                                                     "Nerd Stuff (Optional)",
                                                                     size=22,
                                                                     weight=ft.FontWeight.BOLD,
+                                                                    font_family=FONT_FAMILY_HEADER,
                                                                     color=TEXT_PRIMARY,
                                                                 ),
                                                                 ft.Text(
@@ -239,6 +241,7 @@ class AboutView:
                                     group_title,
                                     size=17,
                                     weight=ft.FontWeight.BOLD,
+                                    font_family=FONT_FAMILY_HEADER,
                                     color=TEXT_PRIMARY,
                                 ),
                                 *[
@@ -341,6 +344,7 @@ class AboutView:
                                             version.name,
                                             size=18,
                                             weight=ft.FontWeight.BOLD,
+                                            font_family=FONT_FAMILY_HEADER,
                                             color=TEXT_PRIMARY,
                                         ),
                                         ft.Container(
@@ -423,6 +427,7 @@ class AboutView:
                                         "Version History",
                                         size=22,
                                         weight=ft.FontWeight.BOLD,
+                                        font_family=FONT_FAMILY_HEADER,
                                         color=TEXT_PRIMARY,
                                     ),
                                 ],

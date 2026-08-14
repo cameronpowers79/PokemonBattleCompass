@@ -13,6 +13,7 @@ import flet as ft
 
 from ui.components.app_shell import AppShell
 from ui.storage.flet_preferences_backend import FletPreferencesBackend
+from ui.storage.journey_storage import parse_journey_export
 from ui.theme import configure_page
 from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import load_reference_data
@@ -25,6 +26,8 @@ from ui.views.onboarding_view import OnboardingView
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 ASSETS_DIR = PROJECT_ROOT / "assets"
+
+PENDING_IMPORT_KEY = "pokemon_battle_compass.pending_import.v1"
 
 
 async def main(page: ft.Page) -> None:
@@ -44,6 +47,43 @@ async def main(page: ft.Page) -> None:
     )
 
     await app_state.initialize()
+
+    pending_import_journey: dict | None = None
+    pending_import_error: str | None = None
+
+    if page.web:
+        preferences = ft.SharedPreferences()
+
+        try:
+            staged_export = await preferences.get(
+                PENDING_IMPORT_KEY
+            )
+        except (RuntimeError, ValueError) as error:
+            staged_export = None
+            pending_import_error = (
+                "The staged Journey could not be read from browser "
+                f"storage: {error}"
+            )
+
+        if isinstance(staged_export, str) and staged_export:
+            try:
+                await preferences.remove(PENDING_IMPORT_KEY)
+            except (RuntimeError, ValueError):
+                # A failed cleanup should not block validation/import.
+                pass
+
+            import_result = parse_journey_export(staged_export)
+
+            if (
+                import_result.status == "valid"
+                and import_result.journey is not None
+            ):
+                pending_import_journey = import_result.journey
+            else:
+                pending_import_error = (
+                    import_result.error
+                    or "The selected Journey file is invalid."
+                )
 
     def show_onboarding(
         *,
@@ -250,14 +290,175 @@ async def main(page: ft.Page) -> None:
         )
         page.update()
 
+    def close_pending_import_error(
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Close a non-fatal browser-import error."""
+
+        del event
+        page.pop_dialog()
+        page.update()
+
+    def show_pending_import_error(message: str) -> None:
+        """Report a helper-file import problem without changing the Journey."""
+
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Journey could not be loaded",
+                    weight=ft.FontWeight.BOLD,
+                ),
+                content=ft.Text(
+                    (
+                        f"{message}\n\n"
+                        "Your current Journey has not been changed."
+                    )
+                ),
+                actions=[
+                    ft.Button(
+                        content="OK",
+                        on_click=close_pending_import_error,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def cancel_pending_import(
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Cancel the Journey staged by the browser helper."""
+
+        nonlocal pending_import_journey
+
+        del event
+        pending_import_journey = None
+        page.pop_dialog()
+        page.update()
+
+    async def confirm_pending_import(
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Persist the Journey staged by the browser helper."""
+
+        nonlocal pending_import_journey
+
+        del event
+
+        imported_journey = pending_import_journey
+        pending_import_journey = None
+        page.pop_dialog()
+
+        if imported_journey is None:
+            show_pending_import_error(
+                "No valid Journey is waiting to be loaded."
+            )
+            return
+
+        try:
+            load_succeeded = await app_state.import_journey(
+                imported_journey
+            )
+        except (RuntimeError, ValueError) as error:
+            show_pending_import_error(
+                f"The Journey could not be loaded: {error}"
+            )
+            return
+
+        if not load_succeeded:
+            show_pending_import_error(
+                "The Journey could not be saved."
+            )
+            return
+
+        show_loaded_application()
+
+    def show_pending_import_confirmation(
+        journey: dict,
+    ) -> None:
+        """Confirm a Journey selected through the browser helper."""
+
+        starter = str(journey.get("starter") or "Unknown")
+        team = journey.get("team")
+        team_count = len(team) if isinstance(team, list) else 0
+
+        page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Load this Journey?",
+                    weight=ft.FontWeight.BOLD,
+                ),
+                content=ft.Column(
+                    controls=[
+                        ft.Text(
+                            (
+                                "Loading this Journey will overwrite the "
+                                "Journey currently saved in Pokémon Battle "
+                                "Compass."
+                            )
+                        ),
+                        ft.Container(
+                            content=ft.Column(
+                                controls=[
+                                    ft.Text(
+                                        f"Starter: {starter}",
+                                        weight=ft.FontWeight.BOLD,
+                                    ),
+                                    ft.Text(
+                                        f"Active team: {team_count} Pokémon"
+                                    ),
+                                ],
+                                spacing=6,
+                                tight=True,
+                            ),
+                            padding=12,
+                            border_radius=10,
+                        ),
+                    ],
+                    spacing=14,
+                    tight=True,
+                ),
+                actions=[
+                    ft.Button(
+                        content="Cancel",
+                        on_click=cancel_pending_import,
+                    ),
+                    ft.Button(
+                        content="Load Journey",
+                        icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+                        on_click=confirm_pending_import,
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
 
     if app_state.is_ready:
         show_main_application()
 
-        if app_state.recovered_from_backup:
+        if pending_import_journey is not None:
+            show_pending_import_confirmation(
+                pending_import_journey
+            )
+        elif pending_import_error is not None:
+            show_pending_import_error(
+                pending_import_error
+            )
+        elif app_state.recovered_from_backup:
             show_recovery_dialog()
     else:
         show_onboarding(show_welcome=not app_state.has_journey)
+
+        if pending_import_journey is not None:
+            show_pending_import_confirmation(
+                pending_import_journey
+            )
+        elif pending_import_error is not None:
+            show_pending_import_error(
+                pending_import_error
+            )
 
 
 if __name__ == "__main__":

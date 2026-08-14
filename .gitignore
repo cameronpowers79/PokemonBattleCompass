@@ -9,3 +9,4 @@ project_tree.txt
 *.log
 dist-web/
 dist-web-offline
+assets/runtime

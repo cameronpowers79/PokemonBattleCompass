@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0F16">
+  <title>Load Journey — Pokémon Battle Compass</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0B0F16;
+      color: #F4F7FB;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding:
+        max(24px, env(safe-area-inset-top))
+        max(20px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(20px, env(safe-area-inset-left));
+      background: #0B0F16;
+    }
+
+    main {
+      width: min(100%, 520px);
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+      background: #121722;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.65rem;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: #AEB8C7;
+      line-height: 1.5;
+    }
+
+    .file-label {
+      display: block;
+      margin: 22px 0 12px;
+      font-weight: 700;
+    }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      background: #151B27;
+      color: #F4F7FB;
+      font-size: 1rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    button,
+    a.button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button {
+      background: #4F9CFF;
+      color: #08111F;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    a.button {
+      background: #252D3A;
+      color: #F4F7FB;
+    }
+
+    #status {
+      min-height: 1.5em;
+      margin-top: 16px;
+      color: #AEB8C7;
+    }
+
+    #status.error {
+      color: #F87171;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Load Journey</h1>
+    <p>
+      Choose a Pokémon Battle Compass Journey export. The file is read only
+      in this browser and staged for the app to validate before anything is
+      replaced.
+    </p>
+
+    <label class="file-label" for="journey-file">Journey JSON</label>
+    <input
+      id="journey-file"
+      type="file"
+      accept=".json,application/json"
+    >
+
+    <div class="actions">
+      <button id="continue-button" type="button" disabled>
+        Continue
+      </button>
+      <a class="button" href="./">Cancel</a>
+    </div>
+
+    <div id="status" aria-live="polite"></div>
+  </main>
+
+  <script>
+    (() => {
+      const LOGICAL_KEY = "pokemon_battle_compass.pending_import.v1";
+      const FLUTTER_KEY = `flutter.${LOGICAL_KEY}`;
+
+      const fileInput = document.getElementById("journey-file");
+      const continueButton = document.getElementById("continue-button");
+      const status = document.getElementById("status");
+
+      let selectedText = null;
+
+      function setStatus(message, isError = false) {
+        status.textContent = message;
+        status.classList.toggle("error", isError);
+      }
+
+      fileInput.addEventListener("change", async () => {
+        selectedText = null;
+        continueButton.disabled = true;
+        setStatus("");
+
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+          return;
+        }
+
+        try {
+          const text = await file.text();
+
+          // Cheap first-pass check only. Python remains the authority for
+          // the actual Journey/export validation after the redirect.
+          JSON.parse(text);
+
+          selectedText = text;
+          continueButton.disabled = false;
+          setStatus(`${file.name} is ready to validate.`);
+        } catch (error) {
+          setStatus(
+            "That file could not be read as JSON. Choose a Journey export.",
+            true
+          );
+        }
+      });
+
+      continueButton.addEventListener("click", () => {
+        if (selectedText === null) {
+          return;
+        }
+
+        try {
+          // shared_preferences_web stores legacy SharedPreferences values
+          // under a "flutter." key and JSON-encodes the value.
+          localStorage.setItem(
+            FLUTTER_KEY,
+            JSON.stringify(selectedText)
+          );
+
+          window.location.replace("./");
+        } catch (error) {
+          setStatus(
+            "The Journey could not be staged in browser storage.",
+            true
+          );
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

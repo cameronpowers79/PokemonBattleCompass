@@ -43,6 +43,13 @@ INCENSE_SPRITE_DIR = (
     / "incense"
 )
 
+NORMALIZED_SPRITE_DIR = (
+    ASSETS_DIR
+    / "runtime"
+    / "pokemon-gen8"
+    / "regular"
+)
+
 
 def _asset_src(path: Path) -> str:
     """Return a browser/Flet asset path relative to the asset root."""
@@ -145,7 +152,8 @@ def get_sprite_path(
     pokemon_name,
     gender=None,
     use_gmax=False,
-    use_texture=True
+    use_texture=True,
+    sprite_dir=None,
 ):
     sprite_name = slugify_pokemon_name(pokemon_name)
 
@@ -153,8 +161,10 @@ def get_sprite_path(
         str(gender).strip().lower() == "female"
     )
 
+    base_dir = sprite_dir or SPRITE_DIR
+    female_dir = base_dir / "female"
+
     candidates = []
-    female_dir = SPRITE_DIR / "female"
 
     if use_texture:
         if is_female:
@@ -170,12 +180,12 @@ def get_sprite_path(
 
         if use_gmax:
             candidates.append(
-                SPRITE_DIR / f"{sprite_name}-gmax-texture.png"
+                base_dir / f"{sprite_name}-gmax-texture.png"
             )
 
         candidates.extend([
-            SPRITE_DIR / f"{sprite_name}-galar-texture.png",
-            SPRITE_DIR / f"{sprite_name}-texture.png",
+            base_dir / f"{sprite_name}-galar-texture.png",
+            base_dir / f"{sprite_name}-texture.png",
         ])
 
     if is_female:
@@ -191,12 +201,12 @@ def get_sprite_path(
 
     if use_gmax:
         candidates.append(
-            SPRITE_DIR / f"{sprite_name}-gmax.png"
+            base_dir / f"{sprite_name}-gmax.png"
         )
 
     candidates.extend([
-        SPRITE_DIR / f"{sprite_name}-galar.png",
-        SPRITE_DIR / f"{sprite_name}.png",
+        base_dir / f"{sprite_name}-galar.png",
+        base_dir / f"{sprite_name}.png",
     ])
 
     for candidate in candidates:
@@ -204,6 +214,44 @@ def get_sprite_path(
             return candidate
 
     return None
+
+def get_sprite_src(
+    pokemon_name: str,
+    gender=None,
+    use_gmax=False,
+    use_texture=True,
+    normalized=False,
+) -> str | None:
+    source_path = get_sprite_path(
+        pokemon_name,
+        gender=gender,
+        use_gmax=use_gmax,
+        use_texture=use_texture,
+    )
+
+    if source_path is None:
+        return None
+
+    if normalized:
+        try:
+            relative_path = source_path.relative_to(
+                SPRITE_DIR
+            )
+        except ValueError:
+            return _asset_src(source_path)
+
+        normalized_path = (
+            NORMALIZED_SPRITE_DIR
+            / relative_path
+        )
+
+        if IS_WEB:
+            return _asset_src(normalized_path)
+
+        if normalized_path.exists():
+            return _asset_src(normalized_path)
+
+    return _asset_src(source_path)
 
 
 def get_sprite_img_html(

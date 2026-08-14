@@ -33,6 +33,7 @@ from engine.item_recommendations import (
 from engine.moves import apply_move_metadata
 from ui.constants import POKEMON_TYPES, TYPE_COLORS
 from ui.rendering import (
+    asset_exists,
     get_item_sprite_src,
     get_sprite_path,
 )
@@ -443,8 +444,6 @@ class MyTeamView:
         self.on_journey_updated = on_journey_updated
         self.pending_import_journey: dict | None = None
 
-        self.file_picker = ft.FilePicker()
-        self.page.services.append(self.file_picker)
 
         self.move_lookup = {
             move["Move"]: move
@@ -462,6 +461,9 @@ class MyTeamView:
             tuple[int, str],
             ft.TextField | ft.Dropdown | ft.AutoComplete,
         ] = {}
+        self._active_numeric_field: tuple[int, str] | None = None
+        self._previous_keyboard_handler = None
+
         self._autocomplete_edit_versions: dict[
             tuple[int, str],
             int,
@@ -2635,11 +2637,38 @@ class MyTeamView:
                     if column in NUMERIC_COLUMNS
                     else ft.KeyboardType.TEXT
                 ),
-                on_blur=lambda event, row=row_index, field=column: (
-                    self._handle_text_commit(
-                        event,
-                        row,
-                        field,
+                ignore_up_down_keys=(
+                    column in NUMERIC_FOCUS_ORDER
+                ),
+                on_focus=(
+                    (
+                        lambda event, row=row_index, field=column:
+                        self._handle_numeric_focus(
+                            event,
+                            row,
+                            field,
+                        )
+                    )
+                    if column in NUMERIC_FOCUS_ORDER
+                    else None
+                ),
+                on_blur=(
+                    (
+                        lambda event, row=row_index, field=column:
+                        self._handle_numeric_blur(
+                            event,
+                            row,
+                            field,
+                        )
+                    )
+                    if column in NUMERIC_FOCUS_ORDER
+                    else (
+                        lambda event, row=row_index, field=column:
+                        self._handle_text_commit(
+                            event,
+                            row,
+                            field,
+                        )
                     )
                 ),
                 on_submit=lambda event, row=row_index, field=column: (
@@ -2697,6 +2726,93 @@ class MyTeamView:
                 column,
             )
 
+    def _handle_numeric_focus(
+        self,
+        event: ft.Event[ft.TextField],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Track the focused numeric field and listen for Up/Down keys."""
+
+        del event
+
+        if self._active_numeric_field is None:
+            self._previous_keyboard_handler = (
+                self.page.on_keyboard_event
+            )
+
+        self._active_numeric_field = (
+            row_index,
+            column,
+        )
+        self.page.on_keyboard_event = (
+            self._handle_numeric_keyboard_event
+        )
+
+    def _handle_numeric_blur(
+        self,
+        event: ft.Event[ft.TextField],
+        row_index: int,
+        column: str,
+    ) -> None:
+        """Commit a numeric field and restore the prior keyboard handler."""
+
+        self._handle_text_commit(
+            event,
+            row_index,
+            column,
+        )
+
+        if self._active_numeric_field != (
+            row_index,
+            column,
+        ):
+            return
+
+        self._active_numeric_field = None
+        self.page.on_keyboard_event = (
+            self._previous_keyboard_handler
+        )
+        self._previous_keyboard_handler = None
+
+    def _handle_numeric_keyboard_event(
+        self,
+        event: ft.KeyboardEvent,
+    ) -> None:
+        """Use Up/Down keyboard events as Previous/Next numeric-field actions."""
+
+        active_field = self._active_numeric_field
+        if active_field is None:
+            return
+
+        normalized_key = (
+            str(event.key or "")
+            .strip()
+            .casefold()
+            .replace(" ", "")
+        )
+
+        if normalized_key in {
+            "arrowup",
+            "up",
+        }:
+            offset = -1
+        elif normalized_key in {
+            "arrowdown",
+            "down",
+        }:
+            offset = 1
+        else:
+            return
+
+        row_index, column = active_field
+        self.page.run_task(
+            self._focus_numeric_field_offset,
+            row_index,
+            column,
+            offset,
+        )
+
     async def _focus_next_numeric_field(
         self,
         row_index: int,
@@ -2704,30 +2820,61 @@ class MyTeamView:
     ) -> None:
         """Move focus to the next Level/stat field after Enter/Next."""
 
+        await self._focus_numeric_field_offset(
+            row_index,
+            column,
+            1,
+        )
+
+    async def _focus_numeric_field_offset(
+        self,
+        row_index: int,
+        column: str,
+        offset: int,
+    ) -> None:
+        """Move focus through Level/stat fields in row-major order."""
+
         try:
-            column_index = NUMERIC_FOCUS_ORDER.index(column)
+            column_index = NUMERIC_FOCUS_ORDER.index(
+                column
+            )
         except ValueError:
             return
 
-        next_row = row_index
-        next_column_index = column_index + 1
+        current_position = (
+            row_index * len(NUMERIC_FOCUS_ORDER)
+            + column_index
+        )
+        target_position = current_position + offset
 
-        if next_column_index >= len(NUMERIC_FOCUS_ORDER):
-            next_row += 1
-            next_column_index = 0
+        total_positions = (
+            len(self.working_team)
+            * len(NUMERIC_FOCUS_ORDER)
+        )
 
-        if next_row >= len(self.working_team):
+        if (
+            target_position < 0
+            or target_position >= total_positions
+        ):
             return
 
-        next_control = self.editor_controls.get(
+        target_row, target_column_index = divmod(
+            target_position,
+            len(NUMERIC_FOCUS_ORDER),
+        )
+        target_column = NUMERIC_FOCUS_ORDER[
+            target_column_index
+        ]
+
+        target_control = self.editor_controls.get(
             (
-                next_row,
-                NUMERIC_FOCUS_ORDER[next_column_index],
+                target_row,
+                target_column,
             )
         )
 
-        if isinstance(next_control, ft.TextField):
-            await next_control.focus()
+        if isinstance(target_control, ft.TextField):
+            await target_control.focus()
 
     def _handle_text_commit(
         self,
@@ -3401,7 +3548,7 @@ class MyTeamView:
                 / f"{pokemon_type}.png"
             )
 
-            if badge_path.exists():
+            if asset_exists(badge_path):
                 badge_control: ft.Control = ft.Image(
                     src=self._asset_src(badge_path),
                     height=24,
@@ -3744,7 +3891,7 @@ class MyTeamView:
                 / f"{move_type}.png"
             )
 
-            if badge_path.exists():
+            if asset_exists(badge_path):
                 card_controls.append(
                     ft.GestureDetector(
                         content=ft.Image(
@@ -3902,7 +4049,7 @@ class MyTeamView:
             / f"{move_type}.png"
         )
 
-        if badge_path.exists():
+        if asset_exists(badge_path):
             type_category_controls.append(
                 ft.Image(
                     src=self._asset_src(
@@ -5865,24 +6012,19 @@ class MyTeamView:
                 app_version=_app_version(),
             )
 
-            selected_path = await self.file_picker.save_file(
+            export_filename = journey_export_filename()
+
+            selected_path = await ft.FilePicker().save_file(
                 dialog_title="Export Journey",
-                file_name=journey_export_filename(),
+                file_name=export_filename,
+                file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["json"],
+                src_bytes=serialized_export.encode("utf-8"),
             )
 
-            if not selected_path:
-                return
-
-            export_path = Path(selected_path)
-
-            if export_path.suffix.lower() != ".json":
-                export_path = export_path.with_suffix(".json")
-
-            export_path.write_text(
-                serialized_export,
-                encoding="utf-8",
-            )
+            if not self.page.web:
+                if not selected_path:
+                    return
         except (OSError, RuntimeError, ValueError) as error:
             self.save_status.value = (
                 f"Journey could not be exported: {error}"
@@ -5903,13 +6045,28 @@ class MyTeamView:
 
         del event
 
+        if self.page.web:
+            try:
+                await ft.UrlLauncher().launch_url(
+                    ft.Url(
+                        url="./import.html",
+                        target=ft.UrlTarget.SELF,
+                    )
+                )
+            except (RuntimeError, ValueError) as error:
+                self._show_load_error(
+                    f"The Journey import helper could not be opened: {error}"
+                )
+            return
+
         try:
-            selected_files = await self.file_picker.pick_files(
+            selected_files = await ft.FilePicker().pick_files(
                 dialog_title="Load Journey",
                 allow_multiple=False,
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["json"],
                 with_data=True,
+                cancel_upload_on_window_blur=False,
             )
 
             if not selected_files:
@@ -5928,6 +6085,7 @@ class MyTeamView:
                     "The selected file could not be accessed."
                 )
                 return
+
         except (OSError, UnicodeError) as error:
             self._show_load_error(
                 f"The selected Journey file could not be read: {error}"
