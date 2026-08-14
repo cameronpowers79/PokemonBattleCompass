@@ -1,13 +1,17 @@
 import base64
 import re
 import sys
-from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
 
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
+
+try:
+    from ui.asset_manifest import BUNDLED_ASSETS
+except ImportError:
+    BUNDLED_ASSETS = frozenset()
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -46,33 +50,13 @@ def _asset_src(path: Path) -> str:
     return path.relative_to(ASSETS_DIR).as_posix()
 
 
-@lru_cache(maxsize=None)
-def _web_asset_exists(asset_src: str) -> bool:
-    """Check whether a published static-web asset exists.
-
-    Flet publishes the contents of ``assets/`` beside the web app rather than
-    inside Pyodide's Python filesystem. A normal ``Path.exists()`` therefore
-    cannot discover those files in static web builds.
-
-    Python runs in Flet's web worker, so a synchronous same-origin HEAD request
-    preserves the existing candidate/fallback ordering without downloading
-    image bodies. Results are cached for the life of the app.
-    """
-
-    try:
-        js = __import__("js")
-
-        request = js.XMLHttpRequest.new()
-        request.open("HEAD", asset_src, False)
-        request.send()
-
-        return 200 <= int(request.status) < 400
-    except Exception:
-        return False
-
-
 def asset_exists(path: Path) -> bool:
-    """Return whether an app asset exists on the active platform."""
+    """Return whether an app asset exists on the active platform.
+
+    Native builds can query the real filesystem directly. Static web builds
+    cannot see Flet's published asset tree from Pyodide, so they use the
+    generated asset manifest instead of making blocking HTTP probe requests.
+    """
 
     if not IS_WEB:
         return path.exists()
@@ -82,7 +66,7 @@ def asset_exists(path: Path) -> bool:
     except ValueError:
         return False
 
-    return _web_asset_exists(asset_src)
+    return asset_src in BUNDLED_ASSETS
 
 
 def image_to_base64(
