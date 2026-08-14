@@ -46,7 +46,6 @@
 .\dist\PokemonBattleCompass\PokemonBattleCompass.exe
 
 # Web App Dev Commands
-flet run --web --host 127.0.0.1 --port 51427 flet_app.py
 
 python tools\publish_web.py
 python -m http.server 8002 --directory dist-web (Desktop web)
