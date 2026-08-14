@@ -36,12 +36,34 @@ Model Shell Side Arm and Photon Geyser category/ability behavior.
 - [x] Implement optional backup/export.
 - [x] Implement restore/import.
 - [x] Verify desktop packaging.
-- [ ] Verify installable PWA.
+- [x] Upgrade the active Flet branch to Flet 0.86.2 / DataTable2 0.86.2.
+- [x] Verify static web/Pyodide publishing on Flet 0.86.2.
+- [x] Make Journey restore/import browser-safe by reading uploaded file bytes when no filesystem path is available.
+- [x] Verify durable browser-local Journey persistence in static web.
+- [x] Replace blocking browser asset-existence probes with a generated asset manifest.
+- [x] Verify the promoted 0.86.2 codebase still packages and runs as a Windows desktop app.
+- [x] Verify installable PWA.
+- [x] Verify desktop Chrome install behavior
+- [x] Verify standalone app-window launch
+- [x] Verify persistence after reopening the       installed PWA
 - [ ] Verify offline behavior.
 - [ ] Verify iPhone PWA behavior.
 - [x] Migrate Battle Compass.
 - [x] Migrate Trainer's Guide.
 - [x] Retire the Streamlit implementation.
+- [x] Replace Flet-generated PWA icons/favicon with Pokémon Battle Compass branding assets.
+
+## Next Priorities
+
+Verify installable PWA behavior on desktop Chrome.
+
+Verify offline startup, cached assets, and reconnection behavior.
+
+Verify iPhone PWA installation, persistence, and suspend/resume behavior.
+
+Complete PWA-specific mobile polish discovered during device testing.
+
+Begin Beta-release documentation once the PWA behavior is validated.
 
 ---
 
@@ -140,7 +162,7 @@ Centralized semantic text-size hierarchy in ui/theme.py.
 - [x] Continue separating UI from engine.
 - [x] Keep `engine/` framework-independent.
 - [x] Separate persistent user data from bundled reference data.
-- [ ] Create a shared storage interface for desktop and PWA.
+- [x] Create a shared storage interface for desktop and PWA.
 - [x] Add save-data schema versioning.
 - [ ] Add save-data validation and migration support.
 - [x] Add automatic recovery from interrupted writes.
@@ -197,6 +219,7 @@ Centralized semantic text-size hierarchy in ui/theme.py.
 - [ ] Expand the texture hierarchy for regional forms and other variants.
 - [ ] Preserve sprite lookup as framework-independent logic.
 - [x] Verify sprite packaging in the desktop build.
+- [x] Add browser-safe asset lookup using a generated bundled-asset manifest.
 - [ ] Verify sprite caching and offline use in the PWA.
 
 ---
@@ -254,6 +277,7 @@ Centralized semantic text-size hierarchy in ui/theme.py.
 
 ## Documentation
 
+- [x] Update development commands for fixed-origin dynamic web and static-web testing.
 - [ ] Rewrite README for the desktop/PWA architecture.
 - [ ] Add current desktop screenshots.
 - [ ] Add mobile/PWA screenshots.
