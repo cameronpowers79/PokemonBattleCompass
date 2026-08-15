@@ -275,6 +275,7 @@ def main() -> int:
 
         runtime_asset_dirs = [
             "type_badges",
+            "badges",
             "raw/pokesprite/pokemon-gen8/regular",
             "fonts",
             "runtime/pokemon-gen8/regular",
@@ -290,6 +291,37 @@ def main() -> int:
                     target_dir,
                     dirs_exist_ok=True,
                 )
+
+        runtime_asset_files = [
+            "raw/BattleCompassLogo.png",
+            "raw/WordMarkLogoBlock.png",
+            "Galar_Map_Base.png",
+        ]
+
+        for relative_file in runtime_asset_files:
+            source_file = assets / relative_file
+            target_file = staged_output / relative_file
+
+            if not source_file.is_file():
+                raise FileNotFoundError(
+                    f"Runtime asset not found: {source_file}"
+                )
+
+            target_file.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            shutil.copy2(
+                source_file,
+                target_file,
+            )
+
+            print(
+                "  + runtime asset: "
+                f"{source_file.relative_to(assets)} "
+                f"-> {target_file.relative_to(staged_output)}"
+            )
 
         item_assets_source = assets / "raw" / "pokesprite" / "items"
         item_assets_target = staged_output / "raw" / "pokesprite" / "items"
