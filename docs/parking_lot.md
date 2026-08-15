@@ -45,25 +45,27 @@ Model Shell Side Arm and Photon Geyser category/ability behavior.
 - [x] Verify installable PWA.
 - [x] Verify desktop Chrome install behavior
 - [x] Verify standalone app-window launch
-- [x] Verify persistence after reopening the       installed PWA
+- [x] Verify persistence after reopening the       installed PWA
 - [ ] Verify offline behavior.
-- [ ] Verify iPhone PWA behavior.
+- [x] Verify iPhone PWA installation and standalone app-window launch.
+- [x] Verify Journey restore/import from the installed iPhone PWA.
+- [x] Verify core runtime artwork (header branding, Badge Tracker, and Galar Map) in the installed iPhone PWA.
 - [x] Migrate Battle Compass.
 - [x] Migrate Trainer's Guide.
 - [x] Retire the Streamlit implementation.
 - [x] Replace Flet-generated PWA icons/favicon with Pokémon Battle Compass branding assets.
+- [x] Deploy the static Beta build to Hugging Face Spaces.
+- [x] Ensure web publishing copies required runtime artwork assets into dist-web.
 
 ## Next Priorities
 
-Verify installable PWA behavior on desktop Chrome.
-
 Verify offline startup, cached assets, and reconnection behavior.
 
-Verify iPhone PWA installation, persistence, and suspend/resume behavior.
+Verify iPhone PWA persistence after reopening and suspend/resume behavior.
 
-Complete PWA-specific mobile polish discovered during device testing.
+Complete any remaining PWA-specific mobile polish discovered during device testing.
 
-Begin Beta-release documentation once the PWA behavior is validated.
+Begin Beta-release documentation once the remaining PWA behavior is validated.
 
 ---
 
@@ -281,18 +283,18 @@ Centralized semantic text-size hierarchy in ui/theme.py.
 - [ ] Rewrite README for the desktop/PWA architecture.
 - [ ] Add current desktop screenshots.
 - [ ] Add mobile/PWA screenshots.
-- [ ] Add feature overview.
-- [ ] Add installation instructions for the standalone build.
+- [x] Add feature overview.
+- [x] Add installation instructions for the standalone build.
 - [ ] Add PWA installation instructions.
-- [ ] Explain autosave, local storage, backup, and restore behavior.
-- [ ] Add known limitations.
-- [ ] Add roadmap section.
+- [x] Explain autosave, local storage, backup, and restore behavior.
+- [x] Add known limitations.
+- [x] Add roadmap section.
 - [ ] Create release-notes template.
 - [ ] Add animated demonstrations of major features.
-- [ ] Document the Streamlit Alpha as the original reference implementation.
-- [ ] Document the known iOS/Safari favicon limitation in the Alpha.
-- [ ] Add fan-project and intellectual-property disclaimer.
-- [ ] Architecture overview.
+- [x] Document the Streamlit Alpha as the original reference implementation.
+- [x] Document the known iOS/Safari favicon limitation in the Alpha. (No longer needed)
+- [x] Add fan-project and intellectual-property disclaimer.
+- [x] Architecture overview.
 
 # My Journey
 
