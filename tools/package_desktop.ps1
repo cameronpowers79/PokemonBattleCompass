@@ -26,7 +26,7 @@ foreach ($path in $requiredPaths) {
 Write-Host ""
 Write-Host "Normalizing Pokemon sprites..."
 
-python tools\normalize_pokemon_sprites.py
+python tools\normalize_pokemon_sprites.py --apply
 
 if ($LASTEXITCODE -ne 0) {
     throw "Sprite normalization failed with exit code $LASTEXITCODE."
