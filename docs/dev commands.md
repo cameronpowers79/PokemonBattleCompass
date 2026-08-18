@@ -34,6 +34,7 @@
 # Web App Dev Commands
 
 python tools\publish_web.py
+
 hf upload cameronpowers/pokemon-battle-compass "C:\PokemonBattleCompass\dist-web" . --repo-type=space --commit-message="Update Pokemon Battle Compass Beta"
 
 python -m http.server 8002 --directory dist-web (Desktop web)
