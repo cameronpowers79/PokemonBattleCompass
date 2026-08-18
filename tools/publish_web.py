@@ -227,6 +227,7 @@ def main() -> int:
     assets = root / "assets"
     manifest_generator = root / "tools" / "generate_asset_manifest.py"
     sprite_normalizer = root / "tools" / "normalize_pokemon_sprites.py"
+    texture_normalizer = root / "tools" / "normalize_texture_artwork.py"
     branding_generator = root / "tools" / "generate_web_branding.py"
 
     print("Pokémon Battle Compass — clean static web publish")
@@ -238,6 +239,7 @@ def main() -> int:
 
     for required_tool in (
         sprite_normalizer,
+        texture_normalizer,
         manifest_generator,
         branding_generator,
     ):
@@ -252,6 +254,7 @@ def main() -> int:
 
     try:
         run([sys.executable, str(sprite_normalizer)], cwd=root)
+        run([sys.executable, str(texture_normalizer), "--apply"], cwd=root)
         run([sys.executable, str(branding_generator)], cwd=root)
         run([sys.executable, str(manifest_generator)], cwd=root)
 
