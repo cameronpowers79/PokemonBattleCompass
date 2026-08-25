@@ -86,9 +86,9 @@ class AboutView:
             ],
         )
 
-        welcome_and_features = section_cards[:5]
-        architecture_and_roadmap = section_cards[5:7]
-        credits_and_disclaimer = section_cards[7:]
+        welcome_and_features = section_cards[:6]
+        architecture_and_roadmap = section_cards[6:8]
+        credits_and_disclaimer = section_cards[8:]
 
         return ft.Container(
             content=ft.Column(
@@ -161,9 +161,7 @@ class AboutView:
                                                                 ),
                                                                 ft.Text(
                                                                     (
-                                                                        "The engine details, "
-                                                                        "minus several thousand "
-                                                                        "lines of code."
+                                                                        "The engine details."
                                                                     ),
                                                                     size=13,
                                                                     color=TEXT_MUTED,

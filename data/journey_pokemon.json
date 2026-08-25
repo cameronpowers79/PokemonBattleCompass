@@ -1595,7 +1595,7 @@
     "acquire_as": "Growlithe",
     "marker_pokemon": "Growlithe",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/growlithe.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Hammerlocke Hills",
@@ -1781,7 +1781,7 @@
     "acquire_as": "Delibird",
     "marker_pokemon": "Delibird",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/delibird.png",
-    "required_badge": 0,
+    "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Rolling Fields",
@@ -2051,26 +2051,18 @@
     "required_badge": 0,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Rolling Fields",
+      "location": "West Lake Axewell",
       "map_locations": [
-        "rolling_fields"
+        "west_lake_axewell"
       ],
       "encounters": [
         {
-          "location": "Rolling Fields",
-          "method": "Random",
-          "weather": "Sandstorm",
-          "rarity_percent": 40,
-          "level_min": 7,
-          "level_max": 9
-        },
-        {
-          "location": "East Lake Axewell",
-          "method": "Random",
-          "weather": "Sandstorm",
+          "location": "West Lake Axewell",
+          "method": "Overworld",
+          "weather": "Intense Sun",
           "rarity_percent": 40,
           "level_min": 8,
-          "level_max": 12
+          "level_max": 14
         }
       ]
     },
@@ -2158,29 +2150,21 @@
     "acquire_as": "Munna",
     "marker_pokemon": "Munna",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/munna.png",
-    "required_badge": 0,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Rolling Fields",
+      "location": "Giant's Cap",
       "map_locations": [
-        "rolling_fields"
+        "giants_cap"
       ],
       "encounters": [
         {
-          "location": "Rolling Fields",
+          "location": "Giant's Cap",
           "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 40,
-          "level_min": 7,
-          "level_max": 9
-        },
-        {
-          "location": "East Lake Axewell",
-          "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 30,
-          "level_min": 8,
-          "level_max": 12
+          "weather": "Overcast",
+          "rarity_percent": 20,
+          "level_min": 27,
+          "level_max": 29
         }
       ]
     },
@@ -2217,29 +2201,29 @@
     "acquire_as": "Natu",
     "marker_pokemon": "Natu",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/natu.png",
-    "required_badge": 0,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Rolling Fields",
+      "location": "Giant's Mirror",
       "map_locations": [
-        "rolling_fields"
+        "giants_mirror"
       ],
       "encounters": [
         {
-          "location": "Rolling Fields",
-          "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 35,
-          "level_min": 7,
-          "level_max": 9
+          "location": "Giant's Mirror",
+          "method": "Overworld",
+          "weather": "Raining",
+          "rarity_percent": 10,
+          "level_min": 28,
+          "level_max": 30
         },
         {
-          "location": "West Lake Axewell",
-          "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 40,
-          "level_min": 7,
-          "level_max": 11
+          "location": "Giant's Mirror",
+          "method": "Overworld",
+          "weather": "Snowing",
+          "rarity_percent": 10,
+          "level_min": 28,
+          "level_max": 30
         }
       ]
     },
@@ -2329,26 +2313,26 @@
     "required_badge": 0,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Axew's Eye",
+      "location": "East Lake Axewell",
       "map_locations": [
-        "axews_eye"
+        "east_lake_axewell"
       ],
       "encounters": [
         {
-          "location": "Axew's Eye",
-          "method": "Random",
+          "location": "East Lake Axewell",
+          "method": "Overworld",
           "weather": "Snowing",
-          "rarity_percent": 40,
-          "level_min": 35,
-          "level_max": 40
+          "rarity_percent": 60,
+          "level_min": 10,
+          "level_max": 15
         },
         {
-          "location": "Axew's Eye",
+          "location": "East Lake Axewell",
           "method": "Random",
-          "weather": "Snowstorm",
+          "weather": "Snowing",
           "rarity_percent": 30,
-          "level_min": 35,
-          "level_max": 40
+          "level_min": 8,
+          "level_max": 12
         }
       ]
     },
@@ -2987,7 +2971,7 @@
     "acquire_as": "Bronzor",
     "marker_pokemon": "Bronzor",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/bronzor.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -3708,7 +3692,7 @@
     "acquire_as": "Goldeen",
     "marker_pokemon": "Goldeen",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/goldeen.png",
-    "required_badge": 1,
+    "required_badge": 0,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Route 4",
@@ -4511,29 +4495,29 @@
     "acquire_as": "Noibat",
     "marker_pokemon": "Noibat",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/noibat.png",
-    "required_badge": 0,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Watchtower Ruins",
+      "location": "Galar Mine No. 2",
       "map_locations": [
-        "watchtower_ruins"
+        "galar_mine_no_2"
       ],
       "encounters": [
         {
-          "location": "Watchtower Ruins",
-          "method": "Flying",
-          "weather": "Normal Weather",
-          "rarity_percent": 40,
-          "level_min": 26,
-          "level_max": 29
+          "location": "Galar Mine No. 2",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 10,
+          "level_min": 20,
+          "level_max": 24
         },
         {
-          "location": "Watchtower Ruins",
-          "method": "Flying",
-          "weather": "Overcast",
-          "rarity_percent": 60,
-          "level_min": 26,
-          "level_max": 29
+          "location": "Galar Mine No. 2",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 20,
+          "level_min": 20,
+          "level_max": 24
         }
       ]
     },
@@ -5502,7 +5486,7 @@
     "acquire_as": "Espurr",
     "marker_pokemon": "Espurr",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/espurr.png",
-    "required_badge": 2,
+    "required_badge": 1,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Route 5",
@@ -5994,7 +5978,7 @@
     "acquire_as": "Barboach",
     "marker_pokemon": "Barboach",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/barboach.png",
-    "required_badge": 2,
+    "required_badge": 0,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Motostoke",
@@ -6052,26 +6036,26 @@
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Bridge Field",
+      "location": "Galar Mine No. 2",
       "map_locations": [
-        "bridge_field"
+        "galar_mine_no_2"
       ],
       "encounters": [
         {
-          "location": "Bridge Field",
-          "method": "Random",
-          "weather": "Raining",
+          "location": "Galar Mine No. 2",
+          "method": "Overworld",
+          "weather": "All Weather",
           "rarity_percent": 25,
-          "level_min": 26,
-          "level_max": 28
+          "level_min": 20,
+          "level_max": 24
         },
         {
-          "location": "Bridge Field",
+          "location": "Galar Mine No. 2",
           "method": "Random",
-          "weather": "Thunderstorm",
-          "rarity_percent": 20,
-          "level_min": 26,
-          "level_max": 28
+          "weather": "All Weather",
+          "rarity_percent": 10,
+          "level_min": 20,
+          "level_max": 24
         }
       ]
     },
@@ -6217,18 +6201,18 @@
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Giant's Mirror",
+      "location": "Stony Wilderness",
       "map_locations": [
-        "giants_mirror"
+        "stony_wilderness"
       ],
       "encounters": [
         {
-          "location": "Giant's Mirror",
+          "location": "Stony Wilderness",
           "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 35,
-          "level_min": 26,
-          "level_max": 28
+          "weather": "Normal Weather",
+          "rarity_percent": 20,
+          "level_min": 27,
+          "level_max": 29
         },
         {
           "location": "Stony Wilderness",
@@ -6342,7 +6326,7 @@
     "acquire_as": "Salandit",
     "marker_pokemon": "Salandit",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/salandit.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Stony Wilderness",
@@ -6585,7 +6569,7 @@
     "acquire_as": "Bonsly",
     "marker_pokemon": "Bonsly",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/bonsly.png",
-    "required_badge": 2,
+    "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -6638,7 +6622,7 @@
     "acquire_as": "Clefairy",
     "marker_pokemon": "Clefairy",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/clefairy.png",
-    "required_badge": 3,
+    "required_badge": 8,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Motostoke Riverbank",
@@ -6697,7 +6681,7 @@
     "acquire_as": "Togepi",
     "marker_pokemon": "Togepi",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/togepi.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -6812,7 +6796,7 @@
     "acquire_as": "Cottonee",
     "marker_pokemon": "Cottonee",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/cottonee.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Stony Wilderness",
@@ -6865,7 +6849,7 @@
     "acquire_as": "Rhyhorn",
     "marker_pokemon": "Rhyhorn",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/rhyhorn.png",
-    "required_badge": 2,
+    "required_badge": 3,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -6927,52 +6911,25 @@
   {
     "id": "gothitelle",
     "pokemon": "Gothitelle",
-    "acquire_as": "Gothita",
-    "marker_pokemon": "Gothita",
-    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/gothita.png",
-    "required_badge": 3,
+    "acquire_as": "Gothitelle",
+    "marker_pokemon": "Gothitelle",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/gothitelle.png",
+    "required_badge": 5,
     "primary_acquisition": {
-      "method": "wild_encounter",
-      "location": "Giant's Cap",
+      "method": "max_raid_battle",
+      "location": "Stony Wilderness",
+      "required_badge": 5,
+      "minimum_star_level": 4,
       "map_locations": [
-        "giants_cap"
+        "stony_wilderness",
+        "watchtower_ruins"
       ],
-      "encounters": [
-        {
-          "location": "Giant's Cap — Area 2",
-          "method": "Overworld",
-          "weather": "Fog",
-          "rarity_percent": 50,
-          "level_min": 28,
-          "level_max": 30
-        },
-        {
-          "location": "Giant's Cap",
-          "method": "Overworld",
-          "weather": "Fog",
-          "rarity_percent": 40,
-          "level_min": 28,
-          "level_max": 30
-        }
-      ]
+      "availability_note": "Gothitelle is available in 4★ Max Raids in the Stony Wilderness / Watchtower Ruins raid pool, materially earlier than its Fog-gated wild line."
     },
-    "evolution_summary": "Evolve 2 times",
-    "evolution_steps": [
-      {
-        "from": "Gothita",
-        "to": "Gothorita",
-        "method": "level",
-        "level": 32
-      },
-      {
-        "from": "Gothorita",
-        "to": "Gothitelle",
-        "method": "level",
-        "level": 41
-      }
-    ],
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
     "required_items": [],
-    "source_url": "https://www.serebii.net/pokedex-swsh/gothita/locations.shtml",
+    "source_url": "https://www.serebii.net/pokedex-swsh/gothitelle/locations.shtml",
     "encounter_data_status": "verified_batch_6",
     "types": {
       "Gothita": [
@@ -6984,7 +6941,35 @@
       "Gothitelle": [
         "Psychic"
       ]
-    }
+    },
+    "alternate_acquisitions": [
+      {
+        "method": "wild_encounter",
+        "location": "Giant's Cap",
+        "map_locations": [
+          "giants_cap"
+        ],
+        "encounters": [
+          {
+            "location": "Giant's Cap — Area 2",
+            "method": "Overworld",
+            "weather": "Fog",
+            "rarity_percent": 50,
+            "level_min": 28,
+            "level_max": 30
+          },
+          {
+            "location": "Giant's Cap",
+            "method": "Overworld",
+            "weather": "Fog",
+            "rarity_percent": 40,
+            "level_min": 28,
+            "level_max": 30
+          }
+        ],
+        "required_badge": 8
+      }
+    ]
   },
   {
     "id": "escavalier",
@@ -7106,27 +7091,26 @@
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Motostoke Riverbank",
+      "location": "Bridge Field",
       "map_locations": [
-        "motostoke_riverbank",
         "bridge_field"
       ],
       "encounters": [
         {
-          "location": "Motostoke Riverbank",
-          "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 30,
-          "level_min": 26,
-          "level_max": 28
+          "location": "Bridge Field",
+          "method": "Overworld",
+          "weather": "Normal Weather",
+          "rarity_percent": 10,
+          "level_min": 27,
+          "level_max": 29
         },
         {
           "location": "Bridge Field",
-          "method": "Random",
-          "weather": "Fog",
-          "rarity_percent": 20,
-          "level_min": 26,
-          "level_max": 28
+          "method": "Overworld",
+          "weather": "Overcast",
+          "rarity_percent": 10,
+          "level_min": 27,
+          "level_max": 29
         }
       ]
     },
@@ -7157,7 +7141,7 @@
     "acquire_as": "Cubchoo",
     "marker_pokemon": "Cubchoo",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/cubchoo.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -7210,13 +7194,13 @@
     "acquire_as": "Rufflet",
     "marker_pokemon": "Rufflet",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/rufflet.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Bridge Field",
+      "location": "Stony Wilderness",
       "map_locations": [
-        "bridge_field",
-        "stony_wilderness"
+        "stony_wilderness",
+        "bridge_field"
       ],
       "encounters": [
         {
@@ -7394,7 +7378,7 @@
     "acquire_as": "Inkay",
     "marker_pokemon": "Inkay",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/inkay.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -7542,7 +7526,7 @@
     "acquire_as": "Maractus",
     "marker_pokemon": "Maractus",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/maractus.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -7691,19 +7675,19 @@
       "location": "Motostoke Riverbank",
       "map_locations": [
         "motostoke_riverbank",
-        "bridge_field"
+        "giants_mirror"
       ],
       "encounters": [
         {
           "location": "Motostoke Riverbank",
-          "method": "Random",
+          "method": "Overworld",
           "weather": "Intense Sun",
           "rarity_percent": 10,
           "level_min": 26,
           "level_max": 28
         },
         {
-          "location": "Bridge Field",
+          "location": "Giant's Mirror",
           "method": "Random",
           "weather": "Intense Sun",
           "rarity_percent": 10,
@@ -7800,7 +7784,7 @@
     "acquire_as": "Cufant",
     "marker_pokemon": "Cufant",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/cufant.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -7853,7 +7837,7 @@
     "acquire_as": "Qwilfish",
     "marker_pokemon": "Qwilfish",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/qwilfish.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -7900,27 +7884,18 @@
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Motostoke Riverbank",
+      "location": "Bridge Field",
       "map_locations": [
-        "motostoke_riverbank",
         "bridge_field"
       ],
       "encounters": [
         {
-          "location": "Motostoke Riverbank",
-          "method": "Fishing",
-          "weather": "All Weather",
-          "rarity_percent": 10,
-          "level_min": 26,
-          "level_max": 28
-        },
-        {
           "location": "Bridge Field",
-          "method": "Fishing",
-          "weather": "All Weather",
+          "method": "Overworld",
+          "weather": "Thunderstorm",
           "rarity_percent": 10,
-          "level_min": 26,
-          "level_max": 28
+          "level_min": 27,
+          "level_max": 29
         }
       ]
     },
@@ -7956,25 +7931,25 @@
     "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Motostoke Riverbank",
+      "location": "Giant's Mirror",
       "map_locations": [
-        "motostoke_riverbank",
-        "bridge_field"
+        "giants_mirror",
+        "motostoke_riverbank"
       ],
       "encounters": [
         {
-          "location": "Motostoke Riverbank",
+          "location": "Giant's Mirror",
           "method": "Fishing",
           "weather": "All Weather",
-          "rarity_percent": 5,
+          "rarity_percent": 35,
           "level_min": 26,
           "level_max": 28
         },
         {
-          "location": "Bridge Field",
-          "method": "Fishing",
-          "weather": "All Weather",
-          "rarity_percent": 5,
+          "location": "Motostoke Riverbank",
+          "method": "Overworld",
+          "weather": "Thunderstorm",
+          "rarity_percent": 25,
           "level_min": 26,
           "level_max": 28
         }
@@ -8009,7 +7984,7 @@
     "acquire_as": "Cramorant",
     "marker_pokemon": "Cramorant",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/cramorant.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Bridge Field",
@@ -8271,27 +8246,27 @@
     "acquire_as": "Heatmor",
     "marker_pokemon": "Heatmor",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/heatmor.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Route 6",
+      "location": "Giant's Mirror",
       "map_locations": [
-        "route_6",
-        "giants_mirror"
+        "giants_mirror",
+        "route_6"
       ],
       "encounters": [
         {
-          "location": "Route 6",
-          "method": "Random",
-          "weather": "All Weather",
+          "location": "Giant's Mirror",
+          "method": "Overworld",
+          "weather": "Intense Sun",
           "rarity_percent": 5,
           "level_min": 28,
           "level_max": 30
         },
         {
-          "location": "Giant's Mirror",
-          "method": "Overworld",
-          "weather": "Intense Sun",
+          "location": "Route 6",
+          "method": "Random",
+          "weather": "All Weather",
           "rarity_percent": 5,
           "level_min": 28,
           "level_max": 30
@@ -8315,7 +8290,7 @@
     "acquire_as": "Helioptile",
     "marker_pokemon": "Helioptile",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/helioptile.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Giant's Mirror",
@@ -8377,28 +8352,28 @@
     "acquire_as": "Hawlucha",
     "marker_pokemon": "Hawlucha",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/hawlucha.png",
-    "required_badge": 3,
+    "required_badge": 2,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Route 6",
+      "location": "Hammerlocke Hills",
       "map_locations": [
-        "route_6",
-        "hammerlocke_hills"
+        "hammerlocke_hills",
+        "route_6"
       ],
       "encounters": [
-        {
-          "location": "Route 6",
-          "method": "Random",
-          "weather": "All Weather",
-          "rarity_percent": 2,
-          "level_min": 28,
-          "level_max": 30
-        },
         {
           "location": "Hammerlocke Hills",
           "method": "Random",
           "weather": "Overcast",
           "rarity_percent": 5,
+          "level_min": 28,
+          "level_max": 30
+        },
+        {
+          "location": "Route 6",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 2,
           "level_min": 28,
           "level_max": 30
         }
@@ -8860,47 +8835,31 @@
   {
     "id": "shiinotic",
     "pokemon": "Shiinotic",
-    "acquire_as": "Morelull",
-    "marker_pokemon": "Morelull",
-    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/morelull.png",
-    "required_badge": 3,
+    "acquire_as": "Shiinotic",
+    "marker_pokemon": "Shiinotic",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/shiinotic.png",
+    "required_badge": 4,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Giant's Mirror",
+      "location": "Glimwood Tangle",
       "map_locations": [
-        "giants_mirror",
-        "hammerlocke_hills"
+        "glimwood_tangle"
       ],
       "encounters": [
         {
-          "location": "Giant's Mirror",
-          "method": "Overworld",
-          "weather": "Fog",
-          "rarity_percent": 35,
-          "level_min": 28,
-          "level_max": 30
-        },
-        {
-          "location": "Hammerlocke Hills",
-          "method": "Overworld",
-          "weather": "Fog",
-          "rarity_percent": 35,
-          "level_min": 29,
-          "level_max": 31
+          "location": "Glimwood Tangle",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 20,
+          "level_min": 34,
+          "level_max": 36
         }
       ]
     },
-    "evolution_summary": "Evolve once",
-    "evolution_steps": [
-      {
-        "from": "Morelull",
-        "to": "Shiinotic",
-        "method": "level",
-        "level": 24
-      }
-    ],
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
     "required_items": [],
-    "source_url": "https://www.serebii.net/pokedex-swsh/morelull/locations.shtml",
+    "source_url": "https://www.serebii.net/pokedex-swsh/shiinotic/locations.shtml",
     "encounter_data_status": "verified_batch_7",
     "types": {
       "Morelull": [
@@ -9777,23 +9736,15 @@
     "acquire_as": "Stonjourner",
     "marker_pokemon": "Stonjourner",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/stonjourner.png",
-    "required_badge": 8,
+    "required_badge": 6,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Route 10",
+      "location": "Lake of Outrage",
       "map_locations": [
-        "route_10",
-        "lake_of_outrage"
+        "lake_of_outrage",
+        "route_10"
       ],
       "encounters": [
-        {
-          "location": "Route 10",
-          "method": "Random",
-          "weather": "All Weather",
-          "rarity_percent": 2,
-          "level_min": 44,
-          "level_max": 46
-        },
         {
           "location": "Lake of Outrage",
           "method": "Random",
@@ -9801,6 +9752,14 @@
           "rarity_percent": 2,
           "level_min": 50,
           "level_max": 52
+        },
+        {
+          "location": "Route 10",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 2,
+          "level_min": 44,
+          "level_max": 46
         }
       ]
     },
@@ -9821,23 +9780,15 @@
     "acquire_as": "Duraludon",
     "marker_pokemon": "Duraludon",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/duraludon.png",
-    "required_badge": 8,
+    "required_badge": 6,
     "primary_acquisition": {
       "method": "wild_encounter",
-      "location": "Route 10",
+      "location": "Lake of Outrage",
       "map_locations": [
-        "route_10",
-        "lake_of_outrage"
+        "lake_of_outrage",
+        "route_10"
       ],
       "encounters": [
-        {
-          "location": "Route 10",
-          "method": "Overworld",
-          "weather": "All Weather",
-          "rarity_percent": 1,
-          "level_min": 45,
-          "level_max": 48
-        },
         {
           "location": "Lake of Outrage",
           "method": "Random",
@@ -9845,6 +9796,14 @@
           "rarity_percent": 2,
           "level_min": 50,
           "level_max": 52
+        },
+        {
+          "location": "Route 10",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 1,
+          "level_min": 45,
+          "level_max": 48
         }
       ]
     },
@@ -9866,7 +9825,7 @@
     "acquire_as": "Rotom",
     "marker_pokemon": "Rotom",
     "marker_asset": "raw/pokesprite/pokemon-gen8/regular/rotom.png",
-    "required_badge": 6,
+    "required_badge": 7,
     "primary_acquisition": {
       "method": "wild_encounter",
       "location": "Lake of Outrage",

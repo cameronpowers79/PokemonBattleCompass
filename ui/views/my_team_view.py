@@ -318,7 +318,7 @@ def _app_version() -> str:
     try:
         return version("pokemon-battle-compass")
     except PackageNotFoundError:
-        return "0.1.1"
+        return "0.2.1"
 
 
 class MyTeamView:

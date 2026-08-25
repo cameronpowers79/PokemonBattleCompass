@@ -1,0 +1,361 @@
+pokemon,acquire_as,acquisition_kind,acquisition_index,acquisition_method,acquisition_location,encounter_index,encounter_location,encounter_method,weather,rarity_percent,level_min,level_max,pokemon_declared_badge,acquisition_declared_badge,declared_badge_used,computed_minimum_badge,gate_reasons,review_flags,validation_result
+Rillaboom,Grookey,primary,0,starter_choice,Postwick,1,Postwick,Starter choice,All Weather,,5,5,0,,0,0,,,OK
+Cinderace,Scorbunny,primary,0,starter_choice,Postwick,1,Postwick,Starter choice,All Weather,,5,5,0,,0,0,,,OK
+Inteleon,Sobble,primary,0,starter_choice,Postwick,1,Postwick,Starter choice,All Weather,,5,5,0,,0,0,,,OK
+Orbeetle,Blipbug,primary,0,wild_encounter,Slumbering Weald,1,Slumbering Weald,Overworld,All Weather,20,2,3,0,,0,0,,,OK
+Orbeetle,Blipbug,primary,0,wild_encounter,Slumbering Weald,2,Slumbering Weald,Random,All Weather,10,2,3,0,,0,0,,,OK
+Butterfree,Caterpie,primary,0,wild_encounter,Route 1,1,Route 1,Random,All Weather,15,2,5,0,,0,0,,,OK
+Vikavolt,Grubbin,primary,0,wild_encounter,Route 1,1,Route 1,Random,All Weather,10,2,5,0,,0,0,,,OK
+Noctowl,Hoothoot,primary,0,wild_encounter,Route 1,1,Route 1,Random,All Weather,5,2,5,0,,0,0,,,OK
+Noctowl,Hoothoot,primary,0,wild_encounter,Route 1,2,Route 2,Random,All Weather,5,4,6,0,,0,0,,,OK
+Corviknight,Rookidee,primary,0,wild_encounter,Route 1,1,Route 1,Overworld,All Weather,30,3,6,0,,0,0,,,OK
+Corviknight,Rookidee,primary,0,wild_encounter,Route 1,2,Route 2,Random,All Weather,25,4,6,0,,0,0,,,OK
+Greedent,Skwovet,primary,0,wild_encounter,Route 1,1,Route 1,Random,All Weather,40,2,5,0,,0,0,,,OK
+Greedent,Skwovet,primary,0,wild_encounter,Route 1,2,Route 1,Overworld,All Weather,50,3,6,0,,0,0,,,OK
+Unfezant,Pidove,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Flying,Normal Weather,25,7,10,0,,0,0,,,OK
+Unfezant,Pidove,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Flying,Overcast,25,7,10,0,,0,0,,,OK
+Thievul,Nickit,primary,0,wild_encounter,Route 1,1,Route 1,Overworld,All Weather,5,3,6,0,,0,0,,,OK
+Thievul,Nickit,primary,0,wild_encounter,Route 1,2,Route 2,Overworld,All Weather,15,5,7,0,,0,0,,,OK
+Obstagoon,Galarian Zigzagoon,primary,0,wild_encounter,Route 2,1,Route 2,Overworld,All Weather,2,5,7,0,,0,0,,,OK
+Obstagoon,Galarian Zigzagoon,primary,0,wild_encounter,Route 2,2,Route 3,Overworld,All Weather,38,10,14,0,,0,0,,,OK
+Dubwool,Wooloo,primary,0,wild_encounter,Route 1,1,Route 1,Overworld,All Weather,15,3,6,0,,0,0,,,OK
+Dubwool,Wooloo,primary,0,wild_encounter,Route 1,2,Route 4,Random,All Weather,25,13,15,0,,0,0,,,OK
+Shiftry,Seedot,primary,0,wild_encounter,Route 2,1,Route 2,Random,All Weather,20,4,6,0,,0,0,,,OK
+Shiftry,Seedot,primary,0,wild_encounter,Route 2,2,Dappled Grove,Random,Normal Weather,40,11,15,0,,0,0,,,OK
+Drednaw,Chewtle,primary,0,wild_encounter,Route 2,1,Route 2,Fishing,All Weather,15,4,6,0,,0,0,,,OK
+Drednaw,Chewtle,primary,0,wild_encounter,Route 2,2,Route 2,Overworld,All Weather,10,5,7,0,,0,0,,,OK
+Liepard,Purrloin,primary,0,wild_encounter,Route 2,1,Route 2,Random,All Weather,10,4,6,0,,0,0,,,OK
+Liepard,Purrloin,primary,0,wild_encounter,Route 2,2,East Lake Axewell,Random,Fog,45,8,12,0,,0,8,Fog unlocks after 8 badge(s),,TOO_PERMISSIVE
+Boltund,Yamper,primary,0,wild_encounter,Route 2,1,Route 2,Overworld,All Weather,5,5,7,0,,0,0,,,OK
+Boltund,Yamper,primary,0,wild_encounter,Route 2,2,Route 2,Wandering,All Weather,,8,8,0,,0,0,,,OK
+Diggersby,Bunnelby,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Normal Weather,40,7,9,0,,0,0,,,OK
+Diggersby,Bunnelby,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Overworld,Normal Weather,25,7,10,0,,0,0,,,OK
+Cinccino,Minccino,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Normal Weather,35,7,9,0,,0,0,,,OK
+Cinccino,Minccino,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Random,Snowing,5,7,9,0,,0,0,,,OK
+Tsareena,Bounsweet,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Normal Weather,20,7,9,0,,0,0,,,OK
+Tsareena,Bounsweet,primary,0,wild_encounter,Rolling Fields,2,East Lake Axewell,Overworld,Normal Weather,15,10,15,0,,0,0,,,OK
+Vileplume,Oddish,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Overcast,40,7,9,0,,0,0,,,OK
+Vileplume,Oddish,primary,0,wild_encounter,Rolling Fields,2,East Lake Axewell,Random,Normal Weather,45,8,12,0,,0,0,,,OK
+Bellossom,Oddish,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Overcast,40,7,9,0,,0,0,,,OK
+Bellossom,Oddish,primary,0,wild_encounter,Rolling Fields,2,East Lake Axewell,Random,Normal Weather,45,8,12,0,,0,0,,,OK
+Roserade,Budew,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Overcast,35,7,9,0,,0,0,,,OK
+Roserade,Budew,primary,0,wild_encounter,Rolling Fields,2,East Lake Axewell,Random,Overcast,45,8,12,0,,0,0,,,OK
+Pelipper,Wingull,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields - Area 2,Overworld,Raining,25,7,10,0,,0,0,,,OK
+Pelipper,Wingull,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Overworld,Raining,60,7,10,0,,0,0,,,OK
+Galvantula,Joltik,primary,0,wild_encounter,East Lake Axewell,1,East Lake Axewell,Random,Thunderstorm,45,8,12,0,,0,0,,,OK
+Galvantula,Joltik,primary,0,wild_encounter,East Lake Axewell,2,Dappled Grove,Random,Thunderstorm,40,11,15,0,,0,0,,,OK
+Manectric,Electrike,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Thunderstorm,35,7,9,0,,0,0,,,OK
+Manectric,Electrike,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields - Area 2,Overworld,Thunderstorm,25,7,10,0,,0,0,,,OK
+Ninetales,Vulpix,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Intense Sun,20,7,9,0,,0,0,,,OK
+Ninetales,Vulpix,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields - Area 2,Overworld,Intense Sun,25,7,10,0,,0,0,,,OK
+Arcanine,Growlithe,primary,0,wild_encounter,Hammerlocke Hills,1,Hammerlocke Hills,Random,Intense Sun,40,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Arcanine,Growlithe,primary,0,wild_encounter,Hammerlocke Hills,2,Dusty Bowl,Overworld,Intense Sun,30,42,47,2,,2,5,Lv. 42 minimum requires 5 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Vanilluxe,Vanillite,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Snowing,40,7,9,0,,0,0,,,OK
+Vanilluxe,Vanillite,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields - Area 2,Overworld,Snowing,25,7,10,0,,0,0,,,OK
+Mamoswine,Swinub,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Snowing,35,7,9,0,,0,0,,,OK
+Mamoswine,Swinub,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Random,Snowstorm,40,7,9,0,,0,3,Snowstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Delibird,Delibird,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Snowstorm,35,7,9,3,,3,3,Snowstorm unlocks after 3 badge(s),,OK
+Delibird,Delibird,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Overworld,Snowstorm,60,7,10,3,,3,3,Snowstorm unlocks after 3 badge(s),,OK
+Glalie,Snorunt,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Snowstorm,20,7,9,0,,0,3,Snowstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Glalie,Snorunt,primary,0,wild_encounter,Rolling Fields,2,West Lake Axewell,Random,Snowing,30,7,11,0,,0,0,,,OK
+Froslass,Snorunt,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Snowstorm,20,7,9,0,,0,3,Snowstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Froslass,Snorunt,primary,0,wild_encounter,Rolling Fields,2,West Lake Axewell,Random,Snowing,30,7,11,0,,0,0,,,OK
+Claydol,Baltoy,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Intense Sun,40,7,9,0,,0,0,,,OK
+Claydol,Baltoy,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Random,Sandstorm,35,7,9,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Mudsdale,Mudbray,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Intense Sun,35,7,9,0,,0,0,,,OK
+Mudsdale,Mudbray,primary,0,wild_encounter,Rolling Fields,2,West Lake Axewell,Random,Sandstorm,10,7,11,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Crustle,Dwebble,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Overworld,Intense Sun,40,8,14,0,,0,0,,,OK
+Golurk,Golett,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Random,Sandstorm,20,7,9,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Golurk,Golett,primary,0,wild_encounter,Rolling Fields,2,Watchtower Ruins,Random,Normal Weather,40,11,14,0,,0,0,,,OK
+Musharna,Munna,primary,0,wild_encounter,Giant's Cap,1,Giant's Cap,Random,Overcast,20,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Xatu,Natu,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Overworld,Raining,10,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Xatu,Natu,primary,0,wild_encounter,Giant's Mirror,2,Giant's Mirror,Overworld,Snowing,10,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Bewear,Stufful,primary,0,wild_encounter,East Lake Axewell,1,East Lake Axewell,Overworld,Normal Weather,50,10,15,0,,0,0,,,OK
+Bewear,Stufful,primary,0,wild_encounter,East Lake Axewell,2,Dappled Grove,Random,Overcast,40,11,15,0,,0,0,,,OK
+Abomasnow,Snover,primary,0,wild_encounter,East Lake Axewell,1,East Lake Axewell,Overworld,Snowing,60,10,15,0,,0,0,,,OK
+Abomasnow,Snover,primary,0,wild_encounter,East Lake Axewell,2,East Lake Axewell,Random,Snowing,30,8,12,0,,0,0,,,OK
+Kingler,Krabby,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Overworld,Normal Weather,10,8,14,0,,0,0,,,OK
+Kingler,Krabby,primary,0,wild_encounter,West Lake Axewell,2,South Lake Miloch,Overworld,Normal Weather,30,14,16,0,,0,0,,,OK
+Quagsire,Wooper,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Overworld,Normal Weather,25,8,14,0,,0,0,,,OK
+Quagsire,Wooper,primary,0,wild_encounter,West Lake Axewell,2,South Lake Miloch,Random,Sandstorm,30,11,13,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Crawdaunt,Corphish,primary,0,wild_encounter,South Lake Miloch,1,South Lake Miloch,Overworld,Normal Weather,30,14,16,0,,0,0,,,OK
+Crawdaunt,Corphish,primary,0,wild_encounter,South Lake Miloch,2,South Lake Miloch,Overworld,Overcast,10,14,16,0,,0,0,,,OK
+Ninjask,Nincada,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Random,Sandstorm,30,7,11,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Ninjask,Nincada,primary,0,wild_encounter,West Lake Axewell,2,South Lake Miloch,Random,Intense Sun,10,11,13,0,,0,0,,,OK
+Shedinja,Nincada,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Random,Sandstorm,30,7,11,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Shedinja,Nincada,primary,0,wild_encounter,West Lake Axewell,2,South Lake Miloch,Random,Intense Sun,10,11,13,0,,0,0,,,OK
+Hitmonlee,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Normal Weather,5,7,10,0,,0,0,,,OK
+Hitmonlee,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Overcast,28,7,10,0,,0,0,,,OK
+Hitmonchan,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Normal Weather,5,7,10,0,,0,0,,,OK
+Hitmonchan,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Overcast,28,7,10,0,,0,0,,,OK
+Hitmontop,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Normal Weather,5,7,10,0,,0,0,,,OK
+Hitmontop,Tyrogue,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Overcast,28,7,10,0,,0,0,,,OK
+Pangoro,Pancham,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Normal Weather,60,7,10,0,,0,0,,,OK
+Pangoro,Pancham,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Overcast,60,7,10,0,,0,0,,,OK
+Klinklang,Klink,primary,0,wild_encounter,Route 3,1,Route 3,Random,All Weather,9,8,13,0,,0,0,,,OK
+Klinklang,Klink,primary,0,wild_encounter,Route 3,2,West Lake Axewell,Random,Snowstorm,40,7,11,0,,0,3,Snowstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Vespiquen,Combee,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Normal Weather,25,7,10,0,,0,0,,,OK
+Vespiquen,Combee,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields,Overworld,Normal Weather,60,7,10,0,,0,0,,,OK
+Bronzong,Bronzor,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Overworld,Raining,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Bronzong,Bronzor,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Overworld,Thunderstorm,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Gardevoir,Ralts,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Overcast,2,7,10,0,,0,0,,,OK
+Gardevoir,Ralts,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Fog,25,7,10,0,,0,8,Fog unlocks after 8 badge(s),,TOO_PERMISSIVE
+Gallade,Ralts,primary,0,wild_encounter,Rolling Fields - Area 2,1,Rolling Fields - Area 2,Overworld,Overcast,2,7,10,0,,0,0,,,OK
+Gallade,Ralts,primary,0,wild_encounter,Rolling Fields - Area 2,2,Rolling Fields - Area 2,Overworld,Fog,25,7,10,0,,0,8,Fog unlocks after 8 badge(s),,TOO_PERMISSIVE
+Drifblim,Drifloon,primary,0,wild_encounter,Route 5,1,Route 5,Overworld,All Weather,5,19,21,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Drifblim,Drifloon,primary,0,wild_encounter,Route 5,2,North Lake Miloch,Overworld,Fog,60,26,28,1,,1,8,Fog unlocks after 8 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Eldegoss,Gossifleur,primary,0,wild_encounter,Route 3,1,Route 3,Overworld,All Weather,30,10,14,0,,0,0,,,OK
+Eldegoss,Gossifleur,primary,0,wild_encounter,Route 3,2,Motostoke Riverbank,Overworld,Normal Weather,25,26,28,0,,0,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Cherrim,Cherubi,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Berry Tree,All Weather,20,7,10,0,,0,0,,,OK
+Cherrim,Cherubi,primary,0,wild_encounter,Rolling Fields,2,Route 3,Berry Tree,All Weather,20,8,13,0,,0,0,,,OK
+Skuntank,Stunky,primary,0,wild_encounter,Route 3,1,Route 3,Overworld,All Weather,10,10,14,0,,0,0,,,OK
+Skuntank,Stunky,primary,0,wild_encounter,Route 3,2,Dappled Grove,Random,Overcast,35,11,15,0,,0,0,,,OK
+Seismitoad,Tympole,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Overworld,Normal Weather,60,8,14,0,,0,0,,,OK
+Seismitoad,Tympole,primary,0,wild_encounter,West Lake Axewell,2,West Lake Axewell,Overworld,Overcast,25,8,14,0,,0,0,,,OK
+Dusknoir,Duskull,primary,0,wild_encounter,Watchtower Ruins,1,Watchtower Ruins,Random,Intense Sun,30,11,14,0,,0,0,,,OK
+Dusknoir,Duskull,primary,0,wild_encounter,Watchtower Ruins,2,Watchtower Ruins,Random,Snowing,30,11,14,0,,0,0,,,OK
+Machamp,Machop,primary,0,wild_encounter,Route 3,1,Route 3,Random,All Weather,20,8,13,0,,0,0,,,OK
+Machamp,Machop,primary,0,wild_encounter,Route 3,2,South Lake Miloch,Random,Normal Weather,40,11,13,0,,0,0,,,OK
+Gengar,Gastly,primary,0,wild_encounter,Watchtower Ruins,1,Watchtower Ruins,Random,Overcast,10,11,14,0,,0,0,,,OK
+Gengar,Gastly,primary,0,wild_encounter,Watchtower Ruins,2,North Lake Miloch,Random,Overcast,10,14,16,0,,0,0,,,OK
+Gyarados,Magikarp,primary,0,wild_encounter,Route 2,1,Route 2,Fishing,All Weather,80,4,6,0,,0,0,,,OK
+Gyarados,Magikarp,primary,0,wild_encounter,Route 2,2,Motostoke,Fishing,All Weather,50,7,11,0,,0,0,,,OK
+Seaking,Goldeen,primary,0,wild_encounter,Route 4,1,Route 4,Fishing,All Weather,10,13,15,0,,0,0,,,OK
+Seaking,Goldeen,primary,0,wild_encounter,Route 4,2,Route 5,Fishing,All Weather,10,16,18,0,,0,1,Route 5 is accessible after 1 badge(s),,TOO_PERMISSIVE
+Octillery,Remoraid,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Fishing,All Weather,10,7,11,0,,0,0,,,OK
+Octillery,Remoraid,primary,0,wild_encounter,West Lake Axewell,2,South Lake Miloch,Fishing,All Weather,40,11,13,0,,0,0,,,OK
+Cloyster,Shellder,primary,0,wild_encounter,East Lake Axewell,1,East Lake Axewell,Fishing,All Weather,20,8,12,0,,0,0,,,OK
+Cloyster,Shellder,primary,0,wild_encounter,East Lake Axewell,2,East Lake Axewell,Surf,Snowstorm,5,40,43,0,,0,4,Snowstorm unlocks after 3 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Milotic,Feebas,primary,0,wild_encounter,Route 2 - Lakeside,1,Route 2 - Lakeside,Fishing,All Weather,1,37,40,6,,6,6,Route 2 - Lakeside is accessible after 6 badge(s) | Lv. 37 minimum requires 4 badge(s) under the wild catch cap,,OK
+Basculin,Basculin,primary,0,wild_encounter,Hulbury,1,Hulbury,Fishing,All Weather,10,20,24,1,,1,1,Hulbury is accessible after 1 badge(s),,OK
+Basculin,Basculin,primary,0,wild_encounter,Hulbury,2,Motostoke Riverbank,Surf,Snowstorm,10,40,43,1,,1,4,Snowstorm unlocks after 3 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Wishiwashi,Wishiwashi,primary,0,wild_encounter,West Lake Axewell,1,West Lake Axewell,Fishing,All Weather,5,7,11,0,,0,0,,,OK
+Wishiwashi,Wishiwashi,primary,0,wild_encounter,West Lake Axewell,2,East Lake Axewell,Fishing,All Weather,5,8,12,0,,0,0,,,OK
+Pyukumuku,Pyukumuku,primary,0,wild_encounter,South Lake Miloch,1,South Lake Miloch,Fishing,All Weather,1,11,13,0,,0,0,,,OK
+Pyukumuku,Pyukumuku,primary,0,wild_encounter,South Lake Miloch,2,South Lake Miloch,Overworld,Thunderstorm,2,14,16,0,,0,0,,,OK
+Garbodor,Trubbish,primary,0,wild_encounter,Route 3,1,Route 3,Underground,All Weather,1,10,13,0,,0,0,,,OK
+Garbodor,Trubbish,primary,0,wild_encounter,Route 3,2,Route 3,Overworld,All Weather,5,10,14,0,,0,0,,,OK
+Centiskorch,Sizzlipede,primary,0,wild_encounter,Route 3,1,Route 3,Random,All Weather,1,8,13,0,,0,0,,,OK
+Centiskorch,Sizzlipede,primary,0,wild_encounter,Route 3,2,Motostoke - Gym,Wandering,All Weather,,25,25,0,,0,2,Motostoke - Gym is accessible after 2 badge(s) | Lv. 25 minimum requires 1 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Coalossal,Rolycoly,primary,0,wild_encounter,Route 3,1,Route 3,Underground,All Weather,99,10,13,0,,0,0,,,OK
+Coalossal,Rolycoly,primary,0,wild_encounter,Route 3,2,Galar Mine,Overworld,All Weather,35,11,14,0,,0,0,,,OK
+Dugtrio,Diglett,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Underground,Normal Weather,80,8,10,0,,0,0,,,OK
+Dugtrio,Diglett,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Underground,Overcast,20,8,10,0,,0,0,,,OK
+Excadrill,Drilbur,primary,0,wild_encounter,Galar Mine,1,Galar Mine,Overworld,All Weather,10,11,14,0,,0,0,,,OK
+Excadrill,Drilbur,primary,0,wild_encounter,Galar Mine,2,Galar Mine,Random,All Weather,10,11,15,0,,0,0,,,OK
+Gigalith,Roggenrola,primary,0,wild_encounter,Rolling Fields,1,Rolling Fields,Underground,Normal Weather,20,8,10,0,,0,0,,,OK
+Gigalith,Roggenrola,primary,0,wild_encounter,Rolling Fields,2,Rolling Fields,Underground,Overcast,80,8,10,0,,0,0,,,OK
+Conkeldurr,Timburr,primary,0,wild_encounter,Galar Mine,1,Galar Mine,Overworld,All Weather,25,11,14,0,,0,0,,,OK
+Conkeldurr,Timburr,primary,0,wild_encounter,Galar Mine,2,Galar Mine,Random,All Weather,30,11,15,0,,0,0,,,OK
+Swoobat,Woobat,primary,0,wild_encounter,Galar Mine,1,Galar Mine,Overworld,All Weather,15,11,14,0,,0,0,,,OK
+Swoobat,Woobat,primary,0,wild_encounter,Galar Mine,2,Galar Mine,Random,All Weather,10,11,15,0,,0,0,,,OK
+Noivern,Noibat,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Overworld,All Weather,10,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Noivern,Noibat,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Random,All Weather,20,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Steelix,Onix,primary,0,wild_encounter,East Lake Axewell,1,East Lake Axewell,Random,Intense Sun,10,8,12,0,,0,0,,,OK
+Steelix,Onix,primary,0,wild_encounter,East Lake Axewell,2,East Lake Axewell,Random,Sandstorm,10,8,12,0,,0,3,Sandstorm unlocks after 3 badge(s),,TOO_PERMISSIVE
+Barraskewda,Arrokuda,primary,0,wild_encounter,Route 2,1,Route 2,Fishing,All Weather,5,4,6,0,,0,0,,,OK
+Barraskewda,Arrokuda,primary,0,wild_encounter,Route 2,2,Hulbury,Fishing,All Weather,50,20,24,0,,0,1,Hulbury is accessible after 1 badge(s),,TOO_PERMISSIVE
+Perrserker,Galarian Meowth,primary,0,wild_encounter,Route 4,1,Route 4,Random,All Weather,35,13,15,0,,0,0,,,OK
+Perrserker,Galarian Meowth,primary,0,wild_encounter,Route 4,2,Route 4,Overworld,All Weather,23,14,16,0,,0,0,,,OK
+Persian,Kantonian Meowth,primary,0,in_game_trade,Turffield — in-game trade,1,Turffield,In-game trade,Not applicable,100,,,0,,0,0,Verified special acquisition is available before the first badge,,OK
+Alcremie,Milcery,primary,0,wild_encounter,Route 4,1,Route 4,Random,All Weather,20,13,15,0,,0,0,,,OK
+Alcremie,Milcery,primary,0,wild_encounter,Route 4,2,Bridge Field,Random,Fog,30,26,28,0,,0,8,Fog unlocks after 8 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Ribombee,Cutiefly,primary,0,wild_encounter,Route 4,1,Route 4,Random,All Weather,5,13,15,0,,0,0,,,OK
+Ribombee,Cutiefly,primary,0,wild_encounter,Route 4,2,Motostoke Riverbank,Overworld,Overcast,25,26,28,0,,0,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Ferrothorn,Ferroseed,primary,0,wild_encounter,Route 4,1,Route 4,Random,All Weather,1,13,15,0,,0,0,,,OK
+Ferrothorn,Ferroseed,primary,0,wild_encounter,Route 4,2,Bridge Field,Random,Normal Weather,5,26,28,0,,0,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Gourgeist,Pumpkaboo,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,10,14,16,0,,0,0,,,OK
+Gourgeist,Pumpkaboo,primary,0,wild_encounter,Route 4,2,Route 4,Overworld,All Weather,5,14,16,0,,0,0,,,OK
+Raichu,Pikachu,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,5,14,16,0,,0,0,,,OK
+Raichu,Pikachu,primary,0,wild_encounter,Route 4,2,Rolling Fields,Wandering,Thunderstorm,,15,15,0,,0,0,,,OK
+Vaporeon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Jolteon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Flareon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Espeon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Umbreon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Leafeon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Glaceon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Sylveon,Eevee,primary,0,wild_encounter,Route 4,1,Route 4,Overworld,All Weather,1,14,16,0,,0,0,,,OK
+Flapple,Applin,primary,0,wild_encounter,Route 5,1,Route 5,Random,All Weather,10,16,18,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Flapple,Applin,primary,0,wild_encounter,Route 5,2,Giant's Mirror,Random,Thunderstorm,30,26,28,1,,1,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Meowstic,Espurr,primary,0,wild_encounter,Route 5,1,Route 5,Random,All Weather,20,16,18,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Meowstic,Espurr,primary,0,wild_encounter,Route 5,2,Motostoke Riverbank,Random,Fog,35,26,28,1,,1,8,Fog unlocks after 8 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Slurpuff,Swirlix,primary,0,wild_encounter,Route 5,1,Route 5,Random,All Weather,14,16,18,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Slurpuff,Swirlix,primary,0,wild_encounter,Route 5,2,Route 5,Overworld,All Weather,30,19,21,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Araquanid,Dewpider,primary,0,wild_encounter,Route 5,1,Route 5,Random,All Weather,5,16,18,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Araquanid,Dewpider,primary,0,wild_encounter,Route 5,2,Motostoke Riverbank,Overworld,Raining,5,26,28,1,,1,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Wynaut,Wynaut,primary,0,breeding,Route 5 Pokémon Nursery,1,Route 5 Pokémon Nursery,Breed Wobbuffet holding Lax Incense,Not applicable,100,1,1,1,,1,1,Verified special acquisition requires 1 badge(s) | Route 5 Pokémon Nursery is accessible after 1 badge(s),,OK
+Wobbuffet,Wobbuffet,primary,0,wild_encounter,Route 5,1,Route 5,Overworld,All Weather,10,19,21,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Wobbuffet,Wobbuffet,primary,0,wild_encounter,Route 5,2,Bridge Field,Random,Normal Weather,25,26,28,1,,1,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Sirfetch'd,Galarian Farfetch'd,primary,0,wild_encounter,Route 5,1,Route 5,Overworld,All Weather,5,19,21,1,,1,1,Route 5 is accessible after 1 badge(s),,OK
+Sirfetch'd,Galarian Farfetch'd,primary,0,wild_encounter,Route 5,2,Giant's Mirror,Overworld,Overcast,5,28,30,1,,1,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Lanturn,Chinchou,primary,0,wild_encounter,Hulbury,1,Hulbury,Fishing,All Weather,20,20,24,1,,1,1,Hulbury is accessible after 1 badge(s),,OK
+Lanturn,Chinchou,primary,0,wild_encounter,Hulbury,2,Giant's Mirror,Fishing,All Weather,10,26,28,1,,1,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Scrafty,Scraggy,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Overworld,All Weather,15,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Scrafty,Scraggy,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Random,All Weather,15,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Stunfisk,Galarian Stunfisk,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Random,All Weather,5,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Stunfisk,Galarian Stunfisk,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Wandering,All Weather,,25,25,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s) | Lv. 25 minimum requires 1 badge(s) under the wild catch cap,,OK
+Shuckle,Shuckle,primary,0,wild_encounter,Dusty Bowl,1,Dusty Bowl,Wandering,Normal Weather,,34,34,3,,3,3,Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Shuckle,Shuckle,primary,0,wild_encounter,Dusty Bowl,2,Dusty Bowl,Wandering,Overcast,,34,34,3,,3,3,Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Whiscash,Barboach,primary,0,wild_encounter,Motostoke,1,Motostoke,Fishing,All Weather,10,7,11,0,,0,0,,,OK
+Whiscash,Barboach,primary,0,wild_encounter,Motostoke,2,South Lake Miloch,Fishing,All Weather,9,11,13,0,,0,0,,,OK
+Gastrodon,Shellos,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Overworld,All Weather,25,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Gastrodon,Shellos,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Random,All Weather,10,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Golisopod,Wimpod,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Overworld,All Weather,25,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Golisopod,Wimpod,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Random,All Weather,20,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Barbaracle,Binacle,primary,0,wild_encounter,Galar Mine No. 2,1,Galar Mine No. 2,Overworld,All Weather,15,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Barbaracle,Binacle,primary,0,wild_encounter,Galar Mine No. 2,2,Galar Mine No. 2,Random,All Weather,10,20,24,2,,2,2,Galar Mine No. 2 is accessible after 2 badge(s),,OK
+Grimmsnarl,Impidimp,primary,0,wild_encounter,Stony Wilderness,1,Stony Wilderness,Random,Normal Weather,20,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Grimmsnarl,Impidimp,primary,0,wild_encounter,Stony Wilderness,2,Stony Wilderness,Random,Raining,20,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Hatterene,Hatenna,primary,0,wild_encounter,Motostoke Outskirts,1,Motostoke Outskirts,Overworld,All Weather,10,22,26,2,,2,2,Motostoke Outskirts is accessible after 2 badge(s) | Lv. 22 minimum requires 1 badge(s) under the wild catch cap,,OK
+Hatterene,Hatenna,primary,0,wild_encounter,Motostoke Outskirts,2,Hammerlocke Hills,Random,Fog,25,28,30,2,,2,8,Fog unlocks after 8 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Salazzle,Salandit,primary,0,wild_encounter,Stony Wilderness,1,Stony Wilderness — Area 3,Overworld,Intense Sun,5,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Salazzle,Salandit,primary,0,wild_encounter,Stony Wilderness,2,Stony Wilderness,Overworld,Intense Sun,15,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Bisharp,Pawniard,primary,0,wild_encounter,Motostoke Outskirts,1,Motostoke Outskirts,Random,All Weather,20,21,24,2,,2,2,Motostoke Outskirts is accessible after 2 badge(s) | Lv. 21 minimum requires 1 badge(s) under the wild catch cap,,OK
+Bisharp,Pawniard,primary,0,wild_encounter,Motostoke Outskirts,2,Giant's Cap,Random,Snowstorm,30,26,28,2,,2,3,Snowstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Throh,Throh,primary,0,in_game_trade,Circhester — in-game trade,1,Circhester,In-game trade — give Vanillish,Not applicable,100,,,5,,5,5,Verified special acquisition requires 5 badge(s) | Circhester is accessible after 5 badge(s),,OK
+Sawk,Sawk,primary,0,wild_encounter,Motostoke Outskirts,1,Motostoke Outskirts,Overworld,All Weather,5,22,26,2,,2,2,Motostoke Outskirts is accessible after 2 badge(s) | Lv. 22 minimum requires 1 badge(s) under the wild catch cap,,OK
+Sawk,Sawk,primary,0,wild_encounter,Motostoke Outskirts,2,Motostoke Riverbank,Overworld,Overcast,5,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Weezing,Koffing,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Random,Raining,20,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Weezing,Koffing,primary,0,wild_encounter,Giant's Mirror,2,Giant's Mirror,Random,Thunderstorm,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sudowoodo,Bonsly,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Overworld,Sandstorm,40,27,29,3,,3,3,Sandstorm unlocks after 3 badge(s) | Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sudowoodo,Bonsly,primary,0,wild_encounter,Bridge Field,2,Stony Wilderness — Area 2,Overworld,Sandstorm,45,28,30,3,,3,3,Sandstorm unlocks after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Clefable,Clefairy,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Overworld,Fog,40,26,28,8,,8,8,Fog unlocks after 8 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Clefable,Clefairy,primary,0,wild_encounter,Motostoke Riverbank,2,Giant's Cap — Area 2,Overworld,Fog,10,28,30,8,,8,8,Fog unlocks after 8 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Togekiss,Togepi,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Normal Weather,2,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Togekiss,Togepi,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Random,Overcast,2,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Snorlax,Munchlax,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Overworld,Normal Weather,5,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Whimsicott,Cottonee,primary,0,wild_encounter,Stony Wilderness,1,Stony Wilderness,Random,Overcast,40,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Rhyperior,Rhyhorn,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Sandstorm,30,26,28,3,,3,3,Sandstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Rhyperior,Rhyhorn,primary,0,wild_encounter,Bridge Field,2,Giant's Cap,Underground,Normal Weather,30,31,34,3,,3,3,Lv. 31 minimum requires 3 badge(s) under the wild catch cap,,OK
+Gothitelle,Gothitelle,primary,0,max_raid_battle,Stony Wilderness,1,,,,,,,5,5,5,5,4★ Max Raids require 5 badge(s),,OK
+Gothitelle,Gothitelle,alternate,1,wild_encounter,Giant's Cap,1,Giant's Cap — Area 2,Overworld,Fog,50,28,30,5,8,8,8,Fog unlocks after 8 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Gothitelle,Gothitelle,alternate,1,wild_encounter,Giant's Cap,2,Giant's Cap,Overworld,Fog,40,28,30,5,8,8,8,Fog unlocks after 8 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Escavalier,Karrablast,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Random,Raining,35,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Escavalier,Karrablast,primary,0,wild_encounter,Motostoke Riverbank,2,Bridge Field,Random,Overcast,30,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Accelgor,Shelmet,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Overcast,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Accelgor,Shelmet,primary,0,wild_encounter,Bridge Field,2,Motostoke Riverbank,Random,Raining,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Beheeyem,Elgyem,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Overworld,Normal Weather,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Beheeyem,Elgyem,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Overworld,Overcast,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Beartic,Cubchoo,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Snowing,40,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Beartic,Cubchoo,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Random,Snowstorm,40,26,28,2,,2,3,Snowstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Braviary,Rufflet,primary,0,wild_encounter,Stony Wilderness,1,Bridge Field,Random,Sandstorm,25,26,28,2,,2,3,Sandstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Braviary,Rufflet,primary,0,wild_encounter,Stony Wilderness,2,Stony Wilderness — Area 2,Overworld,Normal Weather,5,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Drapion,Skorupi,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Random,Raining,30,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Drapion,Skorupi,primary,0,wild_encounter,Giant's Mirror,2,Giant's Mirror,Random,Thunderstorm,20,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Chandelure,Litwick,primary,0,wandering_encounter,Motostoke — Gym,1,Motostoke — Gym,Wandering,All Weather,,25,25,2,,2,2,Motostoke — Gym is accessible after 2 badge(s) | Lv. 25 minimum requires 1 badge(s) under the wild catch cap,,OK
+Chandelure,Litwick,primary,0,wandering_encounter,Motostoke — Gym,2,Bridge Field,Random,Intense Sun,25,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Malamar,Inkay,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Normal Weather,20,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Malamar,Inkay,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Random,Intense Sun,30,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Weavile,Sneasel,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Overworld,Snowing,40,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Weavile,Sneasel,primary,0,wild_encounter,Motostoke Riverbank,2,Motostoke Riverbank,Overworld,Snowstorm,40,26,28,2,,2,3,Snowstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Mawile,Mawile,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Snowstorm,10,26,28,3,,3,3,Snowstorm unlocks after 3 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Maractus,Maractus,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Intense Sun,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Maractus,Maractus,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Overworld,Intense Sun,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sigilyph,Sigilyph,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Overworld,Intense Sun,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sigilyph,Sigilyph,primary,0,wild_encounter,Motostoke Riverbank,2,Bridge Field,Random,Intense Sun,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Lucario,Riolu,primary,0,wild_encounter,Giant's Cap,1,Giant's Cap — Area 2,Overworld,Snowstorm,5,28,30,3,,3,3,Snowstorm unlocks after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Lucario,Riolu,primary,0,wild_encounter,Giant's Cap,2,Giant's Cap,Overworld,Snowstorm,5,28,30,3,,3,3,Snowstorm unlocks after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Torkoal,Torkoal,primary,0,wild_encounter,Motostoke Riverbank,1,Motostoke Riverbank,Overworld,Intense Sun,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Torkoal,Torkoal,primary,0,wild_encounter,Motostoke Riverbank,2,Giant's Mirror,Random,Intense Sun,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Mimikyu,Mimikyu,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Random,Fog,3,26,28,8,8,8,8,Fog unlocks after 8 badge(s) | Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Mimikyu,Mimikyu,alternate,1,wandering_encounter,Bridge Field,1,,Wandering,Fog,,50,50,8,8,8,8,Fog unlocks after 8 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Mimikyu,Mimikyu,alternate,2,max_raid_battle,Wild Area,1,,,,,,,8,8,8,8,5★ Max Raids require 8 badge(s),,OK
+Copperajah,Cufant,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Overworld,Normal Weather,30,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Copperajah,Cufant,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Overworld,Overcast,30,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Qwilfish,Qwilfish,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Fishing,All Weather,30,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Qwilfish,Qwilfish,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Surf,Raining,20,40,43,2,,2,4,Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Jellicent,Frillish,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Overworld,Thunderstorm,10,27,29,2,,2,2,Lv. 27 minimum requires 2 badge(s) under the wild catch cap,,OK
+Toxapex,Mareanie,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Fishing,All Weather,35,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Toxapex,Mareanie,primary,0,wild_encounter,Giant's Mirror,2,Motostoke Riverbank,Overworld,Thunderstorm,25,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Cramorant,Cramorant,primary,0,wild_encounter,Bridge Field,1,Bridge Field,Random,Raining,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Cramorant,Cramorant,primary,0,wild_encounter,Bridge Field,2,Bridge Field,Random,Thunderstorm,10,26,28,2,,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Toxtricity,Toxel,primary,0,gift,Route 5 — Pokémon Nursery,1,Route 5 — Pokémon Nursery,Gift,Not applicable,100,1,1,1,,1,1,Verified special acquisition requires 1 badge(s) | Route 5 — Pokémon Nursery is accessible after 1 badge(s),,OK
+Toxtricity,Toxel,alternate,1,wild_encounter,Motostoke Riverbank,1,,Overworld,Thunderstorm,5,26,28,1,2,2,2,Lv. 26 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sandaconda,Silicobra,primary,0,wild_encounter,Route 6,1,Route 6,Random,All Weather,30,28,30,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Sandaconda,Silicobra,primary,0,wild_encounter,Route 6,2,Route 6,Overworld,All Weather,10,29,33,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Hippowdon,Hippopotas,primary,0,wild_encounter,Route 6,1,Route 6,Random,All Weather,30,28,30,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Hippowdon,Hippopotas,primary,0,wild_encounter,Route 6,2,Route 6,Overworld,All Weather,10,29,33,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Durant,Durant,primary,0,wild_encounter,Route 6,1,Route 6,Random,All Weather,20,28,30,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Durant,Durant,primary,0,wild_encounter,Route 6,2,Route 6,Overworld,All Weather,20,29,33,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Heatmor,Heatmor,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Overworld,Intense Sun,5,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Heatmor,Heatmor,primary,0,wild_encounter,Giant's Mirror,2,Route 6,Random,All Weather,5,28,30,2,,2,3,Route 6 is accessible after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Heliolisk,Helioptile,primary,0,wild_encounter,Giant's Mirror,1,Giant's Mirror,Overworld,Thunderstorm,40,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Heliolisk,Helioptile,primary,0,wild_encounter,Giant's Mirror,2,Route 6,Overworld,All Weather,29,29,33,2,,2,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Hawlucha,Hawlucha,primary,0,wild_encounter,Hammerlocke Hills,1,Hammerlocke Hills,Random,Overcast,5,28,30,2,,2,2,Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Hawlucha,Hawlucha,primary,0,wild_encounter,Hammerlocke Hills,2,Route 6,Random,All Weather,2,28,30,2,,2,3,Route 6 is accessible after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Flygon,Trapinch,primary,0,wild_encounter,Route 6,1,Route 6,Overworld,All Weather,1,29,33,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Haxorus,Axew,primary,0,wild_encounter,Hammerlocke Hills,1,Hammerlocke Hills,Overworld,Sandstorm,2,29,31,3,,3,3,Sandstorm unlocks after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Haxorus,Axew,primary,0,wild_encounter,Hammerlocke Hills,2,Route 6,Overworld,All Weather,5,29,33,3,,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Runerigus,Galarian Yamask,primary,0,max_raid_battle,Watchtower Ruins,1,,,,,,,0,,0,0,Verified special acquisition is available before the first badge,,OK
+Runerigus,Galarian Yamask,alternate,1,wild_encounter,Route 6,1,Route 6,Overworld,All Weather,35,29,33,0,3,3,3,Route 6 is accessible after 3 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,OK
+Cofagrigus,Unovan Yamask,primary,0,in_game_trade,Ballonlea — in-game trade,1,Ballonlea,In-game trade — give Galarian Yamask,Not applicable,100,,,4,,4,4,Verified special acquisition requires 4 badge(s) | Ballonlea is accessible after 4 badge(s),,OK
+Aegislash,Honedge,primary,0,wild_encounter,Hammerlocke Hills,1,Hammerlocke Hills,Random,Snowstorm,15,28,30,3,,3,3,Snowstorm unlocks after 3 badge(s) | Lv. 28 minimum requires 2 badge(s) under the wild catch cap,,OK
+Aegislash,Honedge,primary,0,wild_encounter,Hammerlocke Hills,2,Hammerlocke Hills,Overworld,Fog,44,29,31,3,,3,8,Fog unlocks after 8 badge(s) | Lv. 29 minimum requires 2 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Polteageist,Sinistea,primary,0,wild_encounter,Glimwood Tangle,1,Glimwood Tangle,Random,All Weather,10,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Polteageist,Sinistea,primary,0,wild_encounter,Glimwood Tangle,2,Glimwood Tangle,Random,All Weather,1,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Indeedee,Indeedee,primary,0,wild_encounter,Glimwood Tangle,1,Glimwood Tangle,Random,All Weather,5,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Trevenant,Phantump,primary,0,wild_encounter,Glimwood Tangle,1,Glimwood Tangle,Random,All Weather,10,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Shiinotic,Shiinotic,primary,0,wild_encounter,Glimwood Tangle,1,Glimwood Tangle,Random,All Weather,20,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Passimian,Passimian,primary,0,wild_encounter,Glimwood Tangle,1,Glimwood Tangle,Random,All Weather,9,34,36,4,,4,4,Glimwood Tangle is accessible after 4 badge(s) | Lv. 34 minimum requires 3 badge(s) under the wild catch cap,,OK
+Morpeko,Morpeko,primary,0,wild_encounter,Route 7,1,Route 7,Overworld,All Weather,5,37,41,5,,5,5,Route 7 is accessible after 5 badge(s) | Lv. 37 minimum requires 4 badge(s) under the wild catch cap,,OK
+Morpeko,Morpeko,primary,0,wild_encounter,Route 7,2,Route 9 — Outer Spikemuth,Random,All Weather,5,40,44,5,,5,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Falinks,Falinks,primary,0,wild_encounter,Route 8,1,Route 8,Random,All Weather,2,38,40,5,,5,5,Route 8 is accessible after 5 badge(s) | Lv. 38 minimum requires 4 badge(s) under the wild catch cap,,OK
+Falinks,Falinks,primary,0,wild_encounter,Route 8,2,Route 8,Wandering,All Weather,,40,40,5,,5,5,Route 8 is accessible after 5 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,OK
+Turtonator,Turtonator,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Intense Sun,2,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Togedemaru,Togedemaru,primary,0,wild_encounter,Route 8,1,Route 8,Overworld,All Weather,5,39,41,5,,5,5,Route 8 is accessible after 5 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Togedemaru,Togedemaru,primary,0,wild_encounter,Route 8,2,Lake of Outrage,Random,Snowstorm,13,50,52,5,,5,6,Lake of Outrage is accessible after 6 badge(s) | Snowstorm unlocks after 3 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Frosmoth,Snom,primary,0,wild_encounter,Route 8 — Steamdrift Way,1,Route 8 — Steamdrift Way,Random,All Weather,40,38,41,5,,5,5,Route 8 — Steamdrift Way is accessible after 5 badge(s) | Lv. 38 minimum requires 4 badge(s) under the wild catch cap,,OK
+Frosmoth,Snom,primary,0,wild_encounter,Route 8 — Steamdrift Way,2,Route 8 — Steamdrift Way,Overworld,All Weather,40,39,43,5,,5,5,Route 8 — Steamdrift Way is accessible after 5 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Grapploct,Clobbopus,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Overworld,All Weather,30,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Grapploct,Clobbopus,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 9 — Outer Spikemuth,Overworld,Normal Weather,30,40,44,6,,6,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,OK
+Pincurchin,Pincurchin,primary,0,wild_encounter,Route 9,1,Route 9,Random,All Weather,5,38,42,6,,6,6,Route 9 is accessible after 6 badge(s) | Lv. 38 minimum requires 4 badge(s) under the wild catch cap,,OK
+Pincurchin,Pincurchin,primary,0,wild_encounter,Route 9,2,Route 9 — Circhester Bay,Random,All Weather,5,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Mantine,Mantyke,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Surf,All Weather,35,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Mantine,Mantyke,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 9 — Circhester Bay,Fishing,All Weather,50,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Wailord,Wailmer,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Surf,All Weather,40,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Wailord,Wailmer,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 9 — Circhester Bay,Fishing,All Weather,34,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Avalugg,Bergmite,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Overworld,All Weather,15,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Avalugg,Bergmite,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 9 — Outer Spikemuth,Overworld,Normal Weather,40,40,44,6,,6,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,OK
+Dhelmise,Dhelmise,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Overworld,All Weather,1,39,43,6,6,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Dhelmise,Dhelmise,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 9 — Outer Spikemuth,Overworld,Normal Weather,1,40,44,6,6,6,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,OK
+Dhelmise,Dhelmise,alternate,1,max_raid_battle,Wild Area,1,,,,,,,6,8,8,8,5★ Max Raids require 8 badge(s),,OK
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,1,,Overworld,Normal Weather,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,2,,Overworld,Overcast,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,3,,Overworld,Raining,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,4,,Overworld,Thunderstorm,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,5,,Overworld,Intense Sun,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,6,,Overworld,Snowing,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,7,,Overworld,Snowstorm,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Snowstorm unlocks after 3 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,8,,Overworld,Sandstorm,1,40,44,6,7,7,6,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Sandstorm unlocks after 3 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_RESTRICTIVE
+Dhelmise,Dhelmise,alternate,2,wild_encounter,Route 9 — Outer Spikemuth,9,,Overworld,Fog,1,40,44,6,7,7,8,Route 9 — Outer Spikemuth is accessible after 6 badge(s) | Fog unlocks after 8 badge(s) | Lv. 40 minimum requires 4 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Lapras,Lapras,primary,0,wild_encounter,Route 9 — Circhester Bay,1,Route 9 — Circhester Bay,Fishing,All Weather,1,39,43,6,,6,6,Route 9 — Circhester Bay is accessible after 6 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Lapras,Lapras,primary,0,wild_encounter,Route 9 — Circhester Bay,2,Route 2 — Lake,Wandering,All Weather,,55,55,6,,6,7,Lv. 55 minimum requires 7 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Solrock,Solrock,primary,0,wild_encounter,Route 8,1,Route 8,Overworld,All Weather,5,39,41,5,,5,5,Route 8 is accessible after 5 badge(s) | Lv. 39 minimum requires 4 badge(s) under the wild catch cap,,OK
+Solrock,Solrock,primary,0,wild_encounter,Route 8,2,Giant's Cap — Area 2,Underground,All Weather,100,41,44,5,,5,5,Lv. 41 minimum requires 5 badge(s) under the wild catch cap,,OK
+Mr. Rime,Galarian Mr. Mime,primary,0,wild_encounter,Route 10 — Winter Hill Station,1,Route 10 — Winter Hill Station,Overworld,All Weather,30,45,48,8,,8,8,Route 10 — Winter Hill Station is accessible after 8 badge(s) | Lv. 45 minimum requires 5 badge(s) under the wild catch cap,,OK
+Mr. Rime,Galarian Mr. Mime,primary,0,wild_encounter,Route 10 — Winter Hill Station,2,Route 10,Overworld,All Weather,40,45,48,8,,8,8,Route 10 is accessible after 8 badge(s) | Lv. 45 minimum requires 5 badge(s) under the wild catch cap,,OK
+Darmanitan,Galarian Darumaka,primary,0,wild_encounter,Route 8 — Steamdrift Way,1,Route 8 — Steamdrift Way,Random,All Weather,5,38,41,5,,5,5,Route 8 — Steamdrift Way is accessible after 5 badge(s) | Lv. 38 minimum requires 4 badge(s) under the wild catch cap,,OK
+Darmanitan,Galarian Darumaka,primary,0,wild_encounter,Route 8 — Steamdrift Way,2,Route 10 — Winter Hill Station,Random,All Weather,5,43,46,5,,5,8,Route 10 — Winter Hill Station is accessible after 8 badge(s) | Lv. 43 minimum requires 5 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Stonjourner,Stonjourner,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Intense Sun,2,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Stonjourner,Stonjourner,primary,0,wild_encounter,Lake of Outrage,2,Route 10,Random,All Weather,2,44,46,6,,6,8,Route 10 is accessible after 8 badge(s) | Lv. 44 minimum requires 5 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Duraludon,Duraludon,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Snowstorm,2,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Snowstorm unlocks after 3 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Duraludon,Duraludon,primary,0,wild_encounter,Lake of Outrage,2,Route 10,Overworld,All Weather,1,45,48,6,,6,8,Route 10 is accessible after 8 badge(s) | Lv. 45 minimum requires 5 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Rotom,Rotom,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Overworld,Raining,2,55,58,7,,7,7,Lake of Outrage is accessible after 6 badge(s) | Lv. 55 minimum requires 7 badge(s) under the wild catch cap,,OK
+Rotom,Rotom,primary,0,wild_encounter,Lake of Outrage,2,Lake of Outrage,Overworld,Thunderstorm,2,55,58,7,,7,7,Lake of Outrage is accessible after 6 badge(s) | Lv. 55 minimum requires 7 badge(s) under the wild catch cap,,OK
+Ditto,Ditto,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Normal Weather,2,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Ditto,Ditto,primary,0,wild_encounter,Lake of Outrage,2,Lake of Outrage,Overworld,Normal Weather,10,55,58,6,,6,7,Lake of Outrage is accessible after 6 badge(s) | Lv. 55 minimum requires 7 badge(s) under the wild catch cap,,TOO_PERMISSIVE
+Dracozolt,Dracozolt,primary,0,fossil_restoration,Route 6 — Cara Liss,1,Route 6 — Cara Liss,Restore Fossilized Bird + Fossilized Drake,Not applicable,100,10,10,3,,3,3,Route 6 — Cara Liss is accessible after 3 badge(s),,OK
+Arctozolt,Arctozolt,primary,0,fossil_restoration,Route 6 — Cara Liss,1,Route 6 — Cara Liss,Restore Fossilized Bird + Fossilized Dino,Not applicable,100,10,10,3,,3,3,Route 6 — Cara Liss is accessible after 3 badge(s),,OK
+Dracovish,Dracovish,primary,0,fossil_restoration,Route 6 — Cara Liss,1,Route 6 — Cara Liss,Restore Fossilized Fish + Fossilized Drake,Not applicable,100,10,10,3,,3,3,Route 6 — Cara Liss is accessible after 3 badge(s),,OK
+Arctovish,Arctovish,primary,0,fossil_restoration,Route 6 — Cara Liss,1,Route 6 — Cara Liss,Restore Fossilized Fish + Fossilized Dino,Not applicable,100,10,10,3,,3,3,Route 6 — Cara Liss is accessible after 3 badge(s),,OK
+Charizard,Charmander,primary,0,gift,Postwick — Leon's room,1,Postwick — Leon's room,Gift,Not applicable,100,5,5,8,,8,8,Verified special acquisition requires 8 badge(s),,OK
+Silvally,Type: Null,primary,0,gift,Wyndon — Battle Tower,1,Wyndon — Battle Tower,Gift,Not applicable,100,50,50,8,,8,8,Verified special acquisition requires 8 badge(s) | Wyndon — Battle Tower is accessible after 8 badge(s),,OK
+Hydreigon,Deino,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Raining,2,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Kommo-o,Jangmo-o,primary,0,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Overcast,5,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Kommo-o,Jangmo-o,primary,0,wild_encounter,Lake of Outrage,2,Lake of Outrage,Random,Intense Sun,5,50,52,6,,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Dragapult,Dreepy,primary,0,max_raid_battle,Rolling Fields,1,,,,,,,1,1,1,1,2★ Max Raids require 1 badge(s),,OK
+Dragapult,Dreepy,alternate,1,wild_encounter,Lake of Outrage,1,Lake of Outrage,Random,Overcast,1,50,52,1,6,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Dragapult,Dreepy,alternate,1,wild_encounter,Lake of Outrage,2,Lake of Outrage,Random,Thunderstorm,2,50,52,1,6,6,6,Lake of Outrage is accessible after 6 badge(s) | Lv. 50 minimum requires 6 badge(s) under the wild catch cap,,OK
+Zacian,Zacian,primary,0,story_encounter,Energy Plant — Tower Summit,1,Energy Plant — Tower Summit,Interact,Not applicable,100,70,70,8,,8,8,Verified special acquisition requires 8 badge(s) | Energy Plant — Tower Summit is accessible after 8 badge(s),,OK
+Eternatus,Eternatus,primary,0,story_encounter,Energy Plant — Tower Summit,1,Energy Plant — Tower Summit,Interact,Not applicable,100,60,60,8,,8,8,Verified special acquisition requires 8 badge(s) | Energy Plant — Tower Summit is accessible after 8 badge(s),,OK

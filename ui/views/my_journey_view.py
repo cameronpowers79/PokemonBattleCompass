@@ -225,6 +225,7 @@ class MyJourneyView:
         self._root: ft.Column | None = None
         self._top_journey_row: ft.ResponsiveRow | None = None
         self._checklist_table: fdt.DataTable2 | None = None
+        self._team_planner_table: fdt.DataTable2 | None = None
         self._caught_stage_selector: ft.Dropdown | None = None
         self._add_item_selector: ft.AutoComplete | None = None
         self._add_item_quantity: ft.TextField | None = None
@@ -2429,8 +2430,8 @@ class MyJourneyView:
             badge_button = ft.Container(
                 content=ft.Button(
                     content=ft.Text(
-                        "I've earned\nthis badge!",
-                        size=8.5,
+                        "Got it!",
+                        size=9,
                         weight=ft.FontWeight.BOLD,
                         text_align=ft.TextAlign.CENTER,
                     ),
@@ -2555,7 +2556,22 @@ class MyJourneyView:
         """Show or hide acquired Team Planner Pokémon rows."""
 
         self._hide_obtained_pokemon = bool(event.control.value)
-        self._refresh()
+
+        mounted_table = self._team_planner_table
+        if mounted_table is not None:
+            for objective_id in list(self._objective_data_rows):
+                if objective_id.startswith("pokemon:"):
+                    self._objective_data_rows.pop(objective_id, None)
+
+            self._build_team_planner_card()
+            rebuilt_table = self._team_planner_table
+
+            if rebuilt_table is not None:
+                mounted_table.rows = rebuilt_table.rows
+
+            self._team_planner_table = mounted_table
+            mounted_table.update()
+
         await self.app_state.save_journey_filter_preferences(
             hide_obtained_items=self._hide_obtained_items,
             hide_obtained_pokemon=self._hide_obtained_pokemon,
@@ -2682,11 +2698,11 @@ class MyJourneyView:
                 ),
                 fdt.DataColumn2(
                     label=ft.Text(
-                        "Location",
+                        "Primary Location",
                         weight=ft.FontWeight.BOLD,
                         color=TEXT_PRIMARY,
                     ),
-                    fixed_width=checklist_widths[2],
+                    size=fdt.DataColumnSize.L,
                 ),
                 fdt.DataColumn2(
                     label=ft.Text(
@@ -3907,6 +3923,8 @@ class MyJourneyView:
             show_checkbox_column=False,
         )
 
+        self._team_planner_table = table
+
         toolbar = ft.ResponsiveRow(
             controls=[
                 ft.Container(
@@ -4319,16 +4337,25 @@ class MyJourneyView:
         else:
             level_text = f"Lv. {min_level}–{max_level}"
 
+        location = str(
+            encounter.get("location")
+            or acquisition.get("location")
+            or "Location unavailable"
+        ).strip()
+
         details = [
             value
             for value in (rarity_text, level_text, weather)
             if value
         ]
-        return (
+
+        encounter_text = (
             f"{method}: {' · '.join(details)}"
             if details
             else method
         )
+
+        return f"{location} — {encounter_text}"
 
     @classmethod
     def _pokemon_encounter_options_control(

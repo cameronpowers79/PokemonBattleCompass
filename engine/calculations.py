@@ -24,6 +24,7 @@ def is_opponent_record(pokemon):
 
 CONSERVATIVE_OPPONENT_IV = 31
 AVERAGE_OPPONENT_IV = 16
+OHKO_RECOMMENDATION_CONFIDENCE = 1.10
 
 
 def approximate_stat(base_stat, level, iv=CONSERVATIVE_OPPONENT_IV):
@@ -470,11 +471,18 @@ def calculate_move_score(
         ability_rules,
     )
 
-    item_multiplier = get_item_multiplier(
-        attacker.get("Held Item"),
+    item_damage_multiplier = get_item_damage_multiplier(
+        attacker,
+        defender,
         move,
         items,
+        effectiveness,
         effective_power=effective_power,
+    )
+    item_attack_multiplier = get_item_attack_stat_multiplier(
+        attacker,
+        move,
+        items,
     )
     power_multiplier = get_move_power_multiplier(
         attacker,
@@ -492,6 +500,7 @@ def calculate_move_score(
         move,
         ability_rules,
     )
+    attack_stat *= item_attack_multiplier
 
     # Foul Play-style moves use the target's Attack stat. Defender-side
     # AttackReduction rules such as Intimidate represent lowering the user's
@@ -507,6 +516,11 @@ def calculate_move_score(
     defense_stat = get_relevant_defense_stat(
         defender,
         move,
+    )
+    defense_stat *= get_item_defense_stat_multiplier(
+        defender,
+        move,
+        items,
     )
 
     hits = move.get("Hits", 1)
@@ -525,7 +539,7 @@ def calculate_move_score(
         * power_multiplier
         * effectiveness
         * stab
-        * item_multiplier
+        * item_damage_multiplier
         * attack_stat
         / defense_stat
     )
@@ -622,11 +636,18 @@ def calculate_damage_range(
         attacker,
         ability_rules,
     )
-    item_multiplier = get_item_multiplier(
-        attacker.get("Held Item"),
+    item_damage_multiplier = get_item_damage_multiplier(
+        attacker,
+        defender,
         move,
         items,
+        effectiveness,
         effective_power=effective_power,
+    )
+    item_attack_multiplier = get_item_attack_stat_multiplier(
+        attacker,
+        move,
+        items,
     )
     power_multiplier = get_move_power_multiplier(
         attacker,
@@ -646,6 +667,7 @@ def calculate_damage_range(
         move,
         ability_rules,
     )
+    attack_stat *= item_attack_multiplier
 
     if move.get("DamageMethod") != "TargetATK":
         attack_stat *= get_attack_reduction_multiplier(
@@ -660,6 +682,11 @@ def calculate_damage_range(
             defender,
             move,
             defender_opponent_iv_override,
+        )
+        * get_item_defense_stat_multiplier(
+            defender,
+            move,
+            items,
         ),
         1,
     )
@@ -684,7 +711,7 @@ def calculate_damage_range(
     fixed_modifier = (
         effectiveness
         * stab
-        * item_multiplier
+        * item_damage_multiplier
     )
 
     hits = move.get("Hits", 1)
@@ -1077,6 +1104,15 @@ def find_best_team_member(
 ):
     all_results = []
 
+    opponent_hp = get_stat(opponent, "HP")
+    opponent_spe = get_stat(opponent, "SPE")
+    opponent_is_dmax = get_opponent_dmax_note(opponent) != ""
+    offensive_target_hp = (
+        opponent_hp * 2
+        if opponent_is_dmax
+        else opponent_hp
+    )
+
     for pokemon in team:
         (
             best_move,
@@ -1095,6 +1131,43 @@ def find_best_team_member(
         if best_move is None:
             continue
 
+        minimum_damage, _ = calculate_damage_range(
+            pokemon,
+            opponent,
+            best_move,
+            items,
+            ability_rules,
+        )
+
+        effective_team_speed = (
+            pokemon.get("SPE", 0)
+            * get_item_speed_multiplier(
+                pokemon,
+                items,
+            )
+        )
+        team_moves_second = effective_team_speed < opponent_spe
+        has_incoming_damage = worst_score > 0
+
+        likely_ohko = (
+            minimum_damage is not None
+            and offensive_target_hp > 0
+            and minimum_damage >= offensive_target_hp
+            and (
+                not team_moves_second
+                or not has_incoming_damage
+            )
+        )
+
+        ohko_confidence = (
+            minimum_damage / offensive_target_hp
+            if (
+                likely_ohko
+                and minimum_damage is not None
+            )
+            else 0
+        )
+
         all_results.append(
             {
                 "pokemon": pokemon,
@@ -1103,6 +1176,8 @@ def find_best_team_member(
                 "worst_move": worst_move,
                 "worst_score": worst_score,
                 "ratio": ratio,
+                "likely_ohko": likely_ohko,
+                "ohko_confidence": ohko_confidence,
             }
         )
 
@@ -1118,21 +1193,71 @@ def find_best_team_member(
             ),
         )
 
-    selected_result = max(
+    ratio_result = max(
         all_results,
         key=lambda result: result["ratio"],
     )
 
-    why = build_why_explanation(
+    qualifying_ohko_results = [
+        result
+        for result in all_results
+        if (
+            result["likely_ohko"]
+            and result["ohko_confidence"]
+            >= OHKO_RECOMMENDATION_CONFIDENCE
+        )
+    ]
+
+    if qualifying_ohko_results:
+        selected_result = max(
+            qualifying_ohko_results,
+            key=lambda result: (
+                result["ohko_confidence"],
+                result["ratio"],
+            ),
+        )
+    else:
+        selected_result = ratio_result
+
+    opponent_moves = get_moves(
+        opponent,
+        moves_data,
+    )
+
+    ratio_why = build_why_explanation(
         all_results,
-        selected_result,
+        ratio_result,
         opponent,
         ability_rules,
-        opponent_moves=get_moves(
-            opponent,
-            moves_data,
-        ),
+        opponent_moves=opponent_moves,
     )
+
+    if selected_result is not ratio_result:
+        selected_name = selected_result["pokemon"].get(
+            "Pokemon",
+            "This Pokémon",
+        )
+        ratio_name = ratio_result["pokemon"].get(
+            "Pokemon",
+            "The ratio leader",
+        )
+        cleaned_ratio_why = ratio_why.rstrip(".")
+
+        if cleaned_ratio_why.startswith(ratio_name):
+            ratio_sentence = f"{cleaned_ratio_why}."
+        else:
+            ratio_sentence = (
+                f"{ratio_name} has the "
+                f"{cleaned_ratio_why[:1].lower()}"
+                f"{cleaned_ratio_why[1:]}."
+            )
+
+        why = (
+            f"{selected_name} is recommended due to high OHKO confidence. "
+            f"{ratio_sentence}"
+        )
+    else:
+        why = ratio_why
 
     best_result = (
         selected_result["best_move"],
@@ -1147,6 +1272,7 @@ def find_best_team_member(
         best_result,
         why,
     )
+
 
 def calculate_offensive_multiplier(
     attacker,

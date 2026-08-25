@@ -193,19 +193,9 @@ def _build_matchup_view_model(
             {},
         )
     )
-
-    best_move.setdefault(
-        "Move",
-        best_move_name,
-    )
-    best_move.setdefault(
-        "Type",
-        result.get("Best Move Type"),
-    )
-    best_move.setdefault(
-        "Category",
-        result.get("Best Move Category"),
-    )
+    best_move["Move"] = best_move_name
+    best_move["Type"] = result.get("Best Move Type")
+    best_move["Category"] = result.get("Best Move Category")
 
     worst_move = dict(
         move_lookup.get(
@@ -214,18 +204,9 @@ def _build_matchup_view_model(
         )
     )
 
-    worst_move.setdefault(
-        "Move",
-        worst_move_name,
-    )
-    worst_move.setdefault(
-        "Type",
-        result.get("Worst Incoming Move Type"),
-    )
-    worst_move.setdefault(
-        "Category",
-        result.get("Worst Incoming Move Category"),
-    )
+    worst_move["Move"] = worst_move_name
+    worst_move["Type"] = result.get("Worst Incoming Move Type")
+    worst_move["Category"] = result.get("Worst Incoming Move Category")
 
     ratio = float(result["Ratio"])
     is_immune = bool(result.get("Is Immune", False))

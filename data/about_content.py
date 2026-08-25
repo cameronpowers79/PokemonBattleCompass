@@ -33,7 +33,7 @@ class VersionEntry:
 
 HERO_TITLE = "Pokémon Battle Compass"
 HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword"
-HERO_VERSION = "v0.2.0 Beta"
+HERO_VERSION = "v0.2.1 Beta"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
 
@@ -84,7 +84,70 @@ ABOUT_SECTIONS = (
             "Provides move, type, Ability, and held-item reference popups.",
             "Explains why one option edged out another.",
         ),
-        accent="green",
+                accent="green",
+    ),
+    AboutSection(
+        title="How to Use Battle Compass",
+        icon="help",
+        paragraphs=(
+            (
+                "Battle Compass works best as a simple loop: keep your team "
+                "updated, check the matchup before an important battle, plan "
+                "what comes next, and repeat."
+            ),
+            (
+                "The app can only work with the information you give it. A "
+                "beautifully calculated recommendation based on last Tuesday’s "
+                "moveset is still a beautifully calculated wrong answer."
+            ),
+        ),
+        bullets=(
+            (
+                "My Team — Start with the Team Editor. Enter your active and "
+                "boxed Pokémon and keep their level, stats, moves, Ability, "
+                "held item, Nature, and other available details current. The "
+                "Battle Compass uses this information directly in its "
+                "calculations, so update it after evolutions, move changes, "
+                "held-item changes, or other meaningful changes to a build."
+            ),
+            (
+                "Pokémon Details — To review any Pokémon already in your "
+                "Journey, open Pokémon Details on the My Team page and select "
+                "the Pokémon you want to inspect from the dropdown. This gives "
+                "you a quick view of its current build, stats, Nature effects, "
+                "and evolution information."
+            ),
+            (
+                "Battle Compass — Select the battle and opponent you are "
+                "preparing for. The Recommendation card shows the suggested "
+                "team member, Best Move, Matchup Strength, explanation, and "
+                "relevant Battle Notes. Check Full Analysis when you want to "
+                "compare the rest of the team instead of stopping at the top "
+                "recommendation."
+            ),
+            (
+                "My Journey — Use the Badge Tracker to keep your story progress "
+                "current. Current Objectives shows what matters now, while the "
+                "Journey Checklist, Galar map, and Team Planner help you track "
+                "items and future team additions and see when and where they "
+                "become available. Objectives move from unavailable to "
+                "available to obtained as your Journey progresses."
+            ),
+            (
+                "Team Planner — Review acquisition details before hunting a "
+                "planned Pokémon. When you catch one, mark it acquired and add "
+                "the Pokémon you actually caught to My Team so the planning "
+                "objective becomes part of your usable roster."
+            ),
+            (
+                "About — You are here. This page contains the recommendation "
+                "philosophy, save and backup guidance, current project scope, "
+                "roadmap, version history, credits, and the optional Nerd Stuff "
+                "for anyone who would like considerably more Pokémon math than "
+                "was strictly necessary."
+            ),
+        ),
+        accent="blue",
     ),
     AboutSection(
         title="How Recommendations Work",
@@ -312,6 +375,38 @@ NERD_STUFF_GROUPS = (
 
 
 VERSION_HISTORY = (
+    VersionEntry(
+        name="v0.2.1",
+        status="Current Beta",
+        summary=(
+            "Journey acquisition validation, planning refinements, and "
+            "player-facing guidance for the next round of Beta testing."
+        ),
+        bullets=(
+            "Corrected and validated Pokémon Journey acquisition data",
+            "Added deterministic acquisition validation with 193/193 records passing",
+            "Improved special trade, gift, story, and Max Raid acquisition handling",
+            "Refined Journey encounter and badge-gating data",
+            "Added How to Use Battle Compass guidance to the About page",
+            "Included additional Journey and mobile-interface polish",
+        ),
+    ),
+    VersionEntry(
+        name="v0.2.1",
+        status="Current Beta",
+        summary=(
+            "Journey acquisition validation, planning refinements, and "
+            "player-facing guidance for the next round of Beta testing."
+        ),
+        bullets=(
+            "Corrected and validated Pokémon Journey acquisition data",
+            "Added deterministic acquisition validation with 193/193 records passing",
+            "Improved special trade, gift, story, and Max Raid acquisition handling",
+            "Refined Journey encounter and badge-gating data",
+            "Added How to Use Battle Compass guidance to the About page",
+            "Included additional Journey and mobile-interface polish",
+        ),
+    ),
     VersionEntry(
     name="v0.1.1",
         status="Previous Alpha",

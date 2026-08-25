@@ -8,12 +8,13 @@ The goal is not to solve Pokémon for you. It is a **compass, not a GPS**: usefu
 
 ## Current Version
 
-**0.2.0 Beta**
+**0.2.1 Beta**
 
 The original Excel prototype and Streamlit migration have been retired. The active application is now built with **Flet** and runs as:
 
 - a packaged Windows desktop application
 - a browser-based web application
+- an installable mobile/web app on supported devices
 
 ## Features
 
@@ -23,18 +24,21 @@ Select your starter, trainer battle, opponent, and current team to see:
 
 - Recommended Pokémon
 - Best move
-- Matchup strength
+- Matchup Strength
 - Defensive risk
 - Other strong options
 - Full team analysis
-- Context-sensitive battle notes
-- Support for many special move and ability interactions
+- Context-sensitive Battle Notes
+- Likely OHKO and survival guidance
+- Support for many special move, held-item, and Ability interactions
 
-The recommendation engine considers more than simple type effectiveness. It also evaluates stats, STAB, held items, abilities, move behavior, defensive matchups, likely OHKOs, and a growing collection of battle-specific mechanics.
+The recommendation engine considers more than simple type effectiveness. It also evaluates stats, STAB, held items, Abilities, move behavior, defensive matchups, likely OHKOs, turn order, priority, and a growing collection of battle-specific mechanics.
+
+Recommendations are intended as decision support, not commands. Sometimes the mathematically strongest matchup is exactly what you want. Sometimes you brought a haunted balloon because you felt like it. Both are valid approaches to Pokémon.
 
 ### My Team
 
-Build and maintain your current team with:
+Build and maintain your current and boxed Pokémon with the Team Editor:
 
 - Pokémon
 - Gender
@@ -45,29 +49,50 @@ Build and maintain your current team with:
 - Stats
 - Moves
 
-Pokémon details include sprites, type information, stat visualization, move details, evolution guidance, and related reference information.
+Battle Compass uses the information entered here for its calculations, so keeping your team data current matters. Update Pokémon after evolutions, move changes, held-item changes, major stat changes, or other meaningful build changes.
+
+Pokémon Details provides a closer look at any current or boxed Pokémon, including artwork, types, stats, Nature effects, moves, held-item guidance, and evolution information.
 
 ### My Journey
 
-Track your Sword playthrough with:
+Track and plan your Sword playthrough with:
 
 - Badge progression
-- Current objectives
+- Current Objectives
 - Pokémon acquisition targets
-- Items, TMs, and TRs
+- Item, TM, and TR objectives
+- Acquisition availability
 - Galar map markers
-- Team planning
+- Team Planner
+- Encounter details
 - Save / backup / restore support
 
-Objective availability follows story progression, so the app can distinguish between something that exists in the game and something you can actually obtain yet.
+Objective availability follows story progression, catch-level restrictions, important traversal requirements, weather restrictions, and other modeled acquisition gates.
+
+The goal is to distinguish between **“this exists somewhere in Pokémon Sword”** and **“you can reasonably go get this now.”**
+
+Pokémon acquisition data has been validated against the app’s progression rules, including special handling for trades, gifts, story encounters, Raid exceptions, and other acquisition methods that do not fit neatly into ordinary wild-encounter logic.
+
+## How to Use It
+
+A typical Battle Compass workflow looks like this:
+
+1. Enter and maintain your Pokémon on **My Team**.
+2. Use **Battle Compass** before important battles to review the recommended matchup and Full Analysis.
+3. Keep your earned badges current on **My Journey**.
+4. Use Current Objectives, the map, and Team Planner to see what becomes available next.
+5. Update My Team when your Pokémon evolve, learn new moves, change items, or otherwise change meaningfully.
+6. Export a Journey backup occasionally, because relying entirely on browser storage is an exciting lifestyle choice.
+
+More detailed guidance is available on the in-app **About** page under **How to Use Battle Compass**.
 
 ## Saving Your Progress
 
 Pokémon Battle Compass stores Journey data locally on your device.
 
-You can also export a backup and restore it later.
+You can also export a portable Journey backup and restore it later.
 
-Because browser storage belongs to the browser/device you are using, data does not automatically synchronize between computers, phones, browsers, or browser profiles.
+Because browser storage belongs to the browser/device you are using, Journey data does not automatically synchronize between computers, phones, browsers, or browser profiles.
 
 Backups are strongly recommended if you care about preserving a Journey.
 
@@ -87,11 +112,15 @@ No installation is currently required.
 
 The web version runs directly in a modern browser.
 
-### Mobile note
+It can also be installed as a standalone web app on supported devices.
 
-On iPhone and iPad, use Pokémon Battle Compass **in Safari or Chrome as a normal browser site**.
+### Mobile / PWA note
 
-Installing it to the Home Screen as a standalone Web App is not currently considered a supported configuration because Journey file import / Load does not work reliably in that mode.
+Pokémon Battle Compass has been tested as an installed Home Screen Web App on iPhone as well as in a normal mobile browser.
+
+Journey storage, artwork, map features, and Journey import / load are supported in the current Beta build.
+
+As with any locally stored web application, keeping an exported Journey backup is still strongly recommended.
 
 ## Current Scope
 
@@ -111,10 +140,12 @@ It does not attempt to model every possible live battle state, including arbitra
 
 - HP percentages
 - stat stages
-- field conditions
+- doubles-specific partner interactions
+- full weather and terrain simulation
 - turn-by-turn decision trees
 - opponent AI behavior
-- random damage rolls
+- every random damage outcome
+- every wonderfully strange edge case Game Freak has invented
 
 The app focuses on practical pre-battle matchup guidance using the information a player can reasonably maintain without turning every fight into spreadsheet homework.
 
@@ -137,4 +168,4 @@ The battle engine is intentionally kept separate from the UI so recommendation l
 From the project root:
 
 ```powershell
-python flet_app.py
+flet run flet_app.py
