@@ -392,19 +392,20 @@ VERSION_HISTORY = (
         ),
     ),
     VersionEntry(
-        name="v0.2.1",
-        status="Current Beta",
+        name="v0.2.0",
+        status="Initial Beta",
         summary=(
-            "Journey acquisition validation, planning refinements, and "
-            "player-facing guidance for the next round of Beta testing."
+            "The first Beta release, introducing My Journey, broader battle "
+            "mechanics, web deployment, and the expanded playthrough-planning "
+            "toolset."
         ),
         bullets=(
-            "Corrected and validated Pokémon Journey acquisition data",
-            "Added deterministic acquisition validation with 193/193 records passing",
-            "Improved special trade, gift, story, and Max Raid acquisition handling",
-            "Refined Journey encounter and badge-gating data",
-            "Added How to Use Battle Compass guidance to the About page",
-            "Included additional Journey and mobile-interface polish",
+            "Introduced My Journey with Badge Tracker, Current Objectives, map, and Team Planner",
+            "Added broader Journey persistence, import/export, and backup support",
+            "Expanded battle-engine handling for special moves, Abilities, held items, and OHKO notes",
+            "Added held-item recommendations and richer Pokémon Details",
+            "Completed the move from desktop-only Alpha to hosted Flet web Beta",
+            "Added normalized texture artwork and expanded runtime asset support",
         ),
     ),
     VersionEntry(
