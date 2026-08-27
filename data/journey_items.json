@@ -8073,23 +8073,13 @@
     "required_by": [],
     "sources": [
       {
-        "id": "muscle_band_wyndon",
+        "id": "muscle_band_hammerlocke",
         "method": "fixed_pickup",
-        "location": "Wyndon",
-        "location_detail": "Fixed overworld pickup in Wyndon.",
-        "required_badge": 8,
+        "location": "Hammerlocke",
+        "location_detail": "At the eastern side of the court in front of the western Pokémon Center.",
+        "required_badge": 3,
         "map_locations": [
-          "wyndon"
-        ]
-      },
-      {
-        "id": "muscle_band_battle_tower",
-        "method": "bp_shop",
-        "location": "Wyndon — Battle Tower",
-        "location_detail": "Purchase from the Battle Tower BP shop after becoming Champion.",
-        "required_badge": 8,
-        "map_locations": [
-          "wyndon"
+          "hammerlocke"
         ]
       }
     ],
