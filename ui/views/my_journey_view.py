@@ -1750,8 +1750,23 @@ class MyJourneyView:
         move_type = str(record.get("move_type") or "").strip().lower()
         if not move_type:
             title = str(record.get("title") or "").strip()
-            move_name = re.sub(r"^(?:TM|TR)\d{2}\s+", "", title).strip()
-            move_type = self._move_type_by_name.get(move_name.casefold(), "")
+
+            move_name = re.sub(
+                r"^(?:TM|TR)\d{2}\s+",
+                "",
+                title,
+            ).strip()
+
+            move_name = re.sub(
+                r"\s+×\d+$",
+                "",
+                move_name,
+            ).strip()
+
+            move_type = self._move_type_by_name.get(
+                move_name.casefold(),
+                "",
+            )
 
         if move_type:
             return f"raw/pokesprite/items/{category}/{move_type}.png"
@@ -2364,10 +2379,9 @@ class MyJourneyView:
     def _build_badge_tracker_card(self) -> ft.Control:
         """Build the layered Sword badge coin."""
 
-        coin_size = 390
+        base_coin_size = 390.0
 
         # Normalized visual centers of the manually traced badge polygons.
-        # These keep the action button centered on whichever badge is next.
         badge_button_centers = [
             (0.631, 0.808),  # Grass
             (0.783, 0.279),  # Water
@@ -2379,19 +2393,17 @@ class MyJourneyView:
             (0.177, 0.367),  # Dragon
         ]
 
-        coin_layers: list[ft.Control] = [
-            ft.Image(
-                src=BADGE_FRAME_ASSET,
-                width=coin_size,
-                height=coin_size,
-                fit=ft.BoxFit.CONTAIN,
-                semantics_label="Galar badge coin frame",
-            )
-        ]
+        frame_image = ft.Image(
+            src=BADGE_FRAME_ASSET,
+            width=base_coin_size,
+            height=base_coin_size,
+            fit=ft.BoxFit.CONTAIN,
+            semantics_label="Galar badge coin frame",
+        )
+        coin_layers: list[ft.Control] = [frame_image]
+        badge_images: list[ft.Image] = []
 
-        for index, (badge_name, badge_asset) in enumerate(
-            BADGE_LAYERS
-        ):
+        for index, (badge_name, badge_asset) in enumerate(BADGE_LAYERS):
             earned = index < self.earned_badges
             next_badge = (
                 index == self.earned_badges
@@ -2405,92 +2417,123 @@ class MyJourneyView:
             else:
                 opacity = 0.0
 
-            coin_layers.append(
-                ft.Image(
-                    src=badge_asset,
-                    width=coin_size,
-                    height=coin_size,
-                    fit=ft.BoxFit.CONTAIN,
-                    opacity=opacity,
-                    semantics_label=(
-                        badge_name
-                        if earned or next_badge
-                        else "Hidden future badge"
-                    ),
-                )
+            badge_image = ft.Image(
+                src=badge_asset,
+                width=base_coin_size,
+                height=base_coin_size,
+                fit=ft.BoxFit.CONTAIN,
+                opacity=opacity,
+                semantics_label=(
+                    badge_name
+                    if earned or next_badge
+                    else "Hidden future badge"
+                ),
             )
+            badge_images.append(badge_image)
+            coin_layers.append(badge_image)
+
+        badge_button: ft.Container | None = None
+        button_icon: ft.Icon | None = None
+        button_text: ft.Text | None = None
+        center_x = 0.5
+        center_y = 0.5
 
         if self.earned_badges < len(BADGE_LAYERS):
-            center_x, center_y = badge_button_centers[
-                self.earned_badges
-            ]
-            button_width = 112
-            button_height = 55
-
+            center_x, center_y = badge_button_centers[self.earned_badges]
+            button_icon = ft.Icon(
+                ft.Icons.MILITARY_TECH_ROUNDED,
+                size=18,
+                color="#07120B",
+            )
+            button_text = ft.Text(
+                "Got it!",
+                size=12,
+                weight=ft.FontWeight.BOLD,
+                color="#07120B",
+                text_align=ft.TextAlign.CENTER,
+            )
             badge_button = ft.Container(
-                content=ft.Button(
-                    content=ft.Text(
-                        "Got it!",
-                        size=9,
-                        weight=ft.FontWeight.BOLD,
-                        text_align=ft.TextAlign.CENTER,
-                    ),
-                    icon=ft.Icons.MILITARY_TECH_ROUNDED,
-                    style=ft.ButtonStyle(
-                        bgcolor={
-                            ft.ControlState.DEFAULT: ft.Colors.with_opacity(
-                                0.68,
-                                SUCCESS,
-                            ),
-                            ft.ControlState.HOVERED: SUCCESS,
-                            ft.ControlState.PRESSED: ft.Colors.with_opacity(
-                                0.86,
-                                SUCCESS,
-                            ),
-                        },
-                        color={
-                            ft.ControlState.DEFAULT: "#07120B",
-                            ft.ControlState.HOVERED: "#07120B",
-                            ft.ControlState.PRESSED: "#07120B",
-                        },
-                        icon_color={
-                            ft.ControlState.DEFAULT: "#07120B",
-                            ft.ControlState.HOVERED: "#07120B",
-                            ft.ControlState.PRESSED: "#07120B",
-                        },
-                        mouse_cursor=ft.MouseCursor.CLICK,
-                        animation_duration=160,
-                    ),
-                    on_click=lambda: self.page.run_task(
-                        self._earn_next_badge
-                    ),
+                content=ft.Row(
+                    controls=[button_icon, button_text],
+                    spacing=7,
+                    tight=True,
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                width=button_width,
-                height=button_height,
+                width=112,
+                height=55,
+                bgcolor=ft.Colors.with_opacity(0.68, SUCCESS),
+                border_radius=27.5,
+                alignment=ft.Alignment.CENTER,
+                ink=True,
+                on_click=lambda: self.page.run_task(
+                    self._earn_next_badge
+                ),
             )
-            badge_button.left = (
-                center_x * coin_size - button_width / 2
-            )
-            badge_button.top = (
-                center_y * coin_size - button_height / 2
-            )
+            badge_button.left = center_x * base_coin_size - 56
+            badge_button.top = center_y * base_coin_size - 27.5
             coin_layers.append(badge_button)
 
-        controls: list[ft.Control] = [
-            ft.Container(
-                content=ft.Stack(
-                    controls=coin_layers,
-                    width=coin_size,
-                    height=coin_size,
-                ),
-                alignment=ft.Alignment.CENTER,
-            )
-        ]
+        coin_stack = ft.Stack(
+            controls=coin_layers,
+            width=base_coin_size,
+            height=base_coin_size,
+            clip_behavior=ft.ClipBehavior.NONE,
+        )
+
+        coin_host: ft.Container
+
+        def handle_coin_size_change(event: Any) -> None:
+            available_width = float(event.width or 0)
+            if available_width <= 0:
+                return
+
+            rendered_size = min(base_coin_size, available_width)
+            scale = rendered_size / base_coin_size
+
+            frame_image.width = rendered_size
+            frame_image.height = rendered_size
+            for badge_image in badge_images:
+                badge_image.width = rendered_size
+                badge_image.height = rendered_size
+
+            coin_stack.width = rendered_size
+            coin_stack.height = rendered_size
+            coin_host.height = rendered_size
+
+            if badge_button is not None:
+                button_width = 112 * scale
+                button_height = 55 * scale
+                badge_button.width = button_width
+                badge_button.height = button_height
+                badge_button.border_radius = button_height / 2
+                badge_button.left = (
+                    center_x * rendered_size - button_width / 2
+                )
+                badge_button.top = (
+                    center_y * rendered_size - button_height / 2
+                )
+
+                if button_icon is not None:
+                    button_icon.size = max(14, 18 * scale)
+                if button_text is not None:
+                    button_text.size = max(10, 12 * scale)
+
+            coin_host.update()
+
+        coin_host = ft.Container(
+            content=coin_stack,
+            width=float("inf"),
+            height=base_coin_size,
+            alignment=ft.Alignment.TOP_CENTER,
+            clip_behavior=ft.ClipBehavior.NONE,
+            on_size_change=handle_coin_size_change,
+        )
+
+        controls: list[ft.Control] = [coin_host]
 
         if self.earned_badges < len(BADGE_LAYERS):
-            next_badge_name = BADGE_LAYERS[
-                self.earned_badges
-            ][0]
+            next_badge_name = BADGE_LAYERS[self.earned_badges][0]
             controls.append(
                 ft.Text(
                     f"Next: {next_badge_name}",
@@ -2533,8 +2576,9 @@ class MyJourneyView:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             col={"xs": 12, "lg": 6},
-            height=TOP_JOURNEY_CARD_HEIGHT
+            height=TOP_JOURNEY_CARD_HEIGHT,
         )
+
 
     async def _toggle_hide_obtained_items(
         self,

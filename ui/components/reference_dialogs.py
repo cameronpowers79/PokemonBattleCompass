@@ -1109,11 +1109,12 @@ def show_item_dialog(
     page: ft.Page,
     item_name: str,
     items: list[dict],
+    journey_item: dict | None = None,
     item_sprite_src: str | None = None,
 ) -> None:
     """Show the current held item's player-facing description."""
 
-    item = next(
+    modeled_item = next(
         (
             row
             for row in items
@@ -1123,10 +1124,19 @@ def show_item_dialog(
     )
 
     description = (
-        item.get("Description")
-        if isinstance(item, dict)
+        journey_item.get("description")
+        if isinstance(journey_item, dict)
         else None
     )
+
+    # Preserve the modeled-item description as a fallback in case a
+    # catalog record is ever missing or incomplete.
+    if not isinstance(description, str) or not description.strip():
+        description = (
+            modeled_item.get("Description")
+            if isinstance(modeled_item, dict)
+            else None
+        )
 
     if not isinstance(description, str) or not description.strip():
         description = (
@@ -1161,8 +1171,8 @@ def show_item_dialog(
     )
 
     modeled = (
-        isinstance(item, dict)
-        and item.get("EffectType")
+        isinstance(modeled_item, dict)
+        and modeled_item.get("EffectType")
         not in {
             None,
             "None",

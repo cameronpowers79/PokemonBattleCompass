@@ -192,6 +192,7 @@
     "id": "black_sludge",
     "name": "Black Sludge",
     "category": "held_item",
+    "description": "Restores 1/16 of a Poison-type holder's maximum HP at the end of each turn. Damages non-Poison holders instead.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6792,6 +6793,7 @@
     "id": "absorb_bulb",
     "name": "Absorb Bulb",
     "category": "held_item",
+    "description": "Raises the holder's Special Attack by one stage if it is hit by a Water-type move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6823,6 +6825,7 @@
     "id": "air_balloon",
     "name": "Air Balloon",
     "category": "held_item",
+    "description": "Makes the holder immune to damaging Ground-type moves until the holder is hit and the balloon bursts.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6854,6 +6857,7 @@
     "id": "amulet_coin",
     "name": "Amulet Coin",
     "category": "held_item",
+    "description": "Doubles prize money from Trainer battles if the holder takes part in the battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6875,6 +6879,7 @@
     "id": "assault_vest",
     "name": "Assault Vest",
     "category": "held_item",
+    "description": "Raises Special Defense by 50%, but prevents the holder from selecting status moves.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6906,6 +6911,7 @@
     "id": "big_root",
     "name": "Big Root",
     "category": "held_item",
+    "description": "Increases the amount of HP the holder restores from draining moves and similar HP-stealing effects.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6927,6 +6933,7 @@
     "id": "binding_band",
     "name": "Binding Band",
     "category": "held_item",
+    "description": "Increases the residual damage dealt by binding moves such as Bind, Wrap, and Fire Spin.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6948,6 +6955,7 @@
     "id": "black_belt",
     "name": "Black Belt",
     "category": "held_item",
+    "description": "Boosts the power of Fighting-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -6979,6 +6987,7 @@
     "id": "black_glasses",
     "name": "Black Glasses",
     "category": "held_item",
+    "description": "Boosts the power of Dark-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7010,6 +7019,7 @@
     "id": "blunder_policy",
     "name": "Blunder Policy",
     "category": "held_item",
+    "description": "Raises the holder's Speed by two stages when one of its moves misses because of accuracy. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7031,6 +7041,7 @@
     "id": "bright_powder",
     "name": "Bright Powder",
     "category": "held_item",
+    "description": "Makes moves used against the holder slightly less accurate.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7052,6 +7063,7 @@
     "id": "cell_battery",
     "name": "Cell Battery",
     "category": "held_item",
+    "description": "Raises the holder's Attack by one stage if it is hit by an Electric-type move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7083,6 +7095,7 @@
     "id": "charcoal",
     "name": "Charcoal",
     "category": "held_item",
+    "description": "Boosts the power of Fire-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7114,6 +7127,7 @@
     "id": "choice_band",
     "name": "Choice Band",
     "category": "held_item",
+    "description": "Raises Attack by 50%, but locks the holder into the first move it selects until it leaves battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7145,6 +7159,7 @@
     "id": "choice_scarf",
     "name": "Choice Scarf",
     "category": "held_item",
+    "description": "Raises Speed by 50%, but locks the holder into the first move it selects until it leaves battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7176,6 +7191,7 @@
     "id": "choice_specs",
     "name": "Choice Specs",
     "category": "held_item",
+    "description": "Raises Special Attack by 50%, but locks the holder into the first move it selects until it leaves battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7207,6 +7223,7 @@
     "id": "cleanse_tag",
     "name": "Cleanse Tag",
     "category": "held_item",
+    "description": "Reduces the chance of encountering wild Pokémon when the holder is first in the party.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7228,6 +7245,7 @@
     "id": "damp_rock",
     "name": "Damp Rock",
     "category": "held_item",
+    "description": "Extends rain caused by the holder's Rain Dance from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7259,6 +7277,7 @@
     "id": "destiny_knot",
     "name": "Destiny Knot",
     "category": "held_item",
+    "description": "If the holder becomes infatuated, the Pokémon that caused the infatuation becomes infatuated as well.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7288,6 +7307,7 @@
     "id": "eject_button",
     "name": "Eject Button",
     "category": "held_item",
+    "description": "Forces the holder to switch out after it is hit by a damaging move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7309,6 +7329,7 @@
     "id": "eject_pack",
     "name": "Eject Pack",
     "category": "held_item",
+    "description": "Forces the holder to switch out when one or more of its stats are lowered. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7330,6 +7351,7 @@
     "id": "electric_seed",
     "name": "Electric Seed",
     "category": "held_item",
+    "description": "Raises the holder's Defense by one stage when Electric Terrain is active. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7351,6 +7373,7 @@
     "id": "everstone",
     "name": "Everstone",
     "category": "held_item",
+    "description": "Prevents the holder from evolving.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7390,6 +7413,7 @@
     "id": "eviolite",
     "name": "Eviolite",
     "category": "held_item",
+    "description": "Raises Defense and Special Defense by 50% when held by a Pokémon that can still evolve.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7411,6 +7435,7 @@
     "id": "expert_belt",
     "name": "Expert Belt",
     "category": "held_item",
+    "description": "Boosts the power of super-effective attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7432,6 +7457,7 @@
     "id": "flame_orb",
     "name": "Flame Orb",
     "category": "held_item",
+    "description": "Burns the holder at the end of the turn while it remains held.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7453,6 +7479,7 @@
     "id": "float_stone",
     "name": "Float Stone",
     "category": "held_item",
+    "description": "Halves the holder's weight.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7474,6 +7501,7 @@
     "id": "focus_band",
     "name": "Focus Band",
     "category": "held_item",
+    "description": "Gives the holder a chance to survive an otherwise fatal hit with 1 HP.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7507,6 +7535,7 @@
     "id": "focus_sash",
     "name": "Focus Sash",
     "category": "held_item",
+    "description": "Allows the holder to survive an otherwise lethal hit with 1 HP when starting at full HP. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7538,6 +7567,7 @@
     "id": "grip_claw",
     "name": "Grip Claw",
     "category": "held_item",
+    "description": "Makes binding moves such as Bind and Wrap last their maximum duration.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7569,6 +7599,7 @@
     "id": "hard_stone",
     "name": "Hard Stone",
     "category": "held_item",
+    "description": "Boosts the power of Rock-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7600,6 +7631,7 @@
     "id": "heat_rock",
     "name": "Heat Rock",
     "category": "held_item",
+    "description": "Extends harsh sunlight caused by the holder's Sunny Day from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7631,6 +7663,7 @@
     "id": "heavy_duty_boots",
     "name": "Heavy-Duty Boots",
     "category": "held_item",
+    "description": "Protects the holder from entry hazards when it switches into battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7652,6 +7685,7 @@
     "id": "icy_rock",
     "name": "Icy Rock",
     "category": "held_item",
+    "description": "Extends hail caused by the holder's Hail from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7683,6 +7717,7 @@
     "id": "iron_ball",
     "name": "Iron Ball",
     "category": "held_item",
+    "description": "Halves the holder's Speed and grounds it, allowing Ground-type moves to hit Flying-type or levitating holders.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7704,6 +7739,7 @@
     "id": "kings_rock",
     "name": "King's Rock",
     "category": "held_item",
+    "description": "Gives eligible damaging moves a chance to make the target flinch.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7735,6 +7771,7 @@
     "id": "lagging_tail",
     "name": "Lagging Tail",
     "category": "held_item",
+    "description": "Makes the holder move last within its move's priority bracket.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7756,6 +7793,7 @@
     "id": "leftovers",
     "name": "Leftovers",
     "category": "held_item",
+    "description": "Restores 1/16 of the holder's maximum HP at the end of each turn.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7787,6 +7825,7 @@
     "id": "life_orb",
     "name": "Life Orb",
     "category": "held_item",
+    "description": "Boosts the power of damaging moves by 30%. The holder loses 10% of its maximum HP after dealing damage.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7818,6 +7857,7 @@
     "id": "light_ball",
     "name": "Light Ball",
     "category": "held_item",
+    "description": "Doubles Pikachu's Attack and Special Attack while held.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7839,6 +7879,7 @@
     "id": "light_clay",
     "name": "Light Clay",
     "category": "held_item",
+    "description": "Extends Reflect, Light Screen, and Aurora Veil set by the holder from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7872,6 +7913,7 @@
     "id": "lucky_egg",
     "name": "Lucky Egg",
     "category": "held_item",
+    "description": "Increases the amount of Exp. Points the holder earns from battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7893,6 +7935,7 @@
     "id": "luminous_moss",
     "name": "Luminous Moss",
     "category": "held_item",
+    "description": "Raises the holder's Special Defense by one stage if it is hit by a Water-type move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7924,6 +7967,7 @@
     "id": "macho_brace",
     "name": "Macho Brace",
     "category": "held_item",
+    "description": "Halves the holder's Speed but doubles the Effort Values it gains from battling.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7945,6 +7989,7 @@
     "id": "magnet",
     "name": "Magnet",
     "category": "held_item",
+    "description": "Boosts the power of Electric-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -7976,6 +8021,7 @@
     "id": "mental_herb",
     "name": "Mental Herb",
     "category": "held_item",
+    "description": "Cures certain move-restricting effects such as Infatuation, Taunt, Encore, Torment, Disable, and Heal Block. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8007,6 +8053,7 @@
     "id": "metronome",
     "name": "Metronome",
     "category": "held_item",
+    "description": "Boosts the power of a move when the holder uses that same move repeatedly; the boost resets when a different move is used.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8038,6 +8085,7 @@
     "id": "miracle_seed",
     "name": "Miracle Seed",
     "category": "held_item",
+    "description": "Boosts the power of Grass-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8069,6 +8117,7 @@
     "id": "muscle_band",
     "name": "Muscle Band",
     "category": "held_item",
+    "description": "Boosts the power of Physical attacks by 10%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8090,6 +8139,7 @@
     "id": "mystic_water",
     "name": "Mystic Water",
     "category": "held_item",
+    "description": "Boosts the power of Water-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8121,6 +8171,7 @@
     "id": "never_melt_ice",
     "name": "Never-Melt Ice",
     "category": "held_item",
+    "description": "Boosts the power of Ice-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8152,6 +8203,7 @@
     "id": "normal_gem",
     "name": "Normal Gem",
     "category": "held_item",
+    "description": "Boosts the power of the holder's next Normal-type damaging move, then is consumed.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8173,6 +8225,7 @@
     "id": "odd_incense",
     "name": "Odd Incense",
     "category": "held_item",
+    "description": "Boosts the power of Psychic-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8194,6 +8247,7 @@
     "id": "pixie_plate",
     "name": "Pixie Plate",
     "category": "held_item",
+    "description": "Boosts the power of Fairy-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8215,6 +8269,7 @@
     "id": "poison_barb",
     "name": "Poison Barb",
     "category": "held_item",
+    "description": "Boosts the power of Poison-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8247,6 +8302,7 @@
     "id": "power_anklet",
     "name": "Power Anklet",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra Speed Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8268,6 +8324,7 @@
     "id": "power_band",
     "name": "Power Band",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra Special Defense Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8289,6 +8346,7 @@
     "id": "power_belt",
     "name": "Power Belt",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra Defense Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8310,6 +8368,7 @@
     "id": "power_bracer",
     "name": "Power Bracer",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra Attack Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8331,6 +8390,7 @@
     "id": "power_lens",
     "name": "Power Lens",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra Special Attack Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8352,6 +8412,7 @@
     "id": "power_weight",
     "name": "Power Weight",
     "category": "held_item",
+    "description": "Halves the holder's Speed and adds extra HP Effort Values after battles.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8373,6 +8434,7 @@
     "id": "protective_pads",
     "name": "Protective Pads",
     "category": "held_item",
+    "description": "Prevents effects that would normally trigger because the holder's move makes direct contact with its target.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8394,6 +8456,7 @@
     "id": "quick_claw",
     "name": "Quick Claw",
     "category": "held_item",
+    "description": "Sometimes allows the holder to move first within its move's priority bracket.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8425,6 +8488,7 @@
     "id": "quick_powder",
     "name": "Quick Powder",
     "category": "held_item",
+    "description": "Doubles Ditto's Speed while Ditto is not transformed.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8446,6 +8510,7 @@
     "id": "red_card",
     "name": "Red Card",
     "category": "held_item",
+    "description": "Forces an attacker to switch out after it hits the holder with a damaging move, if the holder remains in battle. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8467,6 +8532,7 @@
     "id": "ring_target",
     "name": "Ring Target",
     "category": "held_item",
+    "description": "Allows moves to hit the holder even when its type would normally make it immune to that move's type.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8488,6 +8554,7 @@
     "id": "rock_incense",
     "name": "Rock Incense",
     "category": "held_item",
+    "description": "Boosts the power of Rock-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8509,6 +8576,7 @@
     "id": "rocky_helmet",
     "name": "Rocky Helmet",
     "category": "held_item",
+    "description": "Damages an attacker that makes contact for 1/6 of the attacker's maximum HP.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8540,6 +8608,7 @@
     "id": "room_service",
     "name": "Room Service",
     "category": "held_item",
+    "description": "Lowers the holder's Speed by one stage when Trick Room takes effect. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8561,6 +8630,7 @@
     "id": "safety_goggles",
     "name": "Safety Goggles",
     "category": "held_item",
+    "description": "Protects the holder from weather damage and from powder- and spore-based moves.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8582,6 +8652,7 @@
     "id": "scope_lens",
     "name": "Scope Lens",
     "category": "held_item",
+    "description": "Raises the holder's critical-hit ratio by one stage.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8613,6 +8684,7 @@
     "id": "sea_incense",
     "name": "Sea Incense",
     "category": "held_item",
+    "description": "Boosts the power of Water-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8634,6 +8706,7 @@
     "id": "sharp_beak",
     "name": "Sharp Beak",
     "category": "held_item",
+    "description": "Boosts the power of Flying-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8665,6 +8738,7 @@
     "id": "shell_bell",
     "name": "Shell Bell",
     "category": "held_item",
+    "description": "Restores HP equal to 1/8 of the damage dealt by the holder's attacks.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8686,6 +8760,7 @@
     "id": "shed_shell",
     "name": "Shed Shell",
     "category": "held_item",
+    "description": "Allows the holder to switch out even when an effect would normally prevent switching.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8718,6 +8793,7 @@
     "id": "full_incense",
     "name": "Full Incense",
     "category": "held_item",
+    "description": "Makes the holder move last within its move's priority bracket.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8739,6 +8815,7 @@
     "id": "lax_incense",
     "name": "Lax Incense",
     "category": "held_item",
+    "description": "Makes moves used against the holder slightly less accurate.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8760,6 +8837,7 @@
     "id": "luck_incense",
     "name": "Luck Incense",
     "category": "held_item",
+    "description": "Doubles prize money from Trainer battles if the holder takes part in the battle.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8781,6 +8859,7 @@
     "id": "pure_incense",
     "name": "Pure Incense",
     "category": "held_item",
+    "description": "Reduces the chance of encountering wild Pokémon when the holder is first in the party.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8802,6 +8881,7 @@
     "id": "rose_incense",
     "name": "Rose Incense",
     "category": "held_item",
+    "description": "Boosts the power of Grass-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8823,6 +8903,7 @@
     "id": "rusted_sword",
     "name": "Rusted Sword",
     "category": "held_item",
+    "description": "Transforms Zacian into its Crowned Sword form in battle; Zacian becomes Fairy/Steel, its stats change, and Iron Head becomes Behemoth Blade.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8844,6 +8925,7 @@
     "id": "silk_scarf",
     "name": "Silk Scarf",
     "category": "held_item",
+    "description": "Boosts the power of Normal-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8875,6 +8957,7 @@
     "id": "silver_powder",
     "name": "Silver Powder",
     "category": "held_item",
+    "description": "Boosts the power of Bug-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8906,6 +8989,7 @@
     "id": "smoke_ball",
     "name": "Smoke Ball",
     "category": "held_item",
+    "description": "Allows the holder to flee from wild Pokémon battles without fail.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8939,6 +9023,7 @@
     "id": "smooth_rock",
     "name": "Smooth Rock",
     "category": "held_item",
+    "description": "Extends sandstorm caused by the holder's Sandstorm from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -8970,6 +9055,7 @@
     "id": "soft_sand",
     "name": "Soft Sand",
     "category": "held_item",
+    "description": "Boosts the power of Ground-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9001,6 +9087,7 @@
     "id": "soothe_bell",
     "name": "Soothe Bell",
     "category": "held_item",
+    "description": "Increases the amount of friendship the holder gains.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9022,6 +9109,7 @@
     "id": "spell_tag",
     "name": "Spell Tag",
     "category": "held_item",
+    "description": "Boosts the power of Ghost-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9043,6 +9131,7 @@
     "id": "sticky_barb",
     "name": "Sticky Barb",
     "category": "held_item",
+    "description": "Damages the holder at the end of each turn and can transfer to an attacker that makes contact if that attacker is not holding an item.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9075,6 +9164,7 @@
     "id": "terrain_extender",
     "name": "Terrain Extender",
     "category": "held_item",
+    "description": "Extends terrain created by the holder's move or Ability from five turns to eight turns.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9106,6 +9196,7 @@
     "id": "throat_spray",
     "name": "Throat Spray",
     "category": "held_item",
+    "description": "Raises the holder's Special Attack by one stage after it uses a sound-based move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9137,6 +9228,7 @@
     "id": "toxic_orb",
     "name": "Toxic Orb",
     "category": "held_item",
+    "description": "Badly poisons the holder at the end of the turn while it remains held.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9158,6 +9250,7 @@
     "id": "twisted_spoon",
     "name": "Twisted Spoon",
     "category": "held_item",
+    "description": "Boosts the power of Psychic-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9179,6 +9272,7 @@
     "id": "utility_umbrella",
     "name": "Utility Umbrella",
     "category": "held_item",
+    "description": "Makes the holder unaffected by the battle effects of rain and harsh sunlight; sandstorm and hail still affect it normally.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9200,6 +9294,7 @@
     "id": "wave_incense",
     "name": "Wave Incense",
     "category": "held_item",
+    "description": "Boosts the power of Water-type attacks by 20%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9221,6 +9316,7 @@
     "id": "weakness_policy",
     "name": "Weakness Policy",
     "category": "held_item",
+    "description": "Raises the holder's Attack and Special Attack by two stages when it is hit by a super-effective move. Consumed after activation.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9242,6 +9338,7 @@
     "id": "white_herb",
     "name": "White Herb",
     "category": "held_item",
+    "description": "Restores the holder's lowered stat stages once, then is consumed.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9281,6 +9378,7 @@
     "id": "wide_lens",
     "name": "Wide Lens",
     "category": "held_item",
+    "description": "Slightly increases the accuracy of the holder's moves.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9302,6 +9400,7 @@
     "id": "wise_glasses",
     "name": "Wise Glasses",
     "category": "held_item",
+    "description": "Boosts the power of Special attacks by 10%.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [
@@ -9323,6 +9422,7 @@
     "id": "zoom_lens",
     "name": "Zoom Lens",
     "category": "held_item",
+    "description": "Increases the accuracy of the holder's move when it acts after its target.",
     "quantity_required": 1,
     "required_by": [],
     "sources": [

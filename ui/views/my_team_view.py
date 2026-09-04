@@ -194,7 +194,7 @@ NATURE_EFFECTS: dict[str, tuple[str | None, str | None]] = {
     "Quirky": (None, None),
 }
 
-NATURE_OPTIONS = list(NATURE_EFFECTS)
+NATURE_OPTIONS = sorted(NATURE_EFFECTS)
 
 MOVE_TAG_DESCRIPTIONS = {
     "Pivot": (
@@ -2239,6 +2239,8 @@ class MyTeamView:
 
         if column == "Pokemon":
             return self.pokemon_options
+        if column == "Nature":
+            return NATURE_OPTIONS
         if column in {"Type1", "Type2"}:
             return self.type_options
         if column == "Ability":
@@ -2476,24 +2478,33 @@ class MyTeamView:
                 ),
             )
         elif column == "Nature":
-            control = ft.Dropdown(
+            control = ft.AutoComplete(
                 value=(
                     str(value)
                     if value in NATURE_EFFECTS
-                    else None
+                    else ""
                 ),
-                options=[
-                    ft.DropdownOption(
-                        key=nature,
-                        text=nature,
-                    )
-                    for nature in NATURE_OPTIONS
-                ],
+                suggestions=self._filtered_autocomplete_suggestions(
+                    column,
+                    str(value) if value else "",
+                ),
+                suggestions_max_height=240,
                 width=115,
-                text_size=12,
-                dense=True,
-                on_select=lambda event, row=row_index, field=column: (
-                    self._handle_dropdown_change(
+                on_change=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_change(
+                        event,
+                        row,
+                        field,
+                    )
+                ),
+                on_select=(
+                    lambda event,
+                    row=row_index,
+                    field=column:
+                    self._handle_autocomplete_select(
                         event,
                         row,
                         field,
@@ -5042,6 +5053,9 @@ class MyTeamView:
             page=self.page,
             item_name=item_name,
             items=self.items_data,
+            journey_item=self.journey_item_by_name.get(
+                self._normalize_item_name(item_name)
+            ),
             item_sprite_src=(
                 get_item_sprite_src(
                     item_name
@@ -6313,6 +6327,7 @@ class MyTeamView:
         del event
 
         invalid_pokemon: list[str] = []
+        invalid_natures: list[str] = []
         invalid_types: list[str] = []
         invalid_moves: list[str] = []
         invalid_abilities: list[str] = []
@@ -6330,6 +6345,18 @@ class MyTeamView:
             ):
                 invalid_pokemon.append(
                     pokemon_name or "(blank)"
+                )
+
+            nature_name = str(
+                pokemon.get("Nature") or ""
+            ).strip()
+
+            if (
+                not nature_name
+                or nature_name not in NATURE_EFFECTS
+            ):
+                invalid_natures.append(
+                    nature_name or "(blank)"
                 )
 
             type1 = str(
@@ -6402,6 +6429,23 @@ class MyTeamView:
 
             self.save_status.value = (
                 "Invalid Pokémon selection: "
+                f"{invalid_list}"
+            )
+            self.save_status.color = "#F87171"
+            self.page.update()
+            return
+
+        if invalid_natures:
+            invalid_list = ", ".join(
+                sorted(
+                    set(
+                        invalid_natures
+                    )
+                )
+            )
+
+            self.save_status.value = (
+                "Invalid Nature selection: "
                 f"{invalid_list}"
             )
             self.save_status.color = "#F87171"
