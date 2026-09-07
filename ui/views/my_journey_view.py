@@ -206,7 +206,14 @@ class MyJourneyView:
             DATA_DIR / "journey_pokemon.json"
         )
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
+        self.planned_moves = self._load_planned_moves()
         self.pokemon = self._planned_pokemon_records()
+        self._move_planner_options = self._build_move_planner_options()
+        self._move_plan_by_display = {
+            str(option.get("display") or "").casefold(): option
+            for option in self._move_planner_options
+            if option.get("display")
+        }
         self.earned_badges = app_state.earned_badges
         self.derived_item_requirements = (
             self._build_derived_item_requirements()
@@ -226,6 +233,8 @@ class MyJourneyView:
         self._top_journey_row: ft.ResponsiveRow | None = None
         self._checklist_table: fdt.DataTable2 | None = None
         self._team_planner_table: fdt.DataTable2 | None = None
+        self._move_planner_table: fdt.DataTable2 | None = None
+        self._move_planner_controls: dict[tuple[str, int], ft.AutoComplete] = {}
         self._caught_stage_selector: ft.Dropdown | None = None
         self._add_item_selector: ft.AutoComplete | None = None
         self._add_item_quantity: ft.TextField | None = None
@@ -367,6 +376,199 @@ class MyJourneyView:
             if pokemon_id in records_by_id
         ]
 
+    def _load_planned_moves(
+        self,
+    ) -> dict[str, list[dict[str, str | None] | None]]:
+        """Load saved Move Planner slots without requiring active roster membership."""
+
+        raw = self.app_state.my_journey_data.get("planned_moves", {})
+        if not isinstance(raw, dict):
+            return {}
+
+        valid_source_ids = {
+            str(item.get("id", "")).strip()
+            for item in self.items
+            if str(item.get("category", "")).strip().lower() in {"tm", "tr"}
+            and str(item.get("id", "")).strip()
+        }
+
+        planned: dict[str, list[dict[str, str | None] | None]] = {}
+        for raw_pokemon_id, raw_slots in raw.items():
+            pokemon_id = str(raw_pokemon_id or "").strip()
+            if not pokemon_id or not isinstance(raw_slots, list):
+                continue
+
+            slots: list[dict[str, str | None] | None] = []
+            for raw_slot in raw_slots[:4]:
+                if not isinstance(raw_slot, dict):
+                    slots.append(None)
+                    continue
+
+                move_name = str(raw_slot.get("move_name") or "").strip()
+                if not move_name:
+                    slots.append(None)
+                    continue
+
+                source_item_id = str(
+                    raw_slot.get("source_item_id") or ""
+                ).strip()
+                if source_item_id not in valid_source_ids:
+                    source_item_id = ""
+
+                slots.append({
+                    "move_name": move_name,
+                    "source_item_id": source_item_id or None,
+                })
+
+            while len(slots) < 4:
+                slots.append(None)
+
+            planned[pokemon_id] = slots
+
+        return planned
+
+    @staticmethod
+    def _move_source_parts(
+        item: dict[str, Any],
+    ) -> tuple[str, str, str] | None:
+        """Return TM/TR kind, number, and move name from a Journey item."""
+
+        if str(item.get("category", "")).strip().lower() not in {"tm", "tr"}:
+            return None
+
+        item_name = str(item.get("name") or "").strip()
+        match = re.match(r"^(TM|TR)\s*(\d+)\s+(.+)$", item_name, re.IGNORECASE)
+        if match is None:
+            return None
+
+        return (
+            match.group(1).upper(),
+            match.group(2),
+            match.group(3).strip(),
+        )
+
+    def _build_move_planner_options(self) -> list[dict[str, str | None]]:
+        """Build plain-move and optional TM/TR autocomplete choices."""
+
+        source_options: dict[str, list[dict[str, str | None]]] = {}
+        move_names: dict[str, str] = {}
+
+        for move in self.app_state.moves_data:
+            if not isinstance(move, dict):
+                continue
+            move_name = str(
+                move.get("Move")
+                or move.get("move")
+                or move.get("Name")
+                or move.get("name")
+                or ""
+            ).strip()
+            if move_name:
+                move_names.setdefault(move_name.casefold(), move_name)
+
+        for item in self.items:
+            parts = self._move_source_parts(item)
+            if parts is None:
+                continue
+
+            kind, number, move_name = parts
+            source_item_id = str(item.get("id") or "").strip()
+            if not source_item_id:
+                continue
+
+            canonical_name = move_names.setdefault(
+                move_name.casefold(),
+                move_name,
+            )
+            display = f"{kind} {number} {canonical_name}"
+            source_options.setdefault(canonical_name.casefold(), []).append({
+                "display": display,
+                "move_name": canonical_name,
+                "source_item_id": source_item_id,
+            })
+
+        options: list[dict[str, str | None]] = []
+        for folded_name in sorted(move_names, key=lambda value: move_names[value].casefold()):
+            move_name = move_names[folded_name]
+            options.append({
+                "display": move_name,
+                "move_name": move_name,
+                "source_item_id": None,
+            })
+            options.extend(
+                sorted(
+                    source_options.get(folded_name, []),
+                    key=lambda option: str(option["display"]).casefold(),
+                )
+            )
+
+        return options
+
+    def _move_plan_display_value(
+        self,
+        slot: dict[str, str | None] | None,
+    ) -> str:
+        """Return the persisted Move Planner choice as player-facing text."""
+
+        if not isinstance(slot, dict):
+            return ""
+
+        move_name = str(slot.get("move_name") or "").strip()
+        source_item_id = str(slot.get("source_item_id") or "").strip()
+        if not source_item_id:
+            return move_name
+
+        item = next(
+            (
+                candidate
+                for candidate in self.items
+                if str(candidate.get("id", "")).strip() == source_item_id
+            ),
+            None,
+        )
+        if item is None:
+            return move_name
+
+        parts = self._move_source_parts(item)
+        if parts is None:
+            return move_name
+
+        kind, number, _ = parts
+        return f"{kind} {number} {move_name}"
+
+    def _move_planner_suggestions(
+        self,
+        query: str,
+        *,
+        limit: int = 30,
+    ) -> list[ft.AutoCompleteSuggestion]:
+        """Return a small filtered suggestion set for one move cell."""
+
+        folded_query = query.strip().casefold()
+        if not folded_query:
+            return []
+
+        matches: list[ft.AutoCompleteSuggestion] = []
+        for option in self._move_planner_options:
+            display = str(option["display"])
+            move_name = str(option["move_name"])
+            if (
+                folded_query not in display.casefold()
+                and folded_query not in move_name.casefold()
+            ):
+                continue
+
+            matches.append(
+                ft.AutoCompleteSuggestion(
+                    key=f"{move_name} {display}",
+                    value=display,
+                )
+            )
+            if len(matches) >= limit:
+                break
+
+        return matches
+
     def _reload_planner_dependencies(self) -> None:
         """Rebuild planner records, ownership state, and linked requirements."""
 
@@ -393,7 +595,7 @@ class MyJourneyView:
         }
 
     def _build_derived_item_requirements(self) -> dict[str, int]:
-        """Aggregate evolution-item quantities required by the team plan."""
+        """Aggregate Team Planner evolution items and Move Planner TM/TRs."""
 
         requirements: dict[str, int] = {}
         for pokemon in self.pokemon:
@@ -412,6 +614,22 @@ class MyJourneyView:
                 requirements[item_id] = (
                     requirements.get(item_id, 0) + quantity
                 )
+
+        # Move plans are retained when a Pokémon leaves Team Planner, but only
+        # active Team Planner rows contribute acquisition requirements.
+        for pokemon_id in self.planned_pokemon_ids:
+            for slot in self.planned_moves.get(pokemon_id, []):
+                if not isinstance(slot, dict):
+                    continue
+                source_item_id = str(
+                    slot.get("source_item_id") or ""
+                ).strip()
+                if not source_item_id:
+                    continue
+                requirements[source_item_id] = (
+                    requirements.get(source_item_id, 0) + 1
+                )
+
         return requirements
 
     def _load_item_objectives(self) -> dict[str, dict[str, int]]:
@@ -535,6 +753,12 @@ class MyJourneyView:
                 spacing=20,
                 run_spacing=20,
             ),
+            ft.ResponsiveRow(
+                controls=[self._build_move_planner_card()],
+                columns=12,
+                spacing=20,
+                run_spacing=20,
+            ),
         ]
 
     def _refresh(self) -> None:
@@ -581,6 +805,7 @@ class MyJourneyView:
 
         self.earned_badges = self.app_state.earned_badges
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
+        self.planned_moves = self._load_planned_moves()
         self._reload_planner_dependencies()
         self.pokemon_obtained = {
             str(pokemon.get("id")): self.app_state.is_pokemon_obtained(
@@ -3646,6 +3871,16 @@ class MyJourneyView:
             ),
         ]
 
+        planned_move_slots = self.planned_moves.get(pokemon_id, [])
+        if any(slot is not None for slot in planned_move_slots):
+            impact_lines.append(
+                (
+                    "Its saved Move Planner row will be hidden, not deleted; "
+                    "adding this Pokémon back later will restore it."
+                )
+            )
+
+        removal_requirements: dict[str, int] = {}
         for requirement in pokemon.get("required_items", []):
             if not isinstance(requirement, dict):
                 continue
@@ -3658,7 +3893,22 @@ class MyJourneyView:
                 or quantity <= 0
             ):
                 continue
+            removal_requirements[item_id] = (
+                removal_requirements.get(item_id, 0) + quantity
+            )
 
+        for slot in planned_move_slots:
+            if not isinstance(slot, dict):
+                continue
+            source_item_id = str(
+                slot.get("source_item_id") or ""
+            ).strip()
+            if source_item_id:
+                removal_requirements[source_item_id] = (
+                    removal_requirements.get(source_item_id, 0) + 1
+                )
+
+        for item_id, quantity in removal_requirements.items():
             current_required = self._required_item_quantity(item_id)
             new_required = max(0, current_required - quantity)
             item_name = next(
@@ -4017,6 +4267,413 @@ class MyJourneyView:
                     ),
                     table,
                 ],
+                spacing=12,
+            ),
+            col={"xs": 12},
+        )
+
+    def _restore_move_planner_control(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        control: ft.AutoComplete,
+    ) -> None:
+        """Restore one editor to its currently persisted Move Planner value."""
+
+        slots = self.planned_moves.get(pokemon_id, [])
+        slot = slots[slot_index] if slot_index < len(slots) else None
+        display = self._move_plan_display_value(slot)
+        control.value = display
+        control.suggestions = self._move_planner_suggestions(display)
+        control.update()
+
+    def _handle_move_planner_change(
+        self,
+        event: ft.Event[ft.AutoComplete],
+        pokemon_id: str,
+        slot_index: int,
+        control: ft.AutoComplete,
+    ) -> None:
+        """Filter move suggestions; clearing a cell clears its saved slot."""
+
+        del event
+        entered = str(control.value or "").strip()
+        control.suggestions = self._move_planner_suggestions(entered)
+        control.update()
+
+        if entered:
+            return
+
+        existing_slots = self.planned_moves.get(pokemon_id, [])
+        existing = (
+            existing_slots[slot_index]
+            if slot_index < len(existing_slots)
+            else None
+        )
+        if existing is not None:
+            self.page.run_task(
+                self._save_move_plan_slot,
+                pokemon_id,
+                slot_index,
+                None,
+            )
+
+    def _duplicate_move_slot(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        move_name: str,
+    ) -> int | None:
+        """Return another slot already planning the same move, if any."""
+
+        folded_move = move_name.strip().casefold()
+        if not folded_move:
+            return None
+
+        for index, slot in enumerate(self.planned_moves.get(pokemon_id, [])):
+            if index == slot_index or not isinstance(slot, dict):
+                continue
+            existing_name = str(slot.get("move_name") or "").strip().casefold()
+            if existing_name == folded_move:
+                return index
+
+        return None
+
+    def _show_duplicate_move_prompt(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        duplicate_index: int,
+        selected_slot: dict[str, str | None],
+        control: ft.AutoComplete,
+    ) -> None:
+        """Offer to move a duplicate planned move instead of saving it twice."""
+
+        pokemon = next(
+            (
+                record
+                for record in self.pokemon
+                if str(record.get("id", "")).strip() == pokemon_id
+            ),
+            None,
+        )
+        pokemon_name = str(
+            (pokemon or {}).get("pokemon") or "This Pokémon"
+        )
+        move_name = str(selected_slot.get("move_name") or "This move")
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            f"{move_name} is already planned",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Text(
+            (
+                f"{pokemon_name} already has {move_name} in Move "
+                f"{duplicate_index + 1}. A Pokémon can't know the same move "
+                f"twice. Move it to Move {slot_index + 1} instead?"
+            ),
+            color=TEXT_SECONDARY,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=lambda: self._cancel_duplicate_move_prompt(
+                    pokemon_id,
+                    slot_index,
+                    control,
+                ),
+            ),
+            ft.Button(
+                content="Move Here",
+                icon=ft.Icons.SWAP_HORIZ_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=lambda: self._confirm_duplicate_move_relocation(
+                    pokemon_id,
+                    slot_index,
+                    duplicate_index,
+                    selected_slot,
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _cancel_duplicate_move_prompt(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        control: ft.AutoComplete,
+    ) -> None:
+        self.page.pop_dialog()
+        self._restore_move_planner_control(
+            pokemon_id,
+            slot_index,
+            control,
+        )
+
+    def _confirm_duplicate_move_relocation(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        duplicate_index: int,
+        selected_slot: dict[str, str | None],
+    ) -> None:
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._save_move_plan_slot,
+            pokemon_id,
+            slot_index,
+            selected_slot,
+            duplicate_index,
+        )
+
+    def _handle_move_planner_select(
+        self,
+        event: ft.AutoCompleteSelectEvent,
+        pokemon_id: str,
+        slot_index: int,
+        control: ft.AutoComplete,
+    ) -> None:
+        """Persist only exact autocomplete selections."""
+
+        del event
+        display = str(control.value or "").strip()
+        selected = self._move_plan_by_display.get(display.casefold())
+        if selected is None:
+            return
+
+        selected_slot = {
+            "move_name": str(selected["move_name"]),
+            "source_item_id": selected.get("source_item_id"),
+        }
+        duplicate_index = self._duplicate_move_slot(
+            pokemon_id,
+            slot_index,
+            selected_slot["move_name"],
+        )
+        if duplicate_index is not None:
+            self._show_duplicate_move_prompt(
+                pokemon_id,
+                slot_index,
+                duplicate_index,
+                selected_slot,
+                control,
+            )
+            return
+
+        self.page.run_task(
+            self._save_move_plan_slot,
+            pokemon_id,
+            slot_index,
+            selected_slot,
+        )
+
+    async def _save_move_plan_slot(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+        slot: dict[str, str | None] | None,
+        clear_slot_index: int | None = None,
+    ) -> None:
+        """Persist one Move Planner slot and refresh linked checklist needs."""
+
+        if slot_index < 0 or slot_index > 3:
+            return
+        if clear_slot_index is not None and (
+            clear_slot_index < 0 or clear_slot_index > 3
+        ):
+            return
+
+        previous = deepcopy(self.planned_moves)
+        updated = deepcopy(self.planned_moves)
+        slots = list(updated.get(pokemon_id, [None, None, None, None]))[:4]
+        while len(slots) < 4:
+            slots.append(None)
+
+        if clear_slot_index is not None and clear_slot_index != slot_index:
+            slots[clear_slot_index] = None
+
+        if slots[slot_index] == slot and clear_slot_index is None:
+            return
+
+        slots[slot_index] = deepcopy(slot)
+        if any(entry is not None for entry in slots):
+            updated[pokemon_id] = slots
+        else:
+            updated.pop(pokemon_id, None)
+
+        save_succeeded = await self.app_state.save_planned_moves(updated)
+        if not save_succeeded:
+            self.planned_moves = previous
+            self._show_save_error("The Move Planner change could not be saved.")
+            self._refresh()
+            return
+
+        self.planned_moves = updated
+        self._reload_planner_dependencies()
+        self._refresh()
+
+    def _build_move_planner_cell(
+        self,
+        pokemon_id: str,
+        slot_index: int,
+    ) -> ft.AutoComplete:
+        """Build one autocomplete cell for a planned move slot."""
+
+        slots = self.planned_moves.get(pokemon_id, [])
+        slot = slots[slot_index] if slot_index < len(slots) else None
+        value = self._move_plan_display_value(slot)
+
+        control = ft.AutoComplete(
+            value=value,
+            suggestions=self._move_planner_suggestions(value),
+            suggestions_max_height=240,
+            width=190,
+        )
+        control.on_change = (
+            lambda event,
+            planned_id=pokemon_id,
+            index=slot_index,
+            autocomplete=control:
+            self._handle_move_planner_change(
+                event,
+                planned_id,
+                index,
+                autocomplete,
+            )
+        )
+        control.on_select = (
+            lambda event,
+            planned_id=pokemon_id,
+            index=slot_index,
+            autocomplete=control:
+            self._handle_move_planner_select(
+                event,
+                planned_id,
+                index,
+                autocomplete,
+            )
+        )
+        self._move_planner_controls[(pokemon_id, slot_index)] = control
+        return control
+
+    def _build_move_planner_card(self) -> ft.Control:
+        """Render planned moves for the active Team Planner roster."""
+
+        self._move_planner_controls = {}
+        rows: list[ft.DataRow] = []
+
+        for pokemon in self.pokemon:
+            pokemon_id = str(pokemon.get("id", "")).strip()
+            pokemon_name = str(pokemon.get("pokemon", "Unknown"))
+            if not pokemon_id:
+                continue
+
+            rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(
+                            ft.Text(
+                                pokemon_name,
+                                color=TEXT_PRIMARY,
+                                weight=ft.FontWeight.BOLD,
+                                size=14,
+                            )
+                        ),
+                        *[
+                            ft.DataCell(
+                                self._build_move_planner_cell(
+                                    pokemon_id,
+                                    slot_index,
+                                )
+                            )
+                            for slot_index in range(4)
+                        ],
+                    ]
+                )
+            )
+
+        move_widths = [160, 205, 205, 205, 205]
+        table = fdt.DataTable2(
+            columns=[
+                fdt.DataColumn2(
+                    label=ft.Text(
+                        "Pokémon",
+                        weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY,
+                    ),
+                    fixed_width=move_widths[0],
+                ),
+                *[
+                    fdt.DataColumn2(
+                        label=ft.Text(
+                            f"Move {slot_index + 1}",
+                            weight=ft.FontWeight.BOLD,
+                            color=TEXT_PRIMARY,
+                        ),
+                        fixed_width=move_widths[slot_index + 1],
+                    )
+                    for slot_index in range(4)
+                ],
+            ],
+            rows=rows,
+            fixed_left_columns=1,
+            fixed_top_rows=1,
+            fixed_columns_color=SURFACE,
+            fixed_corner_color=SURFACE_RAISED,
+            min_width=sum(move_widths),
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=12,
+            heading_row_color=SURFACE_RAISED,
+            column_spacing=10,
+            horizontal_margin=8,
+            data_row_height=72,
+            heading_row_height=52,
+            show_checkbox_column=False,
+        )
+        self._move_planner_table = table
+
+        body_controls: list[ft.Control] = [
+            ft.Text(
+                (
+                    "Choose a suggestion to save. Select the plain move name for "
+                    "a level-up or otherwise self-supplied move; select a TM/TR "
+                    "version to add that item to the Journey Checklist. Swipe left "
+                    "or right to view more columns."
+                ),
+                size=12,
+                color=TEXT_MUTED,
+                italic=True,
+            )
+        ]
+
+        if rows:
+            body_controls.extend([
+                table,
+                ft.Container(height=140),
+            ])
+        else:
+            body_controls.append(
+                ft.Text(
+                    "Add Pokémon to the Team Planner above to start planning moves.",
+                    color=TEXT_SECONDARY,
+                    size=13,
+                )
+            )
+
+        return self._build_card(
+            title="Move Planner",
+            icon=ft.Icons.LIST_ALT_ROUNDED,
+            subtitle=(
+                "Plan each team member's four moves and automatically track "
+                "required TMs and TRs."
+            ),
+            body=ft.Column(
+                controls=body_controls,
                 spacing=12,
             ),
             col={"xs": 12},

@@ -79,6 +79,24 @@ def dedupe_notes(notes):
     return cleaned
 
 
+def get_aegislash_stance_note(attacker):
+    """Explain the mixed-form defensive assumption used for Aegislash."""
+
+    pokemon_name = str(attacker.get("Pokemon") or "").strip().casefold()
+    if pokemon_name != "aegislash":
+        return None
+
+    return note(
+        NOTE_CAUTION,
+        (
+            "Aegislash is evaluated defensively using Shield Forme. "
+            "Taking a hit while in Blade Forme can result in much higher "
+            "incoming damage. Use King's Shield when needed to return to "
+            "Shield Forme before taking an attack."
+        ),
+    )
+
+
 # ---------- Damage-changing ability notes ----------
 
 def format_percent_change(modifier):
@@ -1045,6 +1063,10 @@ def build_battle_notes(
     )
 
     has_ohko_note = offensive_ohko_note is not None
+
+    aegislash_stance_note = get_aegislash_stance_note(attacker)
+    if aegislash_stance_note:
+        notes.append(aegislash_stance_note)
 
     if dmax_note:
         notes.append(note(NOTE_INFO, dmax_note))

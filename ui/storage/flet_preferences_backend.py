@@ -8,6 +8,8 @@ or application state.
 
 from __future__ import annotations
 
+import asyncio
+
 import flet as ft
 
 
@@ -30,10 +32,40 @@ class FletPreferencesBackend:
         self.page.update()
         return preferences
 
+    @staticmethod
+    def _is_invoke_timeout(error: RuntimeError) -> bool:
+        """Return whether Flet timed out waiting for a service listener."""
+
+        message = str(error)
+
+        return (
+            "TimeoutException" in message
+            and "Timeout waiting for invoke method listener" in message
+        )
+
+    async def _invoke_with_retry(self, operation):
+        """Retry once when a newly attached Flet service is not ready yet."""
+
+        try:
+            return await operation()
+        except RuntimeError as error:
+            if not self._is_invoke_timeout(error):
+                raise
+
+        # A newly-created/reconnected Flet session can briefly have the
+        # SharedPreferences service registered on the Python side before its
+        # client-side invoke-method listener is ready.
+        await asyncio.sleep(0.35)
+
+        return await operation()
+
     async def get(self, key: str) -> str | None:
         """Return a stored string value, or None when absent."""
 
-        value = await self.preferences.get(key)
+        value = await self._invoke_with_retry(
+            lambda: self.preferences.get(key)
+        )
+
         if value is None or isinstance(value, str):
             return value
 
@@ -44,14 +76,20 @@ class FletPreferencesBackend:
     async def set(self, key: str, value: str) -> bool:
         """Persist a string value."""
 
-        return await self.preferences.set(key, value)
+        return await self._invoke_with_retry(
+            lambda: self.preferences.set(key, value)
+        )
 
     async def remove(self, key: str) -> bool:
         """Remove a stored value."""
 
-        return await self.preferences.remove(key)
+        return await self._invoke_with_retry(
+            lambda: self.preferences.remove(key)
+        )
 
     async def contains(self, key: str) -> bool:
         """Return whether a key exists."""
 
-        return await self.preferences.contains_key(key)
+        return await self._invoke_with_retry(
+            lambda: self.preferences.contains_key(key)
+        )

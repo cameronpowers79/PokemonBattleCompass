@@ -318,7 +318,7 @@ def _app_version() -> str:
     try:
         return version("pokemon-battle-compass")
     except PackageNotFoundError:
-        return "0.2.1"
+        return "0.2.2"
 
 
 class MyTeamView:
@@ -577,6 +577,70 @@ class MyTeamView:
             bgcolor="#3B3017",
             border_radius=10,
             visible=False,
+        )
+        self.aegislash_entry_notice = ft.Container(
+            content=ft.Row(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Icon(
+                            ft.Icons.INFO_OUTLINE_ROUNDED,
+                            color=PRIMARY_BLUE,
+                            size=22,
+                        ),
+                        ft.Column(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Text(
+                                        "Aegislash stat entry",
+                                        size=14,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=TEXT_PRIMARY,
+                                    ),
+                                    ft.Text(
+                                        (
+                                            "Aegislash uses mixed-form stats in Battle Compass. "
+                                            "Enter the higher ATK and SPA values from Blade Forme, "
+                                            "and the higher DEF and SPD values from Shield Forme. "
+                                            "Shield Forme stats can be viewed at any time in the "
+                                            "in-game Pokémon menu. Blade Forme stats are easiest "
+                                            "to record when Aegislash levels up while in Blade Forme."
+                                        ),
+                                        size=13,
+                                        color=TEXT_SECONDARY,
+                                    ),
+                                ],
+                            ),
+                            spacing=3,
+                            expand=True,
+                        ),
+                        ft.Button(
+                            content="Got it",
+                            icon=ft.Icons.CHECK_ROUNDED,
+                            on_click=self._dismiss_aegislash_entry_notice,
+                        ),
+                    ],
+                ),
+                spacing=10,
+                vertical_alignment=ft.CrossAxisAlignment.START,
+            ),
+            padding=12,
+            bgcolor=PRIMARY_BLUE_SOFT,
+            border_radius=10,
+            visible=(
+                not bool(
+                    self.app_state.my_journey_data.get(
+                        "aegislash_stat_guidance_dismissed",
+                        False,
+                    )
+                )
+                and any(
+                    str(pokemon.get("Pokemon") or "").strip().casefold()
+                    == "aegislash"
+                    for pokemon in self.working_team
+                )
+            ),
         )
         self.save_status = ft.Text(
             "",
@@ -1450,9 +1514,45 @@ class MyTeamView:
         self.page.pop_dialog()
         self.page.update()
 
+    def _sync_aegislash_entry_notice(self) -> None:
+        """Show Aegislash stat-entry guidance until the user dismisses it."""
+
+        dismissed = bool(
+            self.app_state.my_journey_data.get(
+                "aegislash_stat_guidance_dismissed",
+                False,
+            )
+        )
+        self.aegislash_entry_notice.visible = (
+            not dismissed
+            and any(
+                str(pokemon.get("Pokemon") or "").strip().casefold()
+                == "aegislash"
+                for pokemon in self.working_team
+            )
+        )
+
+    async def _dismiss_aegislash_entry_notice(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Persist dismissal of the Aegislash stat-entry guidance."""
+
+        del event
+
+        save_succeeded = await (
+            self.app_state.save_aegislash_stat_guidance_dismissed(True)
+        )
+        if not save_succeeded:
+            return
+
+        self.aegislash_entry_notice.visible = False
+        self.page.update()
+
     def _update_dirty_state(self) -> None:
         """Synchronize controls with the current dirty state."""
 
+        self._sync_aegislash_entry_notice()
         is_dirty = self.has_unsaved_changes
 
         self.save_button.disabled = not is_dirty
@@ -1503,6 +1603,7 @@ class MyTeamView:
                             italic=True,
                         ),
                         self.table_host,
+                        self.aegislash_entry_notice,
                         ft.Row(
                             controls=cast(
                                 list[ft.Control],
@@ -3072,6 +3173,7 @@ class MyTeamView:
         self.discard_button.update()
         self.export_button.update()
         self.detail_notice.update()
+        self.aegislash_entry_notice.update()
         self.save_status.update()
 
         if column == "Pokemon":

@@ -33,7 +33,7 @@ class VersionEntry:
 
 HERO_TITLE = "Pokémon Battle Compass"
 HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword"
-HERO_VERSION = "v0.2.1 Beta"
+HERO_VERSION = "v0.2.2 Beta"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
 
@@ -83,6 +83,7 @@ ABOUT_SECTIONS = (
             "Suggests modeled held items that fit the current build.",
             "Provides move, type, Ability, and held-item reference popups.",
             "Explains why one option edged out another.",
+            "Plans future moves and their TM/TR acquisition needs in My Journey.",
         ),
                 accent="green",
     ),
@@ -128,16 +129,24 @@ ABOUT_SECTIONS = (
             (
                 "My Journey — Use the Badge Tracker to keep your story progress "
                 "current. Current Objectives shows what matters now, while the "
-                "Journey Checklist, Galar map, and Team Planner help you track "
-                "items and future team additions and see when and where they "
-                "become available. Objectives move from unavailable to "
-                "available to obtained as your Journey progresses."
+                "Journey Checklist, Galar map, Team Planner, and Move Planner "
+                "help you track items, future team additions, planned moves, "
+                "and when and where their requirements become available. "
+                "Objectives move from unavailable to available to obtained as "
+                "your Journey progresses."
             ),
             (
                 "Team Planner — Review acquisition details before hunting a "
                 "planned Pokémon. When you catch one, mark it acquired and add "
                 "the Pokémon you actually caught to My Team so the planning "
                 "objective becomes part of your usable roster."
+            ),
+            (
+                "Move Planner — Plan up to four moves for each Pokémon in Team "
+                "Planner. Choose a plain move when you only want to record the "
+                "moveset, or choose its TM/TR source when Battle Compass should "
+                "also add that acquisition requirement to the Journey Checklist. "
+                "Consumable TR quantities are counted across the active plan."
             ),
             (
                 "About — You are here. This page contains the recommendation "
@@ -171,7 +180,7 @@ ABOUT_SECTIONS = (
         ),
         bullets=(
             "Type effectiveness and immunities",
-            "STAB and modeled Ability effects",
+            "STAB, modeled Ability effects, and deterministic Ability-set weather",
             "Move power, accuracy, priority, and multi-hit behavior",
             "Relevant offensive and defensive stats",
             "Modeled held-item bonuses and defensive effects",
@@ -359,13 +368,14 @@ NERD_STUFF_GROUPS = (
             "Offensive type/category boosters",
             "Eviolite, Assault Vest, Air Balloon, and Choice-item effects",
             "Tactical notes for recoil, move locking, Focus Sash, and contact",
+            "Deterministic Drought, Drizzle, Sand Stream, and Snow Warning weather handling",
         ),
     ),
     (
         "Still intentionally outside the model",
         (
             "Doubles-specific targeting and partner interactions",
-            "Full weather and terrain simulation",
+            "Conditional or turn-by-turn weather and terrain simulation",
             "Nature effects in battle calculations, IVs, EV spreads, and competitive optimization",
             "Long-form turn-by-turn battle simulation",
             "Every wonderfully strange edge case Game Freak has invented",
@@ -376,8 +386,24 @@ NERD_STUFF_GROUPS = (
 
 VERSION_HISTORY = (
     VersionEntry(
-        name="v0.2.1",
+        name="v0.2.2",
         status="Current Beta",
+        summary=(
+            "Move planning, deterministic Ability-set weather, and a focused "
+            "stability and Journey-refinement pass for the next validation run."
+        ),
+        bullets=(
+            "Added Move Planner with four move slots per planned Pokémon",
+            "Linked TM/TR move sources to Journey Checklist requirements and consumable quantities",
+            "Modeled deterministic Drought, Drizzle, Sand Stream, and Snow Warning weather effects",
+            "Refined Badge Tracker behavior and mobile interaction",
+            "Improved storage and session robustness around SharedPreferences startup/reconnect timing",
+            "Added Aegislash mixed-form stat-entry guidance and Stance Change battle warnings",
+        ),
+    ),
+    VersionEntry(
+        name="v0.2.1",
+        status="Previous Beta",
         summary=(
             "Journey acquisition validation, planning refinements, and "
             "player-facing guidance for the next round of Beta testing."

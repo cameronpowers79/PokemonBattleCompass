@@ -104,6 +104,8 @@ def create_journey(
             "checklist_initialized": False,
             "item_objectives": [],
             "pokemon_objectives": [],
+            "planned_moves": {},
+            "aegislash_stat_guidance_dismissed": False,
         },
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -305,6 +307,41 @@ def _validate_journey(
                     "Stored My Journey "
                     f"{field_name} is invalid."
                 )
+
+        aegislash_stat_guidance_dismissed = my_journey.get(
+            "aegislash_stat_guidance_dismissed",
+            False,
+        )
+        if not isinstance(aegislash_stat_guidance_dismissed, bool):
+            return (
+                "Stored Aegislash stat-guidance preference is invalid."
+            )
+
+        planned_moves = my_journey.get("planned_moves", {})
+        if not isinstance(planned_moves, dict):
+            return "Stored My Journey planned moves are invalid."
+
+        for pokemon_id, slots in planned_moves.items():
+            if not isinstance(pokemon_id, str) or not pokemon_id.strip():
+                return "Stored Move Planner Pokémon ID is invalid."
+            if not isinstance(slots, list) or len(slots) != 4:
+                return "Stored Move Planner row is invalid."
+
+            for slot in slots:
+                if slot is None:
+                    continue
+                if not isinstance(slot, dict):
+                    return "Stored Move Planner slot is invalid."
+
+                move_name = slot.get("move_name")
+                source_item_id = slot.get("source_item_id")
+                if not isinstance(move_name, str) or not move_name.strip():
+                    return "Stored Move Planner move name is invalid."
+                if source_item_id is not None and (
+                    not isinstance(source_item_id, str)
+                    or not source_item_id.strip()
+                ):
+                    return "Stored Move Planner source item is invalid."
 
     battle_compass_selection = journey.get(
         "battle_compass_selection"

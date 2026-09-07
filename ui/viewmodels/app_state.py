@@ -144,6 +144,8 @@ class AppState:
             "checklist_initialized": False,
             "planner_initialized": False,
             "planned_pokemon_ids": [],
+            "planned_moves": {},
+            "aegislash_stat_guidance_dismissed": False,
             "item_objectives": [],
             "pokemon_objectives": [],
             "hide_obtained_items": False,
@@ -191,6 +193,63 @@ class AppState:
             if isinstance(pokemon_id, str) and pokemon_id.strip()
         ]
 
+        raw_planned_moves = my_journey.get("planned_moves", {})
+        planned_moves: dict[str, list[dict[str, str | None] | None]] = {}
+
+        if isinstance(raw_planned_moves, dict):
+            for raw_pokemon_id, raw_slots in raw_planned_moves.items():
+                if not isinstance(raw_pokemon_id, str):
+                    continue
+
+                pokemon_id = raw_pokemon_id.strip()
+                if not pokemon_id or not isinstance(raw_slots, list):
+                    continue
+
+                normalized_slots: list[dict[str, str | None] | None] = []
+                for raw_slot in raw_slots[:4]:
+                    if raw_slot is None:
+                        normalized_slots.append(None)
+                        continue
+
+                    if not isinstance(raw_slot, dict):
+                        normalized_slots.append(None)
+                        continue
+
+                    move_name = raw_slot.get("move_name")
+                    source_item_id = raw_slot.get("source_item_id")
+
+                    if not isinstance(move_name, str) or not move_name.strip():
+                        normalized_slots.append(None)
+                        continue
+
+                    if source_item_id is not None and not isinstance(
+                        source_item_id,
+                        str,
+                    ):
+                        source_item_id = None
+
+                    normalized_slots.append({
+                        "move_name": move_name.strip(),
+                        "source_item_id": (
+                            source_item_id.strip()
+                            if isinstance(source_item_id, str)
+                            and source_item_id.strip()
+                            else None
+                        ),
+                    })
+
+                while len(normalized_slots) < 4:
+                    normalized_slots.append(None)
+
+                planned_moves[pokemon_id] = normalized_slots
+
+        aegislash_stat_guidance_dismissed = my_journey.get(
+            "aegislash_stat_guidance_dismissed",
+            False,
+        )
+        if not isinstance(aegislash_stat_guidance_dismissed, bool):
+            aegislash_stat_guidance_dismissed = False
+
         item_objectives = my_journey.get("item_objectives", [])
         if not isinstance(item_objectives, list):
             item_objectives = []
@@ -221,6 +280,10 @@ class AppState:
             "checklist_initialized": checklist_initialized,
             "planner_initialized": planner_initialized,
             "planned_pokemon_ids": planned_pokemon_ids,
+            "planned_moves": planned_moves,
+            "aegislash_stat_guidance_dismissed": (
+                aegislash_stat_guidance_dismissed
+            ),
             "item_objectives": item_objectives,
             "pokemon_objectives": pokemon_objectives,
             "hide_obtained_items": hide_obtained_items,
@@ -816,6 +879,50 @@ class AppState:
         return save_succeeded
 
 
+    async def save_aegislash_stat_guidance_dismissed(
+        self,
+        dismissed: bool,
+    ) -> bool:
+        """Persist whether the Aegislash stat-entry guidance was dismissed."""
+
+        if self.journey is None:
+            return False
+
+        if not isinstance(dismissed, bool):
+            raise ValueError(
+                "Aegislash stat-guidance preference must be boolean."
+            )
+
+        previous_my_journey = deepcopy(
+            self.journey.get("my_journey")
+        )
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey[
+            "aegislash_stat_guidance_dismissed"
+        ] = dismissed
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.storage,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
+
+
     async def save_earned_badges(
         self,
         earned_badges: int,
@@ -1240,6 +1347,83 @@ class AppState:
                 self.journey["my_journey"] = previous_my_journey
 
         return save_succeeded
+
+    async def save_planned_moves(
+        self,
+        planned_moves: dict[str, list[dict[str, str | None] | None]],
+    ) -> bool:
+        """Persist Move Planner slots keyed by Team Planner Pokémon ID."""
+
+        if self.journey is None:
+            return False
+        if not isinstance(planned_moves, dict):
+            raise ValueError("Planned moves must be an object keyed by Pokémon ID.")
+
+        normalized: dict[str, list[dict[str, str | None] | None]] = {}
+
+        for raw_pokemon_id, raw_slots in planned_moves.items():
+            if not isinstance(raw_pokemon_id, str) or not raw_pokemon_id.strip():
+                raise ValueError("Move Planner Pokémon IDs must be non-empty text.")
+            if not isinstance(raw_slots, list) or len(raw_slots) != 4:
+                raise ValueError("Each Move Planner row must contain exactly four slots.")
+
+            pokemon_id = raw_pokemon_id.strip()
+            normalized_slots: list[dict[str, str | None] | None] = []
+
+            for raw_slot in raw_slots:
+                if raw_slot is None:
+                    normalized_slots.append(None)
+                    continue
+                if not isinstance(raw_slot, dict):
+                    raise ValueError("Each Move Planner slot must be an object or empty.")
+
+                move_name = raw_slot.get("move_name")
+                source_item_id = raw_slot.get("source_item_id")
+
+                if not isinstance(move_name, str) or not move_name.strip():
+                    raise ValueError("Planned move names must be non-empty text.")
+                if source_item_id is not None and (
+                    not isinstance(source_item_id, str)
+                    or not source_item_id.strip()
+                ):
+                    raise ValueError("Move source item IDs must be text or empty.")
+
+                normalized_slots.append({
+                    "move_name": move_name.strip(),
+                    "source_item_id": (
+                        source_item_id.strip()
+                        if isinstance(source_item_id, str)
+                        else None
+                    ),
+                })
+
+            normalized[pokemon_id] = normalized_slots
+
+        previous_my_journey = deepcopy(self.journey.get("my_journey"))
+        updated_my_journey = deepcopy(self.my_journey_data)
+        updated_my_journey["planned_moves"] = normalized
+        self.journey["my_journey"] = updated_my_journey
+
+        try:
+            save_succeeded = await save_journey(
+                self.storage,
+                self.journey,
+            )
+        except ValueError:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not save_succeeded:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+
+        return save_succeeded
+
 
     async def save_pokemon_objective(
         self,
