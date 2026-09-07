@@ -78,7 +78,7 @@ NATURE_EFFECTS: dict[str, tuple[str | None, str | None]] = {
     "Quirky": (None, None),
 }
 
-NATURE_OPTIONS = list(NATURE_EFFECTS)
+NATURE_OPTIONS = sorted(NATURE_EFFECTS)
 
 
 class StarterDetails(ft.Container):
@@ -132,15 +132,16 @@ class StarterDetails(ft.Container):
             ],
         )
 
-        self.nature_dropdown = ft.Dropdown(
-            label="Nature",
-            options=[
-                ft.DropdownOption(
+        self.nature_dropdown = ft.AutoComplete(
+            value="",
+            suggestions=[
+                ft.AutoCompleteSuggestion(
                     key=nature,
-                    text=nature,
+                    value=nature,
                 )
                 for nature in NATURE_OPTIONS
             ],
+            suggestions_max_height=240,
         )
 
         self.status_text = ft.Text(
@@ -387,13 +388,30 @@ class StarterDetails(ft.Container):
                             color=TEXT_PRIMARY,
                         ),
                         self.gender_dropdown,
-                        ft.Text(
+                      ft.Text(
                             "Nature",
                             size=16,
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
                         ),
-                        self.nature_dropdown,
+                        ft.Text(
+                            "Start typing a Nature, then choose it from the suggestions.",
+                            size=13,
+                            color=TEXT_MUTED,
+                        ),
+                        ft.Container(
+                            content=self.nature_dropdown,
+                            width=320,
+                            padding=ft.Padding.symmetric(
+                                horizontal=12,
+                                vertical=8,
+                            ),
+                            border=ft.Border.all(
+                                1,
+                                BORDER_DEFAULT,
+                            ),
+                            border_radius=8,
+                        ),
                         ft.Text(
                             "Current Stats",
                             size=16,

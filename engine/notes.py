@@ -1,7 +1,12 @@
 from engine.mechanics import (
+    WEATHER_SETTING_ABILITIES,
+    ability_rule_applies,
     get_ability_multiplier,
     get_applicable_ability_rules,
+    get_guaranteed_weather,
     get_type_multiplier,
+    get_weather_damage_multiplier,
+    get_weather_defense_stat_multiplier,
 )
 
 NOTE_INFO = "info"
@@ -164,6 +169,11 @@ def get_damage_ability_notes(
         defender_types,
     )
 
+    # If typing already makes the move ineffective, do not credit the
+    # defender's Ability for the immunity.
+    if type_multiplier == 0:
+        return []
+
     notes = []
 
     for rule in get_applicable_ability_rules(
@@ -214,6 +224,11 @@ def get_blocked_move_ability_notes(
             defender_types,
         )
 
+        # A type immunity already blocks this move, so the Ability is not
+        # the cause and should not receive a separate blocking note.
+        if type_multiplier == 0:
+            continue
+
         applicable_rules = get_applicable_ability_rules(
             defender,
             move,
@@ -252,6 +267,194 @@ def get_blocked_move_ability_notes(
         )
 
     return dedupe_notes(notes)
+
+def get_ability_bypass_note(
+    *,
+    attacker,
+    defender,
+    move,
+    ability_rules,
+):
+    """Explain when an attacking Ability bypasses a defensive immunity."""
+
+    if not move or not move.get("Power"):
+        return None
+
+    attacker_ability = attacker.get("Ability")
+    defender_ability = defender.get("Ability")
+
+    if not attacker_ability or not defender_ability:
+        return None
+
+    bypasses_defender_ability = any(
+        rule.get("Ability") == attacker_ability
+        and rule.get("Effect") == "AbilityBypass"
+        and rule.get("TargetType") == "DefenderAbility"
+        for rule in ability_rules
+    )
+
+    if not bypasses_defender_ability:
+        return None
+
+    defender_types = [
+        defender.get("Type1"),
+        defender.get("Type2"),
+    ]
+
+    type_multiplier = get_type_multiplier(
+        move.get("Type"),
+        defender_types,
+    )
+
+    # Ability bypass does not override an ordinary type immunity.
+    if type_multiplier == 0:
+        return None
+
+    would_block_move = any(
+        rule.get("Ability") == defender_ability
+        and rule.get("Effect") == "Immunity"
+        and ability_rule_applies(
+            rule,
+            move,
+            type_multiplier,
+        )
+        for rule in ability_rules
+    )
+
+    if not would_block_move:
+        return None
+
+    attacker_name = attacker.get("Pokemon", "The opponent")
+
+    return note(
+        NOTE_WARNING,
+        (
+            f"{attacker_name}'s {attacker_ability} bypasses "
+            f"{defender_ability}"
+        ),
+    )
+
+# ---------- Deterministic weather notes ----------
+
+def get_weather_source_ability(attacker, defender, weather):
+    """Return the Ability name responsible for guaranteed modeled weather."""
+
+    if not weather:
+        return None
+
+    source_abilities = []
+
+    for pokemon in (attacker, defender):
+        ability = pokemon.get("Ability")
+        if (
+            WEATHER_SETTING_ABILITIES.get(ability) == weather
+            and ability not in source_abilities
+        ):
+            source_abilities.append(ability)
+
+    if len(source_abilities) == 1:
+        return source_abilities[0]
+
+    return None
+
+
+def get_weather_effect_note(
+    *,
+    attacker,
+    defender,
+    move,
+    perspective,
+):
+    """Explain guaranteed weather only when it changes this move's score."""
+
+    if not move or move.get("Category") == "Status":
+        return None
+
+    weather = get_guaranteed_weather(attacker, defender)
+    if not weather:
+        return None
+
+    source_ability = get_weather_source_ability(
+        attacker,
+        defender,
+        weather,
+    )
+
+    damage_multiplier = get_weather_damage_multiplier(
+        move,
+        weather,
+    )
+
+    if damage_multiplier != 1:
+        move_type = str(move.get("Type") or "move")
+        if weather == "Sun":
+            weather_text = "harsh sunlight"
+        elif weather == "Rain":
+            weather_text = "rain"
+        else:
+            weather_text = weather.lower()
+
+        source_text = (
+            f"{source_ability}'s {weather_text}"
+            if source_ability
+            else weather_text.capitalize()
+        )
+
+        if damage_multiplier > 1:
+            category = (
+                NOTE_OPPORTUNITY
+                if perspective == "outgoing"
+                else NOTE_WARNING
+            )
+            effect_text = "boosts"
+        else:
+            category = (
+                NOTE_CAUTION
+                if perspective == "outgoing"
+                else NOTE_INFO
+            )
+            effect_text = "weakens"
+
+        percent = format_percent_change(damage_multiplier)
+        return note(
+            category,
+            (
+                f"{source_text} {effect_text} {move_type}-type "
+                f"damage by {percent}%"
+            ),
+        )
+
+    defense_multiplier = get_weather_defense_stat_multiplier(
+        defender,
+        move,
+        weather,
+    )
+
+    if defense_multiplier > 1:
+        defender_name = str(
+            defender.get("Pokemon")
+            or "The defending Pokémon"
+        )
+        source_text = (
+            f"{source_ability}'s sandstorm"
+            if source_ability
+            else "Sandstorm"
+        )
+        percent = round((defense_multiplier - 1) * 100)
+        category = (
+            NOTE_CAUTION
+            if perspective == "outgoing"
+            else NOTE_INFO
+        )
+        return note(
+            category,
+            (
+                f"{source_text} raises {defender_name}'s "
+                f"Sp. Def by {percent}%"
+            ),
+        )
+
+    return None
 
 
 # ---------- Tactical ability notes ----------
@@ -583,6 +786,11 @@ def has_ability_immunity(
             pokemon_types,
         )
 
+        # Ability immunity only counts here when the Ability independently
+        # changes a move that typing would otherwise allow to hit.
+        if type_multiplier == 0:
+            continue
+
         ability_multiplier = get_ability_multiplier(
             pokemon,
             move,
@@ -869,6 +1077,15 @@ def build_battle_notes(
         )
     )
 
+    outgoing_weather_note = get_weather_effect_note(
+        attacker=attacker,
+        defender=defender,
+        move=best_move,
+        perspective="outgoing",
+    )
+    if outgoing_weather_note:
+        notes.append(outgoing_weather_note)
+
     notes.extend(
         get_blocked_move_ability_notes(
             attacker=attacker,
@@ -888,6 +1105,25 @@ def build_battle_notes(
                 perspective="incoming",
             )
         )
+
+        bypass_note = get_ability_bypass_note(
+            attacker=defender,
+            defender=attacker,
+            move=worst_move,
+            ability_rules=ability_rules,
+        )
+
+        if bypass_note:
+            notes.append(bypass_note)
+
+        incoming_weather_note = get_weather_effect_note(
+            attacker=defender,
+            defender=attacker,
+            move=worst_move,
+            perspective="incoming",
+        )
+        if incoming_weather_note:
+            notes.append(incoming_weather_note)
 
     if (
         not (incoming_ohko_note and incoming_ohko_note["text"].startswith("Likely"))

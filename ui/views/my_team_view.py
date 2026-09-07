@@ -3067,7 +3067,20 @@ class MyTeamView:
                         type_control.value = record[type_column]
 
         self._update_dirty_state()
-        self.page.update()
+
+        self.save_button.update()
+        self.discard_button.update()
+        self.export_button.update()
+        self.detail_notice.update()
+        self.save_status.update()
+
+        if column == "Pokemon":
+            for type_column in ("Type1", "Type2"):
+                type_control = self.editor_controls.get(
+                    (row_index, type_column)
+                )
+                if type_control is not None:
+                    type_control.update()
 
     def _refresh_selector(self) -> None:
         options: list[ft.DropdownOption] = []

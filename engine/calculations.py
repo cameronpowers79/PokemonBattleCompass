@@ -14,6 +14,9 @@ from engine.mechanics import (
     get_attack_stat_multiplier,
     get_attack_reduction_multiplier,
     get_move_power_multiplier,
+    get_guaranteed_weather,
+    get_weather_damage_multiplier,
+    get_weather_defense_stat_multiplier,
 )
 from engine.notes import build_notes, build_battle_notes, build_why_explanation
 
@@ -62,7 +65,6 @@ def get_stat(pokemon, stat_name, opponent_iv_override=None):
         return max(float(value or 0), 1.0)
 
     return value
-
 
 
 def get_move_type_multiplier(move, defender_types):
@@ -490,6 +492,16 @@ def calculate_move_score(
         ability_rules,
     )
 
+    weather = get_guaranteed_weather(
+        attacker,
+        defender,
+    )
+
+    weather_damage_multiplier = get_weather_damage_multiplier(
+        move,
+        weather,
+    )
+
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -523,6 +535,12 @@ def calculate_move_score(
         items,
     )
 
+    defense_stat *= get_weather_defense_stat_multiplier(
+        defender,
+        move,
+        weather,
+    )
+
     hits = move.get("Hits", 1)
 
     try:
@@ -537,6 +555,7 @@ def calculate_move_score(
         effective_power
         * hits
         * power_multiplier
+        * weather_damage_multiplier
         * effectiveness
         * stab
         * item_damage_multiplier
@@ -655,6 +674,16 @@ def calculate_damage_range(
         ability_rules,
     )
 
+    weather = get_guaranteed_weather(
+        attacker,
+        defender,
+    )
+
+    weather_damage_multiplier = get_weather_damage_multiplier(
+        move,
+        weather,
+    )
+
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -687,6 +716,11 @@ def calculate_damage_range(
             defender,
             move,
             items,
+        )
+        * get_weather_defense_stat_multiplier(
+            defender,
+            move,
+            weather,
         ),
         1,
     )
@@ -712,6 +746,7 @@ def calculate_damage_range(
         effectiveness
         * stab
         * item_damage_multiplier
+        * weather_damage_multiplier
     )
 
     hits = move.get("Hits", 1)

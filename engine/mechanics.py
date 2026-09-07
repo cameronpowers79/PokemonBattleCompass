@@ -28,6 +28,88 @@ BULLET_TAGS = {
 }
 
 
+WEATHER_SETTING_ABILITIES = {
+    "Drought": "Sun",
+    "Drizzle": "Rain",
+    "Sand Stream": "Sandstorm",
+    "Snow Warning": "Hail",
+}
+
+
+def get_guaranteed_weather(attacker, defender):
+    """Return deterministic entry weather established by the matchup.
+
+    If both Pokémon set the same weather, that weather is guaranteed. If only
+    one sets weather, that weather is guaranteed. If both set different weather,
+    the Compass does not infer activation order and treats the final weather as
+    unknown.
+    """
+
+    attacker_weather = WEATHER_SETTING_ABILITIES.get(
+        attacker.get("Ability")
+    )
+    defender_weather = WEATHER_SETTING_ABILITIES.get(
+        defender.get("Ability")
+    )
+
+    if attacker_weather and defender_weather:
+        if attacker_weather == defender_weather:
+            return attacker_weather
+        return None
+
+    return attacker_weather or defender_weather
+
+
+def get_weather_damage_multiplier(move, weather):
+    """Return deterministic weather's direct damage modifier."""
+
+    move_type = move.get("Type")
+
+    if weather == "Sun":
+        if move_type == "Fire":
+            return 1.5
+        if move_type == "Water":
+            return 0.5
+
+    if weather == "Rain":
+        if move_type == "Water":
+            return 1.5
+        if move_type == "Fire":
+            return 0.5
+
+    return 1
+
+
+def get_weather_defense_stat_multiplier(
+    defender,
+    move,
+    weather,
+):
+    """Return deterministic weather's modifier to the targeted defense."""
+
+    if weather != "Sandstorm":
+        return 1
+
+    defender_types = {
+        defender.get("Type1"),
+        defender.get("Type2"),
+    }
+
+    if "Rock" not in defender_types:
+        return 1
+
+    # In Sword/Shield, sandstorm raises Rock-type Special Defense by 50%.
+    # Psyshock/Psystrike-style moves are Special but target DEF, so they do not
+    # receive this modifier.
+    if (
+        move.get("Category") == "Special"
+        and move.get("DamageMethod") != "TargetDEFasSPD"
+    ):
+        return 1.5
+
+    return 1
+
+
 def load_type_chart():
     return load_json("type_chart")
 
