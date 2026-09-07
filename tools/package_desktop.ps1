@@ -5,6 +5,17 @@ $appName = "PokemonBattleCompass"
 
 Set-Location $projectRoot
 
+Write-Host "Cleaning previous PyInstaller build artifacts..."
+
+if (Test-Path ".\build") {
+    Remove-Item -Recurse -Force ".\build"
+}
+
+if (Test-Path ".\dist") {
+    Remove-Item -Recurse -Force ".\dist"
+}
+
+Write-Host ""
 Write-Host "Pokemon Battle Compass - desktop package"
 Write-Host "Project: $projectRoot"
 
