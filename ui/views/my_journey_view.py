@@ -598,12 +598,17 @@ class MyJourneyView:
         """Aggregate Team Planner evolution items and Move Planner TM/TRs."""
 
         requirements: dict[str, int] = {}
+
         for pokemon in self.pokemon:
             for requirement in pokemon.get("required_items", []):
                 if not isinstance(requirement, dict):
                     continue
-                item_id = str(requirement.get("item_id", "")).strip()
+
+                item_id = str(
+                    requirement.get("item_id", "")
+                ).strip()
                 quantity = requirement.get("quantity", 0)
+
                 if (
                     not item_id
                     or not isinstance(quantity, int)
@@ -611,24 +616,49 @@ class MyJourneyView:
                     or quantity <= 0
                 ):
                     continue
+
                 requirements[item_id] = (
                     requirements.get(item_id, 0) + quantity
                 )
 
         # Move plans are retained when a Pokémon leaves Team Planner, but only
         # active Team Planner rows contribute acquisition requirements.
+        #
+        # Sword TMs are reusable, so any number of planned users requires only
+        # one copy. TRs are consumable and therefore count once per planned use.
         for pokemon_id in self.planned_pokemon_ids:
             for slot in self.planned_moves.get(pokemon_id, []):
                 if not isinstance(slot, dict):
                     continue
+
                 source_item_id = str(
                     slot.get("source_item_id") or ""
                 ).strip()
                 if not source_item_id:
                     continue
-                requirements[source_item_id] = (
-                    requirements.get(source_item_id, 0) + 1
+
+                source_category = next(
+                    (
+                        str(
+                            item.get("category") or ""
+                        ).strip().lower()
+                        for item in self.items
+                        if str(
+                            item.get("id") or ""
+                        ).strip() == source_item_id
+                    ),
+                    "",
                 )
+
+                if source_category == "tm":
+                    requirements[source_item_id] = max(
+                        requirements.get(source_item_id, 0),
+                        1,
+                    )
+                elif source_category == "tr":
+                    requirements[source_item_id] = (
+                        requirements.get(source_item_id, 0) + 1
+                    )
 
         return requirements
 
@@ -1472,6 +1502,19 @@ class MyJourneyView:
         self.page.pop_dialog()
         self.page.update()
 
+    @staticmethod
+    def _my_team_pokemon_name(
+        pokemon_name: object,
+    ) -> str:
+        """Convert a Journey display/form name to My Team's canonical name."""
+
+        name = str(pokemon_name or "").strip()
+
+        if name.casefold().startswith("galarian "):
+            return name[len("Galarian "):].strip()
+
+        return name
+
     def _go_to_my_team_from_prompt(
         self,
         event: ft.Event[ft.Button],
@@ -1491,7 +1534,9 @@ class MyJourneyView:
         self.page.pop_dialog()
 
         if self.on_go_to_my_team is not None:
-            self.on_go_to_my_team(selected_stage)
+            self.on_go_to_my_team(
+                self._my_team_pokemon_name(selected_stage)
+            )
 
     @staticmethod
     def _build_page_intro() -> ft.Control:
@@ -3900,12 +3945,50 @@ class MyJourneyView:
         for slot in planned_move_slots:
             if not isinstance(slot, dict):
                 continue
+
             source_item_id = str(
                 slot.get("source_item_id") or ""
             ).strip()
-            if source_item_id:
+            if not source_item_id:
+                continue
+
+            source_category = next(
+                (
+                    str(item.get("category") or "").strip().lower()
+                    for item in self.items
+                    if str(item.get("id") or "").strip()
+                    == source_item_id
+                ),
+                "",
+            )
+
+            if source_category == "tr":
                 removal_requirements[source_item_id] = (
                     removal_requirements.get(source_item_id, 0) + 1
+                )
+                continue
+
+            if source_category != "tm":
+                continue
+
+            # A reusable TM requirement disappears only if the Pokémon being
+            # removed was its last active Move Planner user.
+            used_by_other_pokemon = any(
+                str(other_slot.get("source_item_id") or "").strip()
+                == source_item_id
+                for other_pokemon_id in self.planned_pokemon_ids
+                if other_pokemon_id != pokemon_id
+                for other_slot in self.planned_moves.get(
+                    other_pokemon_id,
+                    [],
+                )
+                if isinstance(other_slot, dict)
+            )
+
+            if not used_by_other_pokemon:
+                removal_requirements[source_item_id] = max(
+                    removal_requirements.get(source_item_id, 0),
+                    1,
                 )
 
         for item_id, quantity in removal_requirements.items():
@@ -4835,8 +4918,6 @@ class MyJourneyView:
         pokemon: dict[str, Any],
         status: str,
     ) -> ft.Control:
-        if status == "unavailable":
-            return ft.Text("—", color=TEXT_MUTED, text_align=ft.TextAlign.CENTER)
         if status == "obtained":
             return ft.Text(
                 "Acquired",

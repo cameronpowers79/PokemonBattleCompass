@@ -155,7 +155,13 @@ def get_sprite_path(
     use_texture=True,
     sprite_dir=None,
 ):
-    sprite_name = slugify_pokemon_name(pokemon_name)
+    display_name = str(pokemon_name or "").strip()
+
+    is_galarian = display_name.casefold().startswith("galarian ")
+    if is_galarian:
+        display_name = display_name[len("Galarian "):].strip()
+
+    sprite_name = slugify_pokemon_name(display_name)
 
     is_female = (
         str(gender).strip().lower() == "female"

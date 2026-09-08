@@ -478,6 +478,10 @@ class MyTeamView:
         self._recommendation_target_source: str | None = None
         self._recommendation_target_index: int | None = None
         self._pending_recommended_item: str | None = None
+        self._pending_save_evolution_prompts: list[dict] = []
+        self._evolution_celebration_target: ft.Container | None = None
+        self._evolution_celebration_sparkles: list[ft.Container] = []
+        self._evolution_celebration_row_index: int | None = None
 
         try:
             raw_journey_items = json.loads(
@@ -508,30 +512,48 @@ class MyTeamView:
             raw_journey_pokemon = []
 
         self.pokemon_type_lookup: dict[str, tuple[str, str]] = {}
+        self.evolution_step_lookup: dict[str, list[dict]] = {}
+
         for family in raw_journey_pokemon:
             if not isinstance(family, dict):
                 continue
+
             stage_types = family.get("types", {})
-            if not isinstance(stage_types, dict):
-                continue
-            for pokemon_name, pokemon_types in stage_types.items():
-                if (
-                    not isinstance(pokemon_name, str)
-                    or not isinstance(pokemon_types, list)
-                    or not pokemon_types
-                ):
-                    continue
-                type1 = str(pokemon_types[0] or "").strip()
-                type2 = (
-                    str(pokemon_types[1] or "").strip()
-                    if len(pokemon_types) > 1
-                    else ""
-                )
-                if type1:
-                    self.pokemon_type_lookup[pokemon_name.strip()] = (
-                        type1,
-                        type2,
+            if isinstance(stage_types, dict):
+                for pokemon_name, pokemon_types in stage_types.items():
+                    if (
+                        not isinstance(pokemon_name, str)
+                        or not isinstance(pokemon_types, list)
+                        or not pokemon_types
+                    ):
+                        continue
+                    type1 = str(pokemon_types[0] or "").strip()
+                    type2 = (
+                        str(pokemon_types[1] or "").strip()
+                        if len(pokemon_types) > 1
+                        else ""
                     )
+                    if type1:
+                        self.pokemon_type_lookup[pokemon_name.strip()] = (
+                            type1,
+                            type2,
+                        )
+
+            evolution_steps = family.get("evolution_steps", [])
+            if not isinstance(evolution_steps, list):
+                continue
+
+            for step in evolution_steps:
+                if not isinstance(step, dict):
+                    continue
+                from_name = str(step.get("from") or "").strip()
+                if not from_name:
+                    continue
+                normalized_from = self._normalize_pokemon_name(from_name)
+                self.evolution_step_lookup.setdefault(
+                    normalized_from,
+                    [],
+                ).append(dict(step))
 
         self.box_table_host = ft.Container()
         self.move_to_party_button: ft.Button | None = None
@@ -1591,11 +1613,23 @@ class MyTeamView:
                                 "to ensure your team's information is "
                                 "accurate before saving. The Battle Compass "
                                 "relies on these details to recommend your "
-                                "strongest matchups."
+                                "strongest matchups. "
+                                
                             ),
                             size=TEXT_SIZE_BODY,
                             color=TEXT_SECONDARY,
                         ),
+
+                        ft.Text(
+                            (
+                                "If a Pokémon is ready to Evolve, head down "
+                                "to Pokémon Details and click the Evolve button."
+                            ),
+                            size=TEXT_SIZE_BODY,
+                            color=TEXT_SECONDARY,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                                                    
                         ft.Text(
                             "Swipe left or right to view more columns.",
                             size=TEXT_SIZE_CAPTION,
@@ -3541,11 +3575,109 @@ class MyTeamView:
             border_radius=16,
         )
 
+    @staticmethod
+    def _normalize_pokemon_name(pokemon_name: object) -> str:
+        """Normalize regional display prefixes for evolution matching."""
+
+        normalized = " ".join(
+            str(pokemon_name or "").strip().casefold().split()
+        )
+        for prefix in (
+            "galarian ",
+            "alolan ",
+            "hisuian ",
+            "paldean ",
+        ):
+            if normalized.startswith(prefix):
+                return normalized[len(prefix):].strip()
+        return normalized
+
+    @staticmethod
+    def _evolution_pronouns(pokemon: dict) -> tuple[str, str, str]:
+        """Return subject, object, and possessive pronouns for one Pokémon."""
+
+        gender = str(pokemon.get("Gender") or "").strip().casefold()
+        if gender == "male":
+            return ("he", "him", "his")
+        if gender == "female":
+            return ("she", "her", "her")
+        if gender == "genderless":
+            return ("it", "it", "its")
+        return ("they", "them", "their")
+
+    @staticmethod
+    def _safe_level(value: object) -> int:
+        """Return a non-negative integer level for evolution checks."""
+
+        if isinstance(value, bool):
+            return 0
+        try:
+            return max(0, int(str(value).strip()))
+        except (TypeError, ValueError):
+            return 0
+
+    def _evolution_steps_for(self, pokemon_name: object) -> list[dict]:
+        """Return Journey evolution-step metadata for one species."""
+
+        return list(
+            self.evolution_step_lookup.get(
+                self._normalize_pokemon_name(pokemon_name),
+                [],
+            )
+        )
+
+    def _evolution_step_for(
+        self,
+        from_name: object,
+        into_name: object,
+    ) -> dict | None:
+        """Return the matching Journey evolution step, when available."""
+
+        normalized_into = self._normalize_pokemon_name(into_name)
+        for step in self._evolution_steps_for(from_name):
+            if (
+                self._normalize_pokemon_name(step.get("to"))
+                == normalized_into
+            ):
+                return step
+        return None
+
+    def _is_final_evolution_stage(self, pokemon_name: object) -> bool:
+        """Return whether a species has no known further evolution."""
+
+        name = str(pokemon_name or "").strip()
+        evolution_record = self.evolutions.get(name)
+        if isinstance(evolution_record, dict):
+            options = evolution_record.get("evolutions")
+            if isinstance(options, list):
+                return not any(isinstance(option, dict) for option in options)
+
+        return not bool(self._evolution_steps_for(name))
+
+    def _evolution_options_for(self, pokemon_name: object) -> list[dict]:
+        """Return player-facing evolution options for one species."""
+
+        name = str(pokemon_name or "").strip()
+        evolution_record = self.evolutions.get(name)
+        if not isinstance(evolution_record, dict):
+            return []
+
+        raw_options = evolution_record.get("evolutions")
+        if not isinstance(raw_options, list):
+            return []
+
+        return [
+            dict(option)
+            for option in raw_options
+            if isinstance(option, dict)
+            and str(option.get("into") or "").strip()
+        ]
+
     def _build_evolution_summary(
         self,
         pokemon: dict,
     ) -> ft.Control:
-        """Build concise next-evolution guidance for one Pokémon."""
+        """Build concise next-evolution guidance and the Evolve action."""
 
         pokemon_name = str(
             pokemon.get("Pokemon") or ""
@@ -3618,22 +3750,38 @@ class MyTeamView:
         if not option_controls:
             return ft.Container()
 
+        controls = cast(
+            list[ft.Control],
+            [
+                ft.Text(
+                    heading,
+                    size=13,
+                    weight=ft.FontWeight.BOLD,
+                    color=PRIMARY_BLUE,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+                *option_controls,
+            ],
+        )
+
+        # The editor owns active-party evolution changes. Boxed Pokémon keep
+        # the informational evolution summary in this first-pass workflow.
+        if self.selected_source == "party":
+            controls.append(
+                ft.Button(
+                    content="Evolve!",
+                    icon=ft.Icons.AUTO_AWESOME_ROUNDED,
+                    bgcolor=PRIMARY_BLUE,
+                    color=TEXT_PRIMARY,
+                    icon_color=TEXT_PRIMARY,
+                    on_click=self._request_detail_evolution,
+                )
+            )
+
         return ft.Container(
             content=ft.Column(
-                controls=cast(
-                    list[ft.Control],
-                    [
-                        ft.Text(
-                            heading,
-                            size=13,
-                            weight=ft.FontWeight.BOLD,
-                            color=PRIMARY_BLUE,
-                            text_align=ft.TextAlign.CENTER,
-                        ),
-                        *option_controls,
-                    ],
-                ),
-                spacing=3,
+                controls=controls,
+                spacing=6,
                 horizontal_alignment=(
                     ft.CrossAxisAlignment.CENTER
                 ),
@@ -3647,6 +3795,860 @@ class MyTeamView:
             bgcolor=PRIMARY_BLUE_SOFT,
             border_radius=10,
         )
+
+    def _request_detail_evolution(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Begin a manual evolution from the selected party detail card."""
+
+        del event
+
+        if self.selected_source != "party":
+            return
+        if (
+            self.selected_index < 0
+            or self.selected_index >= len(self.saved_team_snapshot)
+        ):
+            return
+
+        pokemon = self.saved_team_snapshot[self.selected_index]
+        options = self._evolution_options_for(
+            pokemon.get("Pokemon")
+        )
+        if not options:
+            return
+
+        if len(options) == 1:
+            self._request_evolution_option(
+                self.selected_index,
+                pokemon,
+                options[0],
+            )
+            return
+
+        self._show_evolution_choice_dialog(
+            self.selected_index,
+            pokemon,
+            options,
+            skip_standard_confirmation=False,
+        )
+
+    def _show_evolution_choice_dialog(
+        self,
+        row_index: int,
+        pokemon: dict,
+        options: list[dict],
+        *,
+        skip_standard_confirmation: bool,
+    ) -> None:
+        """Ask which branch was taken when several evolutions are possible."""
+
+        pokemon_name = str(pokemon.get("Pokemon") or "this Pokémon")
+        controls: list[ft.Control] = [
+            ft.Text(
+                f"What did {pokemon_name} evolve into?",
+                color=TEXT_SECONDARY,
+            )
+        ]
+
+        for option in options:
+            evolved_name = str(option.get("into") or "").strip()
+            if not evolved_name:
+                continue
+            requirement = str(
+                option.get("display_text") or ""
+            ).strip()
+            label = (
+                f"{evolved_name} · {requirement}"
+                if requirement
+                else evolved_name
+            )
+            controls.append(
+                ft.Button(
+                    content=label,
+                    on_click=(
+                        lambda event, chosen=option:
+                        self._choose_evolution_option(
+                            event,
+                            row_index,
+                            pokemon,
+                            chosen,
+                            skip_standard_confirmation=skip_standard_confirmation,
+                        )
+                    ),
+                )
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Choose Evolution",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=controls,
+            spacing=10,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Cancel",
+                on_click=lambda: self.page.pop_dialog(),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _choose_evolution_option(
+        self,
+        event: ft.Event[ft.Button],
+        row_index: int,
+        pokemon: dict,
+        option: dict,
+        *,
+        skip_standard_confirmation: bool,
+    ) -> None:
+        """Continue from a branching-evolution choice."""
+
+        del event
+        self.page.pop_dialog()
+        self._request_evolution_option(
+            row_index,
+            pokemon,
+            option,
+            skip_standard_confirmation=skip_standard_confirmation,
+        )
+
+    def _request_evolution_option(
+        self,
+        row_index: int,
+        pokemon: dict,
+        option: dict,
+        *,
+        skip_standard_confirmation: bool = False,
+    ) -> None:
+        """Confirm an evolution, applying deterministic item/level warnings."""
+
+        pokemon_name = str(pokemon.get("Pokemon") or "this Pokémon").strip()
+        evolved_name = str(option.get("into") or "").strip()
+        if not evolved_name:
+            return
+
+        held_item = self._normalize_item_name(
+            str(pokemon.get("Held Item") or "")
+        )
+        subject, object_pronoun, possessive_pronoun = (
+            self._evolution_pronouns(pokemon)
+        )
+
+        if held_item == "everstone":
+            self._show_everstone_evolution_reminder(
+                pokemon,
+                evolved_name,
+                continue_queue=False,
+            )
+            return
+
+        step = self._evolution_step_for(
+            pokemon_name,
+            evolved_name,
+        )
+        current_level = self._safe_level(pokemon.get("Level"))
+        required_level = 0
+        is_pure_level = False
+        if isinstance(step, dict):
+            is_pure_level = (
+                str(step.get("method") or "").strip().casefold()
+                == "level"
+            )
+            if is_pure_level:
+                required_level = self._safe_level(step.get("level"))
+
+        warning_lines: list[str] = []
+        if (
+            is_pure_level
+            and required_level > 0
+            and current_level < required_level
+        ):
+            warning_lines.append(
+                (
+                    f"{pokemon_name} normally evolves into {evolved_name} "
+                    f"at Lv. {required_level}, but {subject} is currently "
+                    f"Lv. {current_level}. Evolve anyway?"
+                )
+            )
+
+        if (
+            held_item == "eviolite"
+            and self._is_final_evolution_stage(evolved_name)
+        ):
+            warning_lines.append(
+                (
+                    f"{pokemon_name} is holding Eviolite. If {subject} evolves "
+                    f"into {evolved_name}, Eviolite will no longer boost "
+                    f"{possessive_pronoun} defenses because {evolved_name} is the "
+                    "final evolutionary stage."
+                )
+            )
+
+        if skip_standard_confirmation and not warning_lines:
+            self._apply_evolution_to_editor(
+                row_index,
+                pokemon_name,
+                evolved_name,
+                pokemon,
+            )
+            return
+
+        if not warning_lines:
+            requirement = str(option.get("display_text") or "").strip()
+            warning_lines.append(
+                f"Evolve {pokemon_name} into {evolved_name}?"
+            )
+            if requirement:
+                warning_lines.append(
+                    f"Evolution requirement: {requirement}."
+                )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Ready to evolve?",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(line, color=TEXT_SECONDARY)
+                for line in warning_lines
+            ],
+            spacing=8,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Not Yet",
+                on_click=(
+                    self._dismiss_save_evolution_prompt
+                    if skip_standard_confirmation
+                    else lambda: self.page.pop_dialog()
+                ),
+            ),
+            ft.Button(
+                content="Evolve!",
+                icon=ft.Icons.AUTO_AWESOME_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event:
+                    self._confirm_evolution(
+                        event,
+                        row_index,
+                        pokemon_name,
+                        evolved_name,
+                        pokemon,
+                    )
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _confirm_evolution(
+        self,
+        event: ft.Event[ft.Button],
+        row_index: int,
+        old_name: str,
+        evolved_name: str,
+        pokemon: dict,
+    ) -> None:
+        """Close confirmation and apply the evolved species to the editor."""
+
+        del event
+        self.page.pop_dialog()
+        self._apply_evolution_to_editor(
+            row_index,
+            old_name,
+            evolved_name,
+            pokemon,
+        )
+
+    def _apply_evolution_to_editor(
+        self,
+        row_index: int,
+        old_name: str,
+        evolved_name: str,
+        pokemon: dict,
+    ) -> None:
+        """Update the Team Editor name/types and celebrate without auto-saving."""
+
+        if row_index < 0 or row_index >= len(self.working_team):
+            return
+
+        record = self.working_team[row_index]
+        record["Pokemon"] = evolved_name
+        self._apply_known_pokemon_types(
+            record,
+            evolved_name,
+        )
+
+        for column in ("Pokemon", "Type1", "Type2"):
+            control = self.editor_controls.get((row_index, column))
+            if control is None:
+                continue
+            control.value = record.get(column) or ""
+            control.update()
+
+        self._update_dirty_state()
+        self.save_button.update()
+        self.discard_button.update()
+        self.export_button.update()
+        self.detail_notice.update()
+        self.aegislash_entry_notice.update()
+        self.save_status.update()
+
+        self._show_evolution_celebration(
+            row_index,
+            old_name,
+            evolved_name,
+            pokemon,
+        )
+
+    def _evolution_artwork(
+        self,
+        pokemon_name: str,
+        gender: object,
+        *,
+        size: int = 112,
+    ) -> ft.Control:
+        """Build one texture for the evolution celebration."""
+
+        sprite_path = get_sprite_path(
+            pokemon_name,
+            gender=gender,
+            use_texture=True,
+        )
+        if sprite_path is None:
+            return ft.Container(
+                content=ft.Text(
+                    "?",
+                    size=42,
+                    color=TEXT_MUTED,
+                ),
+                width=size,
+                height=size,
+                alignment=ft.Alignment.CENTER,
+            )
+
+        return ft.Image(
+            src=self._asset_src(sprite_path),
+            width=size,
+            height=size,
+            fit=ft.BoxFit.CONTAIN,
+            semantics_label=pokemon_name,
+        )
+
+    def _show_evolution_celebration(
+        self,
+        row_index: int,
+        old_name: str,
+        evolved_name: str,
+        pokemon: dict,
+    ) -> None:
+        """Show a small Pokémon-style evolution celebration."""
+
+        gender = pokemon.get("Gender")
+        old_artwork = self._evolution_artwork(old_name, gender)
+        new_artwork = self._evolution_artwork(evolved_name, gender)
+
+        self._evolution_celebration_target = ft.Container(
+            content=new_artwork,
+            width=122,
+            height=122,
+            alignment=ft.Alignment.CENTER,
+            opacity=0.28,
+            scale=0.74,
+            animate_opacity=ft.Animation(
+                240,
+                ft.AnimationCurve.EASE_OUT,
+            ),
+            animate_scale=ft.Animation(
+                360,
+                ft.AnimationCurve.EASE_OUT_BACK,
+            ),
+        )
+
+        sparkle_specs = [
+            (ft.Icons.AUTO_AWESOME_ROUNDED, 18),
+            (ft.Icons.STAR_ROUNDED, 15),
+            (ft.Icons.AUTO_AWESOME_ROUNDED, 14),
+        ]
+        self._evolution_celebration_sparkles = [
+            ft.Container(
+                content=ft.Icon(
+                    icon,
+                    size=size,
+                    color=ft.Colors.AMBER_200,
+                ),
+                opacity=0.0,
+                scale=0.6,
+                animate_opacity=ft.Animation(
+                    180,
+                    ft.AnimationCurve.EASE_IN_OUT,
+                ),
+                animate_scale=ft.Animation(
+                    240,
+                    ft.AnimationCurve.EASE_OUT_BACK,
+                ),
+            )
+            for icon, size in sparkle_specs
+        ]
+        self._evolution_celebration_row_index = row_index
+
+        evolved_stack = ft.Stack(
+            controls=[
+                self._evolution_celebration_target,
+                ft.Container(
+                    content=self._evolution_celebration_sparkles[0],
+                    left=4,
+                    top=12,
+                ),
+                ft.Container(
+                    content=self._evolution_celebration_sparkles[1],
+                    right=8,
+                    top=6,
+                ),
+                ft.Container(
+                    content=self._evolution_celebration_sparkles[2],
+                    right=2,
+                    bottom=14,
+                ),
+            ],
+            width=132,
+            height=132,
+            clip_behavior=ft.ClipBehavior.NONE,
+        )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "What?",
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Row(
+                    controls=[
+                        old_artwork,
+                        ft.Icon(
+                            ft.Icons.ARROW_FORWARD_ROUNDED,
+                            size=30,
+                            color=PRIMARY_BLUE,
+                        ),
+                        evolved_stack,
+                    ],
+                    spacing=10,
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                ft.Text(
+                    (
+                        f"Your {old_name} has evolved into {evolved_name}! "
+                        "Congratulations!"
+                    ),
+                    size=19,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+                ft.Text(
+                    (
+                        "Battle Compass will now return you to the Team Editor "
+                        f"so you can update {evolved_name}'s stats."
+                    ),
+                    size=14,
+                    color=TEXT_SECONDARY,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+            ],
+            spacing=12,
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Awesome!",
+                icon=ft.Icons.CELEBRATION_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event:
+                    self.page.run_task(
+                        self._dismiss_evolution_celebration,
+                        event,
+                    )
+                ),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.CENTER
+        self.page.show_dialog(dialog)
+        self.page.run_task(self._animate_evolution_celebration)
+
+    async def _animate_evolution_celebration(self) -> None:
+        """Pop in the evolved texture with a short sparkle burst."""
+
+        await asyncio.sleep(0.08)
+        target = self._evolution_celebration_target
+        if target is None:
+            return
+
+        target.opacity = 1.0
+        target.scale = 1.0
+        for sparkle in self._evolution_celebration_sparkles:
+            sparkle.opacity = 1.0
+            sparkle.scale = 1.0
+        self.page.update()
+
+        await asyncio.sleep(0.42)
+        for sparkle in self._evolution_celebration_sparkles:
+            sparkle.opacity = 0.0
+            sparkle.scale = 0.72
+        self.page.update()
+
+    async def _dismiss_evolution_celebration(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Return to Team Editor and focus the evolved Pokémon's HP field."""
+
+        del event
+        row_index = self._evolution_celebration_row_index
+        self.page.pop_dialog()
+        self._evolution_celebration_target = None
+        self._evolution_celebration_sparkles = []
+        self._evolution_celebration_row_index = None
+        self.page.update()
+
+        await self._scroll_to_team_editor(
+            offset=350,
+            delay=0.05,
+        )
+
+        if row_index is not None:
+            hp_control = self.editor_controls.get((row_index, "HP"))
+            if isinstance(hp_control, ft.TextField):
+                await asyncio.sleep(0.05)
+                await hp_control.focus()
+
+        if self._pending_save_evolution_prompts:
+            await asyncio.sleep(0.10)
+            self._show_next_save_evolution_prompt()
+
+    def _collect_save_evolution_prompts(self) -> list[dict]:
+        """Find pure level evolutions newly triggered by this save."""
+
+        prompts: list[dict] = []
+
+        for row_index, current in enumerate(self.working_team):
+            if row_index >= len(self.saved_team_snapshot):
+                continue
+
+            previous = self.saved_team_snapshot[row_index]
+            current_name = str(current.get("Pokemon") or "").strip()
+            previous_name = str(previous.get("Pokemon") or "").strip()
+            if (
+                not current_name
+                or self._normalize_pokemon_name(current_name)
+                != self._normalize_pokemon_name(previous_name)
+            ):
+                continue
+
+            previous_level = self._safe_level(previous.get("Level"))
+            current_level = self._safe_level(current.get("Level"))
+            previous_item = self._normalize_item_name(
+                str(previous.get("Held Item") or "")
+            )
+            current_item = self._normalize_item_name(
+                str(current.get("Held Item") or "")
+            )
+
+            triggered_steps: list[dict] = []
+            trigger_reason = ""
+
+            for step in self._evolution_steps_for(current_name):
+                if (
+                    str(step.get("method") or "").strip().casefold()
+                    != "level"
+                ):
+                    continue
+                required_level = self._safe_level(step.get("level"))
+                if required_level <= 0 or current_level < required_level:
+                    continue
+
+                crossed_level = (
+                    previous_level < required_level <= current_level
+                )
+                everstone_removed = (
+                    previous_item == "everstone"
+                    and current_item != "everstone"
+                    and previous_level >= required_level
+                )
+
+                if crossed_level:
+                    trigger_reason = "level"
+                    triggered_steps.append(step)
+                elif everstone_removed:
+                    trigger_reason = "everstone_removed"
+                    triggered_steps.append(step)
+
+            if not triggered_steps:
+                continue
+
+            prompts.append({
+                "row_index": row_index,
+                "pokemon": deepcopy(current),
+                "steps": [dict(step) for step in triggered_steps],
+                "reason": trigger_reason,
+            })
+
+        return prompts
+
+    def _show_next_save_evolution_prompt(self) -> None:
+        """Show the next queued post-save evolution question or reminder."""
+
+        if not self._pending_save_evolution_prompts:
+            return
+
+        prompt = self._pending_save_evolution_prompts.pop(0)
+        row_index = int(prompt.get("row_index", -1))
+        pokemon = prompt.get("pokemon")
+        steps = prompt.get("steps")
+        reason = str(prompt.get("reason") or "")
+        if not isinstance(pokemon, dict) or not isinstance(steps, list):
+            self._show_next_save_evolution_prompt()
+            return
+
+        valid_steps = [step for step in steps if isinstance(step, dict)]
+        if not valid_steps:
+            self._show_next_save_evolution_prompt()
+            return
+
+
+        pokemon_name = str(pokemon.get("Pokemon") or "this Pokémon")
+        subject, object_pronoun, _ = self._evolution_pronouns(pokemon)
+        held_item = self._normalize_item_name(
+            str(pokemon.get("Held Item") or "")
+        )
+        required_level = self._safe_level(valid_steps[0].get("level"))
+
+        if held_item == "everstone":
+            target_names = [
+                str(step.get("to") or "").strip()
+                for step in valid_steps
+                if str(step.get("to") or "").strip()
+            ]
+            evolved_name = target_names[0] if len(target_names) == 1 else None
+            self._show_everstone_evolution_reminder(
+                pokemon,
+                evolved_name,
+                required_level=required_level,
+                continue_queue=True,
+            )
+            return
+
+        options = []
+        available_options = self._evolution_options_for(pokemon_name)
+        target_names = {
+            self._normalize_pokemon_name(step.get("to"))
+            for step in valid_steps
+        }
+        for option in available_options:
+            if (
+                self._normalize_pokemon_name(option.get("into"))
+                in target_names
+            ):
+                options.append(option)
+
+        if not options:
+            options = [
+                {
+                    "into": str(step.get("to") or "").strip(),
+                    "display_text": (
+                        f"Reach Lv. {self._safe_level(step.get('level'))}"
+                    ),
+                }
+                for step in valid_steps
+                if str(step.get("to") or "").strip()
+            ]
+
+        if not options:
+            self._show_next_save_evolution_prompt()
+            return
+
+        if reason == "everstone_removed":
+            intro = (
+                f"{pokemon_name} is no longer holding an Everstone. "
+                f"At Lv. {required_level}, {subject} can evolve now."
+            )
+        else:
+            intro = f"Looks like {pokemon_name} hit level {required_level}!"
+
+        if len(options) == 1:
+            evolved_name = str(options[0].get("into") or "").strip()
+            question = f"Has {subject} evolved into {evolved_name}?"
+        else:
+            question = f"Has {subject} evolved?"
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Evolution check",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(intro, color=TEXT_SECONDARY),
+                ft.Text(question, color=TEXT_SECONDARY),
+            ],
+            spacing=8,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Not Yet",
+                on_click=(
+                    lambda event:
+                    self._dismiss_save_evolution_prompt(event)
+                ),
+            ),
+            ft.Button(
+                content=(
+                    "Yes — choose evolution"
+                    if len(options) > 1
+                    else "Yes — evolve!"
+                ),
+                icon=ft.Icons.AUTO_AWESOME_ROUNDED,
+                bgcolor=PRIMARY_BLUE,
+                color=TEXT_PRIMARY,
+                icon_color=TEXT_PRIMARY,
+                on_click=(
+                    lambda event:
+                    self._accept_save_evolution_prompt(
+                        event,
+                        row_index,
+                        pokemon,
+                        options,
+                    )
+                ),
+            ),
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
+
+    def _dismiss_save_evolution_prompt(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Dismiss one post-save prompt and continue any queued checks."""
+
+        del event
+        self.page.pop_dialog()
+        self.page.update()
+        if self._pending_save_evolution_prompts:
+            self._show_next_save_evolution_prompt()
+
+    def _accept_save_evolution_prompt(
+        self,
+        event: ft.Event[ft.Button],
+        row_index: int,
+        pokemon: dict,
+        options: list[dict],
+    ) -> None:
+        """Continue an accepted post-save evolution question."""
+
+        del event
+        self.page.pop_dialog()
+
+        if len(options) > 1:
+            self._show_evolution_choice_dialog(
+                row_index,
+                pokemon,
+                options,
+                skip_standard_confirmation=True,
+            )
+            return
+
+        self._request_evolution_option(
+            row_index,
+            pokemon,
+            options[0],
+            skip_standard_confirmation=True,
+        )
+
+    def _show_everstone_evolution_reminder(
+        self,
+        pokemon: dict,
+        evolved_name: str | None,
+        *,
+        required_level: int = 0,
+        continue_queue: bool,
+    ) -> None:
+        """Explain that Everstone is currently preventing evolution."""
+
+        pokemon_name = str(pokemon.get("Pokemon") or "this Pokémon")
+        _, object_pronoun, _ = self._evolution_pronouns(pokemon)
+
+        if required_level > 0:
+            intro = (
+                f"Looks like {pokemon_name} hit level {required_level}, "
+                "but it's holding an Everstone!"
+            )
+        else:
+            intro = f"{pokemon_name} is holding an Everstone!"
+
+        if evolved_name:
+            guidance = (
+                f"If you'd like {pokemon_name} to evolve into {evolved_name}, "
+                f"take the Everstone from {object_pronoun}."
+            )
+        else:
+            guidance = (
+                f"If you'd like {pokemon_name} to evolve, take the Everstone "
+                f"from {object_pronoun}."
+            )
+
+        dialog = ft.AlertDialog()
+        dialog.modal = True
+        dialog.title = ft.Text(
+            "Everstone reminder",
+            weight=ft.FontWeight.BOLD,
+        )
+        dialog.content = ft.Column(
+            controls=[
+                ft.Text(intro, color=TEXT_SECONDARY),
+                ft.Text(guidance, color=TEXT_SECONDARY),
+            ],
+            spacing=8,
+            tight=True,
+        )
+        dialog.actions = [
+            ft.Button(
+                content="Got it",
+                on_click=(
+                    (
+                        lambda event:
+                        self._dismiss_save_evolution_prompt(event)
+                    )
+                    if continue_queue
+                    else lambda: self.page.pop_dialog()
+                ),
+            )
+        ]
+        dialog.actions_alignment = ft.MainAxisAlignment.END
+        self.page.show_dialog(dialog)
 
     def _build_type_badges(
         self,
@@ -6441,6 +7443,10 @@ class MyTeamView:
     ) -> None:
         del event
 
+        pending_evolution_prompts = (
+            self._collect_save_evolution_prompts()
+        )
+
         invalid_pokemon: list[str] = []
         invalid_natures: list[str] = []
         invalid_types: list[str] = []
@@ -6684,6 +7690,12 @@ class MyTeamView:
         self._sync_team_management_buttons()
 
         self.page.update()
+
+        self._pending_save_evolution_prompts = (
+            pending_evolution_prompts
+        )
+        if self._pending_save_evolution_prompts:
+            self._show_next_save_evolution_prompt()
 
     @staticmethod
     def _asset_src(

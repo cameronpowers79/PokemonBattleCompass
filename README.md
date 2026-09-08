@@ -8,7 +8,7 @@ The goal is not to solve Pokémon for you. It is a **compass, not a GPS**: usefu
 
 ## Current Version
 
-**0.2.1 Beta**
+**0.2.2 Beta**
 
 The original Excel prototype and Streamlit migration have been retired. The active application is now built with **Flet** and runs as:
 

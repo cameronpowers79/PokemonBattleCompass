@@ -44,19 +44,24 @@ class FletPreferencesBackend:
         )
 
     async def _invoke_with_retry(self, operation):
-        """Retry once when a newly attached Flet service is not ready yet."""
+        """Retry Flet invoke-listener timeouts while the service becomes ready."""
 
-        try:
-            return await operation()
-        except RuntimeError as error:
-            if not self._is_invoke_timeout(error):
-                raise
+        retry_delays = (0.35, 0.75, 1.25)
 
-        # A newly-created/reconnected Flet session can briefly have the
-        # SharedPreferences service registered on the Python side before its
-        # client-side invoke-method listener is ready.
-        await asyncio.sleep(0.35)
+        for attempt, delay in enumerate(retry_delays, start=1):
+            try:
+                return await operation()
+            except RuntimeError as error:
+                if not self._is_invoke_timeout(error):
+                    raise
 
+                # A newly-created/reconnected Flet session can briefly have the
+                # SharedPreferences service registered on the Python side before
+                # its client-side invoke-method listener is ready.
+                await asyncio.sleep(delay)
+
+        # Final attempt: let any remaining error propagate normally so startup
+        # still fails visibly if SharedPreferences truly never becomes ready.
         return await operation()
 
     async def get(self, key: str) -> str | None:
