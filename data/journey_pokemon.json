@@ -2241,7 +2241,8 @@
     "encounter_data_status": "verified_batch_2",
     "types": {
       "Natu": [
-        "Psychic"
+        "Psychic",
+        "Flying"
       ],
       "Xatu": [
         "Psychic",

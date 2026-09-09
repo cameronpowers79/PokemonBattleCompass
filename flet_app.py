@@ -7,6 +7,7 @@ either onboarding or the primary application shell.
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
 import flet as ft
@@ -30,8 +31,33 @@ ASSETS_DIR = PROJECT_ROOT / "assets"
 PENDING_IMPORT_KEY = "pokemon_battle_compass.pending_import.v1"
 
 
+def _diag(message: str) -> None:
+    """Print a timestamped diagnostic breadcrumb to the dev console."""
+
+    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    print(f"[{timestamp}] SESSION {message}", flush=True)
+
+
 async def main(page: ft.Page) -> None:
+    shared_preferences_services = [
+        service
+        for service in page.services
+        if isinstance(service, ft.SharedPreferences)
+    ]
+    _diag(
+        "main() entered "
+        f"page_id={id(page)} "
+        f"session_id={id(page.session)} "
+        f"services={len(page.services)} "
+        f"shared_preferences={len(shared_preferences_services)}"
+    )
+
     configure_page(page)
+    _diag(
+        "configure_page() complete "
+        f"page_id={id(page)} "
+        f"session_id={id(page.session)}"
+    )
 
     page.window.icon = str(
         ASSETS_DIR / "icon_windows.ico"
@@ -39,14 +65,42 @@ async def main(page: ft.Page) -> None:
 
     reference_data = load_reference_data()
 
+    _diag(
+        "creating FletPreferencesBackend "
+        f"page_id={id(page)} "
+        f"session_id={id(page.session)} "
+        f"services_before={len(page.services)}"
+    )
     storage = FletPreferencesBackend(page)
+    _diag(
+        "FletPreferencesBackend ready "
+        f"backend_id={id(storage)} "
+        f"preferences_id={id(storage.preferences)} "
+        f"services_after={len(page.services)}"
+    )
 
     app_state = AppState(
         storage=storage,
         reference_data=reference_data,
     )
 
-    await app_state.initialize()
+    _diag(
+        "app_state.initialize() start "
+        f"app_state_id={id(app_state)}"
+    )
+    try:
+        await app_state.initialize()
+    except Exception as error:
+        _diag(
+            "app_state.initialize() FAILED "
+            f"{type(error).__name__}: {error}"
+        )
+        raise
+    _diag(
+        "app_state.initialize() succeeded "
+        f"is_ready={app_state.is_ready} "
+        f"has_journey={app_state.has_journey}"
+    )
 
     pending_import_journey: dict | None = None
     pending_import_error: str | None = None

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 
 from ui.viewmodels.app_state import AppState
@@ -67,6 +68,13 @@ from ui.theme import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
 DATA_DIR = PROJECT_ROOT / "data"
+
+
+def _debug_log(message: str) -> None:
+    """Print timestamped diagnostic breadcrumbs during stability testing."""
+
+    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+    print(f"[{timestamp}] {message}", flush=True)
 
 AUTOCOMPLETE_DEBOUNCE_SECONDS = 0.45
 AUTOCOMPLETE_SUGGESTION_LIMIT = 30
@@ -2342,9 +2350,11 @@ class MyTeamView:
         if not succeeded:
             self.save_status.value = "Pokémon could not be moved."
             self.save_status.color = "#F87171"
+            _debug_log("TEAM persistence returned False")
             self.page.update()
             return
 
+        _debug_log("TEAM persistence succeeded")
         self.team_data = self.app_state.team_data
         self.box_data = self.app_state.box_data
         self.working_team = deepcopy(self.team_data)
@@ -4083,7 +4093,14 @@ class MyTeamView:
     ) -> None:
         """Update the Team Editor name/types and celebrate without auto-saving."""
 
+        _debug_log(
+            f"EVO apply start: row={row_index} {old_name} -> {evolved_name}"
+        )
+
         if row_index < 0 or row_index >= len(self.working_team):
+            _debug_log(
+                f"EVO apply aborted: row {row_index} is no longer valid"
+            )
             return
 
         record = self.working_team[row_index]
@@ -4108,6 +4125,9 @@ class MyTeamView:
         self.aegislash_entry_notice.update()
         self.save_status.update()
 
+        _debug_log(
+            f"EVO editor updated: row={row_index} {old_name} -> {evolved_name}"
+        )
         self._show_evolution_celebration(
             row_index,
             old_name,
@@ -4158,6 +4178,9 @@ class MyTeamView:
     ) -> None:
         """Show a small Pokémon-style evolution celebration."""
 
+        _debug_log(
+            f"EVO celebration build: row={row_index} {old_name} -> {evolved_name}"
+        )
         gender = pokemon.get("Gender")
         old_artwork = self._evolution_artwork(old_name, gender)
         new_artwork = self._evolution_artwork(evolved_name, gender)
@@ -4295,28 +4318,42 @@ class MyTeamView:
         ]
         dialog.actions_alignment = ft.MainAxisAlignment.CENTER
         self.page.show_dialog(dialog)
+        _debug_log("EVO celebration dialog shown")
         self.page.run_task(self._animate_evolution_celebration)
+        _debug_log("EVO animation task scheduled")
 
     async def _animate_evolution_celebration(self) -> None:
         """Pop in the evolved texture with a short sparkle burst."""
 
-        await asyncio.sleep(0.08)
-        target = self._evolution_celebration_target
-        if target is None:
-            return
+        _debug_log("EVO animation task start")
+        try:
+            await asyncio.sleep(0.08)
+            target = self._evolution_celebration_target
+            if target is None:
+                _debug_log("EVO animation exited: target already cleared")
+                return
 
-        target.opacity = 1.0
-        target.scale = 1.0
-        for sparkle in self._evolution_celebration_sparkles:
-            sparkle.opacity = 1.0
-            sparkle.scale = 1.0
-        self.page.update()
+            target.opacity = 1.0
+            target.scale = 1.0
+            for sparkle in self._evolution_celebration_sparkles:
+                sparkle.opacity = 1.0
+                sparkle.scale = 1.0
+            self.page.update()
+            _debug_log("EVO animation pop update complete")
 
-        await asyncio.sleep(0.42)
-        for sparkle in self._evolution_celebration_sparkles:
-            sparkle.opacity = 0.0
-            sparkle.scale = 0.72
-        self.page.update()
+            await asyncio.sleep(0.42)
+            for sparkle in self._evolution_celebration_sparkles:
+                sparkle.opacity = 0.0
+                sparkle.scale = 0.72
+            self.page.update()
+            _debug_log("EVO animation sparkle fade complete")
+        except Exception as error:
+            _debug_log(
+                f"EVO animation FAILED: {type(error).__name__}: {error}"
+            )
+            raise
+        finally:
+            _debug_log("EVO animation task exit")
 
     async def _dismiss_evolution_celebration(
         self,
@@ -4326,26 +4363,41 @@ class MyTeamView:
 
         del event
         row_index = self._evolution_celebration_row_index
+        _debug_log(
+            f"EVO dismiss task start: row={row_index}"
+        )
         self.page.pop_dialog()
         self._evolution_celebration_target = None
         self._evolution_celebration_sparkles = []
         self._evolution_celebration_row_index = None
         self.page.update()
+        _debug_log("EVO celebration dialog cleared")
 
         await self._scroll_to_team_editor(
             offset=350,
             delay=0.05,
         )
+        _debug_log("EVO return-to-editor scroll complete")
 
         if row_index is not None:
             hp_control = self.editor_controls.get((row_index, "HP"))
             if isinstance(hp_control, ft.TextField):
                 await asyncio.sleep(0.05)
                 await hp_control.focus()
+                _debug_log(
+                    f"EVO HP focus complete: row={row_index}"
+                )
+            else:
+                _debug_log(
+                    f"EVO HP focus skipped: no mounted HP field for row={row_index}"
+                )
 
         if self._pending_save_evolution_prompts:
             await asyncio.sleep(0.10)
             self._show_next_save_evolution_prompt()
+            _debug_log("EVO next queued save prompt shown")
+
+        _debug_log("EVO dismiss task exit")
 
     def _collect_save_evolution_prompts(self) -> list[dict]:
         """Find pure level evolutions newly triggered by this save."""
@@ -4558,7 +4610,12 @@ class MyTeamView:
         self.page.pop_dialog()
         self.page.update()
         if self._pending_save_evolution_prompts:
+            _debug_log(
+                f"TEAM save queued {len(self._pending_save_evolution_prompts)} evolution prompt(s)"
+            )
             self._show_next_save_evolution_prompt()
+        else:
+            _debug_log("TEAM save complete: no evolution prompts")
 
     def _accept_save_evolution_prompt(
         self,
@@ -7443,6 +7500,7 @@ class MyTeamView:
     ) -> None:
         del event
 
+        _debug_log("TEAM save start")
         pending_evolution_prompts = (
             self._collect_save_evolution_prompts()
         )
@@ -7645,6 +7703,7 @@ class MyTeamView:
             return
 
         try:
+            _debug_log("TEAM persistence call start")
             save_succeeded = await self.app_state.save_team_and_box(
                 saved_team,
                 self.working_box,
@@ -7654,6 +7713,9 @@ class MyTeamView:
                 f"Team could not be saved: {error}"
             )
             self.save_status.color = "#F87171"
+            _debug_log(
+                f"TEAM persistence FAILED: {type(error).__name__}: {error}"
+            )
             self.page.update()
             return
 
