@@ -1273,13 +1273,13 @@ class BattleCompassView:
 
     def _show_type_matchups(
         self,
-        pokemon_type: str,
+        pokemon_types: list[str],
     ) -> None:
-        """Show defensive single-type matchup information."""
+        """Show the Pokémon's combined defensive type matchups."""
 
         show_type_matchup_dialog(
             page=self.page,
-            pokemon_type=pokemon_type,
+            pokemon_types=pokemon_types,
             type_chart=self.type_chart,
         )
 

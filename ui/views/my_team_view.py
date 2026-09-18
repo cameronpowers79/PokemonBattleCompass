@@ -4715,6 +4715,7 @@ class MyTeamView:
             list[ft.Control],
             [],
         )
+        pokemon_types: list[str] = []
 
         for field_name in ("Type1", "Type2"):
             pokemon_type = pokemon.get(field_name)
@@ -4724,8 +4725,13 @@ class MyTeamView:
 
             pokemon_type = pokemon_type.strip()
 
-            if not pokemon_type:
+            if (
+                not pokemon_type
+                or pokemon_type in pokemon_types
+            ):
                 continue
+
+            pokemon_types.append(pokemon_type)
 
             badge_path = (
                 ASSETS_DIR
@@ -4746,26 +4752,28 @@ class MyTeamView:
                     color=TEXT_SECONDARY,
                 )
 
-            badges.append(
-                ft.GestureDetector(
-                    content=badge_control,
-                    mouse_cursor=ft.MouseCursor.CLICK,
-                    on_tap=(
-                        lambda event,
-                        selected_type=pokemon_type:
-                        self._show_type_matchups(
-                            event,
-                            selected_type,
-                        )
-                    ),
-                )
-            )
+            badges.append(badge_control)
 
-        return ft.Row(
-            controls=badges,
-            spacing=8,
-            wrap=True,
-            alignment=ft.MainAxisAlignment.CENTER,
+        if not badges:
+            return ft.Container()
+
+        return ft.GestureDetector(
+            content=ft.Row(
+                controls=badges,
+                spacing=8,
+                wrap=False,
+                tight=True,
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=(
+                lambda event,
+                selected_types=tuple(pokemon_types):
+                self._show_type_matchups(
+                    event,
+                    list(selected_types),
+                )
+            ),
         )
     @staticmethod
     def _build_nature_summary(
@@ -6240,15 +6248,15 @@ class MyTeamView:
     def _show_type_matchups(
         self,
         event: ft.TapEvent[ft.GestureDetector],
-        pokemon_type: str,
+        pokemon_types: list[str],
     ) -> None:
-        """Show defensive single-type matchup information."""
+        """Show the Pokémon's combined defensive type matchups."""
 
         del event
 
         show_type_matchup_dialog(
             page=self.page,
-            pokemon_type=pokemon_type,
+            pokemon_types=pokemon_types,
             type_chart=self.type_chart,
         )
 

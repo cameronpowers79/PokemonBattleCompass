@@ -138,13 +138,19 @@ def _build_type_group(
 def show_type_matchup_dialog(
     *,
     page: ft.Page,
-    pokemon_type: str,
     type_chart: dict,
+    pokemon_type: str | None = None,
+    pokemon_types: list[str] | None = None,
     mode: Literal["defensive", "offensive"] = "defensive",
 ) -> None:
-    """Show single-type defensive or offensive matchups."""
+    """Show defensive Pokémon typing or offensive single-type matchups."""
 
     if mode == "offensive":
+        attack_type = str(pokemon_type or "").strip()
+
+        if not attack_type:
+            return
+
         super_effective: list[str] = []
         not_very_effective: list[str] = []
         no_effect: list[str] = []
@@ -153,7 +159,7 @@ def show_type_matchup_dialog(
         for defending_type in POKEMON_TYPES:
             multiplier = (
                 type_chart.get(
-                    pokemon_type,
+                    attack_type,
                     {},
                 ).get(
                     defending_type,
@@ -211,56 +217,111 @@ def show_type_matchup_dialog(
             )
         )
 
-        dialog_title = f"{pokemon_type} — Offensive Matchups"
+        dialog_title = f"{attack_type} — Offensive Matchups"
         explanation = (
-            f"These results show how a {pokemon_type}-type move affects "
+            f"These results show how a {attack_type}-type move affects "
             "a single defending type. A second defending type can change "
             "the final matchup."
         )
+        title_types = [attack_type]
+
     else:
-        weak_to: list[str] = []
-        resists: list[str] = []
+        raw_types = (
+            pokemon_types
+            if pokemon_types is not None
+            else [pokemon_type]
+        )
+
+        defending_types: list[str] = []
+
+        for value in raw_types:
+            if not isinstance(value, str):
+                continue
+
+            normalized = value.strip()
+
+            if (
+                normalized
+                and normalized in POKEMON_TYPES
+                and normalized not in defending_types
+            ):
+                defending_types.append(normalized)
+
+        if not defending_types:
+            return
+
+        four_x_weak: list[str] = []
+        two_x_weak: list[str] = []
+        half_resists: list[str] = []
+        quarter_resists: list[str] = []
         immune_to: list[str] = []
-        neutral = []
+        neutral: list[str] = []
 
         for attack_type in POKEMON_TYPES:
-            multiplier = (
-                type_chart.get(
-                    attack_type,
-                    {},
-                ).get(
-                    pokemon_type,
-                    1,
+            multiplier = 1.0
+
+            for defending_type in defending_types:
+                multiplier *= float(
+                    type_chart.get(
+                        attack_type,
+                        {},
+                    ).get(
+                        defending_type,
+                        1,
+                    )
                 )
-            )
 
             if multiplier == 0:
                 immune_to.append(attack_type)
+            elif multiplier >= 4:
+                four_x_weak.append(attack_type)
             elif multiplier > 1:
-                weak_to.append(attack_type)
+                two_x_weak.append(attack_type)
+            elif multiplier <= 0.25:
+                quarter_resists.append(attack_type)
             elif multiplier < 1:
-                resists.append(attack_type)
+                half_resists.append(attack_type)
             else:
                 neutral.append(attack_type)
 
         groups = cast(list[ft.Control], [])
 
-        if weak_to:
+        if four_x_weak:
             groups.append(
                 _build_type_group(
-                    title="Weak to",
-                    multiplier_label="2× damage",
-                    types=weak_to,
+                    title="Especially weak to",
+                    multiplier_label="4× damage",
+                    types=four_x_weak,
                     accent="#FCA5A5",
                 )
             )
 
-        if resists:
+        if two_x_weak:
+            groups.append(
+                _build_type_group(
+                    title="Weak to",
+                    multiplier_label="2× damage",
+                    types=two_x_weak,
+                    accent="#FCA5A5",
+                )
+            )
+
+        if half_resists:
             groups.append(
                 _build_type_group(
                     title="Resists",
                     multiplier_label="½× damage",
-                    types=resists,
+                    types=half_resists,
+                    accent="#86EFAC",
+                )
+            )
+
+        if quarter_resists:
+            groups.append(
+                _build_type_group(
+                    title="Strongly resists",
+                    multiplier_label="¼× damage",
+                    types=quarter_resists,
                     accent="#86EFAC",
                 )
             )
@@ -284,12 +345,34 @@ def show_type_matchup_dialog(
             )
         )
 
-        dialog_title = f"{pokemon_type} — Defensive Matchups"
-        explanation = (
-            "These results describe a single "
-            f"{pokemon_type} type. A second type "
-            "can change the final matchup."
-        )
+        type_label = " / ".join(defending_types)
+        dialog_title = f"{type_label} — Defensive Matchups"
+
+        if len(defending_types) == 1:
+            explanation = (
+                f"These results describe a {defending_types[0]}-type "
+                "Pokémon's defensive matchups."
+            )
+        else:
+            explanation = (
+                "These results combine both of this Pokémon's types, "
+                "including 4× weaknesses, ¼× resistances, and immunities."
+            )
+
+        title_types = defending_types
+
+    title_badges = cast(
+        list[ft.Control],
+        [
+            ft.Image(
+                src=_type_badge_src(display_type),
+                height=28,
+                fit=ft.BoxFit.CONTAIN,
+                semantics_label=f"{display_type} type",
+            )
+            for display_type in title_types
+        ],
+    )
 
     page.show_dialog(
         ft.AlertDialog(
@@ -298,11 +381,10 @@ def show_type_matchup_dialog(
                 controls=cast(
                     list[ft.Control],
                     [
-                        ft.Image(
-                            src=_type_badge_src(pokemon_type),
-                            height=28,
-                            fit=ft.BoxFit.CONTAIN,
-                            semantics_label=f"{pokemon_type} type",
+                        ft.Row(
+                            controls=title_badges,
+                            spacing=6,
+                            tight=True,
                         ),
                         ft.Text(
                             dialog_title,
@@ -352,7 +434,6 @@ def show_type_matchup_dialog(
             actions_alignment=ft.MainAxisAlignment.END,
         )
     )
-
 
 def show_ability_dialog(
     *,

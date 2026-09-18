@@ -59,7 +59,7 @@ class OpponentCard(ft.Container):
         defensive_effectiveness_label: str,
         defensive_effectiveness_color: str,
         defensive_effectiveness_background: str,
-        on_type_badge_click: Callable[[str], None],
+        on_type_badge_click: Callable[[list[str]], None],
         on_move_type_badge_click: Callable[[str], None],
     ) -> None:
         self.app_page = page
@@ -259,30 +259,42 @@ class OpponentCard(ft.Container):
     ) -> ft.Control:
         """Build the visually dominant opponent Pokémon block."""
 
+        pokemon_types = [
+            pokemon_type
+            for pokemon_type, _
+            in self.type_badges
+        ]
+
         badge_controls = cast(
             list[ft.Control],
             [
-                ft.GestureDetector(
-                    content=ft.Image(
-                        src=badge_src,
-                        height=22,
-                        fit=ft.BoxFit.CONTAIN,
-                        semantics_label=(
-                            f"{pokemon_type} type"
-                        ),
-                    ),
-                    mouse_cursor=ft.MouseCursor.CLICK,
-                    on_tap=(
-                        lambda event,
-                        selected_type=pokemon_type:
-                        self.on_type_badge_click(
-                            selected_type
-                        )
+                ft.Image(
+                    src=badge_src,
+                    height=22,
+                    fit=ft.BoxFit.CONTAIN,
+                    semantics_label=(
+                        f"{pokemon_type} type"
                     ),
                 )
                 for pokemon_type, badge_src
                 in self.type_badges
             ],
+        )
+
+        combined_type_badge = ft.GestureDetector(
+            content=ft.Row(
+                controls=badge_controls,
+                spacing=8,
+                tight=True,
+            ),
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=(
+                lambda event,
+                selected_types=tuple(pokemon_types):
+                self.on_type_badge_click(
+                    list(selected_types)
+                )
+            ),
         )
 
         return ft.Column(
@@ -305,7 +317,7 @@ class OpponentCard(ft.Container):
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Row(
-                        controls=badge_controls,
+                        controls=[combined_type_badge],
                         spacing=8,
                         wrap=True,
                         alignment=(
