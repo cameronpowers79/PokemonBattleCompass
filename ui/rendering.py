@@ -145,6 +145,7 @@ def slugify_pokemon_name(pokemon_name):
         .replace(".", "")
         .replace("'", "")
         .replace(" ", "-")
+        .replace(":", "")
     )
 
 
