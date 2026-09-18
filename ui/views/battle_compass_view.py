@@ -24,6 +24,7 @@ from ui.components.other_strong_options import (
     StrongOptionNote,
 )
 from ui.components.recommendation_card import RecommendationCard
+from engine.mechanics import get_effective_pokemon_types
 from ui.components.reference_dialogs import (
     show_type_matchup_dialog,
 )
@@ -969,6 +970,11 @@ class BattleCompassView:
                             )
                         ),
                         use_texture=True,
+                        held_item=(
+                            recommendation.pokemon.get(
+                                "Held Item"
+                            )
+                        ),
                     )
                 ),
                 type_badges=(
@@ -1145,6 +1151,9 @@ class BattleCompassView:
                     )
                 ),
                 use_texture=True,
+                held_item=opponent.get(
+                    "Held Item"
+                ),
             ),
             level=opponent.get("Level"),
             type_badges=(
@@ -1325,6 +1334,9 @@ class BattleCompassView:
                 pokemon["Pokemon"],
                 gender=pokemon.get("Gender"),
                 use_texture=False,
+                held_item=pokemon.get(
+                    "Held Item"
+                ),
             ),
             type_badges=(
                 self._pokemon_type_badges(
@@ -1378,10 +1390,9 @@ class BattleCompassView:
         self,
         pokemon: dict,
     ) -> list[tuple[str, str]]:
-        types = [
-            pokemon.get("Type1"),
-            pokemon.get("Type2"),
-        ]
+        types = get_effective_pokemon_types(
+            pokemon
+        )
 
         return [
             (
@@ -1407,12 +1418,14 @@ class BattleCompassView:
         gender: str | None = None,
         use_gmax: bool = False,
         use_texture: bool,
+        held_item: object = None,
     ) -> str:
         asset_path = get_sprite_path(
             pokemon_name,
             gender=gender,
             use_gmax=use_gmax,
             use_texture=use_texture,
+            held_item=held_item,
         )
 
         if asset_path is None:

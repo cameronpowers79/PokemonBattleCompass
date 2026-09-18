@@ -36,6 +36,102 @@ WEATHER_SETTING_ABILITIES = {
 }
 
 
+SILVALLY_MEMORY_TYPE_MAP = {
+    "bug memory": "Bug",
+    "dark memory": "Dark",
+    "dragon memory": "Dragon",
+    "electric memory": "Electric",
+    "fairy memory": "Fairy",
+    "fighting memory": "Fighting",
+    "fire memory": "Fire",
+    "flying memory": "Flying",
+    "ghost memory": "Ghost",
+    "grass memory": "Grass",
+    "ground memory": "Ground",
+    "ice memory": "Ice",
+    "poison memory": "Poison",
+    "psychic memory": "Psychic",
+    "rock memory": "Rock",
+    "steel memory": "Steel",
+    "water memory": "Water",
+}
+
+
+def get_silvally_memory_type(pokemon):
+    """Return Silvally's active RKS System type from its held Memory."""
+
+    if not isinstance(pokemon, dict):
+        return None
+
+    pokemon_name = str(
+        pokemon.get("Pokemon") or ""
+    ).strip().casefold()
+
+    if pokemon_name != "silvally":
+        return None
+
+    held_item = " ".join(
+        str(
+            pokemon.get("Held Item")
+            or ""
+        ).strip().casefold().split()
+    )
+
+    return SILVALLY_MEMORY_TYPE_MAP.get(
+        held_item
+    )
+
+
+def get_effective_pokemon_types(pokemon):
+    """Return the Pokémon's active defensive typing.
+
+    Silvally is always Normal without a Memory. With a Memory, RKS System
+    changes it to the corresponding single type. Type: Null and every other
+    Pokémon retain their stored types.
+    """
+
+    if not isinstance(pokemon, dict):
+        return [None, None]
+
+    pokemon_name = str(
+        pokemon.get("Pokemon") or ""
+    ).strip().casefold()
+
+    if pokemon_name == "silvally":
+        memory_type = get_silvally_memory_type(
+            pokemon
+        )
+        return [
+            memory_type or "Normal",
+            "",
+        ]
+
+    return [
+        pokemon.get("Type1"),
+        pokemon.get("Type2"),
+    ]
+
+
+def get_effective_move_type(attacker, move):
+    """Return a move's deterministic active type for this attacker."""
+
+    if not isinstance(move, dict):
+        return None
+
+    move_name = str(
+        move.get("Move") or ""
+    ).strip().casefold()
+
+    if move_name == "multi-attack":
+        memory_type = get_silvally_memory_type(
+            attacker
+        )
+        if memory_type:
+            return memory_type
+
+    return move.get("Type")
+
+
 def get_guaranteed_weather(attacker, defender):
     """Return deterministic entry weather established by the matchup.
 
@@ -90,10 +186,11 @@ def get_weather_defense_stat_multiplier(
     if weather != "Sandstorm":
         return 1
 
-    defender_types = {
-        defender.get("Type1"),
-        defender.get("Type2"),
-    }
+    defender_types = set(
+        get_effective_pokemon_types(
+            defender
+        )
+    )
 
     if "Rock" not in defender_types:
         return 1

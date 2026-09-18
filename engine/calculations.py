@@ -17,6 +17,8 @@ from engine.mechanics import (
     get_guaranteed_weather,
     get_weather_damage_multiplier,
     get_weather_defense_stat_multiplier,
+    get_effective_pokemon_types,
+    get_effective_move_type,
 )
 from engine.notes import build_notes, build_battle_notes, build_why_explanation
 
@@ -105,6 +107,13 @@ def resolve_move_for_matchup(
     """Return a matchup-specific move copy for deterministic custom rules."""
     resolved = dict(move)
     damage_method = move.get("DamageMethod")
+
+    effective_move_type = get_effective_move_type(
+        attacker,
+        resolved,
+    )
+    if effective_move_type:
+        resolved["Type"] = effective_move_type
 
     if damage_method == "HigherOffensiveStat":
         attack = get_stat(
@@ -342,10 +351,9 @@ def fixed_damage_can_hit(
     if ability_rules is None:
         ability_rules = []
 
-    defender_types = [
-        defender.get("Type1"),
-        defender.get("Type2"),
-    ]
+    defender_types = get_effective_pokemon_types(
+        defender
+    )
 
     type_multiplier = get_move_type_multiplier(
         move,
@@ -448,10 +456,9 @@ def calculate_move_score(
         attacker.get("Type1"),
         attacker.get("Type2"),
     ]
-    defender_types = [
-        defender.get("Type1"),
-        defender.get("Type2"),
-    ]
+    defender_types = get_effective_pokemon_types(
+        defender
+    )
 
     effectiveness = get_move_type_multiplier(
         move,
@@ -629,10 +636,9 @@ def calculate_damage_range(
         attacker.get("Type1"),
         attacker.get("Type2"),
     ]
-    defender_types = [
-        defender.get("Type1"),
-        defender.get("Type2"),
-    ]
+    defender_types = get_effective_pokemon_types(
+        defender
+    )
 
     effectiveness = get_move_type_multiplier(
         move,
@@ -1014,10 +1020,9 @@ def build_no_recommendation_reason(
         opponent.get("Pokemon")
         or "The opponent"
     )
-    opponent_types = [
-        opponent.get("Type1"),
-        opponent.get("Type2"),
-    ]
+    opponent_types = get_effective_pokemon_types(
+        opponent
+    )
     blocked_options = []
 
     for pokemon in team:
@@ -1030,6 +1035,12 @@ def build_no_recommendation_reason(
             pokemon,
             moves_data,
         ):
+            move = resolve_move_for_matchup(
+                pokemon,
+                opponent,
+                move,
+            )
+
             if move.get("Category") == "Status":
                 continue
 
@@ -1328,10 +1339,9 @@ def calculate_offensive_multiplier(
         move,
     )
 
-    defender_types = [
-        defender.get("Type1"),
-        defender.get("Type2")
-    ]
+    defender_types = get_effective_pokemon_types(
+        defender
+    )
 
     type_multiplier = get_move_type_multiplier(
         move,
@@ -1377,10 +1387,9 @@ def calculate_incoming_multiplier(
         move,
     )
 
-    defender_types = [
-        defender.get("Type1"),
-        defender.get("Type2")
-    ]
+    defender_types = get_effective_pokemon_types(
+        defender
+    )
 
     type_multiplier = get_move_type_multiplier(
         move,
@@ -1454,10 +1463,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         type_effectiveness = get_move_type_multiplier(
             best_move,
-            [
-                opponent.get("Type1"),
-                opponent.get("Type2"),
-            ],
+            get_effective_pokemon_types(
+                opponent
+            ),
         )
 
         best_effective_power = get_effective_move_power(
@@ -1622,10 +1630,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         incoming_type_multiplier = get_move_type_multiplier(
             worst_move,
-            [
-                pokemon.get("Type1"),
-                pokemon.get("Type2"),
-            ],
+            get_effective_pokemon_types(
+                pokemon
+            ),
         )
 
         incoming_multiplier = calculate_incoming_multiplier(
@@ -1638,10 +1645,9 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
 
         offensive_type_multiplier = get_move_type_multiplier(
             best_move,
-            [
-                opponent.get("Type1"),
-                opponent.get("Type2"),
-            ],
+            get_effective_pokemon_types(
+                opponent
+            ),
         )
 
         offensive_multiplier = calculate_offensive_multiplier(

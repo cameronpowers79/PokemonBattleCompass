@@ -32,6 +32,7 @@ from engine.item_recommendations import (
     recommend_held_items,
 )
 from engine.moves import apply_move_metadata
+from engine.mechanics import get_effective_pokemon_types
 from ui.constants import POKEMON_TYPES, TYPE_COLORS
 from ui.rendering import (
     asset_exists,
@@ -563,6 +564,22 @@ class MyTeamView:
                     [],
                 ).append(dict(step))
 
+        for record in (
+            *self.working_team,
+            *self.saved_team_snapshot,
+            *self.working_box,
+            *self.saved_box_snapshot,
+        ):
+            pokemon_name = str(
+                record.get("Pokemon")
+                or ""
+            ).strip()
+            if pokemon_name:
+                self._apply_known_pokemon_types(
+                    record,
+                    pokemon_name,
+                )
+
         self.box_table_host = ft.Container()
         self.move_to_party_button: ft.Button | None = None
         self.release_boxed_button: ft.Button | None = None
@@ -905,6 +922,19 @@ class MyTeamView:
 
         record["Type1"] = known_types[0]
         record["Type2"] = known_types[1]
+
+        effective_types = get_effective_pokemon_types(
+            record
+        )
+        record["Type1"] = str(
+            effective_types[0]
+            or ""
+        ).strip()
+        record["Type2"] = str(
+            effective_types[1]
+            or ""
+        ).strip()
+
         return True
 
     def begin_prefilled_pokemon_entry(
@@ -1240,6 +1270,7 @@ class MyTeamView:
             pokemon_name,
             gender=pokemon.get("Gender"),
             use_texture=False,
+            held_item=pokemon.get("Held Item"),
         )
 
         if sprite_path is None:
@@ -1813,6 +1844,7 @@ class MyTeamView:
                 pokemon_name,
                 gender=pokemon.get("Gender"),
                 use_texture=False,
+                held_item=pokemon.get("Held Item"),
             )
             if sprite_path is None:
                 sprite: ft.Control = ft.Icon(
@@ -3198,11 +3230,19 @@ class MyTeamView:
             row_index
         ][column] = value
 
-        if column == "Pokemon" and isinstance(value, str):
+        if column in {"Pokemon", "Held Item"}:
             record = self.working_team[row_index]
-            if self._apply_known_pokemon_types(
-                record,
-                value,
+            pokemon_name = str(
+                record.get("Pokemon")
+                or ""
+            ).strip()
+
+            if (
+                pokemon_name
+                and self._apply_known_pokemon_types(
+                    record,
+                    pokemon_name,
+                )
             ):
                 for type_column in ("Type1", "Type2"):
                     type_control = self.editor_controls.get(
@@ -3220,7 +3260,7 @@ class MyTeamView:
         self.aegislash_entry_notice.update()
         self.save_status.update()
 
-        if column == "Pokemon":
+        if column in {"Pokemon", "Held Item"}:
             for type_column in ("Type1", "Type2"):
                 type_control = self.editor_controls.get(
                     (row_index, type_column)
@@ -3422,6 +3462,7 @@ class MyTeamView:
             pokemon_name,
             gender=pokemon.get("Gender"),
             use_texture=True,
+            held_item=pokemon.get("Held Item"),
         )
 
         if sprite_path is None:
@@ -4140,6 +4181,7 @@ class MyTeamView:
         pokemon_name: str,
         gender: object,
         *,
+        held_item: object = None,
         size: int = 112,
     ) -> ft.Control:
         """Build one texture for the evolution celebration."""
@@ -4148,6 +4190,7 @@ class MyTeamView:
             pokemon_name,
             gender=gender,
             use_texture=True,
+            held_item=held_item,
         )
         if sprite_path is None:
             return ft.Container(
@@ -4182,8 +4225,17 @@ class MyTeamView:
             f"EVO celebration build: row={row_index} {old_name} -> {evolved_name}"
         )
         gender = pokemon.get("Gender")
-        old_artwork = self._evolution_artwork(old_name, gender)
-        new_artwork = self._evolution_artwork(evolved_name, gender)
+        held_item = pokemon.get("Held Item")
+        old_artwork = self._evolution_artwork(
+            old_name,
+            gender,
+            held_item=held_item,
+        )
+        new_artwork = self._evolution_artwork(
+            evolved_name,
+            gender,
+            held_item=held_item,
+        )
 
         self._evolution_celebration_target = ft.Container(
             content=new_artwork,
@@ -4717,13 +4769,13 @@ class MyTeamView:
         )
         pokemon_types: list[str] = []
 
-        for field_name in ("Type1", "Type2"):
-            pokemon_type = pokemon.get(field_name)
-
-            if not isinstance(pokemon_type, str):
-                continue
-
-            pokemon_type = pokemon_type.strip()
+        for raw_type in get_effective_pokemon_types(
+            pokemon
+        ):
+            pokemon_type = str(
+                raw_type
+                or ""
+            ).strip()
 
             if (
                 not pokemon_type
@@ -6970,6 +7022,16 @@ class MyTeamView:
             return
 
         target["Held Item"] = item_name
+
+        pokemon_name = str(
+            target.get("Pokemon")
+            or ""
+        ).strip()
+        if pokemon_name:
+            self._apply_known_pokemon_types(
+                target,
+                pokemon_name,
+            )
 
         self.editor_controls.clear()
         self._autocomplete_edit_versions.clear()

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from engine.mechanics import get_silvally_memory_type
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
 
 try:
@@ -155,6 +156,7 @@ def get_sprite_path(
     use_gmax=False,
     use_texture=True,
     sprite_dir=None,
+    held_item=None,
 ):
     display_name = str(pokemon_name or "").strip()
 
@@ -162,7 +164,28 @@ def get_sprite_path(
     if is_galarian:
         display_name = display_name[len("Galarian "):].strip()
 
-    sprite_name = slugify_pokemon_name(display_name)
+    base_sprite_name = slugify_pokemon_name(
+        display_name
+    )
+
+    sprite_names = [base_sprite_name]
+
+    if display_name.casefold() == "silvally":
+        memory_type = get_silvally_memory_type(
+            {
+                "Pokemon": "Silvally",
+                "Held Item": held_item,
+            }
+        )
+
+        if memory_type:
+            memory_sprite_name = (
+                f"silvally-{memory_type.casefold()}"
+            )
+            sprite_names.insert(
+                0,
+                memory_sprite_name,
+            )
 
     is_female = (
         str(gender).strip().lower() == "female"
@@ -173,48 +196,49 @@ def get_sprite_path(
 
     candidates = []
 
-    if use_texture:
-        if is_female:
+    for sprite_name in sprite_names:
+        if use_texture:
+            if is_female:
+                if use_gmax:
+                    candidates.append(
+                        female_dir / f"{sprite_name}-gmax-texture.png"
+                    )
+
+                candidates.extend([
+                    female_dir / f"{sprite_name}-galar-texture.png",
+                    female_dir / f"{sprite_name}-texture.png",
+                ])
+
             if use_gmax:
                 candidates.append(
-                    female_dir / f"{sprite_name}-gmax-texture.png"
+                    base_dir / f"{sprite_name}-gmax-texture.png"
                 )
 
             candidates.extend([
-                female_dir / f"{sprite_name}-galar-texture.png",
-                female_dir / f"{sprite_name}-texture.png",
+                base_dir / f"{sprite_name}-galar-texture.png",
+                base_dir / f"{sprite_name}-texture.png",
+            ])
+
+        if is_female:
+            if use_gmax:
+                candidates.append(
+                    female_dir / f"{sprite_name}-gmax.png"
+                )
+
+            candidates.extend([
+                female_dir / f"{sprite_name}-galar.png",
+                female_dir / f"{sprite_name}.png",
             ])
 
         if use_gmax:
             candidates.append(
-                base_dir / f"{sprite_name}-gmax-texture.png"
+                base_dir / f"{sprite_name}-gmax.png"
             )
 
         candidates.extend([
-            base_dir / f"{sprite_name}-galar-texture.png",
-            base_dir / f"{sprite_name}-texture.png",
+            base_dir / f"{sprite_name}-galar.png",
+            base_dir / f"{sprite_name}.png",
         ])
-
-    if is_female:
-        if use_gmax:
-            candidates.append(
-                female_dir / f"{sprite_name}-gmax.png"
-            )
-
-        candidates.extend([
-            female_dir / f"{sprite_name}-galar.png",
-            female_dir / f"{sprite_name}.png",
-        ])
-
-    if use_gmax:
-        candidates.append(
-            base_dir / f"{sprite_name}-gmax.png"
-        )
-
-    candidates.extend([
-        base_dir / f"{sprite_name}-galar.png",
-        base_dir / f"{sprite_name}.png",
-    ])
 
     for candidate in candidates:
         if asset_exists(candidate):
@@ -222,18 +246,21 @@ def get_sprite_path(
 
     return None
 
+
 def get_sprite_src(
     pokemon_name: str,
     gender=None,
     use_gmax=False,
     use_texture=True,
     normalized=False,
+    held_item=None,
 ) -> str | None:
     source_path = get_sprite_path(
         pokemon_name,
         gender=gender,
         use_gmax=use_gmax,
         use_texture=use_texture,
+        held_item=held_item,
     )
 
     if source_path is None:
@@ -267,14 +294,16 @@ def get_sprite_img_html(
     texture_size=None,
     gender=None,
     use_gmax=False,
-    use_texture=True
+    use_texture=True,
+    held_item=None,
 ):
 
     sprite_path = get_sprite_path(
         pokemon_name,
         gender=gender,
         use_gmax=use_gmax,
-        use_texture=use_texture
+        use_texture=use_texture,
+        held_item=held_item,
     )
 
     if sprite_path is None:
