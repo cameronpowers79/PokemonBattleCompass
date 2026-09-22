@@ -8,6 +8,7 @@ unofficial.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import cast
 
 import flet as ft
@@ -49,8 +50,11 @@ class AboutView:
     def __init__(
         self,
         page: ft.Page,
+        *,
+        on_show_tutorial: Callable[[], None] | None = None,
     ) -> None:
         self.page = page
+        self.on_show_tutorial = on_show_tutorial
         self.nerd_stuff_host = ft.Container(
             visible=False,
         )
@@ -101,6 +105,7 @@ class AboutView:
                             version=HERO_VERSION,
                             tagline=HERO_TAGLINE,
                         ),
+                        self._build_tutorial_card(),
                         *welcome_and_features,
                         self._build_nerd_stuff_card(),
                         *architecture_and_roadmap,
@@ -118,6 +123,103 @@ class AboutView:
             width=CONTENT_MAX_WIDTH,
             alignment=ft.Alignment.TOP_CENTER,
         )
+
+    def _build_tutorial_card(self) -> ft.Control:
+        """Build the permanent guided-tutorial replay card."""
+
+        return ft.Container(
+            content=ft.ResponsiveRow(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Container(
+                            content=ft.Row(
+                                controls=[
+                                    ft.Container(
+                                        content=ft.Icon(
+                                            ft.Icons.EXPLORE_ROUNDED,
+                                            size=22,
+                                            color=PRIMARY_BLUE,
+                                        ),
+                                        width=40,
+                                        height=40,
+                                        alignment=ft.Alignment.CENTER,
+                                        bgcolor=PRIMARY_BLUE_SOFT,
+                                        border_radius=10,
+                                    ),
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Guided Tutorial",
+                                                size=20,
+                                                weight=ft.FontWeight.BOLD,
+                                                font_family=FONT_FAMILY_HEADER,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                (
+                                                    "Replay the in-app walkthrough "
+                                                    "for the Battle Compass and its "
+                                                    "less-obvious clickable features."
+                                                ),
+                                                size=13,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=3,
+                                        tight=True,
+                                        expand=True,
+                                    ),
+                                ],
+                                spacing=12,
+                                vertical_alignment=(
+                                    ft.CrossAxisAlignment.CENTER
+                                ),
+                            ),
+                            col={"xs": 12, "sm": 8},
+                        ),
+                        ft.Container(
+                            content=ft.Button(
+                                content="Show Tutorial Again",
+                                icon=ft.Icons.SCHOOL_OUTLINED,
+                                bgcolor=PRIMARY_BLUE,
+                                color=TEXT_PRIMARY,
+                                icon_color=TEXT_PRIMARY,
+                                on_click=self._show_tutorial,
+                                disabled=(
+                                    self.on_show_tutorial
+                                    is None
+                                ),
+                            ),
+                            col={"xs": 12, "sm": 4},
+                            alignment=ft.Alignment.CENTER_RIGHT,
+                        ),
+                    ],
+                ),
+                columns=12,
+                spacing=12,
+                run_spacing=10,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=20,
+            bgcolor=SURFACE,
+            border=ft.Border.all(
+                1,
+                BORDER_DEFAULT,
+            ),
+            border_radius=16,
+        )
+
+    def _show_tutorial(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Replay the guided tutorial from About."""
+
+        del event
+
+        if self.on_show_tutorial is not None:
+            self.on_show_tutorial()
 
     def _build_nerd_stuff_card(self) -> ft.Control:
         """Build the collapsible technical-details section."""

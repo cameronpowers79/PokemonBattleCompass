@@ -65,11 +65,15 @@ class OnboardingView:
         *,
         app_state: AppState,
         on_complete: Callable[[], None],
+        on_new_journey_complete: Callable[[], None] | None = None,
         show_welcome: bool = False,
     ) -> None:
         self.page = page
         self.app_state = app_state
         self.on_complete = on_complete
+        self.on_new_journey_complete = (
+            on_new_journey_complete
+        )
         self.show_welcome = show_welcome
 
         self.pending_starter: str | None = None
@@ -591,6 +595,9 @@ class OnboardingView:
         """Show the final onboarding screen."""
 
         self.content_host.content = JourneyReady(
-            on_continue=self.on_complete,
+            on_continue=(
+                self.on_new_journey_complete
+                or self.on_complete
+            ),
         )
         self.page.update()

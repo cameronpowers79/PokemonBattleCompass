@@ -9,13 +9,19 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+import sys
 
 import flet as ft
 
 from ui.components.app_shell import AppShell
+from ui.components.tutorial_controller import TutorialController
 from ui.storage.flet_preferences_backend import FletPreferencesBackend
 from ui.storage.journey_storage import parse_journey_export
-from ui.theme import configure_page
+from ui.theme import (
+    PRIMARY_BLUE,
+    TEXT_PRIMARY,
+    configure_page,
+)
 from ui.viewmodels.app_state import AppState
 from ui.viewmodels.battle_compass_vm import load_reference_data
 from ui.views.about_view import AboutView
@@ -29,6 +35,21 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
 PENDING_IMPORT_KEY = "pokemon_battle_compass.pending_import.v1"
+TUTORIAL_COMPLETED_KEY = "pokemon_battle_compass.tutorial_completed.v1"
+
+
+def _tutorial_persistence_enabled(page: ft.Page) -> bool:
+    """Return whether tutorial completion should persist across launches.
+
+    Source-run desktop development intentionally does not persist tutorial
+    completion so the first-run experience can be exercised repeatedly.
+    Packaged desktop builds and browser builds persist the player's choice.
+    """
+
+    return (
+        page.web
+        or bool(getattr(sys, "frozen", False))
+    )
 
 
 def _diag(message: str) -> None:
@@ -102,6 +123,24 @@ async def main(page: ft.Page) -> None:
         f"has_journey={app_state.has_journey}"
     )
 
+    tutorial_completed = False
+    tutorial_persistence_enabled = (
+        _tutorial_persistence_enabled(page)
+    )
+
+    if tutorial_persistence_enabled:
+        try:
+            tutorial_value = await storage.get(
+                TUTORIAL_COMPLETED_KEY
+            )
+            tutorial_completed = (
+                tutorial_value == "true"
+            )
+        except (RuntimeError, ValueError):
+            # Tutorial state is intentionally non-critical. A preference
+            # failure must never prevent the Journey itself from loading.
+            tutorial_completed = False
+
     pending_import_journey: dict | None = None
     pending_import_error: str | None = None
 
@@ -142,6 +181,7 @@ async def main(page: ft.Page) -> None:
     def show_onboarding(
         *,
         show_welcome: bool = False,
+        offer_tutorial_on_new_journey: bool = False,
     ) -> None:
         """
         Display onboarding without clearing or replacing the saved Journey.
@@ -157,6 +197,16 @@ async def main(page: ft.Page) -> None:
             page,
             app_state=app_state,
             on_complete=show_main_application,
+            on_new_journey_complete=(
+                (
+                    lambda:
+                    show_main_application(
+                        offer_tutorial=True
+                    )
+                )
+                if offer_tutorial_on_new_journey
+                else None
+            ),
             show_welcome=show_welcome,
         )
 
@@ -169,7 +219,12 @@ async def main(page: ft.Page) -> None:
     def start_new_journey_from_app() -> None:
         """Open the established starter onboarding flow."""
 
-        show_onboarding(show_welcome=False)
+        show_onboarding(
+            show_welcome=False,
+            offer_tutorial_on_new_journey=(
+                not tutorial_persistence_enabled
+            ),
+        )
 
     def close_journey_loaded_dialog(
         event: ft.Event[ft.Button],
@@ -243,8 +298,13 @@ async def main(page: ft.Page) -> None:
 
         page.show_dialog(journey_loaded_dialog)
 
-    def show_main_application() -> None:
+    def show_main_application(
+        *,
+        offer_tutorial: bool = False,
+    ) -> None:
         """Display the normal Battle Compass application shell."""
+
+        nonlocal tutorial_completed
 
         # AppShell owns scrolling so its on_scroll handler can drive the
         # threshold-based Return to Top control.
@@ -298,8 +358,16 @@ async def main(page: ft.Page) -> None:
             on_scroll_to=scroll_app_shell,
         )
 
+        tutorial_controller: TutorialController | None = None
+
+        def replay_tutorial() -> None:
+            controller = tutorial_controller
+            if controller is not None:
+                controller.start()
+
         about_view = AboutView(
-            page
+            page,
+            on_show_tutorial=replay_tutorial,
         )
 
         def persist_active_view(
@@ -331,6 +399,103 @@ async def main(page: ft.Page) -> None:
             ),
         )
 
+        async def mark_tutorial_complete() -> None:
+            nonlocal tutorial_completed
+
+            tutorial_completed = True
+
+            if not tutorial_persistence_enabled:
+                return
+
+            try:
+                await storage.set(
+                    TUTORIAL_COMPLETED_KEY,
+                    "true",
+                )
+            except (RuntimeError, ValueError):
+                # Keep the session-level completion state even if persistent
+                # preferences are temporarily unavailable.
+                pass
+
+        tutorial_controller = TutorialController(
+            page=page,
+            on_completed=mark_tutorial_complete,
+        )
+
+        def close_tutorial_offer(
+            event: ft.Event[ft.Button],
+        ) -> None:
+            del event
+            page.pop_dialog()
+            page.run_task(
+                mark_tutorial_complete
+            )
+            page.update()
+
+        def begin_tutorial(
+            event: ft.Event[ft.Button],
+        ) -> None:
+            del event
+            page.pop_dialog()
+
+            controller = tutorial_controller
+            if controller is not None:
+                controller.start()
+
+        def show_tutorial_offer() -> None:
+            page.show_dialog(
+                ft.AlertDialog(
+                    modal=True,
+                    title=ft.Text(
+                        "Want a quick tour?",
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                    content=ft.Container(
+                        content=ft.Column(
+                            controls=[
+                                ft.Text(
+                                    (
+                                        "Battle Compass has a few useful "
+                                        "features that are not immediately "
+                                        "obvious. The guided tour will point "
+                                        "out the important controls and explain "
+                                        "how recommendations are calculated."
+                                    )
+                                ),
+                                ft.Text(
+                                    (
+                                        "It only takes a few steps, and you can "
+                                        "replay it later from About."
+                                    ),
+                                    color=ft.Colors.with_opacity(
+                                        0.75,
+                                        ft.Colors.WHITE,
+                                    ),
+                                ),
+                            ],
+                            spacing=10,
+                            tight=True,
+                        ),
+                        width=520,
+                    ),
+                    actions=[
+                        ft.Button(
+                            content="Maybe Later",
+                            on_click=close_tutorial_offer,
+                        ),
+                        ft.Button(
+                            content="Take the Tour",
+                            icon=ft.Icons.EXPLORE_ROUNDED,
+                            bgcolor=PRIMARY_BLUE,
+                            color=TEXT_PRIMARY,
+                            icon_color=TEXT_PRIMARY,
+                            on_click=begin_tutorial,
+                        ),
+                    ],
+                    actions_alignment=ft.MainAxisAlignment.END,
+                )
+            )
+
         page.on_resize = (
             lambda event:
             app_shell.apply_responsive_layout(
@@ -343,6 +508,12 @@ async def main(page: ft.Page) -> None:
             app_shell.build()
         )
         page.update()
+
+        if (
+            offer_tutorial
+            and not tutorial_completed
+        ):
+            show_tutorial_offer()
 
     def close_pending_import_error(
         event: ft.Event[ft.Button],
@@ -503,7 +674,12 @@ async def main(page: ft.Page) -> None:
         elif app_state.recovered_from_backup:
             show_recovery_dialog()
     else:
-        show_onboarding(show_welcome=not app_state.has_journey)
+        show_onboarding(
+            show_welcome=not app_state.has_journey,
+            offer_tutorial_on_new_journey=(
+                not app_state.has_journey
+            ),
+        )
 
         if pending_import_journey is not None:
             show_pending_import_confirmation(
