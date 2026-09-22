@@ -7,6 +7,7 @@ either onboarding or the primary application shell.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from pathlib import Path
 import sys
@@ -513,7 +514,13 @@ async def main(page: ft.Page) -> None:
             offer_tutorial
             and not tutorial_completed
         ):
-            show_tutorial_offer()
+            async def show_tutorial_offer_after_mount() -> None:
+                await asyncio.sleep(0.12)
+                show_tutorial_offer()
+
+            page.run_task(
+                show_tutorial_offer_after_mount
+            )
 
     def close_pending_import_error(
         event: ft.Event[ft.Button],
