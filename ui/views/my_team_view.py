@@ -348,6 +348,9 @@ class MyTeamView:
         on_journey_updated: (
             Callable[[], None] | None
         ) = None,
+        on_strategy_updated: (
+            Callable[[str], None] | None
+        ) = None,
         on_scroll_to: (
             Callable[..., Awaitable[None]] | None
         ) = None,
@@ -451,6 +454,7 @@ class MyTeamView:
         self.on_team_updated = on_team_updated
         self.on_journey_loaded = on_journey_loaded
         self.on_journey_updated = on_journey_updated
+        self.on_strategy_updated = on_strategy_updated
         self.pending_import_journey: dict | None = None
 
 
@@ -693,6 +697,35 @@ class MyTeamView:
             "",
             size=14,
             color=SUCCESS,
+        )
+
+        self.strategy_status = ft.Text(
+            "",
+            size=13,
+            color=TEXT_MUTED,
+        )
+        self.team_strategy_dropdown = ft.Dropdown(
+            label="Team Strategy",
+            value=self.app_state.team_strategy,
+            options=[
+                ft.DropdownOption(
+                    key="strongest_matchup",
+                    text="Strongest Matchup",
+                ),
+                ft.DropdownOption(
+                    key="poison_attrition",
+                    text="Poison / Attrition",
+                ),
+            ],
+            width=280,
+            on_select=self._handle_team_strategy_change,
+        )
+        self.strategy_description = ft.Text(
+            self._team_strategy_description(
+                self.app_state.team_strategy
+            ),
+            size=TEXT_SIZE_DETAIL,
+            color=TEXT_SECONDARY,
         )
 
         self.add_pokemon_button = ft.Button(
@@ -1271,6 +1304,7 @@ class MyTeamView:
             gender=pokemon.get("Gender"),
             use_texture=False,
             held_item=pokemon.get("Held Item"),
+            nature=pokemon.get("Nature"),
         )
 
         if sprite_path is None:
@@ -1575,6 +1609,69 @@ class MyTeamView:
         self.page.pop_dialog()
         self.page.update()
 
+    @staticmethod
+    def _team_strategy_description(strategy: str) -> str:
+        if strategy == "poison_attrition":
+            return (
+                "Prefer genuinely viable poison and attrition plans when they "
+                "fit the matchup. If the strategy is not viable, Battle Compass "
+                "falls back to the strongest direct matchup."
+            )
+        return (
+            "Use the standard Battle Compass recommendation priority based on "
+            "the strongest modeled matchup."
+        )
+
+    def _handle_team_strategy_change(
+        self,
+        event: ft.Event[ft.Dropdown],
+    ) -> None:
+        strategy = str(event.control.value or "strongest_matchup")
+        self.strategy_description.value = (
+            self._team_strategy_description(strategy)
+        )
+        self.strategy_status.value = "Saving Team Strategy…"
+        self.strategy_status.color = TEXT_MUTED
+        self.page.update()
+        self.page.run_task(
+            self._persist_team_strategy,
+            strategy,
+        )
+
+    async def _persist_team_strategy(self, strategy: str) -> None:
+        previous_strategy = self.app_state.team_strategy
+        try:
+            save_succeeded = await self.app_state.save_team_strategy(
+                strategy
+            )
+        except (RuntimeError, ValueError) as error:
+            self.team_strategy_dropdown.value = previous_strategy
+            self.strategy_description.value = (
+                self._team_strategy_description(previous_strategy)
+            )
+            self.strategy_status.value = (
+                f"Team Strategy could not be saved: {error}"
+            )
+            self.strategy_status.color = "#F87171"
+            self.page.update()
+            return
+
+        if not save_succeeded:
+            self.team_strategy_dropdown.value = previous_strategy
+            self.strategy_description.value = (
+                self._team_strategy_description(previous_strategy)
+            )
+            self.strategy_status.value = "Team Strategy could not be saved."
+            self.strategy_status.color = "#F87171"
+            self.page.update()
+            return
+
+        self.strategy_status.value = "Team Strategy saved."
+        self.strategy_status.color = SUCCESS
+        if self.on_strategy_updated:
+            self.on_strategy_updated(strategy)
+        self.page.update()
+
     def _sync_aegislash_entry_notice(self) -> None:
         """Show Aegislash stat-entry guidance until the user dismisses it."""
 
@@ -1631,6 +1728,56 @@ class MyTeamView:
 
     def build(self) -> ft.Control:
         """Return the complete My Team view."""
+
+        strategy_card = ft.Container(
+            content=ft.Column(
+                controls=cast(
+                    list[ft.Control],
+                    [
+                        ft.Row(
+                            controls=cast(
+                                list[ft.Control],
+                                [
+                                    ft.Column(
+                                        controls=[
+                                            ft.Text(
+                                                "Team Strategy",
+                                                size=18,
+                                                weight=ft.FontWeight.BOLD,
+                                                font_family=FONT_FAMILY_HEADER,
+                                                color=TEXT_PRIMARY,
+                                            ),
+                                            ft.Text(
+                                                "Choose how Battle Compass prioritizes recommendations.",
+                                                size=TEXT_SIZE_DETAIL,
+                                                color=TEXT_SECONDARY,
+                                            ),
+                                        ],
+                                        spacing=3,
+                                        tight=True,
+                                    ),
+                                    self.team_strategy_dropdown,
+                                ],
+                            ),
+                            spacing=20,
+                            run_spacing=10,
+                            wrap=True,
+                            vertical_alignment=(
+                                ft.CrossAxisAlignment.CENTER
+                            ),
+                        ),
+                        self.strategy_description,
+                        self.strategy_status,
+                    ],
+                ),
+                spacing=8,
+            ),
+            width=660,
+            padding=16,
+            bgcolor=SURFACE,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=CARD_RADIUS,
+        )
 
         editor_card = ft.Container(
             content=ft.Column(
@@ -1756,6 +1903,7 @@ class MyTeamView:
             controls=cast(
                 list[ft.Control],
                 [
+                    strategy_card,
                     editor_card,
                     details_card,
                     box_card,
@@ -1845,6 +1993,7 @@ class MyTeamView:
                 gender=pokemon.get("Gender"),
                 use_texture=False,
                 held_item=pokemon.get("Held Item"),
+                nature=pokemon.get("Nature"),
             )
             if sprite_path is None:
                 sprite: ft.Control = ft.Icon(
@@ -3463,6 +3612,7 @@ class MyTeamView:
             gender=pokemon.get("Gender"),
             use_texture=True,
             held_item=pokemon.get("Held Item"),
+            nature=pokemon.get("Nature"),
         )
 
         if sprite_path is None:
@@ -4182,6 +4332,7 @@ class MyTeamView:
         gender: object,
         *,
         held_item: object = None,
+        nature: object = None,
         size: int = 112,
     ) -> ft.Control:
         """Build one texture for the evolution celebration."""
@@ -4191,6 +4342,7 @@ class MyTeamView:
             gender=gender,
             use_texture=True,
             held_item=held_item,
+            nature=nature,
         )
         if sprite_path is None:
             return ft.Container(
@@ -4226,15 +4378,18 @@ class MyTeamView:
         )
         gender = pokemon.get("Gender")
         held_item = pokemon.get("Held Item")
+        nature = pokemon.get("Nature")
         old_artwork = self._evolution_artwork(
             old_name,
             gender,
             held_item=held_item,
+            nature=nature,
         )
         new_artwork = self._evolution_artwork(
             evolved_name,
             gender,
             held_item=held_item,
+            nature=nature,
         )
 
         self._evolution_celebration_target = ft.Container(
