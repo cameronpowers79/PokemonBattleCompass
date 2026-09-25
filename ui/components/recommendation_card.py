@@ -71,6 +71,9 @@ class RecommendationCard(ft.Container):
         ),
         on_type_badge_click: Callable[[list[str]], None],
         on_move_type_badge_click: Callable[[str], None],
+        move_panel_label: str = "Best Move",
+        score_label: str = "Move Score",
+        score_text: str | None = None,
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -83,6 +86,9 @@ class RecommendationCard(ft.Container):
         self.effectiveness_label = effectiveness_label
         self.effectiveness_color = effectiveness_color
         self.move_score = move_score
+        self.move_panel_label = move_panel_label
+        self.score_label = score_label
+        self.score_text = score_text
 
         self.item_boosted = item_boosted
         self.held_item = held_item or "Held item"
@@ -109,6 +115,12 @@ class RecommendationCard(ft.Container):
         self.on_move_type_badge_click = (
             on_move_type_badge_click
         )
+
+        self._tutorial_focus: str | None = None
+        self._tutorial_pokemon_type_target: ft.Container | None = None
+        self._tutorial_move_type_target: ft.Container | None = None
+        self._tutorial_best_move_panel: ft.Container | None = None
+        self._tutorial_matchup_panel: ft.Container | None = None
 
         super().__init__(
             content=self._build_content(),
@@ -258,6 +270,12 @@ class RecommendationCard(ft.Container):
             ),
         )
 
+        self._tutorial_pokemon_type_target = ft.Container(
+            content=combined_type_badge,
+            padding=4,
+            border_radius=9,
+        )
+
         artwork_panel = ft.Container(
             content=ft.Image(
                 src=self.artwork_src,
@@ -285,7 +303,9 @@ class RecommendationCard(ft.Container):
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Row(
-                            controls=[combined_type_badge],
+                            controls=[
+                                self._tutorial_pokemon_type_target
+                            ],
                             spacing=8,
                             wrap=True,
                             alignment=ft.MainAxisAlignment.CENTER,
@@ -329,6 +349,7 @@ class RecommendationCard(ft.Container):
             bgcolor=SURFACE_RAISED,
             border_radius=12,
         )
+        self._tutorial_best_move_panel = best_move_panel
 
         matchup_panel = ft.Container(
             content=self._build_matchup_meter(),
@@ -340,6 +361,7 @@ class RecommendationCard(ft.Container):
             bgcolor=SURFACE_RAISED,
             border_radius=12,
         )
+        self._tutorial_matchup_panel = matchup_panel
 
         return ft.ResponsiveRow(
             controls=cast(
@@ -355,19 +377,20 @@ class RecommendationCard(ft.Container):
         )
 
     def _build_best_move_panel(self) -> ft.Control:
+        displayed_score = self.score_text or f"{self.move_score:.2f}"
         score_controls = cast(
             list[ft.Control],
             [
                 ft.Text(
-                    f"{self.move_score:.2f}",
-                    size=TEXT_SIZE_METRIC,
+                    displayed_score,
+                    size=TEXT_SIZE_METRIC if self.score_text is None else TEXT_SIZE_BODY_LARGE,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
             ],
         )
 
-        if self.item_boosted:
+        if self.item_boosted and self.score_text is None:
             score_controls.append(
                 self._build_item_boost_popup()
             )
@@ -377,7 +400,7 @@ class RecommendationCard(ft.Container):
                 list[ft.Control],
                 [
                     ft.Text(
-                        "Best Move",
+                        self.move_panel_label,
                         size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),
@@ -391,23 +414,7 @@ class RecommendationCard(ft.Container):
                                     weight=ft.FontWeight.BOLD,
                                     color=TEXT_PRIMARY,
                                 ),
-                                ft.GestureDetector(
-                                    content=ft.Image(
-                                        src=self.best_move_type_badge_src,
-                                        height=22,
-                                        fit=ft.BoxFit.CONTAIN,
-                                        semantics_label=(
-                                            f"{self.best_move_type} move type"
-                                        ),
-                                    ),
-                                    mouse_cursor=ft.MouseCursor.CLICK,
-                                    on_tap=(
-                                        lambda event:
-                                        self.on_move_type_badge_click(
-                                            self.best_move_type
-                                        )
-                                    ),
-                                ),
+                                self._build_tutorial_move_type_badge(),
                             ],
                         ),
                         spacing=9,
@@ -431,7 +438,7 @@ class RecommendationCard(ft.Container):
                         border_radius=10,
                     ),
                     ft.Text(
-                        "Move Score",
+                        self.score_label,
                         size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),
@@ -446,6 +453,81 @@ class RecommendationCard(ft.Container):
             ),
             spacing=9,
         )
+
+    def _build_tutorial_move_type_badge(self) -> ft.Control:
+        """Build the clickable move-type badge used by the tutorial target."""
+
+        clickable_badge = ft.GestureDetector(
+            content=ft.Image(
+                src=self.best_move_type_badge_src,
+                height=22,
+                fit=ft.BoxFit.CONTAIN,
+                semantics_label=(
+                    f"{self.best_move_type} move type"
+                ),
+            ),
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=(
+                lambda event:
+                self.on_move_type_badge_click(
+                    self.best_move_type
+                )
+            ),
+        )
+
+        self._tutorial_move_type_target = ft.Container(
+            content=clickable_badge,
+            padding=4,
+            border_radius=9,
+        )
+
+        return self._tutorial_move_type_target
+
+    def set_tutorial_focus(
+        self,
+        focus: str | None,
+    ) -> None:
+        """Highlight the precise controls referenced by the guided tutorial."""
+
+        targets = {
+            "pokemon_type": self._tutorial_pokemon_type_target,
+            "move_type": self._tutorial_move_type_target,
+            "best_move": self._tutorial_best_move_panel,
+            "matchup": self._tutorial_matchup_panel,
+        }
+
+        for target_name, control in targets.items():
+            if control is None:
+                continue
+
+            active = (
+                focus == "type_badges"
+                and target_name in {"pokemon_type", "move_type"}
+            ) or (
+                focus == "metrics"
+                and target_name in {"best_move", "matchup"}
+            )
+
+            control.border = (
+                ft.Border.all(
+                    3,
+                    PRIMARY_BLUE_LIGHT,
+                )
+                if active
+                else None
+            )
+            control.shadow = (
+                ft.BoxShadow(
+                    blur_radius=18,
+                    spread_radius=2,
+                    color=ft.Colors.with_opacity(
+                        0.70,
+                        PRIMARY_BLUE,
+                    ),
+                )
+                if active
+                else None
+            )
 
     def _build_item_boost_popup(self) -> ft.Control:
         boost_percent = round(

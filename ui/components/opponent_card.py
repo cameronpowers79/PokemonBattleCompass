@@ -1,18 +1,13 @@
 """
 Opponent Card component.
-
 Displays the selected trainer and opponent Pokémon, then summarizes the
 opponent's most dangerous projected incoming move against the
 recommended Pokémon.
 """
-
 from __future__ import annotations
-
 from collections.abc import Callable
 from typing import cast
-
 import flet as ft
-
 from ui.components.reference_dialogs import (
     show_ability_dialog,
     show_move_dialog,
@@ -32,11 +27,8 @@ from ui.theme import (
     FONT_FAMILY_DISPLAY,
     FONT_FAMILY_HEADER,
 )
-
-
 class OpponentCard(ft.Container):
     """Responsive trainer, opponent, and incoming-threat card."""
-
     def __init__(
         self,
         *,
@@ -61,11 +53,12 @@ class OpponentCard(ft.Container):
         defensive_effectiveness_background: str,
         on_type_badge_click: Callable[[list[str]], None],
         on_move_type_badge_click: Callable[[str], None],
+        threat_score_label: str = "Incoming Worst Score",
+        threat_move_label: str = "Worst Incoming Move",
     ) -> None:
         self.app_page = page
         self.trainer_name = trainer_name
         self.trainer_artwork_src = trainer_artwork_src
-
         self.pokemon_name = pokemon_name
         self.artwork_src = artwork_src
         self.level = level
@@ -79,7 +72,6 @@ class OpponentCard(ft.Container):
         )
         self.ability_descriptions = ability_descriptions
         self.ability_rules = ability_rules
-
         self.incoming_worst_score = incoming_worst_score
         self.worst_incoming_move = worst_incoming_move
         self.incoming_category = incoming_category
@@ -87,7 +79,6 @@ class OpponentCard(ft.Container):
         self.incoming_type_badge_src = (
             incoming_type_badge_src
         )
-
         self.defensive_effectiveness_label = (
             defensive_effectiveness_label
         )
@@ -103,7 +94,8 @@ class OpponentCard(ft.Container):
         self.on_move_type_badge_click = (
             on_move_type_badge_click
         )
-
+        self.threat_score_label = threat_score_label
+        self.threat_move_label = threat_move_label
         super().__init__(
             content=self._build_content(),
             expand=True,
@@ -115,19 +107,15 @@ class OpponentCard(ft.Container):
             ),
             border_radius=18,
         )
-
     @property
     def has_trainer(self) -> bool:
         """Return whether this encounter has a displayed trainer."""
-
         return bool(
             self.trainer_name
             and self.trainer_artwork_src
         )
-
     def _build_content(self) -> ft.Control:
         """Build the complete opponent card."""
-
         return ft.Column(
             controls=cast(
                 list[ft.Control],
@@ -149,17 +137,14 @@ class OpponentCard(ft.Container):
             ),
             spacing=20,
         )
-
     def _build_identity_section(
         self,
     ) -> ft.Control:
         """Build the trainer, opponent, and compact moveset area."""
-
         controls = cast(
             list[ft.Control],
             [],
         )
-
         if self.has_trainer:
             controls.append(
                 ft.Container(
@@ -171,7 +156,6 @@ class OpponentCard(ft.Container):
                     alignment=ft.Alignment.CENTER,
                 )
             )
-
         controls.extend(
             cast(
                 list[ft.Control],
@@ -203,7 +187,6 @@ class OpponentCard(ft.Container):
                 ],
             )
         )
-
         return ft.ResponsiveRow(
             controls=controls,
             columns=12,
@@ -213,18 +196,15 @@ class OpponentCard(ft.Container):
                 ft.CrossAxisAlignment.CENTER
             ),
         )
-
     def _build_trainer_identity(
         self,
     ) -> ft.Control:
         """Build the smaller trainer portrait and name block."""
-
         if (
             self.trainer_name is None
             or self.trainer_artwork_src is None
         ):
             return ft.Container()
-
         return ft.Column(
             controls=cast(
                 list[ft.Control],
@@ -253,18 +233,15 @@ class OpponentCard(ft.Container):
             ),
             alignment=ft.MainAxisAlignment.CENTER,
         )
-
     def _build_pokemon_identity(
         self,
     ) -> ft.Control:
         """Build the visually dominant opponent Pokémon block."""
-
         pokemon_types = [
             pokemon_type
             for pokemon_type, _
             in self.type_badges
         ]
-
         badge_controls = cast(
             list[ft.Control],
             [
@@ -280,7 +257,6 @@ class OpponentCard(ft.Container):
                 in self.type_badges
             ],
         )
-
         combined_type_badge = ft.GestureDetector(
             content=ft.Row(
                 controls=badge_controls,
@@ -296,7 +272,6 @@ class OpponentCard(ft.Container):
                 )
             ),
         )
-
         return ft.Column(
             controls=cast(
                 list[ft.Control],
@@ -342,17 +317,14 @@ class OpponentCard(ft.Container):
             ),
             alignment=ft.MainAxisAlignment.CENTER,
         )
-
     def _build_moveset(
         self,
     ) -> ft.Control:
         """Build compact opponent move and Ability reference cards."""
-
         sections = cast(
             list[ft.Control],
             [],
         )
-
         if self.opponent_moves:
             move_cards = cast(
                 list[ft.Control],
@@ -380,7 +352,6 @@ class OpponentCard(ft.Container):
                     ],
                 )
             )
-
         if self.ability_name:
             sections.extend(
                 cast(
@@ -396,10 +367,8 @@ class OpponentCard(ft.Container):
                     ],
                 )
             )
-
         if not sections:
             return ft.Container()
-
         return ft.Column(
             controls=sections,
             spacing=9,
@@ -407,15 +376,12 @@ class OpponentCard(ft.Container):
                 ft.CrossAxisAlignment.STRETCH
             ),
         )
-
     def _build_ability_card(
         self,
     ) -> ft.Control:
         """Build the compact clickable opponent Ability card."""
-
         if self.ability_name is None:
             return ft.Container()
-
         card = ft.Container(
             content=ft.Row(
                 controls=cast(
@@ -455,38 +421,30 @@ class OpponentCard(ft.Container):
             border_radius=10,
             tooltip=f"View details for {self.ability_name}",
         )
-
         return ft.GestureDetector(
             content=card,
             mouse_cursor=ft.MouseCursor.CLICK,
             on_tap=self._show_ability_details,
         )
-
     def _show_ability_details(
         self,
         event: ft.TapEvent[ft.GestureDetector],
     ) -> None:
         """Show details for the opponent's Ability."""
-
         del event
-
         if self.ability_name is None:
             return
-
         show_ability_dialog(
             page=self.app_page,
             ability_name=self.ability_name,
             ability_descriptions=self.ability_descriptions,
             ability_rules=self.ability_rules,
         )
-
-
     def _build_move_card(
         self,
         move: dict,
     ) -> ft.Control:
         """Build one tappable compact opponent move card."""
-
         move_name = str(
             move.get("Move")
             or "Unknown Move"
@@ -499,12 +457,10 @@ class OpponentCard(ft.Container):
             move.get("BadgeSrc")
             or ""
         )
-
         background = TYPE_COLORS.get(
             move_type,
             "#4B5563",
         )
-
         card = ft.Container(
             content=ft.Column(
                 controls=cast(
@@ -562,7 +518,6 @@ class OpponentCard(ft.Container):
             border_radius=10,
             tooltip=f"View details for {move_name}",
         )
-
         return ft.Container(
             content=ft.GestureDetector(
                 content=card,
@@ -581,34 +536,28 @@ class OpponentCard(ft.Container):
                 "md": 12,
             },
         )
-
     def _show_move_details(
         self,
         event: ft.TapEvent[ft.GestureDetector],
         move: dict,
     ) -> None:
         """Show details for an opponent move."""
-
         del event
-
         show_move_dialog(
             page=self.app_page,
             move=move,
         )
-
-
     def _build_threat_section(
         self,
     ) -> ft.Control:
         """Build incoming score and move panels."""
-
         score_panel = ft.Container(
             content=ft.Column(
                 controls=cast(
                     list[ft.Control],
                     [
                         ft.Text(
-                            "Incoming Worst Score",
+                            self.threat_score_label,
                             size=14,
                             color=TEXT_SECONDARY,
                         ),
@@ -630,14 +579,13 @@ class OpponentCard(ft.Container):
             bgcolor=SURFACE_RAISED,
             border_radius=12,
         )
-
         move_panel = ft.Container(
             content=ft.Column(
                 controls=cast(
                     list[ft.Control],
                     [
                         ft.Text(
-                            "Worst Incoming Move",
+                            self.threat_move_label,
                             size=14,
                             color=TEXT_SECONDARY,
                         ),
@@ -708,7 +656,6 @@ class OpponentCard(ft.Container):
             bgcolor=SURFACE_RAISED,
             border_radius=12,
         )
-
         centered_threat_row = ft.Container(
             content=ft.ResponsiveRow(
                 controls=cast(
@@ -724,7 +671,6 @@ class OpponentCard(ft.Container):
             ),
             width=780,
         )
-
         return ft.Container(
             content=centered_threat_row,
             width=float("inf"),
