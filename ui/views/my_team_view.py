@@ -10,10 +10,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
+import traceback
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 
 from ui.viewmodels.app_state import AppState
+from ui.diagnostics import log_event
 from ui.storage.journey_storage import (
     journey_export_filename,
     parse_journey_export,
@@ -74,8 +77,7 @@ DATA_DIR = PROJECT_ROOT / "data"
 def _debug_log(message: str) -> None:
     """Print timestamped diagnostic breadcrumbs during stability testing."""
 
-    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    print(f"[{timestamp}] {message}", flush=True)
+    log_event("TEAM", message)
 
 AUTOCOMPLETE_DEBOUNCE_SECONDS = 0.45
 AUTOCOMPLETE_SUGGESTION_LIMIT = 30
@@ -150,6 +152,10 @@ NUMERIC_FOCUS_ORDER = [
     "SPD",
     "SPE",
 ]
+
+STAT_MIN_VALUE = 1
+STAT_MAX_VALUE = 999
+STAT_VALIDATION_MESSAGE = "Please enter a numeric value between 1 and 999."
 
 STAT_COLUMNS = [
     "HP",
@@ -1639,12 +1645,14 @@ class MyTeamView:
         )
 
     async def _persist_team_strategy(self, strategy: str) -> None:
+        _debug_log(f"strategy save requested strategy={strategy!r}")
         previous_strategy = self.app_state.team_strategy
         try:
             save_succeeded = await self.app_state.save_team_strategy(
                 strategy
             )
         except (RuntimeError, ValueError) as error:
+            _debug_log(f"strategy save failed: {type(error).__name__}: {error}")
             self.team_strategy_dropdown.value = previous_strategy
             self.strategy_description.value = (
                 self._team_strategy_description(previous_strategy)
@@ -1657,6 +1665,7 @@ class MyTeamView:
             return
 
         if not save_succeeded:
+            _debug_log("strategy persistence returned False")
             self.team_strategy_dropdown.value = previous_strategy
             self.strategy_description.value = (
                 self._team_strategy_description(previous_strategy)
@@ -1666,6 +1675,7 @@ class MyTeamView:
             self.page.update()
             return
 
+        _debug_log(f"strategy persistence succeeded strategy={strategy!r}")
         self.strategy_status.value = "Team Strategy saved."
         self.strategy_status.color = SUCCESS
         if self.on_strategy_updated:
@@ -1708,10 +1718,20 @@ class MyTeamView:
         self.page.update()
 
     def _update_dirty_state(self) -> None:
-        """Synchronize controls with the current dirty state."""
+        """Synchronize controls with current edits and validation state."""
 
         self._sync_aegislash_entry_notice()
-        is_dirty = self.has_unsaved_changes
+
+        invalid_stats = [
+            f"row {row_index + 1}: {column}"
+            for (row_index, column), control
+            in self.editor_controls.items()
+            if column in STAT_COLUMNS
+            and isinstance(control, ft.TextField)
+            and not self._valid_stat_text(control.value)
+        ]
+
+        is_dirty = self.has_unsaved_changes or bool(invalid_stats)
 
         self.save_button.disabled = not is_dirty
         self.discard_button.disabled = not is_dirty
@@ -1719,7 +1739,13 @@ class MyTeamView:
         self.detail_notice.visible = is_dirty
         self._sync_box_buttons()
 
-        if is_dirty:
+        if invalid_stats:
+            self.save_status.value = (
+                f"{STAT_VALIDATION_MESSAGE} Invalid fields: "
+                + ", ".join(invalid_stats)
+            )
+            self.save_status.color = "#F87171"
+        elif is_dirty:
             self.save_status.value = "Unsaved changes"
             self.save_status.color = "#FFE5A3"
         else:
@@ -1846,9 +1872,7 @@ class MyTeamView:
                         ft.Text(
                             (
                                 "Only modeled held items affect Move Scores. "
-                                "If an item should improve a score but does "
-                                "not, verify that its name is spelled "
-                                "correctly. A blue ⊕ beside the Move Score "
+                                "A blue ⊕ beside the Move Score "
                                 "indicates an active held-item bonus."
                             ),
                             size=TEXT_SIZE_DETAIL,
@@ -2974,7 +2998,16 @@ class MyTeamView:
                     if column in NUMERIC_COLUMNS
                     else ft.KeyboardType.TEXT
                 ),
-                ignore_up_down_keys=(
+                input_filter=(
+                    ft.InputFilter(
+                        allow=True,
+                        regex_string=r"^[0-9]*$",
+                        replacement_string="",
+                    )
+                    if column in STAT_COLUMNS
+                    else None
+                ),
+                    ignore_up_down_keys=(
                     column in NUMERIC_FOCUS_ORDER
                 ),
                 on_focus=(
@@ -3213,6 +3246,25 @@ class MyTeamView:
         if isinstance(target_control, ft.TextField):
             await target_control.focus()
 
+    @staticmethod
+    def _valid_stat_text(raw_value: object) -> bool:
+        text = str(raw_value if raw_value is not None else "").strip()
+        return (
+            1 <= len(text) <= 3
+            and text.isascii()
+            and text.isdecimal()
+            and STAT_MIN_VALUE <= int(text) <= STAT_MAX_VALUE
+        )
+
+    def _validate_stat_editor(self, control: ft.TextField) -> bool:
+        valid = self._valid_stat_text(control.value)
+
+        # Highlight invalid input without expanding the table row.
+        control.error = None
+        control.border_color = None if valid else "#F87171"
+
+        return valid
+
     def _handle_text_commit(
         self,
         event: ft.Event[ft.TextField],
@@ -3222,6 +3274,15 @@ class MyTeamView:
         """Commit a text field after Enter or loss of focus."""
 
         raw_value = event.control.value or ""
+
+        if column in STAT_COLUMNS:
+            valid = self._validate_stat_editor(event.control)
+
+            self._update_dirty_state()
+            self.page.update()
+
+            if not valid:
+                return
 
         if column in NUMERIC_COLUMNS:
             stripped_value = raw_value.strip()
@@ -7725,7 +7786,12 @@ class MyTeamView:
     ) -> None:
         del event
 
-        _debug_log("TEAM save start")
+        save_started = time.perf_counter()
+        _debug_log(
+            f"save start party_size={len(self.working_team)} "
+            f"box_size={len(self.working_box)} "
+            f"editor_fields={len(self.editor_controls)}"
+        )
         pending_evolution_prompts = (
             self._collect_save_evolution_prompts()
         )
@@ -7736,6 +7802,25 @@ class MyTeamView:
         invalid_moves: list[str] = []
         invalid_abilities: list[str] = []
         invalid_items: list[str] = []
+        invalid_stats: list[str] = []
+
+        for (row_index, column), control in self.editor_controls.items():
+            if column not in STAT_COLUMNS or not isinstance(control, ft.TextField):
+                continue
+            if not self._validate_stat_editor(control):
+                invalid_stats.append(f"row {row_index + 1}: {column}")
+
+        if invalid_stats:
+            self.save_status.value = (
+                f"{STAT_VALIDATION_MESSAGE} Invalid fields: "
+                + ", ".join(invalid_stats)
+            )
+            self.save_status.color = "#F87171"
+            _debug_log(f"save blocked invalid_stat_fields={invalid_stats}")
+            self.page.update()
+            return
+
+        _debug_log("save stat validation passed")
 
         for pokemon in self.working_team:
             pokemon_name = str(
@@ -7927,24 +8012,35 @@ class MyTeamView:
             self.page.update()
             return
 
+        _debug_log("save selection validation passed; building persisted team completed")
         try:
-            _debug_log("TEAM persistence call start")
+            _debug_log("persistence call start")
             save_succeeded = await self.app_state.save_team_and_box(
                 saved_team,
                 self.working_box,
             )
-        except (RuntimeError, ValueError) as error:
+            _debug_log(
+                f"persistence returned success={save_succeeded} "
+                f"duration_ms={(time.perf_counter() - save_started)*1000:.1f}"
+            )
+        except Exception as error:
+            _debug_log(
+                "persistence exception traceback=\n"
+                + traceback.format_exc()
+            )
             self.save_status.value = (
                 f"Team could not be saved: {error}"
             )
             self.save_status.color = "#F87171"
             _debug_log(
-                f"TEAM persistence FAILED: {type(error).__name__}: {error}"
+                f"persistence FAILED duration_ms={(time.perf_counter()-save_started)*1000:.1f} "
+                f"{type(error).__name__}: {error}"
             )
             self.page.update()
             return
 
         if not save_succeeded:
+            _debug_log("persistence returned False")
             self.save_status.value = (
                 "Team could not be saved."
             )
@@ -7952,6 +8048,7 @@ class MyTeamView:
             self.page.update()
             return
 
+        _debug_log("persistence succeeded; starting My Team UI refresh")
         self.team_data = self.app_state.team_data
         self.box_data = self.app_state.box_data
         self.working_team = deepcopy(self.app_state.team_data)
@@ -7977,6 +8074,10 @@ class MyTeamView:
         self._sync_team_management_buttons()
 
         self.page.update()
+        _debug_log(
+            f"save UI refresh completed duration_ms="
+            f"{(time.perf_counter() - save_started) * 1000:.1f}"
+        )
 
         self._pending_save_evolution_prompts = (
             pending_evolution_prompts

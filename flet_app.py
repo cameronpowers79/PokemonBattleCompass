@@ -1,711 +1,1479 @@
 """
+
 Pokémon Battle Compass Flet application entry point.
 
+
+
 Configures application state, loads the player's Journey, and supplies
+
 either onboarding or the primary application shell.
+
 """
+
+
 
 from __future__ import annotations
 
+
+
 import asyncio
+
 from datetime import datetime
+import time
+
 from pathlib import Path
+
 import sys
+
+
 
 import flet as ft
 
+
+
 from ui.components.app_shell import AppShell
+
 from ui.components.tutorial_controller import TutorialController
-from ui.storage.flet_preferences_backend import FletPreferencesBackend
-from ui.storage.journey_storage import parse_journey_export
-from ui.theme import (
-    PRIMARY_BLUE,
-    TEXT_PRIMARY,
-    configure_page,
+
+from ui.diagnostics import (
+    configure_native_logging, log_event, begin_session,
+    mark_session_closed, session_is_current,
 )
+from ui.storage.file_storage_backend import FileStorageBackend
+from ui.storage.flet_preferences_backend import FletPreferencesBackend
+
+from ui.storage.journey_storage import parse_journey_export
+
+from ui.theme import (
+
+    PRIMARY_BLUE,
+
+    TEXT_PRIMARY,
+
+    configure_page,
+
+)
+
 from ui.viewmodels.app_state import AppState
+
 from ui.viewmodels.battle_compass_vm import load_reference_data
+
 from ui.views.about_view import AboutView
+
 from ui.views.battle_compass_view import BattleCompassView
+
 from ui.views.my_team_view import MyTeamView
+
 from ui.views.my_journey_view import MyJourneyView
+
 from ui.views.onboarding_view import OnboardingView
 
 
+
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent
+
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
+
+
 PENDING_IMPORT_KEY = "pokemon_battle_compass.pending_import.v1"
+
 TUTORIAL_COMPLETED_KEY = "pokemon_battle_compass.tutorial_completed.v1"
 
 
+
+
+
 def _tutorial_persistence_enabled(page: ft.Page) -> bool:
+
     """Return whether tutorial completion should persist across launches.
 
+
+
     Source-run desktop development intentionally does not persist tutorial
+
     completion so the first-run experience can be exercised repeatedly.
+
     Packaged desktop builds and browser builds persist the player's choice.
+
     """
 
+
+
     return (
+
         page.web
+
         or bool(getattr(sys, "frozen", False))
+
     )
+
+
+
 
 
 def _diag(message: str) -> None:
+
     """Print a timestamped diagnostic breadcrumb to the dev console."""
 
-    timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    print(f"[{timestamp}] SESSION {message}", flush=True)
+
+
+    log_event("SESSION", message)
+
+
+
 
 
 async def main(page: ft.Page) -> None:
+    if not page.web:
+        log_path = configure_native_logging()
+        _diag(f"native diagnostic log={log_path}")
+
+    session_token = begin_session(id(page), id(page.session))
+    session_started = time.perf_counter()
+
+    def _lifecycle(name: str):
+        def callback(event) -> None:
+            payload = str(getattr(event, "data", "") or "")[:400]
+            _diag(f"lifecycle token={session_token} event={name} data={payload!r}")
+            if name == "close":
+                mark_session_closed(session_token)
+        return callback
+
+    # Flet's connect/disconnect events may not fire in native mode; the
+    # session token and heartbeat below also work without those callbacks.
+    page.on_connect = _lifecycle("connect")
+    page.on_disconnect = _lifecycle("disconnect")
+    page.on_close = _lifecycle("close")
+    page.on_error = _lifecycle("unhandled_error")
+
+    async def _session_heartbeat() -> None:
+        while session_is_current(session_token):
+            await asyncio.sleep(30)
+            if not session_is_current(session_token):
+                _diag(f"heartbeat token={session_token} superseded")
+                break
+            _diag(
+                f"heartbeat token={session_token} "
+                f"uptime_s={time.perf_counter() - session_started:.0f}"
+            )
+
+    if not page.web:
+        page.run_task(_session_heartbeat)
+
+
     shared_preferences_services = [
+
         service
+
         for service in page.services
+
         if isinstance(service, ft.SharedPreferences)
+
     ]
+
     _diag(
+
         "main() entered "
+
         f"page_id={id(page)} "
+
         f"session_id={id(page.session)} "
+
         f"services={len(page.services)} "
+
         f"shared_preferences={len(shared_preferences_services)}"
+
     )
+
+
 
     configure_page(page)
+
     _diag(
+
         "configure_page() complete "
+
         f"page_id={id(page)} "
+
         f"session_id={id(page.session)}"
+
     )
 
+
+
     page.window.icon = str(
+
         ASSETS_DIR / "icon_windows.ico"
+
     )
+
+
 
     reference_data = load_reference_data()
 
-    _diag(
-        "creating FletPreferencesBackend "
-        f"page_id={id(page)} "
-        f"session_id={id(page.session)} "
-        f"services_before={len(page.services)}"
-    )
-    storage = FletPreferencesBackend(page)
-    _diag(
-        "FletPreferencesBackend ready "
-        f"backend_id={id(storage)} "
-        f"preferences_id={id(storage.preferences)} "
-        f"services_after={len(page.services)}"
-    )
 
-    app_state = AppState(
-        storage=storage,
-        reference_data=reference_data,
-    )
-
-    _diag(
-        "app_state.initialize() start "
-        f"app_state_id={id(app_state)}"
-    )
-    try:
-        await app_state.initialize()
-    except Exception as error:
-        _diag(
-            "app_state.initialize() FAILED "
-            f"{type(error).__name__}: {error}"
-        )
-        raise
-    _diag(
-        "app_state.initialize() succeeded "
-        f"is_ready={app_state.is_ready} "
-        f"has_journey={app_state.has_journey}"
-    )
-
-    tutorial_completed = False
-    tutorial_persistence_enabled = (
-        _tutorial_persistence_enabled(page)
-    )
-
-    if tutorial_persistence_enabled:
-        try:
-            tutorial_value = await storage.get(
-                TUTORIAL_COMPLETED_KEY
-            )
-            tutorial_completed = (
-                tutorial_value == "true"
-            )
-        except (RuntimeError, ValueError):
-            # Tutorial state is intentionally non-critical. A preference
-            # failure must never prevent the Journey itself from loading.
-            tutorial_completed = False
-
-    pending_import_journey: dict | None = None
-    pending_import_error: str | None = None
 
     if page.web:
-        preferences = ft.SharedPreferences()
+
+        _diag(
+
+            "creating FletPreferencesBackend "
+
+            f"page_id={id(page)} "
+
+            f"session_id={id(page.session)} "
+
+            f"services_before={len(page.services)}"
+
+        )
+
+        storage = FletPreferencesBackend(page)
+
+        _diag(
+
+            "FletPreferencesBackend ready "
+
+            f"backend_id={id(storage)} "
+
+            f"preferences_id={id(storage.preferences)} "
+
+            f"services_after={len(page.services)}"
+
+        )
+
+    else:
+
+        storage = FileStorageBackend()
+
+        _diag(
+
+            "FileStorageBackend ready "
+
+            f"backend_id={id(storage)} "
+
+            f"storage_dir={storage.storage_dir}"
+
+        )
+
+
+
+    app_state = AppState(
+
+        storage=storage,
+
+        reference_data=reference_data,
+
+    )
+
+
+
+    _diag(
+
+        "app_state.initialize() start "
+
+        f"app_state_id={id(app_state)}"
+
+    )
+
+    try:
+
+        await app_state.initialize()
+
+    except Exception as error:
+
+        _diag(
+
+            "app_state.initialize() FAILED "
+
+            f"{type(error).__name__}: {error}"
+
+        )
+
+        raise
+
+    _diag(
+
+        "app_state.initialize() succeeded "
+
+        f"is_ready={app_state.is_ready} "
+
+        f"has_journey={app_state.has_journey}"
+
+    )
+
+
+
+    tutorial_completed = False
+
+    tutorial_persistence_enabled = (
+
+        _tutorial_persistence_enabled(page)
+
+    )
+
+
+
+    if tutorial_persistence_enabled:
 
         try:
-            staged_export = await preferences.get(
-                PENDING_IMPORT_KEY
-            )
-        except (RuntimeError, ValueError) as error:
-            staged_export = None
-            pending_import_error = (
-                "The staged Journey could not be read from browser "
-                f"storage: {error}"
+
+            tutorial_value = await storage.get(
+
+                TUTORIAL_COMPLETED_KEY
+
             )
 
+            tutorial_completed = (
+
+                tutorial_value == "true"
+
+            )
+
+        except (RuntimeError, ValueError):
+
+            # Tutorial state is intentionally non-critical. A preference
+
+            # failure must never prevent the Journey itself from loading.
+
+            tutorial_completed = False
+
+
+
+    pending_import_journey: dict | None = None
+
+    pending_import_error: str | None = None
+
+
+
+    if page.web:
+
+        preferences = ft.SharedPreferences()
+
+
+
+        try:
+
+            staged_export = await preferences.get(
+
+                PENDING_IMPORT_KEY
+
+            )
+
+        except (RuntimeError, ValueError) as error:
+
+            staged_export = None
+
+            pending_import_error = (
+
+                "The staged Journey could not be read from browser "
+
+                f"storage: {error}"
+
+            )
+
+
+
         if isinstance(staged_export, str) and staged_export:
+
             try:
+
                 await preferences.remove(PENDING_IMPORT_KEY)
+
             except (RuntimeError, ValueError):
+
                 # A failed cleanup should not block validation/import.
+
                 pass
+
+
 
             import_result = parse_journey_export(staged_export)
 
+
+
             if (
+
                 import_result.status == "valid"
+
                 and import_result.journey is not None
+
             ):
+
                 pending_import_journey = import_result.journey
+
             else:
+
                 pending_import_error = (
+
                     import_result.error
+
                     or "The selected Journey file is invalid."
+
                 )
+
+
 
     def show_onboarding(
+
         *,
+
         show_welcome: bool = False,
+
         offer_tutorial_on_new_journey: bool = False,
+
     ) -> None:
+
         """
+
         Display onboarding without clearing or replacing the saved Journey.
 
+
+
         The existing Journey remains persistent until the player completes
+
         starter details and clicks Prepare My Journey.
+
         """
 
+
+
         page.on_resize = None
+
         page.scroll = ft.ScrollMode.AUTO
 
+
+
         onboarding_view = OnboardingView(
+
             page,
+
             app_state=app_state,
+
             on_complete=show_main_application,
+
             on_new_journey_complete=(
+
                 (
+
                     lambda:
+
                     show_main_application(
+
                         offer_tutorial=True
+
                     )
+
                 )
+
                 if offer_tutorial_on_new_journey
+
                 else None
+
             ),
+
             show_welcome=show_welcome,
+
         )
+
+
 
         page.controls.clear()
+
         page.add(
+
             onboarding_view.build()
+
         )
+
         page.update()
+
+
 
     def start_new_journey_from_app() -> None:
+
         """Open the established starter onboarding flow."""
 
+
+
         show_onboarding(
+
             show_welcome=False,
+
             offer_tutorial_on_new_journey=(
+
                 not tutorial_persistence_enabled
+
             ),
+
         )
+
+
 
     def close_journey_loaded_dialog(
+
         event: ft.Event[ft.Button],
+
     ) -> None:
+
         """Close the successful Journey-load confirmation."""
 
+
+
         del event
+
         page.pop_dialog()
+
         page.update()
+
+
 
     def close_recovery_dialog(
+
         event: ft.Event[ft.Button],
+
     ) -> None:
+
         """Close the successful automatic-recovery notice."""
 
+
+
         del event
+
         page.pop_dialog()
+
         page.update()
 
+
+
     def show_recovery_dialog() -> None:
+
         """Tell the player that the last known good Journey was restored."""
 
+
+
         recovery_dialog = ft.AlertDialog()
+
         recovery_dialog.modal = True
+
         recovery_dialog.title = ft.Text(
+
             "Journey Recovered",
+
             weight=ft.FontWeight.BOLD,
+
         )
+
         recovery_dialog.content = ft.Text(
+
             "Your saved Journey couldn’t be read, so Pokémon Battle "
+
             "Compass restored the last known good copy."
+
         )
+
         recovery_dialog.actions = [
+
             ft.Button(
+
                 content="Got It",
+
                 icon=ft.Icons.CHECK_ROUNDED,
+
                 on_click=close_recovery_dialog,
+
             ),
+
         ]
+
         recovery_dialog.actions_alignment = ft.MainAxisAlignment.END
+
+
 
         page.show_dialog(recovery_dialog)
 
+
+
     def show_loaded_application() -> None:
+
         """
+
         Rebuild the application after a Journey import and confirm success.
 
+
+
         A Journey exported from My Team restores My Team as its active page,
+
         so rebuilding refreshes all views without navigating the player away.
+
         """
+
+
 
         show_main_application()
 
+
+
         journey_loaded_dialog = ft.AlertDialog()
+
         journey_loaded_dialog.modal = True
+
         journey_loaded_dialog.title = ft.Text(
+
             "Journey Loaded!",
+
             weight=ft.FontWeight.BOLD,
+
         )
+
         journey_loaded_dialog.content = ft.Text(
+
             "Your saved Journey has been restored."
+
         )
+
         journey_loaded_dialog.actions = [
+
             ft.Button(
+
                 content="OK",
+
                 icon=ft.Icons.CHECK_ROUNDED,
+
                 on_click=close_journey_loaded_dialog,
+
             ),
+
         ]
+
         journey_loaded_dialog.actions_alignment = ft.MainAxisAlignment.END
+
+
 
         page.show_dialog(journey_loaded_dialog)
 
+
+
     def show_main_application(
+
         *,
+
         offer_tutorial: bool = False,
+
     ) -> None:
+
         """Display the normal Battle Compass application shell."""
+
+
 
         nonlocal tutorial_completed
 
+
+
+        _diag(f"shell build start token={session_token} active_view={app_state.active_view}")
+
         # AppShell owns scrolling so its on_scroll handler can drive the
+
         # threshold-based Return to Top control.
+
         page.scroll = None
 
+
+
         battle_compass_view = BattleCompassView(
+
             page,
+
             app_state=app_state,
+
             team_data=app_state.team_data,
+
             selected_starter=app_state.starter,
+
             on_start_new_journey=start_new_journey_from_app,
+
         )
+
+
 
         app_shell: AppShell
 
+
+
         def go_to_my_team_with_prefill(
+
             pokemon_name: str,
+
         ) -> None:
+
             my_team_view.begin_prefilled_pokemon_entry(
+
                 pokemon_name
+
             )
+
             app_shell.show_view("my_team")
 
+
+
         async def scroll_app_shell(
+
             **scroll_kwargs,
+
         ) -> None:
+
             await app_shell.scroll_to(**scroll_kwargs)
 
+
+
         my_journey_view = MyJourneyView(
+
             page,
+
             app_state=app_state,
+
             on_go_to_my_team=go_to_my_team_with_prefill,
+
             on_scroll_to=scroll_app_shell,
+
         )
+
+
 
         def refresh_after_team_update(
+
             team_data: list[dict],
+
         ) -> None:
+
             battle_compass_view.refresh_team_data(team_data)
+
             my_journey_view.refresh_from_app_state()
 
+
+
         def refresh_after_strategy_update(
+
             strategy: str,
+
         ) -> None:
+
             battle_compass_view.refresh_team_strategy(strategy)
 
+
+
         my_team_view = MyTeamView(
+
             page,
+
             app_state=app_state,
+
             moves_data=app_state.moves_data,
+
             on_team_updated=refresh_after_team_update,
+
             on_journey_loaded=show_loaded_application,
+
             on_journey_updated=(
+
                 my_journey_view.refresh_from_app_state
+
             ),
+
             on_strategy_updated=refresh_after_strategy_update,
+
             on_scroll_to=scroll_app_shell,
+
         )
+
+
 
         tutorial_controller: TutorialController | None = None
 
+
+
         def replay_tutorial() -> None:
+
             controller = tutorial_controller
+
             if controller is not None:
+
                 controller.start()
 
+
+
         about_view = AboutView(
+
             page,
+
             on_show_tutorial=replay_tutorial,
+
         )
+
+
 
         def persist_active_view(
+
             view_name: str,
+
         ) -> None:
+
             """Schedule persistence of the newly active primary view."""
 
+
+
+            _diag(f"view switch token={session_token} view={view_name}")
             page.run_task(
+
                 app_state.save_active_view,
+
                 view_name,
+
             )
 
+
+
         app_shell = AppShell(
+
             page=page,
+
             battle_compass_view=(
+
                 battle_compass_view.build
+
             ),
+
             my_team_view=my_team_view.build,
+
             my_journey_view=my_journey_view.build,
+
             about_view=about_view.build,
+
             initial_view=app_state.active_view,
+
             on_view_changed=persist_active_view,
+
             my_team_has_unsaved_changes=(
+
                 lambda:
+
                 my_team_view.has_unsaved_changes
+
             ),
+
             discard_my_team_changes=(
+
                 my_team_view.discard_unsaved_changes
+
             ),
+
         )
 
+
+
         async def mark_tutorial_complete() -> None:
+
             nonlocal tutorial_completed
+
+
 
             tutorial_completed = True
 
+
+
             if not tutorial_persistence_enabled:
+
                 return
 
+
+
             try:
+
                 await storage.set(
+
                     TUTORIAL_COMPLETED_KEY,
+
                     "true",
+
                 )
+
             except (RuntimeError, ValueError):
+
                 # Keep the session-level completion state even if persistent
+
                 # preferences are temporarily unavailable.
+
                 pass
 
+
+
         tutorial_controller = TutorialController(
+
             page=page,
+
             on_completed=mark_tutorial_complete,
+
         )
+
+
 
         def close_tutorial_offer(
+
             event: ft.Event[ft.Button],
+
         ) -> None:
+
             del event
+
             page.pop_dialog()
+
             page.run_task(
+
                 mark_tutorial_complete
+
             )
+
             page.update()
 
+
+
         def begin_tutorial(
+
             event: ft.Event[ft.Button],
+
         ) -> None:
+
             del event
+
             page.pop_dialog()
 
+
+
             controller = tutorial_controller
+
             if controller is not None:
+
                 controller.start()
 
+
+
         def show_tutorial_offer() -> None:
+
             page.show_dialog(
+
                 ft.AlertDialog(
+
                     modal=True,
+
                     title=ft.Text(
+
                         "Want a quick tour?",
+
                         weight=ft.FontWeight.BOLD,
+
                     ),
+
                     content=ft.Container(
+
                         content=ft.Column(
+
                             controls=[
+
                                 ft.Text(
+
                                     (
+
                                         "Battle Compass has a few useful "
+
                                         "features that are not immediately "
+
                                         "obvious. The guided tour will point "
+
                                         "out the important controls and explain "
+
                                         "how recommendations are calculated."
+
                                     )
+
                                 ),
+
                                 ft.Text(
+
                                     (
+
                                         "It only takes a few steps, and you can "
+
                                         "replay it later from About."
+
                                     ),
+
                                     color=ft.Colors.with_opacity(
+
                                         0.75,
+
                                         ft.Colors.WHITE,
+
                                     ),
+
                                 ),
+
                             ],
+
                             spacing=10,
+
                             tight=True,
+
                         ),
+
                         width=520,
+
                     ),
+
                     actions=[
+
                         ft.Button(
+
                             content="Maybe Later",
+
                             on_click=close_tutorial_offer,
+
                         ),
+
                         ft.Button(
+
                             content="Take the Tour",
+
                             icon=ft.Icons.EXPLORE_ROUNDED,
+
                             bgcolor=PRIMARY_BLUE,
+
                             color=TEXT_PRIMARY,
+
                             icon_color=TEXT_PRIMARY,
+
                             on_click=begin_tutorial,
+
                         ),
+
                     ],
+
                     actions_alignment=ft.MainAxisAlignment.END,
+
                 )
+
             )
+
+
 
         page.on_resize = (
+
             lambda event:
+
             app_shell.apply_responsive_layout(
+
                 event.width,
+
             )
+
         )
+
+
 
         page.controls.clear()
+
         page.add(
+
             app_shell.build()
+
         )
+
         page.update()
+        _diag(f"shell mounted token={session_token} active_view={app_state.active_view}")
 
         if (
+
             offer_tutorial
+
             and not tutorial_completed
+
         ):
+
             async def show_tutorial_offer_after_mount() -> None:
+
                 await asyncio.sleep(0.12)
+
                 show_tutorial_offer()
 
+
+
             page.run_task(
+
                 show_tutorial_offer_after_mount
+
             )
+
+
 
     def close_pending_import_error(
+
         event: ft.Event[ft.Button],
+
     ) -> None:
+
         """Close a non-fatal browser-import error."""
 
+
+
         del event
+
         page.pop_dialog()
+
         page.update()
+
+
 
     def show_pending_import_error(message: str) -> None:
+
         """Report a helper-file import problem without changing the Journey."""
 
+
+
         page.show_dialog(
+
             ft.AlertDialog(
+
                 modal=True,
+
                 title=ft.Text(
+
                     "Journey could not be loaded",
+
                     weight=ft.FontWeight.BOLD,
+
                 ),
+
                 content=ft.Text(
+
                     (
+
                         f"{message}\n\n"
+
                         "Your current Journey has not been changed."
+
                     )
+
                 ),
+
                 actions=[
+
                     ft.Button(
+
                         content="OK",
+
                         on_click=close_pending_import_error,
+
                     ),
+
                 ],
+
                 actions_alignment=ft.MainAxisAlignment.END,
+
             )
+
         )
 
+
+
     def cancel_pending_import(
+
         event: ft.Event[ft.Button],
+
     ) -> None:
+
         """Cancel the Journey staged by the browser helper."""
 
+
+
         nonlocal pending_import_journey
 
+
+
         del event
+
         pending_import_journey = None
+
         page.pop_dialog()
+
         page.update()
 
+
+
     async def confirm_pending_import(
+
         event: ft.Event[ft.Button],
+
     ) -> None:
+
         """Persist the Journey staged by the browser helper."""
+
+
 
         nonlocal pending_import_journey
 
+
+
         del event
 
+
+
         imported_journey = pending_import_journey
+
         pending_import_journey = None
+
         page.pop_dialog()
 
+
+
         if imported_journey is None:
+
             show_pending_import_error(
+
                 "No valid Journey is waiting to be loaded."
+
             )
+
             return
+
+
 
         try:
+
             load_succeeded = await app_state.import_journey(
+
                 imported_journey
+
             )
+
         except (RuntimeError, ValueError) as error:
+
             show_pending_import_error(
+
                 f"The Journey could not be loaded: {error}"
+
             )
+
             return
 
+
+
         if not load_succeeded:
+
             show_pending_import_error(
+
                 "The Journey could not be saved."
+
             )
+
             return
+
+
 
         show_loaded_application()
 
+
+
     def show_pending_import_confirmation(
+
         journey: dict,
+
     ) -> None:
+
         """Confirm a Journey selected through the browser helper."""
 
+
+
         starter = str(journey.get("starter") or "Unknown")
+
         team = journey.get("team")
+
         team_count = len(team) if isinstance(team, list) else 0
 
+
+
         page.show_dialog(
+
             ft.AlertDialog(
+
                 modal=True,
+
                 title=ft.Text(
+
                     "Load this Journey?",
+
                     weight=ft.FontWeight.BOLD,
+
                 ),
+
                 content=ft.Column(
+
                     controls=[
+
                         ft.Text(
+
                             (
+
                                 "Loading this Journey will overwrite the "
+
                                 "Journey currently saved in Pokémon Battle "
+
                                 "Compass."
+
                             )
+
                         ),
+
                         ft.Container(
+
                             content=ft.Column(
+
                                 controls=[
+
                                     ft.Text(
+
                                         f"Starter: {starter}",
+
                                         weight=ft.FontWeight.BOLD,
+
                                     ),
+
                                     ft.Text(
+
                                         f"Active team: {team_count} Pokémon"
+
                                     ),
+
                                 ],
+
                                 spacing=6,
+
                                 tight=True,
+
                             ),
+
                             padding=12,
+
                             border_radius=10,
+
                         ),
+
                     ],
+
                     spacing=14,
+
                     tight=True,
+
                 ),
+
                 actions=[
+
                     ft.Button(
+
                         content="Cancel",
+
                         on_click=cancel_pending_import,
+
                     ),
+
                     ft.Button(
+
                         content="Load Journey",
+
                         icon=ft.Icons.UPLOAD_FILE_OUTLINED,
+
                         on_click=confirm_pending_import,
+
                     ),
+
                 ],
+
                 actions_alignment=ft.MainAxisAlignment.END,
+
             )
+
         )
+
+
 
     if app_state.is_ready:
+
         show_main_application()
 
-        if pending_import_journey is not None:
-            show_pending_import_confirmation(
-                pending_import_journey
-            )
-        elif pending_import_error is not None:
-            show_pending_import_error(
-                pending_import_error
-            )
-        elif app_state.recovered_from_backup:
-            show_recovery_dialog()
-    else:
-        show_onboarding(
-            show_welcome=not app_state.has_journey,
-            offer_tutorial_on_new_journey=(
-                not app_state.has_journey
-            ),
-        )
+
 
         if pending_import_journey is not None:
+
             show_pending_import_confirmation(
+
                 pending_import_journey
+
             )
+
         elif pending_import_error is not None:
+
             show_pending_import_error(
+
                 pending_import_error
+
             )
+
+        elif app_state.recovered_from_backup:
+
+            show_recovery_dialog()
+
+    else:
+
+        show_onboarding(
+
+            show_welcome=not app_state.has_journey,
+
+            offer_tutorial_on_new_journey=(
+
+                not app_state.has_journey
+
+            ),
+
+        )
+
+
+
+        if pending_import_journey is not None:
+
+            show_pending_import_confirmation(
+
+                pending_import_journey
+
+            )
+
+        elif pending_import_error is not None:
+
+            show_pending_import_error(
+
+                pending_import_error
+
+            )
+
+
+
 
 
 if __name__ == "__main__":
+
     ft.run(
+
         main,
+
         assets_dir=str(ASSETS_DIR),
+
     )
