@@ -8,6 +8,7 @@ strength, supporting explanation, and structured battle notes.
 from __future__ import annotations
 
 from collections.abc import Callable
+import re
 from typing import Any, cast
 
 import flet as ft
@@ -377,20 +378,20 @@ class RecommendationCard(ft.Container):
         )
 
     def _build_best_move_panel(self) -> ft.Control:
-        displayed_score = self.score_text or f"{self.move_score:.2f}"
+        score_value = self.score_text if self.score_text is not None else f"{self.move_score:.2f}"
         score_controls = cast(
             list[ft.Control],
             [
                 ft.Text(
-                    displayed_score,
-                    size=TEXT_SIZE_METRIC if self.score_text is None else TEXT_SIZE_BODY_LARGE,
+                    score_value,
+                    size=TEXT_SIZE_METRIC,
                     weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY,
                 ),
             ],
         )
 
-        if self.item_boosted and self.score_text is None:
+        if self.item_boosted:
             score_controls.append(
                 self._build_item_boost_popup()
             )
@@ -777,11 +778,7 @@ class RecommendationCard(ft.Container):
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
                         ),
-                        ft.Text(
-                            self.why_text,
-                            size=15,
-                            color="#D7E8FF",
-                        ),
+                        self._build_why_text(),
                         full_analysis_prompt,
                     ],
                 ),
@@ -796,6 +793,17 @@ class RecommendationCard(ft.Container):
             ),
             border_radius=12,
         )
+
+    def _build_why_text(self) -> ft.Control:
+        spans: list[ft.TextSpan] = []
+        for part in re.split(r"(\*\*.*?\*\*)", self.why_text, flags=re.DOTALL):
+            if not part:
+                continue
+            if part.startswith("**") and part.endswith("**"):
+                spans.append(ft.TextSpan(part[2:-2], style=ft.TextStyle(weight=ft.FontWeight.BOLD)))
+            else:
+                spans.append(ft.TextSpan(part))
+        return ft.Text(spans=spans, size=15, color="#D7E8FF", no_wrap=False, overflow=ft.TextOverflow.VISIBLE)
 
     def _build_notes_section(self) -> ft.Control:
         note_controls = cast(

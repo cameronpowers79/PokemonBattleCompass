@@ -1,5 +1,4 @@
 '''calculations.py'''
-
 from engine.mechanics import (
     get_stab_multiplier,
     get_type_multiplier,
@@ -25,8 +24,6 @@ from engine.notes import build_notes, build_battle_notes, build_why_explanation
 
 def is_opponent_record(pokemon):
     return pokemon.get("Trainer") is not None and pokemon.get("Battle") is not None
-
-
 CONSERVATIVE_OPPONENT_IV = 31
 AVERAGE_OPPONENT_IV = 16
 OHKO_RECOMMENDATION_CONFIDENCE = 1.10
@@ -47,25 +44,20 @@ def get_stat(pokemon, stat_name, opponent_iv_override=None):
             if opponent_iv_override is None
             else opponent_iv_override
         )
-
         if stat_name == "HP":
             return approximate_hp(
                 pokemon[stat_name],
                 pokemon["Level"],
                 iv,
             )
-
         return approximate_stat(
             pokemon[stat_name],
             pokemon["Level"],
             iv,
         )
-
     value = pokemon.get(stat_name, 1)
-
     if stat_name in {"HP", "ATK", "DEF", "SPA", "SPD", "SPE"}:
         return max(float(value or 0), 1.0)
-
     return value
 
 
@@ -75,9 +67,7 @@ def get_move_type_multiplier(move, defender_types):
         move.get("Type"),
         defender_types,
     )
-
     damage_method = move.get("DamageMethod")
-
     if (
         damage_method == "WaterSuperEffective"
         and "Water" in defender_types
@@ -85,7 +75,6 @@ def get_move_type_multiplier(move, defender_types):
         # Ordinary Ice vs Water contributes 0.5x. Freeze-Dry replaces that
         # component with 2x, a net 4x adjustment before the second type.
         multiplier *= 4
-
     if damage_method == "DualTypeEffectiveness":
         secondary_type = move.get("SecondaryDamageType")
         if secondary_type:
@@ -93,7 +82,6 @@ def get_move_type_multiplier(move, defender_types):
                 secondary_type,
                 defender_types,
             )
-
     return multiplier
 
 
@@ -107,14 +95,12 @@ def resolve_move_for_matchup(
     """Return a matchup-specific move copy for deterministic custom rules."""
     resolved = dict(move)
     damage_method = move.get("DamageMethod")
-
     effective_move_type = get_effective_move_type(
         attacker,
         resolved,
     )
     if effective_move_type:
         resolved["Type"] = effective_move_type
-
     if damage_method == "HigherOffensiveStat":
         attack = get_stat(
             attacker,
@@ -131,7 +117,6 @@ def resolve_move_for_matchup(
             if attack > special_attack
             else "Special"
         )
-
     elif damage_method == "BestRawDamageCategory":
         attack = get_stat(
             attacker,
@@ -159,10 +144,8 @@ def resolve_move_for_matchup(
             ),
             1,
         )
-
         physical_forecast = attack / defense
         special_forecast = special_attack / special_defense
-
         # In-game ties are random. The Compass uses the move's listed
         # Special category as the deterministic tie-break approximation.
         resolved["Category"] = (
@@ -170,12 +153,10 @@ def resolve_move_for_matchup(
             if physical_forecast > special_forecast
             else "Special"
         )
-
         # Shell Side Arm makes contact only when it resolves as Physical.
         resolved["MakesContact"] = (
             resolved["Category"] == "Physical"
         )
-
     return resolved
 
 
@@ -187,38 +168,29 @@ def get_relevant_attack_stat(
     target_opponent_iv_override=None,
 ):
     damage_method = move.get("DamageMethod")
-
     if damage_method == "UseDEF":
         return get_stat(attacker, "DEF", opponent_iv_override)
-
     if damage_method == "TargetATK" and target is not None:
         return get_stat(
             target,
             "ATK",
             target_opponent_iv_override,
         )
-
     if move.get("Category") == "Physical":
         return get_stat(attacker, "ATK", opponent_iv_override)
-
     if move.get("Category") == "Special":
         return get_stat(attacker, "SPA", opponent_iv_override)
-
     return 0
 
 
 def get_relevant_defense_stat(defender, move, opponent_iv_override=None):
     damage_method = move.get("DamageMethod")
-
     if damage_method == "TargetDEFasSPD":
         return get_stat(defender, "DEF", opponent_iv_override)
-
     if move.get("Category") == "Physical":
         return get_stat(defender, "DEF", opponent_iv_override)
-
     if move.get("Category") == "Special":
         return get_stat(defender, "SPD", opponent_iv_override)
-
     return 1
 
 
@@ -231,16 +203,13 @@ def get_effective_move_power(
     defender_opponent_iv_override=None,
 ):
     """Return the modeled base power for the current matchup.
-
     Most moves use the stored Power value directly. Damage methods that can
     be derived from information the Compass already has may calculate their
     power here without requiring additional battle-state input.
     """
     if items is None:
         items = []
-
     damage_method = move.get("DamageMethod")
-
     if damage_method == "SpeedRatioInverse":
         user_speed = (
             get_stat(
@@ -258,13 +227,11 @@ def get_effective_move_power(
             )
             * get_item_speed_multiplier(defender, items)
         )
-
         # Generation VI onward sets Gyro Ball to 1 BP if the user's
         # effective Speed rounds down to 0. get_stat() normally keeps
         # modeled Speed positive, but retain the guard for completeness.
         if user_speed <= 0:
             return 1
-
         return min(
             150,
             max(
@@ -272,7 +239,6 @@ def get_effective_move_power(
                 int(25 * target_speed / user_speed) + 1,
             ),
         )
-
     if damage_method == "SpeedRatioDirect":
         user_speed = (
             get_stat(
@@ -290,16 +256,13 @@ def get_effective_move_power(
             )
             * get_item_speed_multiplier(defender, items)
         )
-
         # Electro Ball uses discrete power brackets based on the target's
         # effective Speed as a proportion of the user's effective Speed.
         # Battle-state Speed changes are intentionally outside the Compass's
         # limited-input model, but modeled held-item Speed multipliers apply.
         if user_speed <= 0:
             return 40
-
         speed_ratio = target_speed / user_speed
-
         if speed_ratio > 0.5:
             return 60 if speed_ratio <= 1 else 40
         if speed_ratio > (1 / 3):
@@ -307,30 +270,24 @@ def get_effective_move_power(
         if speed_ratio > 0.25:
             return 120
         return 150
-
     try:
         return float(move.get("Power") or 0)
     except (TypeError, ValueError):
         return 0
 
 
-
 def get_deterministic_fixed_damage(attacker, move):
     """Return modeled fixed HP damage, or None when damage remains tactical-only."""
     if move.get("DamageMethod") != "Fixed":
         return None
-
     fixed_method = move.get("FixedDamageMethod")
-
     if fixed_method == "UserLevel":
         return max(float(attacker.get("Level") or 1), 1.0)
-
     if fixed_method == "Constant":
         try:
             return max(float(move.get("FixedDamage") or 0), 0.0)
         except (TypeError, ValueError):
             return None
-
     return None
 
 
@@ -342,7 +299,6 @@ def fixed_damage_can_hit(
     ability_rules=None,
 ):
     """Return whether a deterministic fixed-damage move can affect the target.
-
     Fixed-damage moves ignore resistance/weakness multipliers for their damage
     amount, but Gen VIII type, Ability, and held-item immunities still matter.
     """
@@ -350,19 +306,15 @@ def fixed_damage_can_hit(
         items = []
     if ability_rules is None:
         ability_rules = []
-
     defender_types = get_effective_pokemon_types(
         defender
     )
-
     type_multiplier = get_move_type_multiplier(
         move,
         defender_types,
     )
-
     if type_multiplier == 0:
         return False
-
     ability_multiplier = get_ability_multiplier(
         defender,
         move,
@@ -372,7 +324,6 @@ def fixed_damage_can_hit(
     )
     if ability_multiplier == 0:
         return False
-
     item_multiplier = get_item_immunity_multiplier(
         defender,
         move,
@@ -383,7 +334,6 @@ def fixed_damage_can_hit(
 
 def fixed_damage_to_move_score(attacker, fixed_damage):
     """Convert fixed HP loss to the comparable internal Move Score scale.
-
     Normal damage range estimation is based on:
         floor((level_factor * MoveScore) / 50) + 2
     before the random modifier. Inverting that shape gives fixed-damage moves
@@ -391,10 +341,8 @@ def fixed_damage_to_move_score(attacker, fixed_damage):
     """
     level = max(int(attacker.get("Level") or 1), 1)
     level_factor = (2 * level) // 5 + 2
-
     if fixed_damage <= 0 or level_factor <= 0:
         return 0
-
     return max(
         ((float(fixed_damage) - 2.0) * 50.0) / level_factor,
         0.01,
@@ -413,16 +361,12 @@ def calculate_move_score(
         defender,
         move,
     )
-
     if move["Category"] == "Status":
         return 0
-
     if items is None:
         items = []
-
     if ability_rules is None:
         ability_rules = []
-
     fixed_damage = get_deterministic_fixed_damage(
         attacker,
         move,
@@ -436,22 +380,18 @@ def calculate_move_score(
             ability_rules,
         ):
             return 0
-
         return fixed_damage_to_move_score(
             attacker,
             fixed_damage,
         )
-
     effective_power = get_effective_move_power(
         attacker,
         defender,
         move,
         items,
     )
-
     if effective_power <= 0:
         return 0
-
     attacker_types = [
         attacker.get("Type1"),
         attacker.get("Type2"),
@@ -459,7 +399,6 @@ def calculate_move_score(
     defender_types = get_effective_pokemon_types(
         defender
     )
-
     effectiveness = get_move_type_multiplier(
         move,
         defender_types,
@@ -472,14 +411,12 @@ def calculate_move_score(
         attacker,
     )
     effectiveness *= ability_multiplier
-
     stab = get_stab_multiplier(
         move["Type"],
         attacker_types,
         attacker,
         ability_rules,
     )
-
     item_damage_multiplier = get_item_damage_multiplier(
         attacker,
         defender,
@@ -498,17 +435,14 @@ def calculate_move_score(
         move,
         ability_rules,
     )
-
     weather = get_guaranteed_weather(
         attacker,
         defender,
     )
-
     weather_damage_multiplier = get_weather_damage_multiplier(
         move,
         weather,
     )
-
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -520,7 +454,6 @@ def calculate_move_score(
         ability_rules,
     )
     attack_stat *= item_attack_multiplier
-
     # Foul Play-style moves use the target's Attack stat. Defender-side
     # AttackReduction rules such as Intimidate represent lowering the user's
     # own Attack, so they do not reduce a TargetATK calculation.
@@ -531,7 +464,6 @@ def calculate_move_score(
             move,
             ability_rules,
         )
-
     defense_stat = get_relevant_defense_stat(
         defender,
         move,
@@ -541,23 +473,18 @@ def calculate_move_score(
         move,
         items,
     )
-
     defense_stat *= get_weather_defense_stat_multiplier(
         defender,
         move,
         weather,
     )
-
     hits = move.get("Hits", 1)
-
     try:
         hits = float(hits)
     except (TypeError, ValueError):
         hits = 1
-
     if hits <= 0:
         hits = 1
-
     return (
         effective_power
         * hits
@@ -581,12 +508,10 @@ def calculate_damage_range(
     defender_opponent_iv_override=None,
 ):
     """Estimate minimum and maximum damage using the in-game formula shape.
-
     The estimate uses the same modeled stats and multipliers as Move Score,
     then applies the Gen VIII random damage range. It intentionally assumes
     the defender's currently modeled, unboosted defensive stat.
     """
-
     move = resolve_move_for_matchup(
         attacker,
         defender,
@@ -594,16 +519,12 @@ def calculate_damage_range(
         attacker_opponent_iv_override,
         defender_opponent_iv_override,
     )
-
     if move["Category"] == "Status":
         return None, None
-
     if items is None:
         items = []
-
     if ability_rules is None:
         ability_rules = []
-
     fixed_damage = get_deterministic_fixed_damage(
         attacker,
         move,
@@ -617,9 +538,7 @@ def calculate_damage_range(
             ability_rules,
         ):
             return 0, 0
-
         return fixed_damage, fixed_damage
-
     effective_power = get_effective_move_power(
         attacker,
         defender,
@@ -628,10 +547,8 @@ def calculate_damage_range(
         attacker_opponent_iv_override,
         defender_opponent_iv_override,
     )
-
     if effective_power <= 0:
         return None, None
-
     attacker_types = [
         attacker.get("Type1"),
         attacker.get("Type2"),
@@ -639,7 +556,6 @@ def calculate_damage_range(
     defender_types = get_effective_pokemon_types(
         defender
     )
-
     effectiveness = get_move_type_multiplier(
         move,
         defender_types,
@@ -651,10 +567,8 @@ def calculate_damage_range(
         effectiveness,
         attacker,
     )
-
     if effectiveness == 0:
         return 0, 0
-
     stab = get_stab_multiplier(
         move["Type"],
         attacker_types,
@@ -679,17 +593,14 @@ def calculate_damage_range(
         move,
         ability_rules,
     )
-
     weather = get_guaranteed_weather(
         attacker,
         defender,
     )
-
     weather_damage_multiplier = get_weather_damage_multiplier(
         move,
         weather,
     )
-
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -703,7 +614,6 @@ def calculate_damage_range(
         ability_rules,
     )
     attack_stat *= item_attack_multiplier
-
     if move.get("DamageMethod") != "TargetATK":
         attack_stat *= get_attack_reduction_multiplier(
             attacker,
@@ -711,7 +621,6 @@ def calculate_damage_range(
             move,
             ability_rules,
         )
-
     defense_stat = max(
         get_relevant_defense_stat(
             defender,
@@ -731,12 +640,10 @@ def calculate_damage_range(
         1,
     )
     level = max(int(attacker.get("Level") or 1), 1)
-
     effective_power = max(
         effective_power * power_multiplier,
         1,
     )
-
     # Pokémon's damage formula floors repeatedly. Keeping those floors is
     # especially important at low levels, where one point is a large swing.
     level_factor = (2 * level) // 5 + 2
@@ -747,24 +654,19 @@ def calculate_damage_range(
         / defense_stat
     )
     base_damage = scaled_damage // 50 + 2
-
     fixed_modifier = (
         effectiveness
         * stab
         * item_damage_multiplier
         * weather_damage_multiplier
     )
-
     hits = move.get("Hits", 1)
-
     try:
         hits = float(hits)
     except (TypeError, ValueError):
         hits = 1.0
-
     if hits <= 0:
         hits = 1.0
-
     minimum_per_hit = max(
         int(base_damage * fixed_modifier * 0.85),
         1,
@@ -773,7 +675,6 @@ def calculate_damage_range(
         int(base_damage * fixed_modifier),
         1,
     )
-
     return (
         minimum_per_hit * hits,
         maximum_per_hit * hits,
@@ -782,33 +683,25 @@ def calculate_damage_range(
 
 def get_moves(pokemon, moves_data=None):
     moves = []
-
     if moves_data is None:
         moves_data = []
-
     move_lookup = {
         move.get("Move"): move
         for move in moves_data
         if move.get("Move")
     }
-
     for slot in range(1, 5):
         move_name = pokemon.get(f"Move{slot}")
-
         if not move_name:
             continue
-
         move_info = move_lookup.get(move_name, {})
-
         moves.append({
             "Move": move_name,
-
             # Trust the battle/team sheet for scoring fields.
             "Type": pokemon.get(f"Move{slot}Type"),
             "Power": pokemon.get(f"Move{slot}Power"),
             "Category": pokemon.get(f"Move{slot}Category"),
             "Accuracy": pokemon.get(f"Move{slot}Accuracy"),
-
             # Use moves.json for mechanics metadata.
             "Hits": move_info.get("Hits", 1),
             "MakesContact": move_info.get("MakesContact"),
@@ -824,35 +717,27 @@ def get_moves(pokemon, moves_data=None):
             "ActivationPowerMultiplier": move_info.get("ActivationPowerMultiplier", 1),
             "MechanicsTags": move_info.get("MechanicsTags", []),
         })
-
     return moves
 
 
 def get_team_status_effects(team, moves_data=None):
     if moves_data is None:
         moves_data = []
-
     move_lookup = {
         move.get("Move"): move
         for move in moves_data
         if move.get("Move")
     }
-
     status_effects = set()
-
     for pokemon in team:
         for slot in range(1, 5):
             move_name = pokemon.get(f"Move{slot}")
-
             if not move_name:
                 continue
-
             move_info = move_lookup.get(move_name, {})
             status_effect = move_info.get("StatusEffect")
-
             if status_effect:
                 status_effects.add(status_effect)
-
     return status_effects
 
 
@@ -863,23 +748,17 @@ def calculate_boosted_body_press_score(attacker, defender, items, ability_rules=
         attacker.get("Move3"),
         attacker.get("Move4"),
     ]
-
     if "Iron Defense" not in move_names or "Body Press" not in move_names:
         return None
-
     body_press = None
-
     for move in get_moves(attacker, moves_data):
         if move.get("Move") == "Body Press":
             body_press = move
             break
-
     if body_press is None:
         return None
-
     boosted_attacker = dict(attacker)
     boosted_attacker["DEF"] = attacker["DEF"] * 2
-
     return calculate_move_score(
         boosted_attacker,
         defender,
@@ -896,13 +775,10 @@ def get_opponent_dmax_note(opponent):
         opponent.get("Move3"),
         opponent.get("Move4"),
     ]
-
     if any(move and str(move).startswith("G-Max") for move in move_names):
         return "G-Max"
-
     if any(move and str(move).startswith("Max ") for move in move_names):
         return "Dmax"
-
     return ""
 
 
@@ -915,7 +791,6 @@ def get_best_move(
 ):
     best_move = None
     best_score = 0
-
     for move in get_moves(
         attacker,
         moves_data,
@@ -927,18 +802,15 @@ def get_best_move(
             items,
             ability_rules,
         )
-
         if score > best_score:
             best_score = score
             best_move = move
-
     return best_move, best_score
 
 
 def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves_data=None):
     worst_move = None
     worst_score = -1
-
     for move in get_moves(opponent, moves_data):
         score = calculate_move_score(
             opponent,
@@ -947,11 +819,9 @@ def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves
             items,
             ability_rules
         )
-
         if score > worst_score:
             worst_score = score
             worst_move = move
-
     return worst_move, worst_score
 
 
@@ -969,13 +839,11 @@ def calculate_matchup_ratio(
         ability_rules,
         moves_data,
     )
-
     # An empty or status-only moveset has no offensive matchup
     # to evaluate. Return immediately before calculating incoming
     # damage against potentially incomplete stats.
     if best_move is None:
         return None, 0, None, 0, 0
-
     worst_move, worst_score = get_worst_incoming_move(
         defender,
         attacker,
@@ -983,7 +851,6 @@ def calculate_matchup_ratio(
         ability_rules,
         moves_data,
     )
-
     if worst_score == 0:
         return (
             best_move,
@@ -992,9 +859,7 @@ def calculate_matchup_ratio(
             worst_score,
             99,
         )
-
     ratio = best_score / worst_score
-
     return (
         best_move,
         best_score,
@@ -1004,7 +869,6 @@ def calculate_matchup_ratio(
     )
 
 
-
 def build_no_recommendation_reason(
     team,
     opponent,
@@ -1012,10 +876,8 @@ def build_no_recommendation_reason(
     moves_data=None,
 ):
     """Explain when the opponent's Ability blocks every damaging option."""
-
     if ability_rules is None:
         ability_rules = []
-
     opponent_name = str(
         opponent.get("Pokemon")
         or "The opponent"
@@ -1024,13 +886,11 @@ def build_no_recommendation_reason(
         opponent
     )
     blocked_options = []
-
     for pokemon in team:
         pokemon_name = str(
             pokemon.get("Pokemon")
             or "A team member"
         )
-
         for move in get_moves(
             pokemon,
             moves_data,
@@ -1040,10 +900,8 @@ def build_no_recommendation_reason(
                 opponent,
                 move,
             )
-
             if move.get("Category") == "Status":
                 continue
-
             effective_power = get_effective_move_power(
                 pokemon,
                 opponent,
@@ -1051,12 +909,10 @@ def build_no_recommendation_reason(
             )
             if effective_power <= 0:
                 continue
-
             type_multiplier = get_move_type_multiplier(
                 move,
                 opponent_types,
             )
-
             immunity_rule = next(
                 (
                     rule
@@ -1071,10 +927,8 @@ def build_no_recommendation_reason(
                 ),
                 None,
             )
-
             if immunity_rule is None:
                 continue
-
             blocked_options.append(
                 (
                     str(
@@ -1089,22 +943,17 @@ def build_no_recommendation_reason(
                     ),
                 )
             )
-
     unique_options = []
-
     for option in blocked_options:
         if option not in unique_options:
             unique_options.append(option)
-
     if not unique_options:
         return ""
-
     blocked_descriptions = [
         f"{team_member_name}'s {move_name}"
         for _, team_member_name, move_name
         in unique_options
     ]
-
     if len(blocked_descriptions) == 1:
         blocked_moves_text = blocked_descriptions[0]
     elif len(blocked_descriptions) == 2:
@@ -1117,13 +966,10 @@ def build_no_recommendation_reason(
             f"{', '.join(blocked_descriptions[:-1])}, "
             f"and {blocked_descriptions[-1]}"
         )
-
     ability_names = []
-
     for ability_name, _, _ in unique_options:
         if ability_name not in ability_names:
             ability_names.append(ability_name)
-
     if len(ability_names) == 1:
         blocker_text = (
             f"{opponent_name}'s {ability_names[0]}"
@@ -1133,12 +979,22 @@ def build_no_recommendation_reason(
             f"{opponent_name}'s "
             f"{' and '.join(ability_names)}"
         )
-
     return (
         "No usable damaging move is available: "
         f"{blocker_text} blocks {blocked_moves_text}."
     )
 
+
+def _opponent_burn_threat(opponent, moves_data=None):
+    return next((move.get("Move") for move in get_moves(opponent, moves_data) if str(move.get("StatusEffect") or "").casefold() == "burn"), None)
+
+
+def _physical_burn_risk(pokemon, move):
+    if not move or str(move.get("Category") or "") != "Physical":
+        return False
+    if "Fire" in {pokemon.get("Type1"), pokemon.get("Type2")}:
+        return False
+    return str(pokemon.get("Ability") or "").strip().casefold() not in {"guts", "water veil", "water bubble", "comatose"}
 
 
 def find_best_team_member(
@@ -1149,7 +1005,6 @@ def find_best_team_member(
     moves_data=None,
 ):
     all_results = []
-
     opponent_hp = get_stat(opponent, "HP")
     opponent_spe = get_stat(opponent, "SPE")
     opponent_is_dmax = get_opponent_dmax_note(opponent) != ""
@@ -1158,7 +1013,6 @@ def find_best_team_member(
         if opponent_is_dmax
         else opponent_hp
     )
-
     for pokemon in team:
         (
             best_move,
@@ -1173,10 +1027,8 @@ def find_best_team_member(
             ability_rules,
             moves_data,
         )
-
         if best_move is None:
             continue
-
         minimum_damage, _ = calculate_damage_range(
             pokemon,
             opponent,
@@ -1184,7 +1036,6 @@ def find_best_team_member(
             items,
             ability_rules,
         )
-
         effective_team_speed = (
             pokemon.get("SPE", 0)
             * get_item_speed_multiplier(
@@ -1194,7 +1045,6 @@ def find_best_team_member(
         )
         team_moves_second = effective_team_speed < opponent_spe
         has_incoming_damage = worst_score > 0
-
         likely_ohko = (
             minimum_damage is not None
             and offensive_target_hp > 0
@@ -1204,7 +1054,6 @@ def find_best_team_member(
                 or not has_incoming_damage
             )
         )
-
         ohko_confidence = (
             minimum_damage / offensive_target_hp
             if (
@@ -1213,7 +1062,6 @@ def find_best_team_member(
             )
             else 0
         )
-
         all_results.append(
             {
                 "pokemon": pokemon,
@@ -1226,7 +1074,6 @@ def find_best_team_member(
                 "ohko_confidence": ohko_confidence,
             }
         )
-
     if not all_results:
         return (
             None,
@@ -1238,12 +1085,13 @@ def find_best_team_member(
                 moves_data,
             ),
         )
+    raw_ratio_result = max(all_results, key=lambda result: result["ratio"])
+    burn_move = _opponent_burn_threat(opponent, moves_data)
 
-    ratio_result = max(
-        all_results,
-        key=lambda result: result["ratio"],
-    )
-
+    def recommendation_ratio(result):
+        burn_penalty = 0.72 if burn_move and not result["likely_ohko"] and _physical_burn_risk(result["pokemon"], result["best_move"]) else 1.0
+        return result["ratio"] * burn_penalty
+    ratio_result = max(all_results, key=lambda result: (recommendation_ratio(result), result["ratio"]))
     qualifying_ohko_results = [
         result
         for result in all_results
@@ -1253,7 +1101,6 @@ def find_best_team_member(
             >= OHKO_RECOMMENDATION_CONFIDENCE
         )
     ]
-
     if qualifying_ohko_results:
         selected_result = max(
             qualifying_ohko_results,
@@ -1264,12 +1111,10 @@ def find_best_team_member(
         )
     else:
         selected_result = ratio_result
-
     opponent_moves = get_moves(
         opponent,
         moves_data,
     )
-
     ratio_why = build_why_explanation(
         all_results,
         ratio_result,
@@ -1277,7 +1122,10 @@ def find_best_team_member(
         ability_rules,
         opponent_moves=opponent_moves,
     )
-
+    if burn_move and ratio_result is not raw_ratio_result and _physical_burn_risk(raw_ratio_result["pokemon"], raw_ratio_result["best_move"]):
+        selected_name = ratio_result["pokemon"].get("Pokemon", "This Pokémon")
+        passed_name = raw_ratio_result["pokemon"].get("Pokemon", "the raw ratio leader")
+        ratio_why = f"{ratio_why.rstrip('.')}. {opponent.get('Pokemon', 'The opponent')} knows {burn_move}, so {passed_name}'s physical offense is devalued by burn risk; {selected_name} avoids that physical-damage penalty."
     if selected_result is not ratio_result:
         selected_name = selected_result["pokemon"].get(
             "Pokemon",
@@ -1288,7 +1136,6 @@ def find_best_team_member(
             "The ratio leader",
         )
         cleaned_ratio_why = ratio_why.rstrip(".")
-
         if cleaned_ratio_why.startswith(ratio_name):
             ratio_sentence = f"{cleaned_ratio_why}."
         else:
@@ -1297,14 +1144,12 @@ def find_best_team_member(
                 f"{cleaned_ratio_why[:1].lower()}"
                 f"{cleaned_ratio_why[1:]}."
             )
-
         why = (
             f"{selected_name} is recommended due to high OHKO confidence. "
             f"{ratio_sentence}"
         )
     else:
         why = ratio_why
-
     best_result = (
         selected_result["best_move"],
         selected_result["best_score"],
@@ -1312,7 +1157,6 @@ def find_best_team_member(
         selected_result["worst_score"],
         selected_result["ratio"],
     )
-
     return (
         selected_result["pokemon"],
         best_result,
@@ -1329,25 +1173,20 @@ def calculate_offensive_multiplier(
 ):
     if items is None:
         items = []
-
     if ability_rules is None:
         ability_rules = []
-
     move = resolve_move_for_matchup(
         attacker,
         defender,
         move,
     )
-
     defender_types = get_effective_pokemon_types(
         defender
     )
-
     type_multiplier = get_move_type_multiplier(
         move,
         defender_types,
     )
-
     ability_multiplier = get_ability_multiplier(
         defender,
         move,
@@ -1355,18 +1194,17 @@ def calculate_offensive_multiplier(
         type_multiplier,
         attacker,
     )
-
     item_multiplier = get_item_immunity_multiplier(
         defender,
         move,
         items,
     )
-
     return (
         type_multiplier
         * ability_multiplier
         * item_multiplier
     )
+
 
 def calculate_incoming_multiplier(
     opponent,
@@ -1377,25 +1215,20 @@ def calculate_incoming_multiplier(
 ):
     if items is None:
         items = []
-
     if ability_rules is None:
         ability_rules = []
-
     move = resolve_move_for_matchup(
         opponent,
         defender,
         move,
     )
-
     defender_types = get_effective_pokemon_types(
         defender
     )
-
     type_multiplier = get_move_type_multiplier(
         move,
         defender_types,
     )
-
     ability_multiplier = get_ability_multiplier(
         defender,
         move,
@@ -1403,25 +1236,23 @@ def calculate_incoming_multiplier(
         type_multiplier,
         opponent,
     )
-
     item_multiplier = get_item_immunity_multiplier(
         defender,
         move,
         items,
     )
-
     return (
         type_multiplier
         * ability_multiplier
         * item_multiplier
     )
 
+
 def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
     results = []
     team_status_effects = get_team_status_effects(team, moves_data)
     opponent_moves = get_moves(opponent, moves_data)
     dmax_note = get_opponent_dmax_note(opponent)
-
     opponent_hp = get_stat(opponent, "HP")
     opponent_spe = get_stat(opponent, "SPE")
     opponent_is_dmax = dmax_note != ""
@@ -1430,7 +1261,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         if opponent_is_dmax
         else opponent_hp
     )
-
     for pokemon in team:
         best_move, best_score, worst_move, worst_score, ratio = calculate_matchup_ratio(
             pokemon,
@@ -1439,17 +1269,13 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             ability_rules,
             moves_data
         )
-
         if best_move is None:
             continue
-            
-
         if worst_move is None:
             raise RuntimeError(
                 f"No valid incoming move found for "
                 f"{opponent.get('Pokemon', 'Unknown opponent')}."
             )
-
         best_move = resolve_move_for_matchup(
             pokemon,
             opponent,
@@ -1460,21 +1286,18 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             pokemon,
             worst_move,
         )
-
         type_effectiveness = get_move_type_multiplier(
             best_move,
             get_effective_pokemon_types(
                 opponent
             ),
         )
-
         best_effective_power = get_effective_move_power(
             pokemon,
             opponent,
             best_move,
             items,
         )
-
         item_damage_multiplier = (
             get_item_damage_multiplier(
                 pokemon,
@@ -1485,7 +1308,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 effective_power=best_effective_power,
             )
         )
-
         item_attack_multiplier = (
             get_item_attack_stat_multiplier(
                 pokemon,
@@ -1493,22 +1315,17 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 items,
             )
         )
-
         item_multiplier = (
             item_damage_multiplier
             * item_attack_multiplier
         )
-
         item_boosted = item_multiplier > 1
-
         base_move_score = (
             best_score / item_multiplier
             if item_boosted
             else best_score
         )
-
         item_bonus_amount = best_score - base_move_score
-
         boosted_body_press_score = calculate_boosted_body_press_score(
             pokemon,
             opponent,
@@ -1516,9 +1333,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             ability_rules,
             moves_data
         )
-
         best_hp_ratio = best_score / opponent_hp if opponent_hp else None
-
         (
             offensive_min_damage,
             offensive_max_damage,
@@ -1529,7 +1344,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             ability_rules,
         )
-
         offensive_possible_target_hp = get_stat(
             opponent,
             "HP",
@@ -1546,7 +1360,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             ability_rules,
             defender_opponent_iv_override=AVERAGE_OPPONENT_IV,
         )
-
         (
             incoming_min_damage,
             incoming_max_damage,
@@ -1557,7 +1370,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             ability_rules,
         )
-
         team_member_hp = get_stat(pokemon, "HP")
         incoming_hp_ratio = (
             (
@@ -1572,7 +1384,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             )
             else None
         )
-
         effective_team_speed = (
             pokemon.get("SPE", 0)
             * get_item_speed_multiplier(
@@ -1580,24 +1391,20 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 items,
             )
         )
-
         team_moves_second = (
             effective_team_speed
             < opponent_spe
         )
-
         # Survival OHKO only appears when the team member moves second
         # and the opponent's minimum modeled roll does not KO first.
         likely_survives_first_hit = (
             incoming_min_damage is None
             or incoming_min_damage < team_member_hp
         )
-
         attacker_moves = get_moves(
             pokemon,
             moves_data,
         )
-
         battle_notes = build_battle_notes(
             pokemon,
             opponent,
@@ -1627,14 +1434,12 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             incoming_max_damage,
             team_member_hp,
         )
-
         incoming_type_multiplier = get_move_type_multiplier(
             worst_move,
             get_effective_pokemon_types(
                 pokemon
             ),
         )
-
         incoming_multiplier = calculate_incoming_multiplier(
             opponent,
             pokemon,
@@ -1642,14 +1447,12 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             ability_rules,
         )
-
         offensive_type_multiplier = get_move_type_multiplier(
             best_move,
             get_effective_pokemon_types(
                 opponent
             ),
         )
-
         offensive_multiplier = calculate_offensive_multiplier(
             pokemon,
             opponent,
@@ -1657,7 +1460,6 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             ability_rules,
         )
-
         results.append({
             "Pokemon": pokemon["Pokemon"],
             "Gender": pokemon.get("Gender"),
@@ -1717,10 +1519,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
                 team_member_hp,
             )
         })
-
     if not results:
         return []
-
     return sorted(
         results,
         key=lambda row: row["Ratio"],

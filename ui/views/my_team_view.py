@@ -719,11 +719,15 @@ class MyTeamView:
                     text="Strongest Matchup",
                 ),
                 ft.DropdownOption(
+                    key="poison_offensive_pressure",
+                    text="Poison – Offensive Pressure",
+                ),
+                ft.DropdownOption(
                     key="poison_attrition",
-                    text="Poison / Attrition",
+                    text="Poison – Attrition",
                 ),
             ],
-            width=280,
+            width=380,
             on_select=self._handle_team_strategy_change,
         )
         self.strategy_description = ft.Text(
@@ -1617,16 +1621,15 @@ class MyTeamView:
 
     @staticmethod
     def _team_strategy_description(strategy: str) -> str:
+        if strategy == "poison_offensive_pressure":
+            return (
+                "Establish poison when it is safe and worthwhile, then convert it into offensive pressure with tools such as Venoshock, Hex, or Merciless. Non-lead opponents inherit the recommended lead setup when that assumption remains valid."
+            )
         if strategy == "poison_attrition":
             return (
-                "Prefer genuinely viable poison and attrition plans when they "
-                "fit the matchup. If the strategy is not viable, Battle Compass "
-                "falls back to the strongest direct matchup."
+                "Establish poison when it is safe and worthwhile, then favor walling, recovery, protection, screens, defensive setup, and other ways to let poison progress. Non-lead opponents inherit the recommended lead setup when that assumption remains valid."
             )
-        return (
-            "Use the standard Battle Compass recommendation priority based on "
-            "the strongest modeled matchup."
-        )
+        return "Use the standard Battle Compass recommendation priority based on the strongest modeled matchup."
 
     def _handle_team_strategy_change(
         self,
@@ -1719,31 +1722,20 @@ class MyTeamView:
 
     def _update_dirty_state(self) -> None:
         """Synchronize controls with current edits and validation state."""
-
         self._sync_aegislash_entry_notice()
-
         invalid_stats = [
             f"row {row_index + 1}: {column}"
-            for (row_index, column), control
-            in self.editor_controls.items()
-            if column in STAT_COLUMNS
-            and isinstance(control, ft.TextField)
-            and not self._valid_stat_text(control.value)
+            for (row_index, column), control in self.editor_controls.items()
+            if column in STAT_COLUMNS and isinstance(control, ft.TextField) and not self._valid_stat_text(control.value)
         ]
-
         is_dirty = self.has_unsaved_changes or bool(invalid_stats)
-
         self.save_button.disabled = not is_dirty
         self.discard_button.disabled = not is_dirty
         self.export_button.disabled = is_dirty
         self.detail_notice.visible = is_dirty
         self._sync_box_buttons()
-
         if invalid_stats:
-            self.save_status.value = (
-                f"{STAT_VALIDATION_MESSAGE} Invalid fields: "
-                + ", ".join(invalid_stats)
-            )
+            self.save_status.value = f"{STAT_VALIDATION_MESSAGE} Invalid fields: " + ", ".join(invalid_stats)
             self.save_status.color = "#F87171"
         elif is_dirty:
             self.save_status.value = "Unsaved changes"
@@ -3007,7 +2999,7 @@ class MyTeamView:
                     if column in STAT_COLUMNS
                     else None
                 ),
-                    ignore_up_down_keys=(
+                ignore_up_down_keys=(
                     column in NUMERIC_FOCUS_ORDER
                 ),
                 on_focus=(
@@ -3258,11 +3250,8 @@ class MyTeamView:
 
     def _validate_stat_editor(self, control: ft.TextField) -> bool:
         valid = self._valid_stat_text(control.value)
-
-        # Highlight invalid input without expanding the table row.
         control.error = None
         control.border_color = None if valid else "#F87171"
-
         return valid
 
     def _handle_text_commit(
@@ -3277,10 +3266,8 @@ class MyTeamView:
 
         if column in STAT_COLUMNS:
             valid = self._validate_stat_editor(event.control)
-
             self._update_dirty_state()
             self.page.update()
-
             if not valid:
                 return
 

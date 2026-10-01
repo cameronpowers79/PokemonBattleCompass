@@ -61,7 +61,8 @@ TRAINER_TEXTURE_DIR = (
 STRATEGY_PURPLE = "#C084FC"
 TEAM_STRATEGY_LABELS = {
     "strongest_matchup": "Strongest Matchup",
-    "poison_attrition": "Poison / Attrition",
+    "poison_offensive_pressure": "Poison – Offensive Pressure",
+    "poison_attrition": "Poison – Attrition",
 }
 STARTER_OPTIONS = [
     "Grookey",
@@ -226,16 +227,16 @@ class BattleCompassView:
         )
         self.team_strategy_value.color = (
             STRATEGY_PURPLE
-            if active_strategy == "poison_attrition"
+            if active_strategy in {"poison_attrition", "poison_offensive_pressure"}
             else TEXT_PRIMARY
         )
-        if active_strategy == "poison_attrition":
+        if active_strategy == "poison_offensive_pressure":
             tooltip_text = (
-                "Poison / Attrition tells Battle Compass to prefer complete, "
-                "viable poison or attrition plans when they provide a strong "
-                "alternate win condition. If no viable plan exists, it falls "
-                "back to the strongest direct matchup. For a fuller explanation, "
-                "see Team Strategy in My Team."
+                "Poison – Offensive Pressure establishes poison when it is safe and worthwhile, then favors poison-enabled offensive payoffs such as boosted Venoshock, Hex, or Merciless. For a fuller explanation, see Team Strategy in My Team."
+            )
+        elif active_strategy == "poison_attrition":
+            tooltip_text = (
+                "Poison – Attrition establishes poison when it is safe and worthwhile, then favors walling, recovery, protection, and defensive control while poison progresses. For a fuller explanation, see Team Strategy in My Team."
             )
         else:
             tooltip_text = (
@@ -1223,9 +1224,9 @@ class BattleCompassView:
         self,
         view_model: BattleCompassViewModel,
     ) -> ft.Control | None:
-        """Show the selected Poison / Attrition plan or explain a direct fallback."""
+        """Show the selected Poison strategy plan or explain a direct fallback."""
 
-        if view_model.team_strategy != "poison_attrition":
+        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure"}:
             return None
 
         plan = view_model.selected_strategy_plan
@@ -1240,7 +1241,7 @@ class BattleCompassView:
             action = "Direct fallback recommended"
             detail = (
                 view_model.strategy_fallback_reason
-                or "No safe Poison / Attrition opening is available in this matchup."
+                or "No safe opening is available for the selected Poison strategy in this matchup."
             )
             footer = (
                 "The selected strategy is still active; Battle Compass is deviating "
@@ -1251,7 +1252,7 @@ class BattleCompassView:
             content=ft.Column(
                 controls=[
                     ft.Text(
-                        "Poison / Attrition Plan",
+                        TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Poison Strategy") + " Plan",
                         size=TEXT_SIZE_CARD_TITLE,
                         weight=ft.FontWeight.BOLD,
                         font_family=FONT_FAMILY_HEADER,

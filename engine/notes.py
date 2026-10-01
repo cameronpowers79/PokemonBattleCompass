@@ -8,13 +8,12 @@ from engine.mechanics import (
     get_weather_damage_multiplier,
     get_weather_defense_stat_multiplier,
 )
-
 NOTE_INFO = "info"
 NOTE_OPPORTUNITY = "opportunity"
 NOTE_CAUTION = "caution"
 NOTE_WARNING = "warning"
-
 # ---------- General helpers ----------
+
 
 def note(category, text):
     return {
@@ -46,46 +45,35 @@ def pokemon_knows_move(pokemon, move_name):
 
 def unique_text_list(values):
     cleaned = []
-
     for value in values:
         if value and value not in cleaned:
             cleaned.append(value)
-
     if len(cleaned) == 0:
         return ""
-
     if len(cleaned) == 1:
         return cleaned[0]
-
     if len(cleaned) == 2:
         return f"{cleaned[0]} and {cleaned[1]}"
-
     return f"{', '.join(cleaned[:-1])} and {cleaned[-1]}"
 
 
 def dedupe_notes(notes):
     seen = set()
     cleaned = []
-
     for item in notes:
         text = item.get("text")
-
         if not text or text in seen:
             continue
-
         seen.add(text)
         cleaned.append(item)
-
     return cleaned
 
 
 def get_aegislash_stance_note(attacker):
     """Explain the mixed-form defensive assumption used for Aegislash."""
-
     pokemon_name = str(attacker.get("Pokemon") or "").strip().casefold()
     if pokemon_name != "aegislash":
         return None
-
     return note(
         NOTE_CAUTION,
         (
@@ -95,9 +83,8 @@ def get_aegislash_stance_note(attacker):
             "Shield Forme before taking an attack."
         ),
     )
-
-
 # ---------- Damage-changing ability notes ----------
+
 
 def format_percent_change(modifier):
     return round(abs(1 - modifier) * 100)
@@ -118,28 +105,23 @@ def build_damage_ability_note(
         defender.get("Pokemon")
         or "The defending Pokémon"
     )
-
     if effect == "Immunity":
         if perspective == "outgoing":
             return note(
                 NOTE_WARNING,
                 f"{ability} makes {move_name} ineffective",
             )
-
         return note(
             NOTE_INFO,
             f"{defender_name}'s {ability} makes {move_name} ineffective",
         )
-
     if effect == "Reduction" and modifier < 1:
         percent = format_percent_change(modifier)
-
         if perspective == "outgoing":
             return note(
                 NOTE_CAUTION,
                 f"{ability} reduces damage from {move_name} by {percent}%",
             )
-
         return note(
             NOTE_INFO,
             (
@@ -147,25 +129,21 @@ def build_damage_ability_note(
                 f"from {move_name} by {percent}%"
             ),
         )
-
     if effect == "Vulnerability" and modifier > 1:
         if modifier == 2:
             change_text = "doubles damage"
         else:
             percent = round((modifier - 1) * 100)
             change_text = f"increases damage by {percent}%"
-
         if perspective == "outgoing":
             return note(
                 NOTE_OPPORTUNITY,
                 f"{ability} {change_text} from {move_name}",
             )
-
         return note(
             NOTE_WARNING,
             f"{defender_name}'s {ability} {change_text} from {move_name}",
         )
-
     return None
 
 
@@ -181,19 +159,15 @@ def get_damage_ability_notes(
         defender.get("Type1"),
         defender.get("Type2"),
     ]
-
     type_multiplier = get_type_multiplier(
         move.get("Type"),
         defender_types,
     )
-
     # If typing already makes the move ineffective, do not credit the
     # defender's Ability for the immunity.
     if type_multiplier == 0:
         return []
-
     notes = []
-
     for rule in get_applicable_ability_rules(
         defender,
         move,
@@ -207,12 +181,9 @@ def get_damage_ability_notes(
             rule=rule,
             perspective=perspective,
         )
-
         if built_note:
             notes.append(built_note)
-
     return notes
-
 
 
 def get_blocked_move_ability_notes(
@@ -223,30 +194,25 @@ def get_blocked_move_ability_notes(
     ability_rules,
 ):
     """Explain damaging moves completely blocked by the defender's Ability."""
-
     notes = []
     defender_types = [
         defender.get("Type1"),
         defender.get("Type2"),
     ]
-
     for move in attacker_moves:
         if (
             move.get("Category") == "Status"
             or not move.get("Power")
         ):
             continue
-
         type_multiplier = get_type_multiplier(
             move.get("Type"),
             defender_types,
         )
-
         # A type immunity already blocks this move, so the Ability is not
         # the cause and should not receive a separate blocking note.
         if type_multiplier == 0:
             continue
-
         applicable_rules = get_applicable_ability_rules(
             defender,
             move,
@@ -254,7 +220,6 @@ def get_blocked_move_ability_notes(
             type_multiplier,
             attacker,
         )
-
         immunity_rule = next(
             (
                 rule
@@ -263,10 +228,8 @@ def get_blocked_move_ability_notes(
             ),
             None,
         )
-
         if immunity_rule is None:
             continue
-
         ability_name = str(
             immunity_rule.get("Ability")
             or defender.get("Ability")
@@ -276,15 +239,14 @@ def get_blocked_move_ability_notes(
             move.get("Move")
             or "This move"
         )
-
         notes.append(
             note(
                 NOTE_WARNING,
                 f"{ability_name} blocks {move_name}",
             )
         )
-
     return dedupe_notes(notes)
+
 
 def get_ability_bypass_note(
     *,
@@ -294,40 +256,31 @@ def get_ability_bypass_note(
     ability_rules,
 ):
     """Explain when an attacking Ability bypasses a defensive immunity."""
-
     if not move or not move.get("Power"):
         return None
-
     attacker_ability = attacker.get("Ability")
     defender_ability = defender.get("Ability")
-
     if not attacker_ability or not defender_ability:
         return None
-
     bypasses_defender_ability = any(
         rule.get("Ability") == attacker_ability
         and rule.get("Effect") == "AbilityBypass"
         and rule.get("TargetType") == "DefenderAbility"
         for rule in ability_rules
     )
-
     if not bypasses_defender_ability:
         return None
-
     defender_types = [
         defender.get("Type1"),
         defender.get("Type2"),
     ]
-
     type_multiplier = get_type_multiplier(
         move.get("Type"),
         defender_types,
     )
-
     # Ability bypass does not override an ordinary type immunity.
     if type_multiplier == 0:
         return None
-
     would_block_move = any(
         rule.get("Ability") == defender_ability
         and rule.get("Effect") == "Immunity"
@@ -338,12 +291,9 @@ def get_ability_bypass_note(
         )
         for rule in ability_rules
     )
-
     if not would_block_move:
         return None
-
     attacker_name = attacker.get("Pokemon", "The opponent")
-
     return note(
         NOTE_WARNING,
         (
@@ -351,17 +301,14 @@ def get_ability_bypass_note(
             f"{defender_ability}"
         ),
     )
-
 # ---------- Deterministic weather notes ----------
+
 
 def get_weather_source_ability(attacker, defender, weather):
     """Return the Ability name responsible for guaranteed modeled weather."""
-
     if not weather:
         return None
-
     source_abilities = []
-
     for pokemon in (attacker, defender):
         ability = pokemon.get("Ability")
         if (
@@ -369,10 +316,8 @@ def get_weather_source_ability(attacker, defender, weather):
             and ability not in source_abilities
         ):
             source_abilities.append(ability)
-
     if len(source_abilities) == 1:
         return source_abilities[0]
-
     return None
 
 
@@ -384,25 +329,20 @@ def get_weather_effect_note(
     perspective,
 ):
     """Explain guaranteed weather only when it changes this move's score."""
-
     if not move or move.get("Category") == "Status":
         return None
-
     weather = get_guaranteed_weather(attacker, defender)
     if not weather:
         return None
-
     source_ability = get_weather_source_ability(
         attacker,
         defender,
         weather,
     )
-
     damage_multiplier = get_weather_damage_multiplier(
         move,
         weather,
     )
-
     if damage_multiplier != 1:
         move_type = str(move.get("Type") or "move")
         if weather == "Sun":
@@ -411,13 +351,11 @@ def get_weather_effect_note(
             weather_text = "rain"
         else:
             weather_text = weather.lower()
-
         source_text = (
             f"{source_ability}'s {weather_text}"
             if source_ability
             else weather_text.capitalize()
         )
-
         if damage_multiplier > 1:
             category = (
                 NOTE_OPPORTUNITY
@@ -432,7 +370,6 @@ def get_weather_effect_note(
                 else NOTE_INFO
             )
             effect_text = "weakens"
-
         percent = format_percent_change(damage_multiplier)
         return note(
             category,
@@ -441,13 +378,11 @@ def get_weather_effect_note(
                 f"damage by {percent}%"
             ),
         )
-
     defense_multiplier = get_weather_defense_stat_multiplier(
         defender,
         move,
         weather,
     )
-
     if defense_multiplier > 1:
         defender_name = str(
             defender.get("Pokemon")
@@ -471,58 +406,44 @@ def get_weather_effect_note(
                 f"Sp. Def by {percent}%"
             ),
         )
-
     return None
-
-
 # ---------- Tactical ability notes ----------
+
 
 def build_tactical_note(rule, best_move, move_name, has_ohko_note):
     target_type = rule.get("TargetType")
     ability = rule.get("Ability")
-
     if target_type == "OHKO" and has_ohko_note:
         return note(NOTE_WARNING, "Sturdy may prevent OHKO")
-
     if target_type == "Contact" and move_makes_contact(best_move):
         return note(NOTE_CAUTION, f"{move_name} will trigger {ability}")
-
     if target_type == "Faint" and has_ohko_note:
         return note(NOTE_CAUTION, f"{ability} may trigger if the target faints")
-
     return None
 
 
 def get_tactical_ability_notes(defender, best_move, ability_rules, has_ohko_note):
     notes = []
-
     defender_ability = defender.get("Ability")
     move_name = best_move.get("Move", "This move")
-
     if not defender_ability:
         return notes
-
     for rule in ability_rules:
         if rule.get("Ability") != defender_ability:
             continue
-
         if rule.get("Effect") != "Tactical":
             continue
-
         built_note = build_tactical_note(
             rule,
             best_move,
             move_name,
             has_ohko_note
         )
-
         if built_note:
             notes.append(built_note)
-
     return notes
-
-
 # ---------- Tactical item notes ----------
+
 
 def pokemon_has_status_move(pokemon):
     return any(
@@ -539,14 +460,12 @@ def get_tactical_item_notes(
     has_ohko_note,
 ):
     notes = []
-
     attacker_item = attacker.get("Held Item")
     defender_item = defender.get("Held Item")
     best_move_name = best_move.get(
         "Move",
         "This move",
     )
-
     if attacker_item == "Life Orb":
         notes.append(
             note(
@@ -554,7 +473,6 @@ def get_tactical_item_notes(
                 "Life Orb recoil follows successful damaging attacks",
             )
         )
-
     if attacker_item in {
         "Choice Band",
         "Choice Specs",
@@ -566,7 +484,6 @@ def get_tactical_item_notes(
                 f"{attacker_item} locks the user into its first selected move",
             )
         )
-
     if (
         attacker_item == "Assault Vest"
         and pokemon_has_status_move(attacker)
@@ -577,7 +494,6 @@ def get_tactical_item_notes(
                 "Assault Vest prevents the use of status moves",
             )
         )
-
     if (
         defender_item == "Rocky Helmet"
         and move_makes_contact(best_move)
@@ -588,7 +504,6 @@ def get_tactical_item_notes(
                 f"{best_move_name} will trigger Rocky Helmet",
             )
         )
-
     if (
         defender_item == "Focus Sash"
         and has_ohko_note
@@ -599,7 +514,6 @@ def get_tactical_item_notes(
                 "Focus Sash may prevent an OHKO at full HP",
             )
         )
-
     if (
         attacker_item == "Focus Sash"
         and worst_move
@@ -610,22 +524,17 @@ def get_tactical_item_notes(
                 "Focus Sash may preserve 1 HP from a lethal hit at full HP",
             )
         )
-
     return notes
-
-
 # ---------- Move mechanics notes ----------
+
 
 def get_priority_notes(best_move, worst_move, opponent):
     notes = []
-
     opponent_name = opponent.get("Pokemon", "The opponent")
     opponent_move_name = worst_move.get("Move", "its move")
     best_move_name = best_move.get("Move", "Your move")
-
     player_has_priority = move_has_priority(best_move)
     opponent_has_priority = move_has_priority(worst_move)
-
     if player_has_priority and opponent_has_priority:
         notes.append(note(NOTE_INFO, "Both sides have priority"))
     elif player_has_priority:
@@ -635,75 +544,58 @@ def get_priority_notes(best_move, worst_move, opponent):
             notes.append(note(NOTE_WARNING, f"{opponent_name}'s {opponent_move_name} is powerful and has priority"))
         else:
             notes.append(note(NOTE_CAUTION, f"{opponent_name}'s {opponent_move_name} has priority"))
-
     return notes
 
 
 def get_activation_condition_notes(defender, best_move, opponent_moves):
     notes = []
-
     opponent_name = defender.get("Pokemon", "The opponent")
     best_move_name = best_move.get("Move", "This move")
     best_move_category = best_move.get("Category")
     best_move_power = best_move.get("Power", 0)
-
     for opponent_move in opponent_moves:
         move_name = opponent_move.get("Move")
         condition = opponent_move.get("ActivationCondition")
-
         if not move_name or not condition:
             continue
-
         if condition == "RequiresTargetContactMove" and move_makes_contact(best_move):
             notes.append(note(NOTE_WARNING, f"{best_move_name} may trigger {opponent_name}'s {move_name}"))
-
         if condition == "RequiresTargetPhysicalMove" and best_move_category == "Physical":
             notes.append(note(NOTE_WARNING, f"Physical attacks may trigger {opponent_name}'s {move_name}"))
-
         if condition == "RequiresTargetSpecialMove" and best_move_category == "Special":
             notes.append(note(NOTE_WARNING, f"Special attacks may trigger {opponent_name}'s {move_name}"))
-
         if condition == "RequiresTargetDamagingMove" and best_move_power and best_move_power > 0:
             notes.append(note(NOTE_WARNING, f"{opponent_name}'s {move_name} can punish damaging attacks"))
-
         if (
             condition == "RequiresFirstTurn"
             and opponent_move.get("Power", 0) >= 70
             and move_has_priority(opponent_move)
         ):
             notes.append(note(NOTE_WARNING, f"{opponent_name}'s {move_name} is powerful and has priority"))
-
     return notes
 
 
 def get_move_mechanics_notes(defender, best_move, worst_move, opponent_moves):
     notes = []
-
     notes.extend(get_priority_notes(best_move, worst_move, defender))
     notes.extend(get_activation_condition_notes(defender, best_move, opponent_moves))
-
     return dedupe_notes(notes)
-
-
 # ---------- Incoming move helpers ----------
+
 
 def get_move_type_list(pokemon):
     moves = []
-
     for slot in range(1, 5):
         move_name = pokemon.get(f"Move{slot}")
         move_type = pokemon.get(f"Move{slot}Type")
         move_power = pokemon.get(f"Move{slot}Power")
         move_category = pokemon.get(f"Move{slot}Category")
-
         if not move_name or not move_type:
             continue
-
         # Defensive resistance/immunity language should only consider
         # moves that can actually deal damage.
         if move_category not in {"Physical", "Special"}:
             continue
-
         moves.append({
             "Move": move_name,
             "Type": move_type,
@@ -717,7 +609,6 @@ def get_move_type_list(pokemon):
                 [],
             ),
         })
-
     return moves
 
 
@@ -731,27 +622,21 @@ def get_immune_and_resisted_types(
         pokemon.get("Type1"),
         pokemon.get("Type2"),
     ]
-
     immune_types = []
     resisted_types = []
-
     moves = (
         opponent_moves
         if opponent_moves is not None
         else get_move_type_list(opponent)
     )
-
     for move in moves:
         move_type = move.get("Type")
-
         if not move_type:
             continue
-
         type_multiplier = get_type_multiplier(
             move_type,
             pokemon_types,
         )
-
         ability_multiplier = get_ability_multiplier(
             pokemon,
             move,
@@ -759,17 +644,14 @@ def get_immune_and_resisted_types(
             type_multiplier,
             opponent,
         )
-
         final_multiplier = (
             type_multiplier
             * ability_multiplier
         )
-
         if final_multiplier == 0:
             immune_types.append(move_type)
         elif 0 < final_multiplier < 1:
             resisted_types.append(move_type)
-
     return (
         unique_text_list(immune_types),
         unique_text_list(resisted_types),
@@ -786,29 +668,23 @@ def has_ability_immunity(
         pokemon.get("Type1"),
         pokemon.get("Type2"),
     ]
-
     moves = (
         opponent_moves
         if opponent_moves is not None
         else get_move_type_list(opponent)
     )
-
     for move in moves:
         move_type = move.get("Type")
-
         if not move_type:
             continue
-
         type_multiplier = get_type_multiplier(
             move_type,
             pokemon_types,
         )
-
         # Ability immunity only counts here when the Ability independently
         # changes a move that typing would otherwise allow to hit.
         if type_multiplier == 0:
             continue
-
         ability_multiplier = get_ability_multiplier(
             pokemon,
             move,
@@ -816,40 +692,31 @@ def has_ability_immunity(
             type_multiplier,
             opponent,
         )
-
         if ability_multiplier == 0:
             return True
-
     return False
 
 
 def has_type_immunity(pokemon, opponent):
     pokemon_types = [pokemon.get("Type1"), pokemon.get("Type2")]
-
     for move in get_move_type_list(opponent):
         if get_type_multiplier(move["Type"], pokemon_types) == 0:
             return True
-
     return False
-
-
 # ---------- Opportunity notes ----------
+
 
 def get_status_boosted_move_notes(attacker, team_status_effects):
     notes = []
-
     if pokemon_knows_move(attacker, "Hex"):
         if any(status in team_status_effects for status in ["Burn", "Paralysis", "Poison", "Sleep", "Freeze"]):
             notes.append(note(NOTE_OPPORTUNITY, "Status-boosted Hex possible"))
-
     if pokemon_knows_move(attacker, "Venoshock"):
         if "Poison" in team_status_effects:
             notes.append(note(NOTE_OPPORTUNITY, "Poison-boosted Venoshock possible"))
-
     return notes
-
-
 # ---------- OHKO notes ----------
+
 
 def build_offensive_ohko_note(
     minimum_damage,
@@ -863,18 +730,14 @@ def build_offensive_ohko_note(
     has_incoming_damage,
 ):
     """Build an OHKO note from a modeled damage range.
-
     "Likely" remains conservative: the minimum modeled roll must reach the
     target's modeled HP using the opponent record's full 31-IV approximation.
-
     "Possible" is intentionally a little less strict so high-HP targets do
     not suppress every useful KO note. For that branch, the Compass checks the
     maximum modeled roll against an average-IV bulk estimate (16 IVs).
-
     The language remains intentionally non-promissory because the Compass
     cannot know every live battle-state choice, including defensive boosts.
     """
-
     if (
         minimum_damage is None
         or maximum_damage is None
@@ -882,9 +745,7 @@ def build_offensive_ohko_note(
         or target_hp <= 0
     ):
         return None
-
     meets_likely_ohko = minimum_damage >= target_hp
-
     if (
         possible_minimum_damage is None
         or possible_maximum_damage is None
@@ -900,7 +761,6 @@ def build_offensive_ohko_note(
             not meets_likely_ohko
             and possible_maximum_damage >= possible_target_hp
         )
-
     if (
         team_moves_second
         and has_incoming_damage
@@ -908,7 +768,6 @@ def build_offensive_ohko_note(
         and meets_likely_ohko
     ):
         return note(NOTE_INFO, "Likely Survival OHKO")
-
     if (
         team_moves_second
         and has_incoming_damage
@@ -916,14 +775,11 @@ def build_offensive_ohko_note(
         and meets_possible_ohko
     ):
         return note(NOTE_INFO, "Possible Survival OHKO")
-
     if (not team_moves_second) or (not has_incoming_damage):
         if meets_likely_ohko:
             return note(NOTE_INFO, "Likely OHKO")
-
         if meets_possible_ohko:
             return note(NOTE_INFO, "Possible OHKO")
-
     return None
 
 
@@ -934,7 +790,6 @@ def build_incoming_ohko_note(
     target_hp,
 ):
     """Build an incoming OHKO note from modeled minimum and maximum damage."""
-
     if (
         is_immune
         or minimum_damage is None
@@ -943,17 +798,13 @@ def build_incoming_ohko_note(
         or target_hp <= 0
     ):
         return None
-
     if minimum_damage >= target_hp:
         return note(NOTE_WARNING, "Likely Incoming OHKO")
-
     if maximum_damage >= target_hp:
         return note(NOTE_CAUTION, "Possible Incoming OHKO")
-
     return None
-
-
 # ---------- Battle Notes ----------
+
 
 def build_unmodeled_incoming_damage_note(
     attacker,
@@ -962,7 +813,6 @@ def build_unmodeled_incoming_damage_note(
     worst_score,
 ):
     """Explain a 1-BP opponent placeholder when it drives the matchup.
-
     A 1-BP value in opponents.json is a sentinel for a damaging move whose
     actual power depends on battle state or other data the Compass does not
     model. It prevents a false immunity result without pretending to know
@@ -970,17 +820,13 @@ def build_unmodeled_incoming_damage_note(
     """
     if not worst_move or worst_score <= 0:
         return None
-
     if worst_move.get("Power") != 1:
         return None
-
     if worst_move.get("DamageMethod") not in {"Variable", "Fixed"}:
         return None
-
     move_name = worst_move.get("Move", "This move")
     target_name = attacker.get("Pokemon", "this Pokémon")
     condition = worst_move.get("ActivationCondition")
-
     if condition and condition != "Always":
         text = (
             f"{move_name} can hit {target_name} if triggered, but its "
@@ -991,7 +837,6 @@ def build_unmodeled_incoming_damage_note(
             f"{move_name} can hit {target_name}, but its actual damage is "
             "not modeled; Matchup Strength is approximate"
         )
-
     return note(NOTE_CAUTION, text)
 
 
@@ -1026,21 +871,15 @@ def build_battle_notes(
 ):
     if ability_rules is None:
         ability_rules = []
-
     if team_status_effects is None:
         team_status_effects = set()
-
     if opponent_moves is None:
         opponent_moves = []
-
     if items is None:
         items = []
-
     if attacker_moves is None:
         attacker_moves = []
-
     notes = []
-
     is_immune = worst_score == 0
     has_incoming_damage = worst_score > 0
     offensive_ohko_note = build_offensive_ohko_note(
@@ -1054,26 +893,20 @@ def build_battle_notes(
         likely_survives_first_hit,
         has_incoming_damage,
     )
-
     incoming_ohko_note = build_incoming_ohko_note(
         is_immune,
         incoming_min_damage,
         incoming_max_damage,
         incoming_target_hp,
     )
-
     has_ohko_note = offensive_ohko_note is not None
-
     aegislash_stance_note = get_aegislash_stance_note(attacker)
     if aegislash_stance_note:
         notes.append(aegislash_stance_note)
-
     if dmax_note:
         notes.append(note(NOTE_INFO, dmax_note))
-
     if is_immune:
         notes.append(note(NOTE_INFO, "Immune to opponent's attacks"))
-
     unmodeled_incoming_note = build_unmodeled_incoming_damage_note(
         attacker,
         defender,
@@ -1082,13 +915,10 @@ def build_battle_notes(
     )
     if unmodeled_incoming_note:
         notes.append(unmodeled_incoming_note)
-
     if offensive_ohko_note:
         notes.append(offensive_ohko_note)
-
     if incoming_ohko_note:
         notes.append(incoming_ohko_note)
-
     notes.extend(
         get_damage_ability_notes(
             defender=defender,
@@ -1098,7 +928,6 @@ def build_battle_notes(
             perspective="outgoing",
         )
     )
-
     outgoing_weather_note = get_weather_effect_note(
         attacker=attacker,
         defender=defender,
@@ -1107,7 +936,6 @@ def build_battle_notes(
     )
     if outgoing_weather_note:
         notes.append(outgoing_weather_note)
-
     notes.extend(
         get_blocked_move_ability_notes(
             attacker=attacker,
@@ -1116,7 +944,6 @@ def build_battle_notes(
             ability_rules=ability_rules,
         )
     )
-
     if worst_move:
         notes.extend(
             get_damage_ability_notes(
@@ -1127,17 +954,14 @@ def build_battle_notes(
                 perspective="incoming",
             )
         )
-
         bypass_note = get_ability_bypass_note(
             attacker=defender,
             defender=attacker,
             move=worst_move,
             ability_rules=ability_rules,
         )
-
         if bypass_note:
             notes.append(bypass_note)
-
         incoming_weather_note = get_weather_effect_note(
             attacker=defender,
             defender=attacker,
@@ -1146,7 +970,6 @@ def build_battle_notes(
         )
         if incoming_weather_note:
             notes.append(incoming_weather_note)
-
     if (
         not (incoming_ohko_note and incoming_ohko_note["text"].startswith("Likely"))
         and boosted_body_press_score
@@ -1154,10 +977,8 @@ def build_battle_notes(
         and boosted_body_press_score > best_score
     ):
         notes.append(note(NOTE_OPPORTUNITY, "One Iron Defense makes Body Press the strongest move"))
-
     if not (incoming_ohko_note and incoming_ohko_note["text"].startswith("Likely")):
         notes.extend(get_status_boosted_move_notes(attacker, team_status_effects))
-
     notes.extend(
         get_tactical_ability_notes(
             defender,
@@ -1166,7 +987,6 @@ def build_battle_notes(
             has_ohko_note
         )
     )
-
     notes.extend(
         get_tactical_item_notes(
             attacker,
@@ -1176,7 +996,6 @@ def build_battle_notes(
             has_ohko_note,
         )
     )
-
     notes.extend(
         get_move_mechanics_notes(
             defender,
@@ -1185,31 +1004,25 @@ def build_battle_notes(
             opponent_moves
         )
     )
-
     return dedupe_notes(notes)
 
 
 def build_notes(*args, **kwargs):
     return note_text(build_battle_notes(*args, **kwargs))
-
-
 # ---------- Recommendation text ----------
+
 
 def get_second_largest(values):
     sorted_values = sorted(values, reverse=True)
-
     if len(sorted_values) < 2:
         return sorted_values[0] if sorted_values else 1
-
     return sorted_values[1]
 
 
 def get_second_smallest(values):
     sorted_values = sorted(values)
-
     if len(sorted_values) < 2:
         return sorted_values[0] if sorted_values else 1
-
     return sorted_values[1]
 
 
@@ -1222,73 +1035,56 @@ def get_why_code(
 ):
     best_scores = [result["best_score"] for result in all_results]
     worst_scores = [result["worst_score"] for result in all_results]
-
     selected_best_score = selected_result["best_score"]
     selected_worst_score = selected_result["worst_score"]
     selected_ratio = selected_result["ratio"]
     selected_pokemon = selected_result["pokemon"]
-
     second_best_score = get_second_largest(best_scores)
     second_lowest_worst_score = get_second_smallest(worst_scores)
-
     off_adv_ratio = selected_best_score / second_best_score if second_best_score else selected_best_score
     def_adv_ratio = second_lowest_worst_score / selected_worst_score if selected_worst_score else 999
-
     overwhelming_results = [
         result
         for result in all_results
         if result["best_score"] > 300 and result["ratio"] > 10
     ]
-
     has_overwhelming_offense = (
         selected_best_score > 300
         and selected_ratio > 10
     )
-
     any_overwhelming = len(overwhelming_results) > 0
-
     best_overwhelming_ratio = max(
         [result["ratio"] for result in overwhelming_results],
         default=None
     )
-
     ability_immunity = has_ability_immunity(
         selected_pokemon,
         opponent,
         ability_rules,
         opponent_moves,
     )
-
     type_immunity = has_type_immunity(
         selected_pokemon,
         opponent
     )
-
     if (
         any_overwhelming
         and selected_ratio == best_overwhelming_ratio
         and has_overwhelming_offense
     ):
         return 0
-
     if ability_immunity:
         return 1
-
     if type_immunity and selected_worst_score == min(worst_scores):
         return 2
-
     if off_adv_ratio > 1.3 and def_adv_ratio > 1.3:
         return 3
-
     if off_adv_ratio >= def_adv_ratio * 0.9 and off_adv_ratio > 1.2:
         return 4
-
     if def_adv_ratio > off_adv_ratio * 1.1 and def_adv_ratio > 1.2:
         return 5
-
     if selected_ratio >= 0.8:
         return 6
-
     return 7
 
 
@@ -1304,21 +1100,16 @@ def build_durability_reason(
         ability_rules,
         opponent_moves,
     )
-
     pokemon_name = pokemon.get("Pokemon", "This Pokémon")
-
     if immune_types and resisted_types:
         return (
             f"{pokemon_name} is immune to {immune_types} attacks "
             f"and resists {resisted_types} attacks"
         )
-
     if immune_types:
         return f"{pokemon_name} is immune to {immune_types} attacks"
-
     if resisted_types:
         return f"{pokemon_name} resists {resisted_types} attacks"
-
     return f"{pokemon_name} has the best durability against this opponent"
 
 
@@ -1331,13 +1122,10 @@ def build_why_explanation(
 ):
     if ability_rules is None:
         ability_rules = []
-
     if len(all_results) == 1:
         return "Only Pokemon available"
-
     selected_pokemon = selected_result["pokemon"]
     worst_score = selected_result["worst_score"]
-
     if worst_score == 0:
         return build_durability_reason(
             selected_pokemon,
@@ -1345,7 +1133,6 @@ def build_why_explanation(
             ability_rules,
             opponent_moves,
         )
-
     why_code = get_why_code(
         selected_result,
         all_results,
@@ -1353,10 +1140,8 @@ def build_why_explanation(
         ability_rules,
         opponent_moves,
     )
-
     if why_code == 0:
         return "Overwhelming offensive advantage"
-
     if why_code == 1:
         return build_durability_reason(
             selected_pokemon,
@@ -1364,7 +1149,6 @@ def build_why_explanation(
             ability_rules,
             opponent_moves,
         )
-
     if why_code == 2:
         return build_durability_reason(
             selected_pokemon,
@@ -1372,21 +1156,16 @@ def build_why_explanation(
             ability_rules,
             opponent_moves,
         )
-
     if why_code == 3:
         return "Best overall matchup"
-
     if why_code == 4:
         return "Strongest attack against this opponent"
-
     if why_code == 5:
         return build_durability_reason(
             selected_pokemon,
             opponent,
             ability_rules
         )
-
     if why_code == 6:
         return "Best balance of damage and durability"
-
     return "Highest overall matchup rating"
