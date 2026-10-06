@@ -1425,9 +1425,10 @@ class BattleCompassView:
                     nature=nature,
         )
         if asset_path is None:
-            # A missing form-specific asset must never prevent a Journey from
-            # reopening. Nor should we show another form's artwork instead.
-            return None
+            raise FileNotFoundError(
+                "No sprite asset found for "
+                f"{pokemon_name}."
+            )
         return self._asset_src(
             asset_path
         )

@@ -8,12 +8,17 @@ from io import BytesIO
 
 from pathlib import Path
 
+
+
 from PIL import Image
 
+
+
 from engine.mechanics import get_silvally_memory_type
-from engine.pokemon_identity import AMPED_NATURES, LOW_KEY_NATURES, form_from_nature
 
 from ui.constants import SPRITE_DIR, TYPE_BADGE_DIR
+
+
 
 try:
 
@@ -23,11 +28,19 @@ except ImportError:
 
     BUNDLED_ASSETS = frozenset()
 
+
+
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 ASSETS_DIR = PROJECT_ROOT / "assets"
 
+
+
 IS_WEB = sys.platform == "emscripten"
+
+
 
 HELD_ITEM_SPRITE_DIR = (
 
@@ -43,6 +56,8 @@ HELD_ITEM_SPRITE_DIR = (
 
 )
 
+
+
 PLATE_SPRITE_DIR = (
 
     ASSETS_DIR
@@ -56,6 +71,8 @@ PLATE_SPRITE_DIR = (
     / "plate"
 
 )
+
+
 
 INCENSE_SPRITE_DIR = (
 
@@ -71,6 +88,8 @@ INCENSE_SPRITE_DIR = (
 
 )
 
+
+
 NORMALIZED_SPRITE_DIR = (
 
     ASSETS_DIR
@@ -83,15 +102,27 @@ NORMALIZED_SPRITE_DIR = (
 
 )
 
+
+
+
+
 def _asset_src(path: Path) -> str:
 
     """Return a browser/Flet asset path relative to the asset root."""
 
+
+
     return path.relative_to(ASSETS_DIR).as_posix()
+
+
+
+
 
 def asset_exists(path: Path) -> bool:
 
     """Return whether an app asset exists on the active platform.
+
+
 
     Native builds can query the real filesystem directly. Static web builds
 
@@ -101,9 +132,13 @@ def asset_exists(path: Path) -> bool:
 
     """
 
+
+
     if not IS_WEB:
 
         return path.exists()
+
+
 
     try:
 
@@ -113,7 +148,13 @@ def asset_exists(path: Path) -> bool:
 
         return False
 
+
+
     return asset_src in BUNDLED_ASSETS
+
+
+
+
 
 def image_to_base64(
 
@@ -133,7 +174,11 @@ def image_to_base64(
 
             return base64.b64encode(file.read()).decode("utf-8")
 
+
+
     image = Image.open(path).convert("RGBA")
+
+
 
     if crop_transparency:
 
@@ -141,9 +186,13 @@ def image_to_base64(
 
         bbox = alpha.getbbox()
 
+
+
         if bbox:
 
             image = image.crop(bbox)
+
+
 
     if output_size:
 
@@ -155,19 +204,31 @@ def image_to_base64(
 
         )
 
+
+
     buffer = BytesIO()
 
     image.save(buffer, format="PNG")
 
+
+
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+
+
+
 
 def get_badge_img_html(pokemon_type, height=22):
 
     badge = TYPE_BADGE_DIR / f"{pokemon_type}.png"
 
+
+
     if not asset_exists(badge):
 
         return f"<span>{pokemon_type}</span>"
+
+
 
     if IS_WEB:
 
@@ -189,7 +250,11 @@ def get_badge_img_html(pokemon_type, height=22):
 
         )
 
+
+
     encoded = image_to_base64(badge)
+
+
 
     return (
 
@@ -206,6 +271,10 @@ def get_badge_img_html(pokemon_type, height=22):
         f"/>"
 
     )
+
+
+
+
 
 def slugify_pokemon_name(pokemon_name):
 
@@ -229,103 +298,264 @@ def slugify_pokemon_name(pokemon_name):
 
     )
 
-# Backward-compatible export names; use the shared resolver's Nature table.
-AMPED_TOXTRICITY_NATURES = AMPED_NATURES
-LOW_KEY_TOXTRICITY_NATURES = LOW_KEY_NATURES
+
+
+
+
+AMPED_TOXTRICITY_NATURES = frozenset({
+    "hardy",
+    "brave",
+    "adamant",
+    "naughty",
+    "docile",
+    "impish",
+    "lax",
+    "hasty",
+    "jolly",
+    "naive",
+    "rash",
+    "sassy",
+    "quirky",
+})
+
+
+LOW_KEY_TOXTRICITY_NATURES = frozenset({
+    "lonely",
+    "bold",
+    "relaxed",
+    "timid",
+    "serious",
+    "modest",
+    "mild",
+    "quiet",
+    "bashful",
+    "calm",
+    "gentle",
+    "careful",
+})
+
 
 def get_toxtricity_sprite_name(nature) -> str | None:
-    """Retain the old rendering API, deriving the form from one shared table."""
-    resolved = form_from_nature(nature)
-    if resolved == "Amped":
+    """Return the Nature-specific Toxtricity sprite slug, when known."""
+
+    normalized_nature = str(nature or "").strip().casefold()
+
+    if normalized_nature in AMPED_TOXTRICITY_NATURES:
         return "toxtricity-amped"
-    if resolved == "Low Key":
+
+    if normalized_nature in LOW_KEY_TOXTRICITY_NATURES:
         return "toxtricity-lowkey"
+
     return None
+
 
 def get_sprite_path(
-    pokemon_name, gender=None, use_gmax=False, use_texture=True,
-    sprite_dir=None, held_item=None, nature=None,
+
+    pokemon_name,
+
+    gender=None,
+
+    use_gmax=False,
+
+    use_texture=True,
+
+    sprite_dir=None,
+
+    held_item=None,
+
+    nature=None,
+
 ):
-    """Select a matching form's texture, then its sprite, never another form.
 
-    Gen VIII sprite sets use -galar, -alola, and -lowkey filename suffixes;
-    ordinary default sprites have no regional suffix. Absent correct-form
-    artwork returns None (caller shows its usual placeholder).
-    """
-    from engine.pokemon_identity import resolve_pokemon_id, normalized_display_name
+    display_name = str(pokemon_name or "").strip()
 
-    name = normalized_display_name(pokemon_name)
-    identity = resolve_pokemon_id(name, gender=gender, nature=nature)
-    if not identity:
-        # No invented gender or Nature-dependent artwork.
-        return None
 
-    base = slugify_pokemon_name(name)
-    # Explicit regional prefix gets stripped only after deciding its identity.
-    if name.casefold().startswith((
-        "kantonian ", "alolan ", "hoennian ", "unovan ", "johtonian ",
-    )):
-        base = slugify_pokemon_name(name.split(" ", 1)[1])
-    if base == "silvally":
-        memory_type = get_silvally_memory_type(
-            {"Pokemon": "Silvally", "Held Item": held_item}
+
+    is_galarian = display_name.casefold().startswith("galarian ")
+
+    if is_galarian:
+
+        display_name = display_name[len("Galarian "):].strip()
+
+
+
+    base_sprite_name = slugify_pokemon_name(
+
+        display_name
+
+    )
+
+
+
+    sprite_names = [base_sprite_name]
+
+
+
+    if display_name.casefold() == "toxtricity":
+        toxtricity_sprite_name = get_toxtricity_sprite_name(
+            nature
         )
+
+        if toxtricity_sprite_name:
+            sprite_names.insert(
+                0,
+                toxtricity_sprite_name,
+            )
+
+
+
+    if display_name.casefold() == "silvally":
+
+        memory_type = get_silvally_memory_type(
+
+            {
+
+                "Pokemon": "Silvally",
+
+                "Held Item": held_item,
+
+            }
+
+        )
+
+
+
         if memory_type:
-            base = f"silvally-{memory_type.casefold()}"
 
-    if identity == "toxtricity-low-key":
-        sprite_name = "toxtricity-lowkey"
-    elif identity == "toxtricity-amped":
-        sprite_name = "toxtricity-amped"
-    elif identity.endswith("-galar"):
-        sprite_name = f"{base}-galar"
-    elif identity.endswith("-alola"):
-        sprite_name = f"{base}-alola"
-    elif identity.endswith("-galar-standard"):
-        sprite_name = f"{base}-galar"
-    elif identity == "darmanitan-standard":
-        sprite_name = base
-    elif base in {"indeedee", "meowstic"}:
-        sprite_name = base  # gender-specific artwork lives in female/ directory
-    else:
-        sprite_name = base
+            memory_sprite_name = (
 
-    source_dir = sprite_dir or SPRITE_DIR
-    female = str(gender or "").casefold() == "female"
-    gender_distinct = base in {"indeedee", "meowstic"}
+                f"silvally-{memory_type.casefold()}"
 
-    # Preserve the whole identity through every fallback: G-Max, regional,
-    # gender and Nature-based form first. A correct female sprite beats a
-    # base/male texture; a wrong gender/form texture must never win by type.
-    dirs = ([source_dir / "female"] if female else [])
-    if not (female and gender_distinct):
-        dirs.append(source_dir)
+            )
 
-    suffixes = []
-    if use_gmax:
+            sprite_names.insert(
+
+                0,
+
+                memory_sprite_name,
+
+            )
+
+
+
+    is_female = (
+
+        str(gender).strip().lower() == "female"
+
+    )
+
+
+
+    base_dir = sprite_dir or SPRITE_DIR
+
+    female_dir = base_dir / "female"
+
+
+
+    candidates = []
+
+
+
+    for sprite_name in sprite_names:
+
         if use_texture:
-            suffixes.append("-gmax-texture")
-        suffixes.append("-gmax")
-    else:
-        if use_texture:
-            suffixes.append("-texture")
-        suffixes.append("")
 
-    for directory in dirs:
-        for suffix in suffixes:
-            names = [sprite_name]
-            if not use_gmax and suffix == "":
-                # The PokéSprite box-sprite filenames differ from the
-                # form-specific texture filenames. Both are form-safe.
-                if identity == "toxtricity-low-key":
-                    names = ["toxtricity-low-key", "toxtricity-lowkey"]
-                elif identity == "toxtricity-amped":
-                    names = ["toxtricity", "toxtricity-amped"]
-            for candidate_name in names:
-                candidate = directory / f"{candidate_name}{suffix}.png"
-                if asset_exists(candidate):
-                    return candidate
+            if is_female:
+
+                if use_gmax:
+
+                    candidates.append(
+
+                        female_dir / f"{sprite_name}-gmax-texture.png"
+
+                    )
+
+
+
+                candidates.extend([
+
+                    female_dir / f"{sprite_name}-galar-texture.png",
+
+                    female_dir / f"{sprite_name}-texture.png",
+
+                ])
+
+
+
+            if use_gmax:
+
+                candidates.append(
+
+                    base_dir / f"{sprite_name}-gmax-texture.png"
+
+                )
+
+
+
+            candidates.extend([
+
+                base_dir / f"{sprite_name}-galar-texture.png",
+
+                base_dir / f"{sprite_name}-texture.png",
+
+            ])
+
+
+
+        if is_female:
+
+            if use_gmax:
+
+                candidates.append(
+
+                    female_dir / f"{sprite_name}-gmax.png"
+
+                )
+
+
+
+            candidates.extend([
+
+                female_dir / f"{sprite_name}-galar.png",
+
+                female_dir / f"{sprite_name}.png",
+
+            ])
+
+
+
+        if use_gmax:
+
+            candidates.append(
+
+                base_dir / f"{sprite_name}-gmax.png"
+
+            )
+
+
+
+        candidates.extend([
+
+            base_dir / f"{sprite_name}-galar.png",
+
+            base_dir / f"{sprite_name}.png",
+
+        ])
+
+
+
+    for candidate in candidates:
+
+        if asset_exists(candidate):
+
+            return candidate
+
+
+
     return None
+
+
+
 
 
 def get_sprite_src(
@@ -362,9 +592,13 @@ def get_sprite_src(
 
     )
 
+
+
     if source_path is None:
 
         return None
+
+
 
     if normalized:
 
@@ -380,6 +614,8 @@ def get_sprite_src(
 
             return _asset_src(source_path)
 
+
+
         normalized_path = (
 
             NORMALIZED_SPRITE_DIR
@@ -388,15 +624,25 @@ def get_sprite_src(
 
         )
 
+
+
         if IS_WEB:
 
             return _asset_src(normalized_path)
+
+
 
         if normalized_path.exists():
 
             return _asset_src(normalized_path)
 
+
+
     return _asset_src(source_path)
+
+
+
+
 
 def get_sprite_img_html(
 
@@ -418,6 +664,8 @@ def get_sprite_img_html(
 
 ):
 
+
+
     sprite_path = get_sprite_path(
 
         pokemon_name,
@@ -434,6 +682,8 @@ def get_sprite_img_html(
 
     )
 
+
+
     if sprite_path is None:
 
         return (
@@ -444,11 +694,17 @@ def get_sprite_img_html(
 
         )
 
+
+
     is_texture = "-texture" in sprite_path.stem
+
+
 
     if is_texture:
 
         display_size = texture_size or size
+
+
 
         if IS_WEB:
 
@@ -470,6 +726,8 @@ def get_sprite_img_html(
 
             image_src = f"data:image/png;base64,{encoded}"
 
+
+
         image_style = (
 
             f"width:{display_size}px;"
@@ -484,6 +742,8 @@ def get_sprite_img_html(
 
         )
 
+
+
     else:
 
         if IS_WEB:
@@ -496,6 +756,8 @@ def get_sprite_img_html(
 
             image_src = f"data:image/png;base64,{encoded}"
 
+
+
         image_style = (
 
             f"max-width:{size}px;"
@@ -507,6 +769,8 @@ def get_sprite_img_html(
             "height:auto;"
 
         )
+
+
 
     return (
 
@@ -524,6 +788,10 @@ def get_sprite_img_html(
 
     )
 
+
+
+
+
 def slugify_item_name(
 
     item_name: str,
@@ -531,6 +799,8 @@ def slugify_item_name(
 ) -> str:
 
     """Convert a held-item name into a PokéSprite filename slug."""
+
+
 
     normalized = (
 
@@ -546,6 +816,8 @@ def slugify_item_name(
 
     )
 
+
+
     normalized = re.sub(
 
         r"[^a-z0-9]+",
@@ -556,7 +828,13 @@ def slugify_item_name(
 
     )
 
+
+
     return normalized.strip("-")
+
+
+
+
 
 def get_item_sprite_path(
 
@@ -566,21 +844,31 @@ def get_item_sprite_path(
 
     """Return the bundled sprite for a held item, when available."""
 
+
+
     if not isinstance(item_name, str):
 
         return None
 
+
+
     item_name = item_name.strip()
+
+
 
     if not item_name:
 
         return None
+
+
 
     sprite_name = slugify_item_name(
 
         item_name
 
     )
+
+
 
     candidates = [
 
@@ -598,6 +886,8 @@ def get_item_sprite_path(
 
     ]
 
+
+
     if sprite_name.endswith("-plate"):
 
         candidates.append(
@@ -607,6 +897,8 @@ def get_item_sprite_path(
             / f"{sprite_name.removesuffix('-plate')}.png"
 
         )
+
+
 
     if sprite_name.endswith("-incense"):
 
@@ -618,13 +910,21 @@ def get_item_sprite_path(
 
         )
 
+
+
     for candidate in candidates:
 
         if asset_exists(candidate):
 
             return candidate
 
+
+
     return None
+
+
+
+
 
 def get_item_sprite_src(
 
@@ -634,17 +934,27 @@ def get_item_sprite_src(
 
     """Return an asset-relative item sprite source for Flet."""
 
+
+
     sprite_path = get_item_sprite_path(
 
         item_name
 
     )
 
+
+
     if sprite_path is None:
 
         return None
 
+
+
     return _asset_src(sprite_path)
+
+
+
+
 
 def opponent_uses_gmax(opponent):
 

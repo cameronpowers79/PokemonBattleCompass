@@ -36,10 +36,6 @@ from engine.item_recommendations import (
 )
 from engine.moves import apply_move_metadata
 from engine.mechanics import get_effective_pokemon_types
-from engine.pokemon_identity import (
-    normalized_display_name, regional_choices, regional_types,
-    resolve_pokemon_id, evolution_destination, REGIONAL_FORMS,
-)
 from ui.constants import POKEMON_TYPES, TYPE_COLORS
 from ui.rendering import (
     asset_exists,
@@ -404,31 +400,18 @@ class MyTeamView:
             )
         )
 
-        # The Galar-native form is the bare name. Imported regions are
-        # explicit choices, but historical Galarian-prefixed saves stay valid.
-        validated_names = {
-            name.strip() for name in raw_pokemon_validation
-            if isinstance(name, str) and name.strip()
-        }
-        regional_names = {
-            choice
-            for name in validated_names
-            for choice in regional_choices(name)
-        }
-        self.pokemon_options = sorted({
-            normalized_display_name(name) for name in validated_names
-            # Toxtricity's form is determined by Nature in My Team; legacy
-            # validation names remain accepted for existing Journey saves.
-            if not name.casefold().startswith((
-                "toxtricity ", "toxtricity-",
-            ))
-        } | {
-            name for name in regional_names
-            if not name.casefold().startswith((
-                "toxtricity ", "toxtricity-",
-            ))
-        })
-        self.pokemon_lookup = set(self.pokemon_options) | validated_names
+        self.pokemon_options = sorted(
+            {
+                pokemon_name.strip()
+                for pokemon_name in raw_pokemon_validation
+                if isinstance(pokemon_name, str)
+                and pokemon_name.strip()
+            }
+        )
+
+        self.pokemon_lookup = set(
+            self.pokemon_options
+        )
 
         self.type_options = list(
             POKEMON_TYPES
@@ -585,13 +568,11 @@ class MyTeamView:
                 from_name = str(step.get("from") or "").strip()
                 if not from_name:
                     continue
-                # Different regional lines may use different evolved species.
-                # Never collapse a Kantonian Meowth into Galarian Meowth.
-                from_id = resolve_pokemon_id(from_name)
-                if from_id:
-                    self.evolution_step_lookup.setdefault(
-                        from_id, [],
-                    ).append(dict(step))
+                normalized_from = self._normalize_pokemon_name(from_name)
+                self.evolution_step_lookup.setdefault(
+                    normalized_from,
+                    [],
+                ).append(dict(step))
 
         for record in (
             *self.working_team,
@@ -976,9 +957,8 @@ class MyTeamView:
     ) -> bool:
         """Populate Type1/Type2 when the selected Pokémon is known."""
 
-        known_types = (
-            regional_types(pokemon_name)
-            or self.pokemon_type_lookup.get(pokemon_name.strip())
+        known_types = self.pokemon_type_lookup.get(
+            pokemon_name.strip()
         )
         if known_types is None:
             return False
@@ -1006,7 +986,7 @@ class MyTeamView:
     ) -> None:
         """Open a new Team Editor row with the Pokémon name pre-populated."""
 
-        normalized_name = normalized_display_name(pokemon_name)
+        normalized_name = pokemon_name.strip()
         if not normalized_name:
             return
 
@@ -3436,9 +3416,6 @@ class MyTeamView:
         ):
             return
 
-        if column == "Pokemon":
-            value = normalized_display_name(value)
-
         previous_value = self.working_team[
             row_index
         ].get(column)
@@ -3851,9 +3828,18 @@ class MyTeamView:
     def _normalize_pokemon_name(pokemon_name: object) -> str:
         """Normalize regional display prefixes for evolution matching."""
 
-        return resolve_pokemon_id(pokemon_name) or (
-            " ".join(str(pokemon_name or "").strip().casefold().split())
+        normalized = " ".join(
+            str(pokemon_name or "").strip().casefold().split()
         )
+        for prefix in (
+            "galarian ",
+            "alolan ",
+            "hisuian ",
+            "paldean ",
+        ):
+            if normalized.startswith(prefix):
+                return normalized[len(prefix):].strip()
+        return normalized
 
     @staticmethod
     def _evolution_pronouns(pokemon: dict) -> tuple[str, str, str]:
@@ -3882,19 +3868,12 @@ class MyTeamView:
     def _evolution_steps_for(self, pokemon_name: object) -> list[dict]:
         """Return Journey evolution-step metadata for one species."""
 
-        steps = list(self.evolution_step_lookup.get(
-            self._normalize_pokemon_name(pokemon_name), [],
-        ))
-        if not steps and resolve_pokemon_id(pokemon_name) in {
-            "ponyta", "ponyta-galar",
-        }:
-            # Ponyta isn't a base-Sword Journey objective (Shield-exclusive).
-            # Both forms evolve to the corresponding Rapidash at Lv. 40.
-            return [{
-                "from": str(pokemon_name), "to": "Rapidash",
-                "method": "level", "level": 40,
-            }]
-        return steps
+        return list(
+            self.evolution_step_lookup.get(
+                self._normalize_pokemon_name(pokemon_name),
+                [],
+            )
+        )
 
     def _evolution_step_for(
         self,
@@ -3906,60 +3885,42 @@ class MyTeamView:
         normalized_into = self._normalize_pokemon_name(into_name)
         for step in self._evolution_steps_for(from_name):
             if (
-                self._normalize_pokemon_name(
-                    evolution_destination(from_name, step.get("to"))
-                ) == normalized_into
+                self._normalize_pokemon_name(step.get("to"))
+                == normalized_into
             ):
                 return step
         return None
 
     def _is_final_evolution_stage(self, pokemon_name: object) -> bool:
-        """Return whether this particular regional form has an evolution."""
-        return not bool(self._evolution_options_for(pokemon_name))
+        """Return whether a species has no known further evolution."""
+
+        name = str(pokemon_name or "").strip()
+        evolution_record = self.evolutions.get(name)
+        if isinstance(evolution_record, dict):
+            options = evolution_record.get("evolutions")
+            if isinstance(options, list):
+                return not any(isinstance(option, dict) for option in options)
+
+        return not bool(self._evolution_steps_for(name))
 
     def _evolution_options_for(self, pokemon_name: object) -> list[dict]:
-        """Return evolutions for the selected form, preserving existing guidance."""
+        """Return player-facing evolution options for one species."""
+
         name = str(pokemon_name or "").strip()
-        identity = resolve_pokemon_id(name)
-        if not identity:
+        evolution_record = self.evolutions.get(name)
+        if not isinstance(evolution_record, dict):
             return []
 
-        base_key = name.casefold().split(" ", 1)[-1] if name.casefold().startswith((
-            "kantonian ", "alolan ", "unovan ", "hoennian ", "johtonian ",
-        )) else name.casefold()
-        is_regional = base_key.replace(".", "").replace("'", "").replace(" ", "-") in REGIONAL_FORMS
-        record = self.evolutions.get(name)
-        original = record.get("evolutions", []) if isinstance(record, dict) else []
-        original = [dict(row) for row in original if isinstance(row, dict)
-                    and str(row.get("into") or "").strip()]
-        if not is_regional:
-            return original
-
-        steps = self._evolution_steps_for(name)
-        if not steps:
-            # A foreign regional form may have a different evolution family.
+        raw_options = evolution_record.get("evolutions")
+        if not isinstance(raw_options, list):
             return []
-        options = []
-        for step in steps:
-            into = evolution_destination(name, step.get("to"))
-            if not into or any(x["into"] == into for x in options):
-                continue
-            # Keep the existing detailed text when it matches this branch.
-            existing = next((row for row in original if
-                             self._normalize_pokemon_name(row.get("into")) ==
-                             self._normalize_pokemon_name(into)), None)
-            level = self._safe_level(step.get("level"))
-            requirement = (str(step.get("condition") or "").strip()
-                           or (f"Reach Lv. {level}" if level else
-                               str(step.get("method") or "Evolution requirement")))
-            options.append({
-                "into": into,
-                "display_text": (
-                    existing.get("display_text", requirement) if existing
-                    else requirement
-                ),
-            })
-        return options
+
+        return [
+            dict(option)
+            for option in raw_options
+            if isinstance(option, dict)
+            and str(option.get("into") or "").strip()
+        ]
 
     def _build_evolution_summary(
         self,
@@ -3974,7 +3935,19 @@ class MyTeamView:
         if not pokemon_name:
             return ft.Container()
 
-        evolution_options = self._evolution_options_for(pokemon_name)
+        evolution_record = self.evolutions.get(
+            pokemon_name
+        )
+
+        if not isinstance(evolution_record, dict):
+            return ft.Container()
+
+        evolution_options = evolution_record.get(
+            "evolutions"
+        )
+
+        if not isinstance(evolution_options, list):
+            return ft.Container()
 
         if not evolution_options:
             return ft.Container(
@@ -4370,7 +4343,7 @@ class MyTeamView:
             return
 
         record = self.working_team[row_index]
-        record["Pokemon"] = normalized_display_name(evolved_name)
+        record["Pokemon"] = evolved_name
         self._apply_known_pokemon_types(
             record,
             evolved_name,

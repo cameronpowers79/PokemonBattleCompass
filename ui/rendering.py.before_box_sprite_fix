@@ -313,18 +313,9 @@ def get_sprite_path(
 
     for directory in dirs:
         for suffix in suffixes:
-            names = [sprite_name]
-            if not use_gmax and suffix == "":
-                # The PokéSprite box-sprite filenames differ from the
-                # form-specific texture filenames. Both are form-safe.
-                if identity == "toxtricity-low-key":
-                    names = ["toxtricity-low-key", "toxtricity-lowkey"]
-                elif identity == "toxtricity-amped":
-                    names = ["toxtricity", "toxtricity-amped"]
-            for candidate_name in names:
-                candidate = directory / f"{candidate_name}{suffix}.png"
-                if asset_exists(candidate):
-                    return candidate
+            candidate = directory / f"{sprite_name}{suffix}.png"
+            if asset_exists(candidate):
+                return candidate
     return None
 
 

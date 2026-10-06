@@ -39,7 +39,6 @@ from ui.theme import (
 
 from ..rendering import get_sprite_src
 from ..viewmodels.app_state import AppState
-from engine.pokemon_identity import normalized_display_name, regional_choices, REGIONAL_FORMS
 
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -207,7 +206,6 @@ class MyJourneyView:
             DATA_DIR / "journey_pokemon.json"
         )
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
-        self.planned_pokemon_forms = self._load_planned_pokemon_forms()
         self.planned_moves = self._load_planned_moves()
         self.pokemon = self._planned_pokemon_records()
         self._move_planner_options = self._build_move_planner_options()
@@ -238,7 +236,6 @@ class MyJourneyView:
         self._move_planner_table: fdt.DataTable2 | None = None
         self._move_planner_controls: dict[tuple[str, int], ft.AutoComplete] = {}
         self._caught_stage_selector: ft.Dropdown | None = None
-        self._caught_planner_pokemon_id: str | None = None
         self._add_item_selector: ft.AutoComplete | None = None
         self._add_item_quantity: ft.TextField | None = None
         self._add_item_button: ft.Button | None = None
@@ -249,7 +246,6 @@ class MyJourneyView:
         self._add_pokemon_button: ft.Button | None = None
         self._add_pokemon_validation_text: ft.Text | None = None
         self._add_pokemon_name_to_id: dict[str, str] = {}
-        self._add_pokemon_name_to_form: dict[str, str] = {}
 
         # Section-local display filters. These affect only the rendered
         # Journey Checklist / Team Planner rows; saved objectives remain intact.
@@ -379,118 +375,6 @@ class MyJourneyView:
             for pokemon_id in self.planned_pokemon_ids
             if pokemon_id in records_by_id
         ]
-
-    def _load_planned_pokemon_forms(self) -> dict[str, dict[str, str]]:
-        """Read optional form/gender planning preferences (legacy saves: empty)."""
-        raw = self.app_state.my_journey_data.get("planned_pokemon_forms", {})
-        valid_ids = {str(record.get("id")) for record in self.pokemon_catalog}
-        if not isinstance(raw, dict):
-            return {}
-        return {
-            pokemon_id: {key: value for key, value in settings.items()
-                         if key in {"form", "gender"} and isinstance(value, str)}
-            for pokemon_id, settings in raw.items()
-            if pokemon_id in valid_ids and isinstance(settings, dict)
-        }
-
-    @staticmethod
-    def _planned_form_options(pokemon_name: str) -> list[tuple[str, str]]:
-        """Return (display label, stored field) choices, when relevant."""
-        if pokemon_name in {"Indeedee", "Meowstic"}:
-            return [("Male", "gender"), ("Female", "gender")]
-        if pokemon_name == "Toxtricity":
-            return [("Amped", "form"), ("Low Key", "form")]
-        regional = regional_choices(pokemon_name)
-        if len(regional) > 1:
-            return [(option, "form") for option in regional]
-        return []
-
-    def _planned_stage_name(
-        self, pokemon: dict[str, Any], stage_name: str,
-    ) -> str:
-        """Preserve an imported region through the entire planned line."""
-        pokemon_id = str(pokemon.get("id") or "")
-        selected = self.planned_pokemon_forms.get(pokemon_id, {}).get("form", "")
-        regions = ("Kantonian", "Alolan", "Unovan", "Hoennian", "Johtonian")
-        if not selected.startswith(tuple(origin + " " for origin in regions)):
-            return normalized_display_name(stage_name)
-        origin = selected.split(" ", 1)[0]
-        final_name = str(pokemon.get("pokemon") or "")
-        if stage_name.casefold() == final_name.casefold():
-            return selected
-        current = str(stage_name).strip()
-        if current.casefold().startswith(tuple(
-            prefix + " " for prefix in (
-                "galarian", "kantonian", "alolan", "unovan", "hoennian",
-                "johtonian",
-            )
-        )):
-            return f"{origin} {current.split(' ', 1)[1]}"
-        return normalized_display_name(current)
-
-    def _planned_marker_name(self, pokemon: dict[str, Any]) -> str:
-        """Use the intended regional form for the acquisition sprite."""
-        marker = str(
-            pokemon.get("marker_pokemon") or pokemon.get("acquire_as")
-            or pokemon.get("pokemon") or ""
-        )
-        return self._planned_stage_name(pokemon, marker)
-
-    def _planned_form_is_imported_exception(
-        self, pokemon: dict[str, Any],
-    ) -> bool:
-        selected = self.planned_pokemon_forms.get(
-            str(pokemon.get("id") or ""), {}
-        ).get("form", "")
-        return selected.startswith((
-            "Kantonian ", "Alolan ", "Unovan ", "Hoennian ",
-            "Johtonian ",
-        ))
-
-    def _build_planned_form_control(self, pokemon: dict[str, Any]) -> ft.Control:
-        pokemon_id = str(pokemon.get("id") or "")
-        pokemon_name = str(pokemon.get("pokemon") or "")
-        choices = self._planned_form_options(pokemon_name)
-        if not choices:
-            return ft.Container()
-        field = choices[0][1]
-        saved = self.planned_pokemon_forms.get(pokemon_id, {}).get(field)
-        # Display a regional native form as the unqualified default without
-        # claiming gender or Toxtricity's Nature-derived form is known.
-        value = saved if saved in {choice[0] for choice in choices} else (
-            pokemon_name if field == "form" and pokemon_name != "Toxtricity"
-            else None
-        )
-        return ft.Dropdown(
-            label="Gender" if field == "gender" else "Form",
-            value=value,
-            width=150,
-            dense=True,
-            text_size=11,
-            options=[ft.DropdownOption(key=choice, text=choice)
-                     for choice, _ in choices],
-            on_select=lambda event, pid=pokemon_id, target=field: (
-                self.page.run_task(
-                    self._save_planned_form_choice,
-                    pid, target, str(event.control.value or "")
-                )
-            ),
-        )
-
-    async def _save_planned_form_choice(
-        self, pokemon_id: str, field: str, value: str,
-    ) -> None:
-        previous = deepcopy(self.planned_pokemon_forms)
-        updated = deepcopy(previous)
-        settings = dict(updated.get(pokemon_id, {}))
-        settings[field] = value
-        updated[pokemon_id] = settings
-        if not await self.app_state.save_planned_pokemon_forms(updated):
-            self._show_save_error("Pokémon form preference could not be saved.")
-            self.planned_pokemon_forms = previous
-        else:
-            self.planned_pokemon_forms = updated
-        self._refresh()
 
     def _load_planned_moves(
         self,
@@ -951,7 +835,6 @@ class MyJourneyView:
 
         self.earned_badges = self.app_state.earned_badges
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
-        self.planned_pokemon_forms = self._load_planned_pokemon_forms()
         self.planned_moves = self._load_planned_moves()
         self._reload_planner_dependencies()
         self.pokemon_obtained = {
@@ -1544,9 +1427,7 @@ class MyJourneyView:
     ) -> None:
         """Choose the caught evolution stage, then open a prefilled editor row."""
 
-        stages = [self._planned_stage_name(pokemon, stage)
-                  for stage in self._pokemon_family_stages(pokemon)]
-        self._caught_planner_pokemon_id = str(pokemon.get("id") or "")
+        stages = self._pokemon_family_stages(pokemon)
         default_stage = stages[0]
 
         self._caught_stage_selector = ft.Dropdown(
@@ -1618,7 +1499,6 @@ class MyJourneyView:
     ) -> None:
         del event
         self._caught_stage_selector = None
-        self._caught_planner_pokemon_id = None
         self.page.pop_dialog()
         self.page.update()
 
@@ -1630,7 +1510,10 @@ class MyJourneyView:
 
         name = str(pokemon_name or "").strip()
 
-        return normalized_display_name(name)
+        if name.casefold().startswith("galarian "):
+            return name[len("Galarian "):].strip()
+
+        return name
 
     def _go_to_my_team_from_prompt(
         self,
@@ -1647,21 +1530,10 @@ class MyJourneyView:
         if not selected_stage:
             return
 
-        preference = self.planned_pokemon_forms.get(
-            self._caught_planner_pokemon_id or "", {}
-        )
         self._caught_stage_selector = None
-        self._caught_planner_pokemon_id = None
         self.page.pop_dialog()
 
         if self.on_go_to_my_team is not None:
-            preferred_form = preference.get("form", "")
-            # Only replace the final species, not a pre-evolution stage.
-            if preferred_form and preferred_form.startswith((
-                "Kantonian ", "Alolan ", "Unovan ", "Hoennian ",
-                "Johtonian ",
-            )) and preferred_form.split(" ", 1)[1].casefold() == selected_stage.casefold():
-                selected_stage = preferred_form
             self.on_go_to_my_team(
                 self._my_team_pokemon_name(selected_stage)
             )
@@ -3798,9 +3670,15 @@ class MyJourneyView:
             )
             return
 
-        self._add_pokemon_name_to_id = {}
-        self._add_pokemon_name_to_form = {}
-        self._add_pokemon_name_to_gender = {}
+        self._add_pokemon_name_to_id = {
+            str(pokemon.get("pokemon", "")).strip().casefold():
+            str(pokemon.get("id", "")).strip()
+            for pokemon in available_pokemon
+            if (
+                str(pokemon.get("pokemon", "")).strip()
+                and str(pokemon.get("id", "")).strip()
+            )
+        }
 
         suggestions: list[ft.AutoCompleteSuggestion] = []
         for pokemon in available_pokemon:
@@ -3816,32 +3694,12 @@ class MyJourneyView:
             ):
                 search_key_parts.append(acquire_as)
 
-            choices = [pokemon_name]
-            if pokemon_name == "Toxtricity":
-                choices = ["Toxtricity (Amped)", "Toxtricity (Low Key)"]
-            elif pokemon_name in {"Indeedee", "Meowstic"}:
-                choices = [f"{pokemon_name} (Male)",
-                           f"{pokemon_name} (Female)"]
-            else:
-                choices = regional_choices(pokemon_name)
-            for choice in choices:
-                choice_key = choice.casefold()
-                self._add_pokemon_name_to_id[choice_key] = str(pokemon["id"])
-                if pokemon_name in {"Indeedee", "Meowstic"}:
-                    self._add_pokemon_name_to_gender[choice_key] = (
-                        choice[len(pokemon_name) + 2:-1]
-                    )
-                elif choice != pokemon_name:
-                    self._add_pokemon_name_to_form[choice_key] = (
-                        choice[len("Toxtricity ("):-1]
-                        if choice.startswith("Toxtricity (") else choice
-                    )
-                suggestions.append(
-                    ft.AutoCompleteSuggestion(
-                        key=" ".join(search_key_parts + [choice]),
-                        value=choice,
-                    )
+            suggestions.append(
+                ft.AutoCompleteSuggestion(
+                    key=" ".join(search_key_parts),
+                    value=pokemon_name,
                 )
+            )
 
         self._add_pokemon_validation_text = ft.Text(
             "Choose an exact match from the suggestions.",
@@ -3984,8 +3842,6 @@ class MyJourneyView:
         self._add_pokemon_button = None
         self._add_pokemon_validation_text = None
         self._add_pokemon_name_to_id = {}
-        self._add_pokemon_name_to_form = {}
-        self._add_pokemon_name_to_gender = {}
 
     def _close_add_pokemon_dialog(
         self,
@@ -4006,19 +3862,11 @@ class MyJourneyView:
             self._sync_add_pokemon_validation()
             return
 
-        key = str(self._add_pokemon_selector.value or "").strip().casefold()
-        planned_form = self._add_pokemon_name_to_form.get(key)
-        planned_gender = self._add_pokemon_name_to_gender.get(key)
         self._clear_add_pokemon_dialog_state()
         self.page.pop_dialog()
-        self.page.run_task(
-            self._add_planned_pokemon, pokemon_id, planned_form, planned_gender
-        )
+        self.page.run_task(self._add_planned_pokemon, pokemon_id)
 
-    async def _add_planned_pokemon(
-        self, pokemon_id: str, selected_form: str | None = None,
-        selected_gender: str | None = None,
-    ) -> None:
+    async def _add_planned_pokemon(self, pokemon_id: str) -> None:
         """Persist one new Team Planner Pokémon."""
 
         if pokemon_id in self.planned_pokemon_ids:
@@ -4035,16 +3883,6 @@ class MyJourneyView:
             return
 
         self.planned_pokemon_ids = updated_ids
-        if selected_form or selected_gender:
-            updated = deepcopy(self.planned_pokemon_forms)
-            updated[pokemon_id] = {
-                **({"form": selected_form} if selected_form else {}),
-                **({"gender": selected_gender} if selected_gender else {}),
-            }
-            if await self.app_state.save_planned_pokemon_forms(updated):
-                self.planned_pokemon_forms = updated
-            else:
-                self._show_save_error("Form preference could not be saved. Select it in Team Planner.")
         self._reload_planner_dependencies()
         self._refresh()
 
@@ -4241,11 +4079,6 @@ class MyJourneyView:
             return
 
         self.planned_pokemon_ids = updated_ids
-        if pokemon_id in self.planned_pokemon_forms:
-            updated = deepcopy(self.planned_pokemon_forms)
-            updated.pop(pokemon_id, None)
-            if await self.app_state.save_planned_pokemon_forms(updated):
-                self.planned_pokemon_forms = updated
         if self._selected_map_objective_id == f"pokemon:{pokemon_id}":
             self._selected_map_objective_id = None
             self._selected_marker_y = None
@@ -4265,21 +4098,14 @@ class MyJourneyView:
             if self._hide_obtained_pokemon and status == "obtained":
                 continue
 
-            imported_form = self._planned_form_is_imported_exception(pokemon)
-            marker_name = self._planned_marker_name(pokemon)
-            planned_gender = self.planned_pokemon_forms.get(
-                pokemon_id, {}
-            ).get("gender")
-            if planned_gender and marker_name == str(pokemon.get("pokemon") or ""):
-                marker_asset = get_sprite_src(
-                    marker_name, gender=planned_gender,
-                    use_texture=False, normalized=True,
-                )
-            else:
-                marker_asset = self._normalized_pokemon_sprite_asset(
-                    marker_name,
-                    None if imported_form else pokemon.get("marker_asset"),
-                )
+            marker_asset = self._normalized_pokemon_sprite_asset(
+                (
+                    pokemon.get("marker_pokemon")
+                    or pokemon.get("acquire_as")
+                    or pokemon.get("pokemon")
+                ),
+                pokemon.get("marker_asset"),
+            )
 
             pokemon_identity_controls: list[ft.Control] = []
 
@@ -4300,18 +4126,14 @@ class MyJourneyView:
             pokemon_identity_controls.extend(
                 [
                     ft.Text(
-                        (self.planned_pokemon_forms.get(pokemon_id, {}).get("form")
-                         if imported_form else None)
-                        or str(pokemon.get("pokemon", "Unknown")),
+                        str(pokemon.get("pokemon", "Unknown")),
                         color=TEXT_PRIMARY,
                         weight=ft.FontWeight.BOLD,
                         size=15,
                         text_align=ft.TextAlign.CENTER,
                     ),
-                    self._build_planned_form_control(pokemon),
                     ft.Text(
-                        ("Imported form — check acquisition separately"
-                         if imported_form else self._pokemon_acquisition_text(pokemon)),
+                        self._pokemon_acquisition_text(pokemon),
                         color=TEXT_SECONDARY,
                         size=12,
                         text_align=ft.TextAlign.CENTER,
@@ -4336,8 +4158,8 @@ class MyJourneyView:
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                width=166,
-                height=236,
+                width=100,
+                height=170,
                 padding=ft.Padding.only(right=7),
                 alignment=ft.Alignment.CENTER,
                 border=ft.Border.only(
@@ -4354,9 +4176,7 @@ class MyJourneyView:
                             ft.DataCell(pokemon_cell),
                             ft.DataCell(
                                 ft.Text(
-                                    ("Not listed for this imported form"
-                                     if imported_form
-                                     else self._pokemon_location_text(pokemon)),
+                                    self._pokemon_location_text(pokemon),
                                     color=TEXT_SECONDARY,
                                     size=13,
                                 )
@@ -4412,7 +4232,7 @@ class MyJourneyView:
                 )
             )
 
-        planner_widths = [190, 220, 210, 180, 175, 92]
+        planner_widths = [110, 220, 210, 180, 175, 92]
         table = fdt.DataTable2(
             columns=[
                 fdt.DataColumn2(
@@ -4475,7 +4295,7 @@ class MyJourneyView:
             heading_row_color=SURFACE_RAISED,
             column_spacing=12,
             horizontal_margin=8,
-            data_row_height=248,
+            data_row_height=180,
             heading_row_height=52,
             show_checkbox_column=False,
         )
@@ -5418,8 +5238,8 @@ class MyJourneyView:
 
     @staticmethod
     def _pokemon_acquisition_text(pokemon: dict[str, Any]) -> str:
-        final_name = normalized_display_name(pokemon.get("pokemon", "Unknown"))
-        acquire_as = normalized_display_name(pokemon.get("acquire_as", final_name))
+        final_name = str(pokemon.get("pokemon", "Unknown"))
+        acquire_as = str(pokemon.get("acquire_as", final_name))
         return (
             f"Catch {acquire_as}"
             if acquire_as != final_name

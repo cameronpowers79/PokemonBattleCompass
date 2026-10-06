@@ -1,0 +1,209 @@
+"""SwSh Pokémon form identity, independent of display labels and artwork.
+
+An unqualified regional species name means the native Galar form in Sword/
+Shield. Explicit exception labels preserve imported forms. Unknown conditional
+forms return None rather than guessing a legal learnset.
+"""
+from __future__ import annotations
+
+import re
+
+REGIONAL_FORMS: dict[str, set[str]] = {
+    "meowth": {"galar", "kanto", "alola"},
+    "persian": {"kanto", "alola"},
+    "weezing": {"galar", "kanto"},
+    "zigzagoon": {"galar", "hoenn"},
+    "linoone": {"galar", "hoenn"},
+    "ponyta": {"galar", "kanto"},
+    "rapidash": {"galar", "kanto"},
+    "corsola": {"galar", "johto"},
+    "darumaka": {"galar", "unova"},
+    "darmanitan": {"galar", "unova"},
+    "stunfisk": {"galar", "unova"},
+    "yamask": {"galar", "unova"},
+    "farfetchd": {"galar", "kanto"},
+    "mr-mime": {"galar", "kanto"},
+    "slowpoke": {"galar", "kanto"},
+    "slowbro": {"galar", "kanto"},
+    "slowking": {"galar", "johto"},
+    "articuno": {"galar", "kanto"},
+    "zapdos": {"galar", "kanto"},
+    "moltres": {"galar", "kanto"},
+}
+
+# Source PokéAPI's regional labels; Galar is deliberately the bare UI label.
+REGION_ALIASES = {
+    "galarian": "galar", "kantonian": "kanto", "alolan": "alola",
+    "hoennian": "hoenn", "unovan": "unova", "johtonian": "johto",
+    "hisuian": "hisui", "paldean": "paldea",
+}
+
+AMPED_NATURES = frozenset("hardy brave adamant naughty docile impish lax hasty jolly naive rash sassy quirky".split())
+LOW_KEY_NATURES = frozenset("lonely bold relaxed timid serious modest mild quiet bashful calm gentle careful".split())
+
+# Source identifiers that aren't simply hyphenated species names.
+DEFAULT_KEYS = {
+    "aegislash": "aegislash-shield", "mimikyu": "mimikyu-disguised",
+    "eiscue": "eiscue-ice", "morpeko": "morpeko-full-belly",
+    "gourgeist": "gourgeist-average", "pumpkaboo": "pumpkaboo-average",
+    "wishiwashi": "wishiwashi-solo", "basculin": "basculin-red-striped",
+    "frillish": "frillish-male", "jellicent": "jellicent-male",
+    "giratina": "giratina-altered", "landorus": "landorus-incarnate",
+    "thundurus": "thundurus-incarnate", "tornadus": "tornadus-incarnate",
+    "lycanroc": "lycanroc-midday", "keldeo": "keldeo-ordinary",
+    "calyrex-ice-rider": "calyrex-ice",
+    "calyrex-shadow-rider": "calyrex-shadow",
+    "zygarde": "zygarde-50",
+    "zygarde-10": "zygarde-10",
+    "urshifu-single-strike": "urshifu-single-strike",
+    "urshifu-rapid-strike": "urshifu-rapid-strike",
+}
+
+# Entries correspond to *source form IDs*, not translated display labels.
+REGIONAL_BASE_IDS = {"darmanitan": "darmanitan-standard"}
+REGIONAL_GALAR_IDS = {"darmanitan": "darmanitan-galar-standard"}
+
+
+def _slug(name: object) -> str:
+    s = str(name or "").strip().lower().replace("♀", "-f").replace("♂", "-m")
+    s = s.replace("’", "'").replace("'", "").replace(".", "")
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+
+
+def _parts(name: object) -> tuple[str, str | None]:
+    """Return species slug and explicitly chosen regional origin, if any."""
+    raw = " ".join(str(name or "").strip().split())
+    first, _, rest = raw.partition(" ")
+    region = REGION_ALIASES.get(first.casefold())
+    if region and rest:
+        return _slug(rest), region
+    return _slug(raw), None
+
+
+def normalized_display_name(name: object, *, game: str = "Sword") -> str:
+    """Render the regional default without a qualifier, retaining exceptions."""
+    raw = " ".join(str(name or "").strip().split())
+    base, region = _parts(raw)
+    if game.casefold() not in {"sword", "shield", "sword and shield"}:
+        return raw
+    if region == "galar" and base in REGIONAL_FORMS:
+        return raw.split(" ", 1)[1]
+    return raw
+
+
+REGION_LABELS = {
+    "kanto": "Kantonian", "alola": "Alolan", "johto": "Johtonian",
+    "hoenn": "Hoennian", "unova": "Unovan",
+}
+
+# Explicit types for regional variants whose types differ. No guessing types
+# from the selected species' unqualified Journey record.
+REGIONAL_TYPES: dict[str, dict[str, tuple[str, str]]] = {
+    "meowth": {"galar": ("Steel", ""), "kanto": ("Normal", ""), "alola": ("Dark", "")},
+    "persian": {"kanto": ("Normal", ""), "alola": ("Dark", "")},
+    "weezing": {"galar": ("Poison", "Fairy"), "kanto": ("Poison", "")},
+    "zigzagoon": {"galar": ("Dark", "Normal"), "hoenn": ("Normal", "")},
+    "linoone": {"galar": ("Dark", "Normal"), "hoenn": ("Normal", "")},
+    "ponyta": {"galar": ("Psychic", ""), "kanto": ("Fire", "")},
+    "rapidash": {"galar": ("Psychic", "Fairy"), "kanto": ("Fire", "")},
+    "corsola": {"galar": ("Ghost", ""), "johto": ("Water", "Rock")},
+    "darumaka": {"galar": ("Ice", ""), "unova": ("Fire", "")},
+    "darmanitan": {"galar": ("Ice", ""), "unova": ("Fire", "")},
+    "stunfisk": {"galar": ("Ground", "Steel"), "unova": ("Ground", "Electric")},
+    "yamask": {"galar": ("Ground", "Ghost"), "unova": ("Ghost", "")},
+    "farfetchd": {"galar": ("Fighting", ""), "kanto": ("Normal", "Flying")},
+    "mr-mime": {"galar": ("Ice", "Psychic"), "kanto": ("Psychic", "Fairy")},
+    "slowpoke": {"galar": ("Psychic", ""), "kanto": ("Water", "Psychic")},
+    "slowbro": {"galar": ("Poison", "Psychic"), "kanto": ("Water", "Psychic")},
+    "slowking": {"galar": ("Poison", "Psychic"), "johto": ("Water", "Psychic")},
+    "articuno": {"galar": ("Psychic", "Flying"), "kanto": ("Ice", "Flying")},
+    "zapdos": {"galar": ("Fighting", "Flying"), "kanto": ("Electric", "Flying")},
+    "moltres": {"galar": ("Dark", "Flying"), "kanto": ("Fire", "Flying")},
+}
+
+
+def regional_choices(name: object) -> list[str]:
+    """Autocomplete choices for a regional species in a Galar Journey."""
+    label = normalized_display_name(name)
+    base, explicit = _parts(label)
+    if explicit is not None:
+        label = label.split(" ", 1)[1]
+    regions = REGIONAL_FORMS.get(base)
+    if not regions:
+        return [label]
+    default = "galar" if "galar" in regions else ("kanto" if "kanto" in regions else "johto")
+    return [label] + [f"{REGION_LABELS[region]} {label}" for region in sorted(regions - {default})]
+
+
+def regional_types(name: object) -> tuple[str, str] | None:
+    """Return the actual type pair for recognized regional forms."""
+    base, region = _parts(name)
+    if base not in REGIONAL_FORMS:
+        return None
+    if region is None:
+        region = "galar" if "galar" in REGIONAL_FORMS[base] else ("kanto" if "kanto" in REGIONAL_FORMS[base] else "johto")
+    return REGIONAL_TYPES.get(base, {}).get(region)
+
+
+def resolve_pokemon_id(
+    name: object, *, gender: object = None, nature: object = None,
+    form: object = None, game: str = "Sword",
+) -> str | None:
+    """Resolve to a PokéAPI Sword/Shield Pokémon key or unknown (None)."""
+    base, explicit_region = _parts(name)
+    if not base:
+        return None
+    if base == "urshifu":
+        style = _slug(form)
+        return f"urshifu-{style}" if style in {"single-strike", "rapid-strike"} else None
+    if base in {"indeedee", "meowstic"}:
+        gender_key = str(gender or "").strip().casefold()
+        return f"{base}-{gender_key}" if gender_key in {"male", "female"} else None
+    if base == "toxtricity":
+        explicit = _slug(form)
+        if explicit in {"amped", "low-key", "lowkey"}:
+            return "toxtricity-low-key" if explicit != "amped" else "toxtricity-amped"
+        n = str(nature or "").strip().casefold()
+        if n in AMPED_NATURES:
+            return "toxtricity-amped"
+        if n in LOW_KEY_NATURES:
+            return "toxtricity-low-key"
+        return None
+    if base in REGIONAL_FORMS:
+        region = explicit_region
+        if region is None and game.casefold() in {"sword", "shield", "sword and shield"}:
+            region = "galar" if "galar" in REGIONAL_FORMS[base] else ("kanto" if "kanto" in REGIONAL_FORMS[base] else "johto")
+        if region not in REGIONAL_FORMS[base]:
+            return None
+        if region == "galar":
+            return REGIONAL_GALAR_IDS.get(base, f"{base}-galar")
+        if region == "alola":
+            return f"{base}-alola"
+        return REGIONAL_BASE_IDS.get(base, base)
+    return DEFAULT_KEYS.get(base, base)
+
+
+def form_from_nature(nature: object) -> str | None:
+    n = str(nature or "").strip().casefold()
+    return "Amped" if n in AMPED_NATURES else ("Low Key" if n in LOW_KEY_NATURES else None)
+
+
+def evolution_destination(from_name: object, to_name: object) -> str:
+    """Preserve region for same-species regional lines, not new species."""
+    source, region = _parts(from_name)
+    target, target_region = _parts(to_name)
+    if target_region:
+        return normalized_display_name(to_name)
+    # Special branches from the actual Sword/Shield regional evolution families.
+    exceptions = {
+        ("meowth", "galar"): "Perrserker", ("meowth", "kanto"): "Persian",
+        ("meowth", "alola"): "Alolan Persian",
+        ("yamask", "galar"): "Runerigus", ("yamask", "unova"): "Cofagrigus",
+        ("farfetchd", "galar"): "Sirfetch'd",
+    }
+    if (source, region) in exceptions:
+        return exceptions[source, region]
+    if source in REGIONAL_FORMS and target in REGIONAL_FORMS and region:
+        prefix = {"kanto": "Kantonian", "alola": "Alolan", "hoenn": "Hoennian", "unova": "Unovan", "johto": "Johtonian"}.get(region)
+        return f"{prefix} {to_name}" if prefix else str(to_name)
+    return str(to_name)

@@ -325,7 +325,6 @@ class AppState:
             "planner_initialized": False,
 
             "planned_pokemon_ids": [],
-            "planned_pokemon_forms": {},
 
             "planned_moves": {},
 
@@ -425,18 +424,6 @@ class AppState:
 
 
 
-        raw_planned_forms = my_journey.get("planned_pokemon_forms", {})
-        planned_pokemon_forms: dict[str, dict[str, str]] = {}
-        if isinstance(raw_planned_forms, dict):
-            for pokemon_id, preference in raw_planned_forms.items():
-                if not isinstance(pokemon_id, str) or not isinstance(preference, dict):
-                    continue
-                fields = {
-                    key: val for key, val in preference.items()
-                    if key in {"form", "gender"} and isinstance(val, str)
-                }
-                if fields:
-                    planned_pokemon_forms[pokemon_id] = fields
         raw_planned_moves = my_journey.get("planned_moves", {})
 
         planned_moves: dict[str, list[dict[str, str | None] | None]] = {}
@@ -610,7 +597,6 @@ class AppState:
             "planner_initialized": planner_initialized,
 
             "planned_pokemon_ids": planned_pokemon_ids,
-            "planned_pokemon_forms": planned_pokemon_forms,
 
             "planned_moves": planned_moves,
 
@@ -2811,47 +2797,6 @@ class AppState:
         return save_succeeded
 
 
-
-    async def save_planned_pokemon_forms(
-        self, preferences: dict[str, dict[str, str]],
-    ) -> bool:
-        """Persist selected regional, gender and evolution forms."""
-        if self.journey is None:
-            return False
-        if not isinstance(preferences, dict):
-            raise ValueError("Planned Pokémon form preferences must be an object.")
-        clean: dict[str, dict[str, str]] = {}
-        for pokemon_id, preference in preferences.items():
-            if not isinstance(pokemon_id, str) or not pokemon_id.strip():
-                raise ValueError("Invalid Pokémon form preference ID.")
-            if not isinstance(preference, dict):
-                raise ValueError("Form preference must be an object.")
-            fields: dict[str, str] = {}
-            for key, value in preference.items():
-                if key not in {"form", "gender"} or not isinstance(value, str):
-                    raise ValueError("Invalid Pokémon form preference.")
-                fields[key] = value.strip()
-            if fields:
-                clean[pokemon_id.strip()] = fields
-
-        previous = deepcopy(self.journey.get("my_journey"))
-        updated = deepcopy(self.my_journey_data)
-        updated["planned_pokemon_forms"] = clean
-        self.journey["my_journey"] = updated
-        try:
-            saved = await save_journey(self.storage, self.journey)
-        except (TypeError, ValueError):
-            if previous is None:
-                self.journey.pop("my_journey", None)
-            else:
-                self.journey["my_journey"] = previous
-            raise
-        if not saved:
-            if previous is None:
-                self.journey.pop("my_journey", None)
-            else:
-                self.journey["my_journey"] = previous
-        return saved
 
     async def save_planned_moves(
 

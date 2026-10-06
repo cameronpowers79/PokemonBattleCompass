@@ -3800,7 +3800,6 @@ class MyJourneyView:
 
         self._add_pokemon_name_to_id = {}
         self._add_pokemon_name_to_form = {}
-        self._add_pokemon_name_to_gender = {}
 
         suggestions: list[ft.AutoCompleteSuggestion] = []
         for pokemon in available_pokemon:
@@ -3819,19 +3818,12 @@ class MyJourneyView:
             choices = [pokemon_name]
             if pokemon_name == "Toxtricity":
                 choices = ["Toxtricity (Amped)", "Toxtricity (Low Key)"]
-            elif pokemon_name in {"Indeedee", "Meowstic"}:
-                choices = [f"{pokemon_name} (Male)",
-                           f"{pokemon_name} (Female)"]
-            else:
+            elif pokemon_name not in {"Indeedee", "Meowstic"}:
                 choices = regional_choices(pokemon_name)
             for choice in choices:
                 choice_key = choice.casefold()
                 self._add_pokemon_name_to_id[choice_key] = str(pokemon["id"])
-                if pokemon_name in {"Indeedee", "Meowstic"}:
-                    self._add_pokemon_name_to_gender[choice_key] = (
-                        choice[len(pokemon_name) + 2:-1]
-                    )
-                elif choice != pokemon_name:
+                if choice != pokemon_name:
                     self._add_pokemon_name_to_form[choice_key] = (
                         choice[len("Toxtricity ("):-1]
                         if choice.startswith("Toxtricity (") else choice
@@ -3985,7 +3977,6 @@ class MyJourneyView:
         self._add_pokemon_validation_text = None
         self._add_pokemon_name_to_id = {}
         self._add_pokemon_name_to_form = {}
-        self._add_pokemon_name_to_gender = {}
 
     def _close_add_pokemon_dialog(
         self,
@@ -4008,16 +3999,12 @@ class MyJourneyView:
 
         key = str(self._add_pokemon_selector.value or "").strip().casefold()
         planned_form = self._add_pokemon_name_to_form.get(key)
-        planned_gender = self._add_pokemon_name_to_gender.get(key)
         self._clear_add_pokemon_dialog_state()
         self.page.pop_dialog()
-        self.page.run_task(
-            self._add_planned_pokemon, pokemon_id, planned_form, planned_gender
-        )
+        self.page.run_task(self._add_planned_pokemon, pokemon_id, planned_form)
 
     async def _add_planned_pokemon(
         self, pokemon_id: str, selected_form: str | None = None,
-        selected_gender: str | None = None,
     ) -> None:
         """Persist one new Team Planner Pokémon."""
 
@@ -4035,12 +4022,9 @@ class MyJourneyView:
             return
 
         self.planned_pokemon_ids = updated_ids
-        if selected_form or selected_gender:
+        if selected_form:
             updated = deepcopy(self.planned_pokemon_forms)
-            updated[pokemon_id] = {
-                **({"form": selected_form} if selected_form else {}),
-                **({"gender": selected_gender} if selected_gender else {}),
-            }
+            updated[pokemon_id] = {"form": selected_form}
             if await self.app_state.save_planned_pokemon_forms(updated):
                 self.planned_pokemon_forms = updated
             else:
@@ -4336,8 +4320,8 @@ class MyJourneyView:
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
-                width=166,
-                height=236,
+                width=154,
+                height=208,
                 padding=ft.Padding.only(right=7),
                 alignment=ft.Alignment.CENTER,
                 border=ft.Border.only(
@@ -4412,7 +4396,7 @@ class MyJourneyView:
                 )
             )
 
-        planner_widths = [190, 220, 210, 180, 175, 92]
+        planner_widths = [162, 220, 210, 180, 175, 92]
         table = fdt.DataTable2(
             columns=[
                 fdt.DataColumn2(
@@ -4475,7 +4459,7 @@ class MyJourneyView:
             heading_row_color=SURFACE_RAISED,
             column_spacing=12,
             horizontal_margin=8,
-            data_row_height=248,
+            data_row_height=180,
             heading_row_height=52,
             show_checkbox_column=False,
         )

@@ -417,17 +417,7 @@ class MyTeamView:
         }
         self.pokemon_options = sorted({
             normalized_display_name(name) for name in validated_names
-            # Toxtricity's form is determined by Nature in My Team; legacy
-            # validation names remain accepted for existing Journey saves.
-            if not name.casefold().startswith((
-                "toxtricity ", "toxtricity-",
-            ))
-        } | {
-            name for name in regional_names
-            if not name.casefold().startswith((
-                "toxtricity ", "toxtricity-",
-            ))
-        })
+        } | regional_names)
         self.pokemon_lookup = set(self.pokemon_options) | validated_names
 
         self.type_options = list(
@@ -3882,19 +3872,12 @@ class MyTeamView:
     def _evolution_steps_for(self, pokemon_name: object) -> list[dict]:
         """Return Journey evolution-step metadata for one species."""
 
-        steps = list(self.evolution_step_lookup.get(
-            self._normalize_pokemon_name(pokemon_name), [],
-        ))
-        if not steps and resolve_pokemon_id(pokemon_name) in {
-            "ponyta", "ponyta-galar",
-        }:
-            # Ponyta isn't a base-Sword Journey objective (Shield-exclusive).
-            # Both forms evolve to the corresponding Rapidash at Lv. 40.
-            return [{
-                "from": str(pokemon_name), "to": "Rapidash",
-                "method": "level", "level": 40,
-            }]
-        return steps
+        return list(
+            self.evolution_step_lookup.get(
+                self._normalize_pokemon_name(pokemon_name),
+                [],
+            )
+        )
 
     def _evolution_step_for(
         self,

@@ -122,7 +122,6 @@ def create_journey(
             "item_objectives": [],
             "pokemon_objectives": [],
             "planned_moves": {},
-            "planned_pokemon_forms": {},
             "aegislash_stat_guidance_dismissed": False,
         },
         "created_at": timestamp,
@@ -313,17 +312,6 @@ def _validate_journey(
             return (
                 "Stored Aegislash stat-guidance preference is invalid."
             )
-        preferences = my_journey.get("planned_pokemon_forms", {})
-        if not isinstance(preferences, dict):
-            return "Stored Team Planner form preferences are invalid."
-        for pokemon_id, settings in preferences.items():
-            if not isinstance(pokemon_id, str) or not pokemon_id.strip():
-                return "Stored Team Planner form preference ID is invalid."
-            if not isinstance(settings, dict):
-                return "Stored Team Planner form preference is invalid."
-            if any(key not in {"form", "gender"} or not isinstance(value, str)
-                   for key, value in settings.items()):
-                return "Stored Team Planner form selection is invalid."
         planned_moves = my_journey.get("planned_moves", {})
         if not isinstance(planned_moves, dict):
             return "Stored My Journey planned moves are invalid."
