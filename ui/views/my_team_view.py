@@ -488,6 +488,9 @@ class MyTeamView:
             and move["Move"]
         }
         self.move_options = sorted(self.move_lookup)
+        self.learnsets = self._load_learnsets()
+        self._confirmed_unverified_move_keys: set[tuple[int, str, str]] = set()
+        self._pending_unverified_moves: list[tuple[int, str, str]] = []
         self.working_team = deepcopy(self.team_data)
         self.saved_team_snapshot = deepcopy(self.team_data)
         self.working_box = deepcopy(self.box_data)
@@ -3487,6 +3490,195 @@ class MyTeamView:
                 )
                 if type_control is not None:
                     type_control.update()
+
+    def _load_learnsets(self) -> dict[str, dict]:
+        """Load finalized Sword/Shield learnsets for non-blocking move validation."""
+
+        path = DATA_DIR / "learnsets_swsh.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            _debug_log(f"learnset validation unavailable path={path}")
+            return {}
+
+        pokemon = payload.get("pokemon")
+        if not isinstance(pokemon, dict):
+            _debug_log("learnset validation unavailable: missing pokemon mapping")
+            return {}
+
+        return {
+            str(key): value
+            for key, value in pokemon.items()
+            if isinstance(key, str) and isinstance(value, dict)
+        }
+
+    def _move_is_verified_for_pokemon(
+        self,
+        pokemon: dict,
+        move_name: str,
+    ) -> bool:
+        """Return whether supported non-Egg data verifies this exact move."""
+
+        pokemon_id = resolve_pokemon_id(
+            pokemon.get("Pokemon"),
+            gender=pokemon.get("Gender"),
+            nature=pokemon.get("Nature"),
+        )
+        if pokemon_id is None:
+            return False
+
+        learnset = self.learnsets.get(pokemon_id)
+        if not isinstance(learnset, dict):
+            return False
+
+        moves = learnset.get("moves")
+        if not isinstance(moves, dict):
+            return False
+
+        methods = moves.get(move_name)
+        if not isinstance(methods, list):
+            return False
+
+        return any(
+            isinstance(method, dict)
+            and method.get("supported_for_validation") is True
+            for method in methods
+        )
+
+    def _new_unverified_moves(self) -> list[tuple[int, str, str]]:
+        """Return newly entered moves unsupported by automated verification."""
+
+        unverified: list[tuple[int, str, str]] = []
+
+        for row_index, pokemon in enumerate(self.working_team):
+            saved = (
+                self.saved_team_snapshot[row_index]
+                if row_index < len(self.saved_team_snapshot)
+                else {}
+            )
+            pokemon_name = str(
+                pokemon.get("Pokemon") or f"Team Slot {row_index + 1}"
+            ).strip()
+
+            for slot in range(1, 5):
+                field = f"Move{slot}"
+                move_name = str(pokemon.get(field) or "").strip()
+                if not move_name:
+                    continue
+
+                saved_move = str(saved.get(field) or "").strip()
+                same_identity = (
+                    str(saved.get("Pokemon") or "").strip()
+                    == str(pokemon.get("Pokemon") or "").strip()
+                    and str(saved.get("Gender") or "").strip()
+                    == str(pokemon.get("Gender") or "").strip()
+                    and str(saved.get("Nature") or "").strip()
+                    == str(pokemon.get("Nature") or "").strip()
+                )
+                if move_name == saved_move and same_identity:
+                    continue
+
+                key = (row_index, field, move_name)
+                if key in self._confirmed_unverified_move_keys:
+                    continue
+
+                if not self._move_is_verified_for_pokemon(
+                    pokemon,
+                    move_name,
+                ):
+                    unverified.append(
+                        (row_index, pokemon_name, move_name)
+                    )
+
+        return unverified
+
+    def _show_unverified_move_dialog(
+        self,
+        unverified: list[tuple[int, str, str]],
+    ) -> None:
+        """Ask the player to confirm moves Battle Compass cannot verify."""
+
+        details = [
+            ft.Text(
+                f"• {pokemon_name}: {move_name}",
+                color=TEXT_PRIMARY,
+            )
+            for _, pokemon_name, move_name in unverified
+        ]
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text(
+                "Move Could Not Be Verified",
+                weight=ft.FontWeight.BOLD,
+            ),
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        (
+                            "Battle Compass was not able to verify that the "
+                            "following Pokémon can learn these moves using its "
+                            "supported learnset data:"
+                        ),
+                        color=TEXT_SECONDARY,
+                    ),
+                    *details,
+                    ft.Text(
+                        (
+                            "If your Pokémon definitely knows the move — for "
+                            "example, through breeding or another supported "
+                            "game mechanic — you can keep it."
+                        ),
+                        color=TEXT_SECONDARY,
+                    ),
+                ],
+                spacing=8,
+                tight=True,
+            ),
+            actions=[
+                ft.Button(
+                    content="Go Back",
+                    on_click=lambda: self.page.pop_dialog(),
+                ),
+                ft.Button(
+                    content="Keep Move",
+                    icon=ft.Icons.CHECK_ROUNDED,
+                    bgcolor=PRIMARY_BLUE,
+                    color=TEXT_PRIMARY,
+                    icon_color=TEXT_PRIMARY,
+                    on_click=self._confirm_unverified_moves_and_save,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        self._pending_unverified_moves = list(unverified)
+        self.page.show_dialog(dialog)
+
+    async def _confirm_unverified_moves_and_save(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        """Accept current unverifiable moves and resume the normal save."""
+
+        del event
+
+        for row_index, _pokemon_name, move_name in self._pending_unverified_moves:
+            if row_index >= len(self.working_team):
+                continue
+            for slot in range(1, 5):
+                field = f"Move{slot}"
+                if (
+                    str(
+                        self.working_team[row_index].get(field) or ""
+                    ).strip() == move_name
+                ):
+                    self._confirmed_unverified_move_keys.add(
+                        (row_index, field, move_name)
+                    )
+
+        self._pending_unverified_moves = []
+        self.page.pop_dialog()
+        await self._save_team(None)
 
     def _refresh_selector(self) -> None:
         options: list[ft.DropdownOption] = []
@@ -7796,7 +7988,7 @@ class MyTeamView:
 
     async def _save_team(
         self,
-        event: ft.Event[ft.Button],
+        event: ft.Event[ft.Button] | None,
     ) -> None:
         del event
 
@@ -7984,6 +8176,15 @@ class MyTeamView:
             self.page.update()
             return
         
+        unverified_moves = self._new_unverified_moves()
+        if unverified_moves:
+            _debug_log(
+                "save paused for unverified moves="
+                + repr(unverified_moves)
+            )
+            self._show_unverified_move_dialog(unverified_moves)
+            return
+
         if invalid_items:
             invalid_list = ", ".join(
                 sorted(
