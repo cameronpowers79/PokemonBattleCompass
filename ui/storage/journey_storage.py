@@ -53,6 +53,11 @@ VALID_TEAM_STRATEGIES = {
     "strongest_matchup",
     "poison_offensive_pressure",
     "poison_attrition",
+    "screen_control",
+    "setup_offense",
+    "status_control_punish",
+    "weather_control",
+    "defensive_attrition",
 }
 
 JourneyLoadStatus = Literal[

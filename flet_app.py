@@ -754,16 +754,6 @@ async def main(page: ft.Page) -> None:
 
 
 
-        def refresh_after_strategy_update(
-
-            strategy: str,
-
-        ) -> None:
-
-            battle_compass_view.refresh_team_strategy(strategy)
-
-
-
         my_team_view = MyTeamView(
 
             page,
@@ -782,13 +772,16 @@ async def main(page: ft.Page) -> None:
 
             ),
 
-            on_strategy_updated=refresh_after_strategy_update,
-
             on_scroll_to=scroll_app_shell,
 
         )
 
-
+        battle_compass_view.on_strategy_updated = (
+            my_team_view.refresh_team_strategy
+        )
+        battle_compass_view.on_journey_updated = (
+            my_journey_view.refresh_from_app_state
+        )
 
         tutorial_controller: TutorialController | None = None
 

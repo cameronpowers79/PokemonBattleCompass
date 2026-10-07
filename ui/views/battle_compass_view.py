@@ -5,7 +5,9 @@ Battle Compass ViewModel, and renders live recommendation components.
 """
 from __future__ import annotations
 from collections.abc import Callable
+import json
 from pathlib import Path
+import re
 from typing import cast
 import flet as ft
 from ui.components.full_analysis import (
@@ -20,6 +22,17 @@ from ui.components.other_strong_options import (
 )
 from ui.components.recommendation_card import RecommendationCard
 from engine.mechanics import get_effective_pokemon_types
+from engine.learnsets import supported_strategy_move_methods
+from engine.strategy_capabilities import (
+    evaluate_strategy_recommendations,
+    evaluate_strategy_viability,
+    recognize_team_capabilities,
+    recommend_strategy_moves_for_added_pokemon,
+)
+from engine.strategy_definitions import (
+    RECOMMENDER_STRATEGY_IDS,
+    get_strategy_definition,
+)
 from ui.components.reference_dialogs import (
     show_type_matchup_dialog,
 )
@@ -32,6 +45,8 @@ from ui.theme import (
     BORDER_DEFAULT,
     CONTENT_MAX_WIDTH,
     PRIMARY_BLUE,
+    SUCCESS,
+    WARNING,
     SURFACE,
     SURFACE_RAISED,
     TEXT_MUTED,
@@ -42,6 +57,12 @@ from ui.theme import (
     FONT_FAMILY_HEADER,
 )
 from ui.viewmodels.app_state import AppState
+from ui.strategy_ui import (
+    TEAM_STRATEGY_LABELS,
+    strategy_color,
+    strategy_compact_description,
+    strategy_label,
+)
 from ui.viewmodels.battle_compass_vm import (
     BattleCompassViewModel,
     MatchupViewModel,
@@ -51,6 +72,7 @@ from ui.viewmodels.battle_compass_vm import (
 )
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
+DATA_DIR = PROJECT_ROOT / "data"
 TRAINER_TEXTURE_DIR = (
     ASSETS_DIR
     / "raw"
@@ -58,12 +80,6 @@ TRAINER_TEXTURE_DIR = (
     / "pokemon-gen8"
     / "regular"
 )
-STRATEGY_PURPLE = "#C084FC"
-TEAM_STRATEGY_LABELS = {
-    "strongest_matchup": "Strongest Matchup",
-    "poison_offensive_pressure": "Poison – Offensive Pressure",
-    "poison_attrition": "Poison – Attrition",
-}
 STARTER_OPTIONS = [
     "Grookey",
     "Scorbunny",
@@ -83,44 +99,8 @@ class BattleCompassView:
         self.page = page
         self.app_state = app_state
         self.on_start_new_journey = on_start_new_journey
-        self.team_strategy_label = ft.Text(
-            "Team Strategy",
-            size=14,
-            weight=ft.FontWeight.BOLD,
-            color=TEXT_SECONDARY,
-        )
-        self.team_strategy_value = ft.Text(
-            "",
-            size=14,
-            weight=ft.FontWeight.BOLD,
-        )
-        self.team_strategy_indicator = ft.Container(
-            content=ft.Column(
-                controls=[
-                    self.team_strategy_label,
-                    self.team_strategy_value,
-                ],
-                spacing=3,
-                tight=True,
-            ),
-            width=310,
-            padding=ft.Padding.symmetric(
-                horizontal=16,
-                vertical=12,
-            ),
-            bgcolor=SURFACE_RAISED,
-            border=ft.Border.all(
-                1,
-                BORDER_DEFAULT,
-            ),
-            border_radius=12,
-            tooltip=(
-                "Team Strategy changes which kinds of plans Battle Compass "
-                "prefers when making recommendations. For a fuller explanation, "
-                "see Team Strategy in My Team."
-            ),
-        )
-        self.refresh_team_strategy()
+        self.on_strategy_updated: Callable[[str], None] | None = None
+        self.on_journey_updated: Callable[[], None] | None = None
         reference_data = load_reference_data()
         self.team_data = (
             team_data
@@ -151,6 +131,13 @@ class BattleCompassView:
             and move.get("Move")
         }
         self.type_chart = reference_data["type_chart"]
+        self.learnsets_data = reference_data.get("learnsets_swsh", {})
+        self.strategy_pokemon_catalog = self._load_strategy_json(
+            DATA_DIR / "journey_pokemon.json"
+        )
+        self.strategy_item_catalog = self._load_strategy_json(
+            DATA_DIR / "journey_items.json"
+        )
         self.journey_starter = (
             selected_starter
             if selected_starter in STARTER_OPTIONS
@@ -203,11 +190,782 @@ class BattleCompassView:
             label="Opponent Pokémon",
             on_select=self._handle_opponent_change,
         )
+        self.strategy_status = ft.Text(
+            "",
+            size=12,
+            color=TEXT_MUTED,
+            visible=False,
+        )
+        self.team_strategy_dropdown = ft.Dropdown(
+            label="Team Strategy",
+            value=self.app_state.team_strategy,
+            options=self._team_strategy_options(),
+            width=330,
+            on_select=self._handle_team_strategy_change,
+            text_style=ft.TextStyle(
+                color=strategy_color(self.app_state.team_strategy),
+                weight=ft.FontWeight.BOLD,
+            ),
+        )
+        self.strategy_description_text = ft.Text(
+            strategy_compact_description(self.app_state.team_strategy),
+            size=13,
+            color=TEXT_SECONDARY,
+        )
+        self.strategy_recommender_button = ft.IconButton(
+            icon=ft.Icons.HELP_OUTLINE_ROUNDED,
+            icon_color=SUCCESS,
+            icon_size=28,
+            tooltip="Which strategy fits this team?",
+            on_click=self._show_strategy_recommender,
+        )
         self.results_host = ft.Container(
             width=CONTENT_MAX_WIDTH,
         )
         self._initialize_selections()
         self._refresh_results()
+    @staticmethod
+    def _load_strategy_json(path: Path) -> list[dict]:
+        """Load optional Journey catalog data used by the strategy recommender."""
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            return []
+        return [record for record in data if isinstance(record, dict)] if isinstance(data, list) else []
+
+    @staticmethod
+    def _strategy_name_key(value: object) -> str:
+        return " ".join(str(value or "").strip().casefold().split())
+
+    def _strategy_catalog_record_for_name(self, pokemon_name: str) -> dict | None:
+        """Resolve a recommendation name back to its Team Planner catalog row."""
+        wanted = self._strategy_name_key(pokemon_name)
+        if not wanted:
+            return None
+        for record in self.strategy_pokemon_catalog:
+            names = {
+                self._strategy_name_key(record.get("pokemon")),
+                self._strategy_name_key(record.get("acquire_as")),
+            }
+            for step in record.get("evolution_steps", []):
+                if isinstance(step, dict):
+                    names.add(self._strategy_name_key(step.get("from")))
+                    names.add(self._strategy_name_key(step.get("to")))
+            if wanted in names:
+                return record
+        return None
+
+    def _strategy_candidate_record(self, catalog_record: dict) -> dict:
+        """Adapt one Journey catalog row to the capability recognizer shape."""
+        candidate = dict(catalog_record)
+        candidate["Pokemon"] = str(
+            catalog_record.get("pokemon")
+            or catalog_record.get("Pokemon")
+            or catalog_record.get("acquire_as")
+            or ""
+        ).strip()
+        aliases = {
+            "Ability": ("Ability", "ability"),
+            "Type1": ("Type1", "type1", "primary_type"),
+            "Type2": ("Type2", "type2", "secondary_type"),
+            "Form": ("Form", "form"),
+            "Gender": ("Gender", "gender"),
+            "Nature": ("Nature", "nature"),
+            "BaseSPE": ("BaseSPE", "BaseSpe", "BaseSpeed", "base_speed"),
+        }
+        for target, sources in aliases.items():
+            for source in sources:
+                value = catalog_record.get(source)
+                if value not in (None, ""):
+                    candidate[target] = value
+                    break
+        if not candidate.get("Ability"):
+            abilities = catalog_record.get("abilities")
+            if isinstance(abilities, list) and len(abilities) == 1:
+                candidate["Ability"] = str(abilities[0])
+        return candidate
+
+    def _strategy_candidate_pokemon_data(self) -> list[dict]:
+        """Return currently obtainable Sword catalog candidates not already active."""
+        earned_badges = self.app_state.earned_badges
+        active_names = {
+            self._strategy_name_key(pokemon.get("Pokemon"))
+            for pokemon in self.team_data
+            if isinstance(pokemon, dict) and pokemon.get("Pokemon")
+        }
+        candidates: list[dict] = []
+        seen: set[str] = set()
+        for record in self.strategy_pokemon_catalog:
+            name = str(record.get("pokemon") or record.get("Pokemon") or "").strip()
+            if not name:
+                continue
+            try:
+                required_badge = int(record.get("required_badge", 0) or 0)
+            except (TypeError, ValueError):
+                required_badge = 0
+            if required_badge > earned_badges:
+                continue
+            name_key = self._strategy_name_key(name)
+            if name_key in active_names or name_key in seen:
+                continue
+            candidate = self._strategy_candidate_record(record)
+            if candidate.get("Pokemon"):
+                candidates.append(candidate)
+                seen.add(name_key)
+        return candidates
+
+    def _strategy_move_source_id(
+        self,
+        pokemon: dict,
+        move_name: str,
+    ) -> str | None:
+        """Return a required TM/TR Journey item when no free supported method exists."""
+        methods = supported_strategy_move_methods(
+            pokemon,
+            move_name,
+            self.learnsets_data,
+        )
+        if not methods:
+            return None
+        if any(
+            str(method.get("method") or "").casefold()
+            not in {"tm", "tr"}
+            and not method.get("item")
+            for method in methods
+        ):
+            return None
+        item_codes = [
+            str(method.get("item") or "").strip().upper()
+            for method in methods
+            if str(method.get("item") or "").strip()
+        ]
+        if not item_codes:
+            return None
+        for item_code in item_codes:
+            match = re.match(r"^(TM|TR)\s*0*(\d+)$", item_code, re.IGNORECASE)
+            if match is None:
+                continue
+            kind, number = match.group(1).upper(), str(int(match.group(2)))
+            for item in self.strategy_item_catalog:
+                item_name = str(item.get("name") or "").strip()
+                item_match = re.match(
+                    r"^(TM|TR)\s*0*(\d+)\b",
+                    item_name,
+                    re.IGNORECASE,
+                )
+                if (
+                    item_match is not None
+                    and item_match.group(1).upper() == kind
+                    and str(int(item_match.group(2))) == number
+                ):
+                    return str(item.get("id") or "").strip() or None
+        return None
+
+    @staticmethod
+    def _strategy_viability_color(viability: str) -> str:
+        if viability == "Strong":
+            return SUCCESS
+        if viability == "Viable":
+            return PRIMARY_BLUE
+        return WARNING
+
+    def _strategy_analysis(self, strategy_key: str):
+        return evaluate_strategy_recommendations(
+            strategy_key,
+            self.team_data,
+            self._strategy_candidate_pokemon_data(),
+            self.moves_data,
+            self.learnsets_data,
+            pokemon_limit=3,
+            move_limit=5,
+        )
+
+    def _show_strategy_recommender(
+        self,
+        event: ft.Event[ft.IconButton] | None = None,
+    ) -> None:
+        """Compare canonical strategies against the current equipped team."""
+        del event
+        analyses = {
+            key: self._strategy_analysis(key)
+            for key in RECOMMENDER_STRATEGY_IDS
+        }
+        self._strategy_recommender_results = analyses
+
+        cards: list[ft.Control] = []
+        for strategy_key in RECOMMENDER_STRATEGY_IDS:
+            definition = get_strategy_definition(strategy_key)
+            analysis = analyses[strategy_key]
+            viability = analysis.viability
+            viability_color = self._strategy_viability_color(viability.viability)
+
+            detail_controls: list[ft.Control] = [
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            definition.label,
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                            color=definition.color,
+                            expand=True,
+                        ),
+                        ft.Container(
+                            content=ft.Text(
+                                viability.viability,
+                                size=12,
+                                weight=ft.FontWeight.BOLD,
+                                color=viability_color,
+                            ),
+                            padding=ft.Padding.symmetric(horizontal=10, vertical=5),
+                            border=ft.Border.all(1, viability_color),
+                            border_radius=14,
+                        ),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                ft.Text(
+                    definition.compact_description,
+                    size=13,
+                    color=TEXT_SECONDARY,
+                ),
+                ft.Text(
+                    viability.summary,
+                    size=13,
+                    color=TEXT_PRIMARY,
+                ),
+            ]
+            if viability.contributing_pokemon:
+                detail_controls.append(
+                    ft.Text(
+                        "Current contributors: "
+                        + ", ".join(viability.contributing_pokemon),
+                        size=12,
+                        color=TEXT_MUTED,
+                    )
+                )
+            if analysis.one_change_away:
+                detail_controls.append(
+                    ft.Text(
+                        "You are one supported change away from a viable version of this strategy.",
+                        size=12,
+                        color=SUCCESS,
+                        weight=ft.FontWeight.W_600,
+                    )
+                )
+
+            if viability.viability in {"Viable", "Strong"}:
+                action = ft.Button(
+                    content=(
+                        "Selected Strategy"
+                        if strategy_key == self.app_state.team_strategy
+                        else "Use This Strategy"
+                    ),
+                    icon=(
+                        ft.Icons.CHECK_CIRCLE_ROUNDED
+                        if strategy_key == self.app_state.team_strategy
+                        else ft.Icons.ARROW_FORWARD_ROUNDED
+                    ),
+                    disabled=strategy_key == self.app_state.team_strategy,
+                    on_click=(
+                        lambda e, key=strategy_key:
+                        self._select_strategy_from_recommender(e, key)
+                    ),
+                )
+            else:
+                action = ft.Button(
+                    content="Build toward this strategy",
+                    icon=ft.Icons.EDIT_NOTE_ROUNDED,
+                    on_click=(
+                        lambda e, key=strategy_key:
+                        self._show_strategy_build_options(e, key)
+                    ),
+                )
+            detail_controls.append(action)
+
+            cards.append(
+                ft.Container(
+                    content=ft.Column(
+                        controls=detail_controls,
+                        spacing=8,
+                        tight=True,
+                    ),
+                    padding=16,
+                    bgcolor=SURFACE_RAISED,
+                    border=ft.Border.all(1, definition.color),
+                    border_radius=12,
+                )
+            )
+
+        cards.append(
+            ft.Text(
+                (
+                    "Incomplete does not lock a strategy. Close this window and choose "
+                    "any strategy directly from Team Strategy if you want to experiment "
+                    "with the current team anyway."
+                ),
+                size=12,
+                color=TEXT_MUTED,
+                italic=True,
+            )
+        )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    "Strategy Recommender",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
+                    color=TEXT_PRIMARY,
+                ),
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=[
+                            ft.Text(
+                                (
+                                    "Battle Compass compares your currently equipped team "
+                                    "against each strategy. Readiness is guidance, not a lock."
+                                ),
+                                size=14,
+                                color=TEXT_SECONDARY,
+                            ),
+                            *cards,
+                        ],
+                        spacing=12,
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
+                    width=720,
+                    height=590,
+                ),
+                actions=[
+                    ft.Button(
+                        content="Close",
+                        on_click=lambda e: self.page.pop_dialog(),
+                    )
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _select_strategy_from_recommender(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+    ) -> None:
+        del event
+        self.page.pop_dialog()
+        self._apply_team_strategy_style(strategy_key)
+        self.team_strategy_dropdown.disabled = True
+        self.page.update()
+        self.page.run_task(self._persist_team_strategy, strategy_key)
+
+    def _show_strategy_build_options(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+    ) -> None:
+        """Show supported one-change paths for an incomplete strategy."""
+        del event
+        self.page.pop_dialog()
+        analysis = getattr(self, "_strategy_recommender_results", {}).get(strategy_key)
+        if analysis is None:
+            analysis = self._strategy_analysis(strategy_key)
+        definition = get_strategy_definition(strategy_key)
+
+        controls: list[ft.Control] = [
+            ft.Text(
+                analysis.viability.summary,
+                size=14,
+                color=TEXT_SECONDARY,
+            ),
+        ]
+        if analysis.viability.missing_required_roles:
+            controls.append(
+                ft.Text(
+                    "Missing required roles: "
+                    + ", ".join(analysis.viability.missing_required_roles),
+                    size=13,
+                    color=WARNING,
+                    weight=ft.FontWeight.W_600,
+                )
+            )
+
+        if analysis.pokemon_additions:
+            controls.append(
+                ft.Text(
+                    "Recommended Pokémon",
+                    size=16,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                )
+            )
+            for candidate in analysis.pokemon_additions:
+                controls.append(
+                    self._build_strategy_recommendation_row(
+                        candidate.summary,
+                        "Plan this Pokémon",
+                        lambda e, name=candidate.pokemon_name, key=strategy_key:
+                        self._show_strategy_pokemon_plan(e, key, name),
+                    )
+                )
+
+        if analysis.move_changes:
+            controls.append(
+                ft.Text(
+                    "Recommended move changes",
+                    size=16,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                )
+            )
+            for candidate in analysis.move_changes:
+                controls.append(
+                    self._build_strategy_recommendation_row(
+                        candidate.summary,
+                        "Plan this move",
+                        lambda e, rec=candidate, key=strategy_key:
+                        self._show_strategy_move_plan(e, key, rec),
+                    )
+                )
+
+        if not analysis.pokemon_additions and not analysis.move_changes:
+            controls.append(
+                ft.Text(
+                    (
+                        "No supported single Pokémon addition or move change currently "
+                        "improves this strategy enough to recommend automatically."
+                    ),
+                    color=TEXT_MUTED,
+                    italic=True,
+                )
+            )
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    f"Build toward {definition.label}",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
+                    color=definition.color,
+                ),
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=controls,
+                        spacing=12,
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
+                    width=680,
+                    height=520,
+                ),
+                actions=[
+                    ft.Button(
+                        content="Back",
+                        on_click=lambda e: self._return_to_strategy_recommender(e),
+                    ),
+                    ft.Button(
+                        content="Close",
+                        on_click=lambda e: self.page.pop_dialog(),
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    @staticmethod
+    def _build_strategy_recommendation_row(
+        summary: str,
+        button_text: str,
+        on_click,
+    ) -> ft.Control:
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(summary, size=13, color=TEXT_SECONDARY),
+                    ft.Button(
+                        content=button_text,
+                        icon=ft.Icons.ADD_ROUNDED,
+                        on_click=on_click,
+                    ),
+                ],
+                spacing=7,
+                tight=True,
+            ),
+            padding=12,
+            bgcolor=SURFACE_RAISED,
+            border=ft.Border.all(1, BORDER_DEFAULT),
+            border_radius=10,
+        )
+
+    def _return_to_strategy_recommender(
+        self,
+        event: ft.Event[ft.Button],
+    ) -> None:
+        del event
+        self.page.pop_dialog()
+        self._show_strategy_recommender()
+
+    def _show_strategy_pokemon_plan(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+        pokemon_name: str,
+    ) -> None:
+        """Continue Pokémon-first planning with strategy-relevant move suggestions."""
+        del event
+        self.page.pop_dialog()
+        catalog_record = self._strategy_catalog_record_for_name(pokemon_name)
+        if catalog_record is None:
+            self._show_strategy_message(
+                "That Pokémon could not be matched to the current Team Planner catalog."
+            )
+            return
+        candidate = self._strategy_candidate_record(catalog_record)
+        current_capabilities = recognize_team_capabilities(
+            self.team_data,
+            self.moves_data,
+        )
+        suggested_moves = recommend_strategy_moves_for_added_pokemon(
+            strategy_key,
+            current_capabilities,
+            candidate,
+            self.moves_data,
+            self.learnsets_data,
+        )
+        checkboxes = [
+            ft.Checkbox(label=move_name, value=True)
+            for move_name in suggested_moves
+        ]
+        definition = get_strategy_definition(strategy_key)
+        move_section: list[ft.Control]
+        if checkboxes:
+            move_section = [
+                ft.Text(
+                    "Recommended moves to plan",
+                    size=14,
+                    weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY,
+                ),
+                *checkboxes,
+            ]
+        else:
+            move_section = [
+                ft.Text(
+                    (
+                        "This Pokémon improves the strategy package without requiring "
+                        "a specific additional modeled move recommendation right now."
+                    ),
+                    size=13,
+                    color=TEXT_MUTED,
+                )
+            ]
+
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    f"Plan {pokemon_name}",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
+                    color=definition.color,
+                ),
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=[
+                            ft.Text(
+                                (
+                                    f"Add {pokemon_name} to Team Planner for "
+                                    f"{definition.label}. You can keep or clear any "
+                                    "suggested moves before confirming."
+                                ),
+                                color=TEXT_SECONDARY,
+                            ),
+                            *move_section,
+                        ],
+                        spacing=10,
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
+                    width=560,
+                    height=330,
+                ),
+                actions=[
+                    ft.Button(
+                        content="Cancel",
+                        on_click=lambda e: self.page.pop_dialog(),
+                    ),
+                    ft.Button(
+                        content="Add to My Journey",
+                        icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
+                        bgcolor=PRIMARY_BLUE,
+                        color=TEXT_PRIMARY,
+                        icon_color=TEXT_PRIMARY,
+                        on_click=lambda e, record=catalog_record, mon=candidate, boxes=checkboxes, key=strategy_key: self._confirm_strategy_pokemon_plan(
+                            e, key, record, mon, boxes
+                        ),
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _confirm_strategy_pokemon_plan(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+        catalog_record: dict,
+        pokemon: dict,
+        checkboxes: list[ft.Checkbox],
+    ) -> None:
+        del event
+        selected_moves = [
+            str(box.label)
+            for box in checkboxes
+            if box.value is True and box.label
+        ]
+        move_slots = [
+            {
+                "move_name": move_name,
+                "source_item_id": self._strategy_move_source_id(pokemon, move_name),
+            }
+            for move_name in selected_moves
+        ]
+        pokemon_id = str(catalog_record.get("id") or "").strip()
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._save_strategy_journey_plan,
+            strategy_key,
+            pokemon_id,
+            move_slots,
+        )
+
+    def _show_strategy_move_plan(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+        recommendation,
+    ) -> None:
+        """Confirm one recommended move change before writing it to Move Planner."""
+        del event
+        self.page.pop_dialog()
+        catalog_record = self._strategy_catalog_record_for_name(
+            recommendation.pokemon_name
+        )
+        if catalog_record is None:
+            self._show_strategy_message(
+                "That Pokémon could not be matched to the current Team Planner catalog."
+            )
+            return
+        pokemon = next(
+            (
+                row for row in self.team_data
+                if isinstance(row, dict)
+                and self._strategy_name_key(row.get("Pokemon"))
+                == self._strategy_name_key(recommendation.pokemon_name)
+            ),
+            self._strategy_candidate_record(catalog_record),
+        )
+        replacement_note = (
+            f" It is intended to replace {recommendation.replace_move_name} on the live build."
+            if recommendation.replace_move_name
+            else ""
+        )
+        self.page.show_dialog(
+            ft.AlertDialog(
+                modal=True,
+                title=ft.Text(
+                    f"Plan {recommendation.move_name}",
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
+                    color=get_strategy_definition(strategy_key).color,
+                ),
+                content=ft.Text(
+                    (
+                        f"Add {recommendation.move_name} to "
+                        f"{recommendation.pokemon_name}'s Move Planner row."
+                        f"{replacement_note} This does not change the currently "
+                        "equipped move in My Team."
+                    ),
+                    color=TEXT_SECONDARY,
+                ),
+                actions=[
+                    ft.Button(
+                        content="Cancel",
+                        on_click=lambda e: self.page.pop_dialog(),
+                    ),
+                    ft.Button(
+                        content="Add to My Journey",
+                        icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
+                        bgcolor=PRIMARY_BLUE,
+                        color=TEXT_PRIMARY,
+                        icon_color=TEXT_PRIMARY,
+                        on_click=lambda e, record=catalog_record, mon=pokemon, rec=recommendation, key=strategy_key: self._confirm_strategy_move_plan(
+                            e, key, record, mon, rec
+                        ),
+                    ),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+        )
+
+    def _confirm_strategy_move_plan(
+        self,
+        event: ft.Event[ft.Button],
+        strategy_key: str,
+        catalog_record: dict,
+        pokemon: dict,
+        recommendation,
+    ) -> None:
+        del event
+        move_name = str(recommendation.move_name or "").strip()
+        pokemon_id = str(catalog_record.get("id") or "").strip()
+        moves = [{
+            "move_name": move_name,
+            "source_item_id": self._strategy_move_source_id(pokemon, move_name),
+        }]
+        self.page.pop_dialog()
+        self.page.run_task(
+            self._save_strategy_journey_plan,
+            strategy_key,
+            pokemon_id,
+            moves,
+        )
+
+    async def _save_strategy_journey_plan(
+        self,
+        strategy_key: str,
+        pokemon_id: str,
+        moves: list[dict[str, str | None]],
+    ) -> None:
+        """Persist a confirmed strategy recommendation to My Journey."""
+        try:
+            saved = await self.app_state.add_strategy_plan_to_journey(
+                pokemon_id=pokemon_id,
+                moves=moves,
+            )
+        except (RuntimeError, ValueError) as error:
+            self._show_strategy_message(
+                f"The recommendation could not be added to My Journey: {error}"
+            )
+            return
+        if not saved:
+            self._show_strategy_message(
+                "The recommendation could not be added to My Journey."
+            )
+            return
+        if self.on_journey_updated is not None:
+            self.on_journey_updated()
+        definition = get_strategy_definition(strategy_key)
+        self._show_strategy_message(
+            f"Added to My Journey for {definition.label}."
+        )
+
+    def _show_strategy_message(self, message: str) -> None:
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(message),
+            )
+        )
+
     def refresh_team_data(
         self,
         team_data: list[dict],
@@ -215,54 +973,102 @@ class BattleCompassView:
         """Refresh recommendation results after the shared team is saved."""
         self.team_data = team_data
         self._refresh_results()
+    @staticmethod
+    def _team_strategy_options() -> list[ft.DropdownOption]:
+        """Build color-coded Team Strategy options."""
+        return [
+            ft.DropdownOption(
+                key=strategy,
+                text=label,
+                content=ft.Text(
+                    label,
+                    color=strategy_color(strategy),
+                    weight=ft.FontWeight.BOLD,
+                ),
+            )
+            for strategy, label in TEAM_STRATEGY_LABELS.items()
+        ]
+
+    def _apply_team_strategy_style(self, strategy: str) -> None:
+        """Apply the shared strategy identity to the selector and explainer."""
+        self.team_strategy_dropdown.value = strategy
+        self.team_strategy_dropdown.text_style = ft.TextStyle(
+            color=strategy_color(strategy),
+            weight=ft.FontWeight.BOLD,
+        )
+        self.strategy_description_text.value = strategy_compact_description(strategy)
+
     def refresh_team_strategy(
         self,
         strategy: str | None = None,
     ) -> None:
-        """Refresh the visible Journey Team Strategy indicator."""
+        """Refresh the active strategy and recommendation results."""
         active_strategy = strategy or self.app_state.team_strategy
-        self.team_strategy_value.value = TEAM_STRATEGY_LABELS.get(
-            active_strategy,
-            TEAM_STRATEGY_LABELS["strongest_matchup"],
-        )
-        self.team_strategy_value.color = (
-            STRATEGY_PURPLE
-            if active_strategy in {"poison_attrition", "poison_offensive_pressure"}
-            else TEXT_PRIMARY
-        )
-        if active_strategy == "poison_offensive_pressure":
-            tooltip_text = (
-                "Poison – Offensive Pressure establishes poison when it is safe and worthwhile, then favors poison-enabled offensive payoffs such as boosted Venoshock, Hex, or Merciless. For a fuller explanation, see Team Strategy in My Team."
-            )
-        elif active_strategy == "poison_attrition":
-            tooltip_text = (
-                "Poison – Attrition establishes poison when it is safe and worthwhile, then favors walling, recovery, protection, and defensive control while poison progresses. For a fuller explanation, see Team Strategy in My Team."
-            )
-        else:
-            tooltip_text = (
-                "Strongest Matchup uses Battle Compass's standard recommendation "
-                "priority, comparing modeled offensive pressure with incoming "
-                "danger and existing tactical promotion rules. For a fuller "
-                "explanation, see Team Strategy in My Team."
-            )
-        self.team_strategy_indicator.tooltip = ft.Tooltip(
-            message=tooltip_text,
-            size_constraints=ft.BoxConstraints(
-                max_width=420,
-            ),
-            padding=ft.Padding.symmetric(
-                horizontal=12,
-                vertical=10,
-            ),
-        )
+        self._apply_team_strategy_style(active_strategy)
+        self.strategy_status.visible = False
+        self.strategy_status.value = ""
         if hasattr(self, "results_host"):
             self._refresh_results()
         try:
-            self.team_strategy_indicator.update()
+            self.team_strategy_dropdown.update()
         except RuntimeError:
-            # During __init__, the control has not been mounted yet.
-            # Its configured value/color will render when it is added.
             pass
+
+    def _handle_team_strategy_change(
+        self,
+        event: ft.Event[ft.Dropdown],
+    ) -> None:
+        """Persist a strategy selected from Battle Settings."""
+        strategy = str(
+            event.control.value or "strongest_matchup"
+        )
+        self._apply_team_strategy_style(strategy)
+        self.team_strategy_dropdown.disabled = True
+        self.strategy_status.visible = False
+        self.page.update()
+        self.page.run_task(
+            self._persist_team_strategy,
+            strategy,
+        )
+
+    async def _persist_team_strategy(
+        self,
+        strategy: str,
+    ) -> None:
+        """Save the strategy, then refresh all visible strategy surfaces."""
+        previous_strategy = self.app_state.team_strategy
+        try:
+            save_succeeded = await self.app_state.save_team_strategy(
+                strategy
+            )
+        except (RuntimeError, ValueError) as error:
+            self.team_strategy_dropdown.disabled = False
+            self._apply_team_strategy_style(previous_strategy)
+            self.strategy_status.value = (
+                f"Team Strategy could not be saved: {error}"
+            )
+            self.strategy_status.color = "#F87171"
+            self.strategy_status.visible = True
+            self.page.update()
+            return
+
+        if not save_succeeded:
+            self.team_strategy_dropdown.disabled = False
+            self._apply_team_strategy_style(previous_strategy)
+            self.strategy_status.value = (
+                "Team Strategy could not be saved."
+            )
+            self.strategy_status.color = "#F87171"
+            self.strategy_status.visible = True
+            self.page.update()
+            return
+
+        self.team_strategy_dropdown.disabled = False
+        self.refresh_team_strategy(strategy)
+        if self.on_strategy_updated:
+            self.on_strategy_updated(strategy)
+        self.page.update()
+
     def build(self) -> ft.Control:
         """Return the complete interactive Battle Compass view."""
         settings_card = ft.Container(
@@ -299,7 +1105,50 @@ class BattleCompassView:
                                             content=self.opponent_dropdown,
                                             width=240,
                                         ),
-                                        self.team_strategy_indicator,
+                                        ft.Container(
+                                            content=ft.ResponsiveRow(
+                                                controls=[
+                                                    ft.Container(
+                                                        content=ft.Column(
+                                                            controls=[
+                                                                ft.Row(
+                                                                    controls=[
+                                                                        self.team_strategy_dropdown,
+                                                                        self.strategy_recommender_button,
+                                                                    ],
+                                                                    spacing=6,
+                                                                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                                                                ),
+                                                                self.strategy_status,
+                                                            ],
+                                                            spacing=3,
+                                                            tight=True,
+                                                        ),
+                                                        col={
+                                                            "xs": 12,
+                                                            "md": 7,
+                                                        },
+                                                    ),
+                                                    ft.Container(
+                                                        content=self.strategy_description_text,
+                                                        col={
+                                                            "xs": 12,
+                                                            "md": 5,
+                                                        },
+                                                        padding=ft.Padding.only(
+                                                            top=4,
+                                                        ),
+                                                    ),
+                                                ],
+                                                columns=12,
+                                                spacing=12,
+                                                run_spacing=6,
+                                                vertical_alignment=(
+                                                    ft.CrossAxisAlignment.CENTER
+                                                ),
+                                            ),
+                                            width=650,
+                                        ),
                                     ],
                                 ),
                                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -968,7 +1817,7 @@ class BattleCompassView:
             card_move_score = 0.0
             card_item_boosted = False
             card_effectiveness_label = "Strategic opener"
-            card_effectiveness_color = STRATEGY_PURPLE
+            card_effectiveness_color = strategy_color(view_model.team_strategy)
             move_panel_label = "Recommended Move"
             score_label = "Plan Role"
             score_text = "Engine Setup"
@@ -1224,10 +2073,63 @@ class BattleCompassView:
         self,
         view_model: BattleCompassViewModel,
     ) -> ft.Control | None:
-        """Show the selected Poison strategy plan or explain a direct fallback."""
+        """Show the selected strategy plan, readiness, or tactical fallback."""
+
+        if view_model.team_strategy == "strongest_matchup":
+            return None
 
         if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure"}:
-            return None
+            readiness = evaluate_strategy_viability(
+                view_model.team_strategy,
+                recognize_team_capabilities(self.team_data, self.moves_data),
+            )
+            readiness_color = self._strategy_viability_color(readiness.viability)
+            details: list[ft.Control] = [
+                ft.Text(
+                    strategy_label(view_model.team_strategy) + " Readiness",
+                    size=TEXT_SIZE_CARD_TITLE,
+                    weight=ft.FontWeight.BOLD,
+                    font_family=FONT_FAMILY_HEADER,
+                    color=TEXT_PRIMARY,
+                ),
+                ft.Text(
+                    readiness.viability,
+                    size=19,
+                    weight=ft.FontWeight.BOLD,
+                    color=readiness_color,
+                ),
+                ft.Text(
+                    readiness.summary,
+                    size=14,
+                    color=TEXT_SECONDARY,
+                ),
+            ]
+            if readiness.contributing_pokemon:
+                details.append(
+                    ft.Text(
+                        "Current contributors: " + ", ".join(readiness.contributing_pokemon),
+                        size=12,
+                        color=TEXT_MUTED,
+                    )
+                )
+            details.append(
+                ft.Text(
+                    (
+                        view_model.strategy_fallback_reason
+                        or "This strategy's live tactical branch is not yet specialized."
+                    ),
+                    size=12,
+                    color=TEXT_MUTED,
+                )
+            )
+            return ft.Container(
+                content=ft.Column(controls=details, spacing=8),
+                width=940,
+                padding=16,
+                bgcolor=SURFACE_RAISED,
+                border=ft.Border.all(1, strategy_color(view_model.team_strategy)),
+                border_radius=14,
+            )
 
         plan = view_model.selected_strategy_plan
         if plan is not None:
@@ -1262,7 +2164,7 @@ class BattleCompassView:
                         action,
                         size=19,
                         weight=ft.FontWeight.BOLD,
-                        color=STRATEGY_PURPLE,
+                        color=strategy_color(view_model.team_strategy),
                     ),
                     ft.Text(
                         detail,
@@ -1280,7 +2182,7 @@ class BattleCompassView:
             width=940,
             padding=16,
             bgcolor=SURFACE_RAISED,
-            border=ft.Border.all(1, STRATEGY_PURPLE),
+            border=ft.Border.all(1, strategy_color(view_model.team_strategy)),
             border_radius=14,
         )
     def _show_type_matchups(
@@ -1427,7 +2329,9 @@ class BattleCompassView:
         if asset_path is None:
             # A missing form-specific asset must never prevent a Journey from
             # reopening. Nor should we show another form's artwork instead.
-            return None
+            # UI component contracts require a string source, so an empty
+            # source intentionally renders no artwork rather than the wrong form.
+            return ""
         return self._asset_src(
             asset_path
         )

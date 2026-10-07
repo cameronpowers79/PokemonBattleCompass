@@ -2853,6 +2853,116 @@ class AppState:
                 self.journey["my_journey"] = previous
         return saved
 
+    async def add_strategy_plan_to_journey(
+        self,
+        *,
+        pokemon_id: str,
+        moves: list[dict[str, str | None]] | None = None,
+    ) -> bool:
+        """Atomically add a strategy recommendation to Team/Move Planner.
+
+        ``moves`` entries use the same ``move_name`` / ``source_item_id`` shape as
+        Move Planner. Existing planned moves are preserved; new recommendations fill
+        empty slots and duplicates are ignored.
+        """
+        if self.journey is None:
+            return False
+
+        pokemon_id = str(pokemon_id or "").strip()
+        if not pokemon_id:
+            raise ValueError("Strategy recommendation requires a Pokémon ID.")
+
+        try:
+            catalog = json.loads(
+                (DATA_DIR / "journey_pokemon.json").read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise RuntimeError(
+                "Journey Pokémon reference data could not be loaded."
+            ) from error
+
+        if not isinstance(catalog, list) or not any(
+            isinstance(record, dict)
+            and str(record.get("id") or "").strip() == pokemon_id
+            for record in catalog
+        ):
+            raise ValueError(
+                "That Pokémon is not available in the current Journey catalog."
+            )
+
+        normalized_moves: list[dict[str, str | None]] = []
+        for raw in moves or []:
+            if not isinstance(raw, dict):
+                continue
+            move_name = str(raw.get("move_name") or "").strip()
+            if not move_name:
+                continue
+            source_item_id = raw.get("source_item_id")
+            if source_item_id is not None:
+                source_item_id = str(source_item_id).strip() or None
+            normalized_moves.append({
+                "move_name": move_name,
+                "source_item_id": source_item_id,
+            })
+
+        previous_my_journey = deepcopy(self.journey.get("my_journey"))
+        updated = deepcopy(self.my_journey_data)
+
+        planned_ids = list(updated.get("planned_pokemon_ids", []))
+        if pokemon_id not in planned_ids:
+            planned_ids.append(pokemon_id)
+        updated["planner_initialized"] = True
+        updated["planned_pokemon_ids"] = planned_ids
+
+        planned_moves = deepcopy(updated.get("planned_moves", {}))
+        slots = list(
+            planned_moves.get(pokemon_id, [None, None, None, None])
+        )[:4]
+        while len(slots) < 4:
+            slots.append(None)
+
+        existing_names = {
+            str(slot.get("move_name") or "").strip().casefold()
+            for slot in slots
+            if isinstance(slot, dict)
+            and str(slot.get("move_name") or "").strip()
+        }
+        for move in normalized_moves:
+            folded = move["move_name"].casefold()
+            if folded in existing_names:
+                continue
+            try:
+                empty_index = slots.index(None)
+            except ValueError as error:
+                raise ValueError(
+                    "The Move Planner row is already full. Remove or replace a "
+                    "planned move before adding this recommendation."
+                ) from error
+            slots[empty_index] = deepcopy(move)
+            existing_names.add(folded)
+
+        if any(slot is not None for slot in slots):
+            planned_moves[pokemon_id] = slots
+        updated["planned_moves"] = planned_moves
+        self.journey["my_journey"] = updated
+
+        try:
+            saved = await save_journey(self.storage, self.journey)
+        except (TypeError, ValueError):
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+            raise
+
+        if not saved:
+            if previous_my_journey is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous_my_journey
+        return saved
+
+
     async def save_planned_moves(
 
         self,

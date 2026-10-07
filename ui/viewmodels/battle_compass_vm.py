@@ -37,6 +37,7 @@ class ReferenceData(TypedDict):
     ability_descriptions: list[dict]
     pokemon_validation: list[str]
     moves_data: list[dict]
+    learnsets_swsh: dict
     type_chart: dict[str, dict[str, float]]
     evolutions: dict[str, dict]
 @dataclass(frozen=True)
@@ -397,7 +398,7 @@ def build_battle_compass_view_model(
 ) -> BattleCompassViewModel:
     """Run the battle engine and return display-ready matchup results."""
     strategy_capabilities: list[StrategyCapabilityViewModel] = []
-    if team_strategy in {"poison_attrition", "poison_offensive_pressure"}:
+    if team_strategy != "strongest_matchup":
         strategy_capabilities = [
             StrategyCapabilityViewModel(
                 pokemon_name=result.pokemon_name,
@@ -541,6 +542,14 @@ def build_battle_compass_view_model(
                     strategy_branch=team_strategy,
                 )
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
+    elif team_strategy != "strongest_matchup":
+        fallback_reason = (
+            "This strategy is selected for team-building analysis, but its live "
+            "opponent-aware tactical branch is not implemented yet. Battle Compass "
+            "is using the strongest direct matchup for this battle while keeping "
+            "the selected strategy active for readiness and recommendation guidance."
+        )
+        why_text = f"{fallback_reason} {direct_why_text}".strip()
     other_options = [matchup for matchup in all_matchups if matchup is not recommendation]
     return BattleCompassViewModel(
         opponent=opponent,
@@ -571,5 +580,6 @@ def load_reference_data() -> ReferenceData:
         "type_chart": load_json("type_chart"),
         "pokemon_validation": load_json("pokemon_validation_swsh"),
         "moves_data": load_json("moves"),
+        "learnsets_swsh": load_json("learnsets_swsh"),
         "evolutions": load_json("evolutions"),
     }
