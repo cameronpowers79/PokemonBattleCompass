@@ -4006,7 +4006,7 @@ class MyJourneyView:
             self._sync_add_pokemon_validation()
             return
 
-        key = str(self._add_pokemon_selector.value or "").strip().casefold()
+        key = str(self._add_pokemon_selector.value or "").strip().casefold() if self._add_pokemon_selector is not None else ""
         planned_form = self._add_pokemon_name_to_form.get(key)
         planned_gender = self._add_pokemon_name_to_gender.get(key)
         self._clear_add_pokemon_dialog_state()
