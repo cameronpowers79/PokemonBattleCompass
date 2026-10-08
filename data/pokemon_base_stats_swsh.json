@@ -1,0 +1,1793 @@
+[
+  {
+    "pokemon_id": "abomasnow",
+    "HP": 90,
+    "ATK": 92,
+    "DEF": 75,
+    "SPA": 92,
+    "SPD": 85,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "accelgor",
+    "HP": 80,
+    "ATK": 70,
+    "DEF": 40,
+    "SPA": 100,
+    "SPD": 60,
+    "SPE": 145
+  },
+  {
+    "pokemon_id": "aegislash-blade",
+    "HP": 60,
+    "ATK": 140,
+    "DEF": 50,
+    "SPA": 140,
+    "SPD": 50,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "aegislash-shield",
+    "HP": 60,
+    "ATK": 50,
+    "DEF": 140,
+    "SPA": 50,
+    "SPD": 140,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "alcremie",
+    "HP": 65,
+    "ATK": 60,
+    "DEF": 75,
+    "SPA": 110,
+    "SPD": 121,
+    "SPE": 64
+  },
+  {
+    "pokemon_id": "araquanid",
+    "HP": 68,
+    "ATK": 70,
+    "DEF": 92,
+    "SPA": 50,
+    "SPD": 132,
+    "SPE": 42
+  },
+  {
+    "pokemon_id": "arcanine",
+    "HP": 90,
+    "ATK": 110,
+    "DEF": 80,
+    "SPA": 100,
+    "SPD": 80,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "arctovish",
+    "HP": 90,
+    "ATK": 90,
+    "DEF": 100,
+    "SPA": 80,
+    "SPD": 90,
+    "SPE": 55
+  },
+  {
+    "pokemon_id": "arctozolt",
+    "HP": 90,
+    "ATK": 100,
+    "DEF": 90,
+    "SPA": 90,
+    "SPD": 80,
+    "SPE": 55
+  },
+  {
+    "pokemon_id": "avalugg",
+    "HP": 95,
+    "ATK": 117,
+    "DEF": 184,
+    "SPA": 44,
+    "SPD": 46,
+    "SPE": 28
+  },
+  {
+    "pokemon_id": "barbaracle",
+    "HP": 72,
+    "ATK": 105,
+    "DEF": 115,
+    "SPA": 54,
+    "SPD": 86,
+    "SPE": 68
+  },
+  {
+    "pokemon_id": "barraskewda",
+    "HP": 61,
+    "ATK": 123,
+    "DEF": 60,
+    "SPA": 60,
+    "SPD": 50,
+    "SPE": 136
+  },
+  {
+    "pokemon_id": "basculin-red-striped",
+    "HP": 70,
+    "ATK": 92,
+    "DEF": 65,
+    "SPA": 80,
+    "SPD": 55,
+    "SPE": 98
+  },
+  {
+    "pokemon_id": "beartic",
+    "HP": 95,
+    "ATK": 130,
+    "DEF": 80,
+    "SPA": 70,
+    "SPD": 80,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "beheeyem",
+    "HP": 75,
+    "ATK": 75,
+    "DEF": 75,
+    "SPA": 125,
+    "SPD": 95,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "bellossom",
+    "HP": 75,
+    "ATK": 80,
+    "DEF": 95,
+    "SPA": 90,
+    "SPD": 100,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "bewear",
+    "HP": 120,
+    "ATK": 125,
+    "DEF": 80,
+    "SPA": 55,
+    "SPD": 60,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "bisharp",
+    "HP": 65,
+    "ATK": 125,
+    "DEF": 100,
+    "SPA": 60,
+    "SPD": 70,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "boltund",
+    "HP": 69,
+    "ATK": 90,
+    "DEF": 60,
+    "SPA": 90,
+    "SPD": 60,
+    "SPE": 121
+  },
+  {
+    "pokemon_id": "braviary",
+    "HP": 100,
+    "ATK": 123,
+    "DEF": 75,
+    "SPA": 57,
+    "SPD": 75,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "bronzong",
+    "HP": 67,
+    "ATK": 89,
+    "DEF": 116,
+    "SPA": 79,
+    "SPD": 116,
+    "SPE": 33
+  },
+  {
+    "pokemon_id": "butterfree",
+    "HP": 60,
+    "ATK": 45,
+    "DEF": 50,
+    "SPA": 90,
+    "SPD": 80,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "centiskorch",
+    "HP": 100,
+    "ATK": 115,
+    "DEF": 65,
+    "SPA": 90,
+    "SPD": 90,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "chandelure",
+    "HP": 60,
+    "ATK": 55,
+    "DEF": 90,
+    "SPA": 145,
+    "SPD": 90,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "charizard",
+    "HP": 78,
+    "ATK": 84,
+    "DEF": 78,
+    "SPA": 109,
+    "SPD": 85,
+    "SPE": 100
+  },
+  {
+    "pokemon_id": "cherrim",
+    "HP": 70,
+    "ATK": 60,
+    "DEF": 70,
+    "SPA": 87,
+    "SPD": 78,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "cinccino",
+    "HP": 75,
+    "ATK": 95,
+    "DEF": 60,
+    "SPA": 65,
+    "SPD": 60,
+    "SPE": 115
+  },
+  {
+    "pokemon_id": "cinderace",
+    "HP": 80,
+    "ATK": 116,
+    "DEF": 75,
+    "SPA": 65,
+    "SPD": 75,
+    "SPE": 119
+  },
+  {
+    "pokemon_id": "claydol",
+    "HP": 60,
+    "ATK": 70,
+    "DEF": 105,
+    "SPA": 70,
+    "SPD": 120,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "clefable",
+    "HP": 95,
+    "ATK": 70,
+    "DEF": 73,
+    "SPA": 95,
+    "SPD": 90,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "cloyster",
+    "HP": 50,
+    "ATK": 95,
+    "DEF": 180,
+    "SPA": 85,
+    "SPD": 45,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "coalossal",
+    "HP": 110,
+    "ATK": 80,
+    "DEF": 120,
+    "SPA": 80,
+    "SPD": 90,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "cofagrigus",
+    "HP": 58,
+    "ATK": 50,
+    "DEF": 145,
+    "SPA": 95,
+    "SPD": 105,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "conkeldurr",
+    "HP": 105,
+    "ATK": 140,
+    "DEF": 95,
+    "SPA": 55,
+    "SPD": 65,
+    "SPE": 45
+  },
+  {
+    "pokemon_id": "copperajah",
+    "HP": 122,
+    "ATK": 130,
+    "DEF": 69,
+    "SPA": 80,
+    "SPD": 69,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "corviknight",
+    "HP": 98,
+    "ATK": 87,
+    "DEF": 105,
+    "SPA": 53,
+    "SPD": 85,
+    "SPE": 67
+  },
+  {
+    "pokemon_id": "cramorant",
+    "HP": 70,
+    "ATK": 85,
+    "DEF": 55,
+    "SPA": 85,
+    "SPD": 95,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "crawdaunt",
+    "HP": 63,
+    "ATK": 120,
+    "DEF": 85,
+    "SPA": 90,
+    "SPD": 55,
+    "SPE": 55
+  },
+  {
+    "pokemon_id": "crustle",
+    "HP": 70,
+    "ATK": 105,
+    "DEF": 125,
+    "SPA": 65,
+    "SPD": 75,
+    "SPE": 45
+  },
+  {
+    "pokemon_id": "darmanitan-galar-standard",
+    "HP": 105,
+    "ATK": 140,
+    "DEF": 55,
+    "SPA": 30,
+    "SPD": 55,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "darmanitan-galar-zen",
+    "HP": 105,
+    "ATK": 160,
+    "DEF": 55,
+    "SPA": 30,
+    "SPD": 55,
+    "SPE": 135
+  },
+  {
+    "pokemon_id": "delibird",
+    "HP": 45,
+    "ATK": 55,
+    "DEF": 45,
+    "SPA": 65,
+    "SPD": 45,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "dhelmise",
+    "HP": 70,
+    "ATK": 131,
+    "DEF": 100,
+    "SPA": 86,
+    "SPD": 90,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "diggersby",
+    "HP": 85,
+    "ATK": 56,
+    "DEF": 77,
+    "SPA": 50,
+    "SPD": 77,
+    "SPE": 78
+  },
+  {
+    "pokemon_id": "ditto",
+    "HP": 48,
+    "ATK": 48,
+    "DEF": 48,
+    "SPA": 48,
+    "SPD": 48,
+    "SPE": 48
+  },
+  {
+    "pokemon_id": "dracovish",
+    "HP": 90,
+    "ATK": 90,
+    "DEF": 100,
+    "SPA": 70,
+    "SPD": 80,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "dracozolt",
+    "HP": 90,
+    "ATK": 100,
+    "DEF": 90,
+    "SPA": 80,
+    "SPD": 70,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "dragapult",
+    "HP": 88,
+    "ATK": 120,
+    "DEF": 75,
+    "SPA": 100,
+    "SPD": 75,
+    "SPE": 142
+  },
+  {
+    "pokemon_id": "drapion",
+    "HP": 70,
+    "ATK": 90,
+    "DEF": 110,
+    "SPA": 60,
+    "SPD": 75,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "drednaw",
+    "HP": 90,
+    "ATK": 115,
+    "DEF": 90,
+    "SPA": 48,
+    "SPD": 68,
+    "SPE": 74
+  },
+  {
+    "pokemon_id": "drifblim",
+    "HP": 150,
+    "ATK": 80,
+    "DEF": 44,
+    "SPA": 90,
+    "SPD": 54,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "dubwool",
+    "HP": 72,
+    "ATK": 80,
+    "DEF": 100,
+    "SPA": 60,
+    "SPD": 90,
+    "SPE": 88
+  },
+  {
+    "pokemon_id": "dugtrio",
+    "HP": 35,
+    "ATK": 100,
+    "DEF": 50,
+    "SPA": 50,
+    "SPD": 70,
+    "SPE": 120
+  },
+  {
+    "pokemon_id": "duraludon",
+    "HP": 70,
+    "ATK": 95,
+    "DEF": 115,
+    "SPA": 120,
+    "SPD": 50,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "durant",
+    "HP": 58,
+    "ATK": 109,
+    "DEF": 112,
+    "SPA": 48,
+    "SPD": 48,
+    "SPE": 109
+  },
+  {
+    "pokemon_id": "dusknoir",
+    "HP": 45,
+    "ATK": 100,
+    "DEF": 135,
+    "SPA": 65,
+    "SPD": 135,
+    "SPE": 45
+  },
+  {
+    "pokemon_id": "eldegoss",
+    "HP": 60,
+    "ATK": 50,
+    "DEF": 90,
+    "SPA": 80,
+    "SPD": 120,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "escavalier",
+    "HP": 70,
+    "ATK": 135,
+    "DEF": 105,
+    "SPA": 60,
+    "SPD": 105,
+    "SPE": 20
+  },
+  {
+    "pokemon_id": "espeon",
+    "HP": 65,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 130,
+    "SPD": 95,
+    "SPE": 110
+  },
+  {
+    "pokemon_id": "eternatus",
+    "HP": 140,
+    "ATK": 85,
+    "DEF": 95,
+    "SPA": 145,
+    "SPD": 95,
+    "SPE": 130
+  },
+  {
+    "pokemon_id": "excadrill",
+    "HP": 110,
+    "ATK": 135,
+    "DEF": 60,
+    "SPA": 50,
+    "SPD": 65,
+    "SPE": 88
+  },
+  {
+    "pokemon_id": "falinks",
+    "HP": 65,
+    "ATK": 100,
+    "DEF": 100,
+    "SPA": 70,
+    "SPD": 60,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "ferrothorn",
+    "HP": 74,
+    "ATK": 94,
+    "DEF": 131,
+    "SPA": 54,
+    "SPD": 116,
+    "SPE": 20
+  },
+  {
+    "pokemon_id": "flapple",
+    "HP": 70,
+    "ATK": 110,
+    "DEF": 80,
+    "SPA": 95,
+    "SPD": 60,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "flareon",
+    "HP": 65,
+    "ATK": 130,
+    "DEF": 60,
+    "SPA": 95,
+    "SPD": 110,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "flygon",
+    "HP": 80,
+    "ATK": 100,
+    "DEF": 80,
+    "SPA": 80,
+    "SPD": 80,
+    "SPE": 100
+  },
+  {
+    "pokemon_id": "froslass",
+    "HP": 70,
+    "ATK": 80,
+    "DEF": 70,
+    "SPA": 80,
+    "SPD": 70,
+    "SPE": 110
+  },
+  {
+    "pokemon_id": "frosmoth",
+    "HP": 70,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 125,
+    "SPD": 90,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "gallade",
+    "HP": 68,
+    "ATK": 125,
+    "DEF": 65,
+    "SPA": 65,
+    "SPD": 115,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "galvantula",
+    "HP": 70,
+    "ATK": 77,
+    "DEF": 60,
+    "SPA": 97,
+    "SPD": 60,
+    "SPE": 108
+  },
+  {
+    "pokemon_id": "garbodor",
+    "HP": 80,
+    "ATK": 95,
+    "DEF": 82,
+    "SPA": 60,
+    "SPD": 82,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "gardevoir",
+    "HP": 68,
+    "ATK": 65,
+    "DEF": 65,
+    "SPA": 125,
+    "SPD": 115,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "gastrodon",
+    "HP": 111,
+    "ATK": 83,
+    "DEF": 68,
+    "SPA": 92,
+    "SPD": 82,
+    "SPE": 39
+  },
+  {
+    "pokemon_id": "gengar",
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 130,
+    "SPD": 75,
+    "SPE": 110
+  },
+  {
+    "pokemon_id": "gigalith",
+    "HP": 85,
+    "ATK": 135,
+    "DEF": 130,
+    "SPA": 60,
+    "SPD": 80,
+    "SPE": 25
+  },
+  {
+    "pokemon_id": "glaceon",
+    "HP": 65,
+    "ATK": 60,
+    "DEF": 110,
+    "SPA": 130,
+    "SPD": 95,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "glalie",
+    "HP": 80,
+    "ATK": 80,
+    "DEF": 80,
+    "SPA": 80,
+    "SPD": 80,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "golisopod",
+    "HP": 75,
+    "ATK": 125,
+    "DEF": 140,
+    "SPA": 60,
+    "SPD": 90,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "golurk",
+    "HP": 89,
+    "ATK": 124,
+    "DEF": 80,
+    "SPA": 55,
+    "SPD": 80,
+    "SPE": 55
+  },
+  {
+    "pokemon_id": "gothitelle",
+    "HP": 70,
+    "ATK": 55,
+    "DEF": 95,
+    "SPA": 95,
+    "SPD": 110,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "gourgeist-average",
+    "HP": 65,
+    "ATK": 90,
+    "DEF": 122,
+    "SPA": 58,
+    "SPD": 75,
+    "SPE": 84
+  },
+  {
+    "pokemon_id": "grapploct",
+    "HP": 80,
+    "ATK": 118,
+    "DEF": 90,
+    "SPA": 70,
+    "SPD": 80,
+    "SPE": 42
+  },
+  {
+    "pokemon_id": "greedent",
+    "HP": 120,
+    "ATK": 95,
+    "DEF": 95,
+    "SPA": 55,
+    "SPD": 75,
+    "SPE": 20
+  },
+  {
+    "pokemon_id": "grimmsnarl",
+    "HP": 95,
+    "ATK": 120,
+    "DEF": 65,
+    "SPA": 95,
+    "SPD": 75,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "gyarados",
+    "HP": 95,
+    "ATK": 125,
+    "DEF": 79,
+    "SPA": 60,
+    "SPD": 100,
+    "SPE": 81
+  },
+  {
+    "pokemon_id": "hatterene",
+    "HP": 57,
+    "ATK": 90,
+    "DEF": 95,
+    "SPA": 136,
+    "SPD": 103,
+    "SPE": 29
+  },
+  {
+    "pokemon_id": "hawlucha",
+    "HP": 78,
+    "ATK": 92,
+    "DEF": 75,
+    "SPA": 74,
+    "SPD": 63,
+    "SPE": 118
+  },
+  {
+    "pokemon_id": "haxorus",
+    "HP": 76,
+    "ATK": 147,
+    "DEF": 90,
+    "SPA": 60,
+    "SPD": 70,
+    "SPE": 97
+  },
+  {
+    "pokemon_id": "heatmor",
+    "HP": 85,
+    "ATK": 97,
+    "DEF": 66,
+    "SPA": 105,
+    "SPD": 66,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "heliolisk",
+    "HP": 62,
+    "ATK": 55,
+    "DEF": 52,
+    "SPA": 109,
+    "SPD": 94,
+    "SPE": 109
+  },
+  {
+    "pokemon_id": "hippowdon",
+    "HP": 108,
+    "ATK": 112,
+    "DEF": 118,
+    "SPA": 68,
+    "SPD": 72,
+    "SPE": 47
+  },
+  {
+    "pokemon_id": "hitmonchan",
+    "HP": 50,
+    "ATK": 105,
+    "DEF": 79,
+    "SPA": 35,
+    "SPD": 110,
+    "SPE": 76
+  },
+  {
+    "pokemon_id": "hitmonlee",
+    "HP": 50,
+    "ATK": 120,
+    "DEF": 53,
+    "SPA": 35,
+    "SPD": 110,
+    "SPE": 87
+  },
+  {
+    "pokemon_id": "hitmontop",
+    "HP": 50,
+    "ATK": 95,
+    "DEF": 95,
+    "SPA": 35,
+    "SPD": 110,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "hydreigon",
+    "HP": 92,
+    "ATK": 105,
+    "DEF": 90,
+    "SPA": 125,
+    "SPD": 90,
+    "SPE": 98
+  },
+  {
+    "pokemon_id": "indeedee-female",
+    "HP": 70,
+    "ATK": 55,
+    "DEF": 65,
+    "SPA": 95,
+    "SPD": 105,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "indeedee-male",
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 55,
+    "SPA": 105,
+    "SPD": 95,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "inteleon",
+    "HP": 70,
+    "ATK": 85,
+    "DEF": 65,
+    "SPA": 125,
+    "SPD": 65,
+    "SPE": 120
+  },
+  {
+    "pokemon_id": "jellicent-male",
+    "HP": 100,
+    "ATK": 60,
+    "DEF": 70,
+    "SPA": 85,
+    "SPD": 105,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "jolteon",
+    "HP": 65,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 110,
+    "SPD": 95,
+    "SPE": 130
+  },
+  {
+    "pokemon_id": "kingler",
+    "HP": 55,
+    "ATK": 130,
+    "DEF": 115,
+    "SPA": 50,
+    "SPD": 50,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "klinklang",
+    "HP": 60,
+    "ATK": 100,
+    "DEF": 115,
+    "SPA": 70,
+    "SPD": 85,
+    "SPE": 90
+  },
+  {
+    "pokemon_id": "kommo-o",
+    "HP": 75,
+    "ATK": 110,
+    "DEF": 125,
+    "SPA": 100,
+    "SPD": 105,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "lanturn",
+    "HP": 125,
+    "ATK": 58,
+    "DEF": 58,
+    "SPA": 76,
+    "SPD": 76,
+    "SPE": 67
+  },
+  {
+    "pokemon_id": "lapras",
+    "HP": 130,
+    "ATK": 85,
+    "DEF": 80,
+    "SPA": 85,
+    "SPD": 95,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "leafeon",
+    "HP": 65,
+    "ATK": 110,
+    "DEF": 130,
+    "SPA": 60,
+    "SPD": 65,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "liepard",
+    "HP": 64,
+    "ATK": 88,
+    "DEF": 50,
+    "SPA": 88,
+    "SPD": 50,
+    "SPE": 106
+  },
+  {
+    "pokemon_id": "lucario",
+    "HP": 70,
+    "ATK": 110,
+    "DEF": 70,
+    "SPA": 115,
+    "SPD": 70,
+    "SPE": 90
+  },
+  {
+    "pokemon_id": "machamp",
+    "HP": 90,
+    "ATK": 130,
+    "DEF": 80,
+    "SPA": 65,
+    "SPD": 85,
+    "SPE": 55
+  },
+  {
+    "pokemon_id": "malamar",
+    "HP": 86,
+    "ATK": 92,
+    "DEF": 88,
+    "SPA": 68,
+    "SPD": 75,
+    "SPE": 73
+  },
+  {
+    "pokemon_id": "mamoswine",
+    "HP": 110,
+    "ATK": 130,
+    "DEF": 80,
+    "SPA": 70,
+    "SPD": 60,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "manectric",
+    "HP": 70,
+    "ATK": 75,
+    "DEF": 60,
+    "SPA": 105,
+    "SPD": 60,
+    "SPE": 105
+  },
+  {
+    "pokemon_id": "mantine",
+    "HP": 85,
+    "ATK": 40,
+    "DEF": 70,
+    "SPA": 80,
+    "SPD": 140,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "maractus",
+    "HP": 75,
+    "ATK": 86,
+    "DEF": 67,
+    "SPA": 106,
+    "SPD": 67,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "mawile",
+    "HP": 50,
+    "ATK": 85,
+    "DEF": 85,
+    "SPA": 55,
+    "SPD": 55,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "meowstic-female",
+    "HP": 74,
+    "ATK": 48,
+    "DEF": 76,
+    "SPA": 83,
+    "SPD": 81,
+    "SPE": 104
+  },
+  {
+    "pokemon_id": "meowstic-male",
+    "HP": 74,
+    "ATK": 48,
+    "DEF": 76,
+    "SPA": 83,
+    "SPD": 81,
+    "SPE": 104
+  },
+  {
+    "pokemon_id": "milotic",
+    "HP": 95,
+    "ATK": 60,
+    "DEF": 79,
+    "SPA": 100,
+    "SPD": 125,
+    "SPE": 81
+  },
+  {
+    "pokemon_id": "mimikyu-disguised",
+    "HP": 55,
+    "ATK": 90,
+    "DEF": 80,
+    "SPA": 50,
+    "SPD": 105,
+    "SPE": 96
+  },
+  {
+    "pokemon_id": "morpeko-full-belly",
+    "HP": 58,
+    "ATK": 95,
+    "DEF": 58,
+    "SPA": 70,
+    "SPD": 58,
+    "SPE": 97
+  },
+  {
+    "pokemon_id": "mr-rime",
+    "HP": 80,
+    "ATK": 85,
+    "DEF": 75,
+    "SPA": 110,
+    "SPD": 100,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "mudsdale",
+    "HP": 100,
+    "ATK": 125,
+    "DEF": 100,
+    "SPA": 55,
+    "SPD": 85,
+    "SPE": 35
+  },
+  {
+    "pokemon_id": "musharna",
+    "HP": 116,
+    "ATK": 55,
+    "DEF": 85,
+    "SPA": 107,
+    "SPD": 95,
+    "SPE": 29
+  },
+  {
+    "pokemon_id": "ninetales",
+    "HP": 73,
+    "ATK": 76,
+    "DEF": 75,
+    "SPA": 81,
+    "SPD": 100,
+    "SPE": 100
+  },
+  {
+    "pokemon_id": "ninjask",
+    "HP": 61,
+    "ATK": 90,
+    "DEF": 45,
+    "SPA": 50,
+    "SPD": 50,
+    "SPE": 160
+  },
+  {
+    "pokemon_id": "noctowl",
+    "HP": 100,
+    "ATK": 50,
+    "DEF": 50,
+    "SPA": 86,
+    "SPD": 96,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "noivern",
+    "HP": 85,
+    "ATK": 70,
+    "DEF": 80,
+    "SPA": 97,
+    "SPD": 80,
+    "SPE": 123
+  },
+  {
+    "pokemon_id": "obstagoon",
+    "HP": 93,
+    "ATK": 90,
+    "DEF": 101,
+    "SPA": 60,
+    "SPD": 81,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "octillery",
+    "HP": 75,
+    "ATK": 105,
+    "DEF": 75,
+    "SPA": 105,
+    "SPD": 75,
+    "SPE": 45
+  },
+  {
+    "pokemon_id": "orbeetle",
+    "HP": 60,
+    "ATK": 45,
+    "DEF": 110,
+    "SPA": 80,
+    "SPD": 120,
+    "SPE": 90
+  },
+  {
+    "pokemon_id": "pangoro",
+    "HP": 95,
+    "ATK": 124,
+    "DEF": 78,
+    "SPA": 69,
+    "SPD": 71,
+    "SPE": 58
+  },
+  {
+    "pokemon_id": "passimian",
+    "HP": 100,
+    "ATK": 120,
+    "DEF": 90,
+    "SPA": 40,
+    "SPD": 60,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "pelipper",
+    "HP": 60,
+    "ATK": 50,
+    "DEF": 100,
+    "SPA": 95,
+    "SPD": 70,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "perrserker",
+    "HP": 70,
+    "ATK": 110,
+    "DEF": 100,
+    "SPA": 50,
+    "SPD": 60,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "persian",
+    "HP": 65,
+    "ATK": 70,
+    "DEF": 60,
+    "SPA": 65,
+    "SPD": 65,
+    "SPE": 115
+  },
+  {
+    "pokemon_id": "pincurchin",
+    "HP": 48,
+    "ATK": 101,
+    "DEF": 95,
+    "SPA": 91,
+    "SPD": 85,
+    "SPE": 15
+  },
+  {
+    "pokemon_id": "polteageist",
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 65,
+    "SPA": 134,
+    "SPD": 114,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "pyukumuku",
+    "HP": 55,
+    "ATK": 60,
+    "DEF": 130,
+    "SPA": 30,
+    "SPD": 130,
+    "SPE": 5
+  },
+  {
+    "pokemon_id": "quagsire",
+    "HP": 95,
+    "ATK": 85,
+    "DEF": 85,
+    "SPA": 65,
+    "SPD": 65,
+    "SPE": 35
+  },
+  {
+    "pokemon_id": "qwilfish",
+    "HP": 65,
+    "ATK": 95,
+    "DEF": 85,
+    "SPA": 55,
+    "SPD": 55,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "raichu",
+    "HP": 60,
+    "ATK": 90,
+    "DEF": 55,
+    "SPA": 90,
+    "SPD": 80,
+    "SPE": 110
+  },
+  {
+    "pokemon_id": "rhyperior",
+    "HP": 115,
+    "ATK": 140,
+    "DEF": 130,
+    "SPA": 55,
+    "SPD": 55,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "ribombee",
+    "HP": 60,
+    "ATK": 55,
+    "DEF": 60,
+    "SPA": 95,
+    "SPD": 70,
+    "SPE": 124
+  },
+  {
+    "pokemon_id": "rillaboom",
+    "HP": 100,
+    "ATK": 125,
+    "DEF": 90,
+    "SPA": 60,
+    "SPD": 70,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "roserade",
+    "HP": 60,
+    "ATK": 70,
+    "DEF": 65,
+    "SPA": 125,
+    "SPD": 105,
+    "SPE": 90
+  },
+  {
+    "pokemon_id": "rotom",
+    "HP": 50,
+    "ATK": 50,
+    "DEF": 77,
+    "SPA": 95,
+    "SPD": 77,
+    "SPE": 91
+  },
+  {
+    "pokemon_id": "runerigus",
+    "HP": 58,
+    "ATK": 95,
+    "DEF": 145,
+    "SPA": 50,
+    "SPD": 105,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "salazzle",
+    "HP": 68,
+    "ATK": 64,
+    "DEF": 60,
+    "SPA": 111,
+    "SPD": 60,
+    "SPE": 117
+  },
+  {
+    "pokemon_id": "sandaconda",
+    "HP": 72,
+    "ATK": 107,
+    "DEF": 125,
+    "SPA": 65,
+    "SPD": 70,
+    "SPE": 71
+  },
+  {
+    "pokemon_id": "sawk",
+    "HP": 75,
+    "ATK": 125,
+    "DEF": 75,
+    "SPA": 30,
+    "SPD": 75,
+    "SPE": 85
+  },
+  {
+    "pokemon_id": "scrafty",
+    "HP": 65,
+    "ATK": 90,
+    "DEF": 115,
+    "SPA": 45,
+    "SPD": 115,
+    "SPE": 58
+  },
+  {
+    "pokemon_id": "seaking",
+    "HP": 80,
+    "ATK": 92,
+    "DEF": 65,
+    "SPA": 65,
+    "SPD": 80,
+    "SPE": 68
+  },
+  {
+    "pokemon_id": "seismitoad",
+    "HP": 105,
+    "ATK": 95,
+    "DEF": 75,
+    "SPA": 85,
+    "SPD": 75,
+    "SPE": 74
+  },
+  {
+    "pokemon_id": "shedinja",
+    "HP": 1,
+    "ATK": 90,
+    "DEF": 45,
+    "SPA": 30,
+    "SPD": 30,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "shiftry",
+    "HP": 90,
+    "ATK": 100,
+    "DEF": 60,
+    "SPA": 90,
+    "SPD": 60,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "shiinotic",
+    "HP": 60,
+    "ATK": 45,
+    "DEF": 80,
+    "SPA": 90,
+    "SPD": 100,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "shuckle",
+    "HP": 20,
+    "ATK": 10,
+    "DEF": 230,
+    "SPA": 10,
+    "SPD": 230,
+    "SPE": 5
+  },
+  {
+    "pokemon_id": "sigilyph",
+    "HP": 72,
+    "ATK": 58,
+    "DEF": 80,
+    "SPA": 103,
+    "SPD": 80,
+    "SPE": 97
+  },
+  {
+    "pokemon_id": "silvally",
+    "HP": 95,
+    "ATK": 95,
+    "DEF": 95,
+    "SPA": 95,
+    "SPD": 95,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "sirfetchd",
+    "HP": 62,
+    "ATK": 135,
+    "DEF": 95,
+    "SPA": 68,
+    "SPD": 82,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "skuntank",
+    "HP": 103,
+    "ATK": 93,
+    "DEF": 67,
+    "SPA": 71,
+    "SPD": 61,
+    "SPE": 84
+  },
+  {
+    "pokemon_id": "slurpuff",
+    "HP": 82,
+    "ATK": 80,
+    "DEF": 86,
+    "SPA": 85,
+    "SPD": 75,
+    "SPE": 72
+  },
+  {
+    "pokemon_id": "snorlax",
+    "HP": 160,
+    "ATK": 110,
+    "DEF": 65,
+    "SPA": 65,
+    "SPD": 110,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "solrock",
+    "HP": 90,
+    "ATK": 95,
+    "DEF": 85,
+    "SPA": 55,
+    "SPD": 65,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "steelix",
+    "HP": 75,
+    "ATK": 85,
+    "DEF": 200,
+    "SPA": 55,
+    "SPD": 65,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "stonjourner",
+    "HP": 100,
+    "ATK": 125,
+    "DEF": 135,
+    "SPA": 20,
+    "SPD": 20,
+    "SPE": 70
+  },
+  {
+    "pokemon_id": "stunfisk-galar",
+    "HP": 109,
+    "ATK": 81,
+    "DEF": 99,
+    "SPA": 66,
+    "SPD": 84,
+    "SPE": 32
+  },
+  {
+    "pokemon_id": "sudowoodo",
+    "HP": 70,
+    "ATK": 100,
+    "DEF": 115,
+    "SPA": 30,
+    "SPD": 65,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "swoobat",
+    "HP": 67,
+    "ATK": 57,
+    "DEF": 55,
+    "SPA": 77,
+    "SPD": 55,
+    "SPE": 114
+  },
+  {
+    "pokemon_id": "sylveon",
+    "HP": 95,
+    "ATK": 65,
+    "DEF": 65,
+    "SPA": 110,
+    "SPD": 130,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "thievul",
+    "HP": 70,
+    "ATK": 58,
+    "DEF": 58,
+    "SPA": 87,
+    "SPD": 92,
+    "SPE": 90
+  },
+  {
+    "pokemon_id": "throh",
+    "HP": 120,
+    "ATK": 100,
+    "DEF": 85,
+    "SPA": 30,
+    "SPD": 85,
+    "SPE": 45
+  },
+  {
+    "pokemon_id": "togedemaru",
+    "HP": 65,
+    "ATK": 98,
+    "DEF": 63,
+    "SPA": 40,
+    "SPD": 73,
+    "SPE": 96
+  },
+  {
+    "pokemon_id": "togekiss",
+    "HP": 85,
+    "ATK": 50,
+    "DEF": 95,
+    "SPA": 120,
+    "SPD": 115,
+    "SPE": 80
+  },
+  {
+    "pokemon_id": "torkoal",
+    "HP": 70,
+    "ATK": 85,
+    "DEF": 140,
+    "SPA": 85,
+    "SPD": 70,
+    "SPE": 20
+  },
+  {
+    "pokemon_id": "toxapex",
+    "HP": 50,
+    "ATK": 63,
+    "DEF": 152,
+    "SPA": 53,
+    "SPD": 142,
+    "SPE": 35
+  },
+  {
+    "pokemon_id": "toxtricity-amped",
+    "HP": 75,
+    "ATK": 98,
+    "DEF": 70,
+    "SPA": 114,
+    "SPD": 70,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "toxtricity-low-key",
+    "HP": 75,
+    "ATK": 98,
+    "DEF": 70,
+    "SPA": 114,
+    "SPD": 70,
+    "SPE": 75
+  },
+  {
+    "pokemon_id": "trevenant",
+    "HP": 85,
+    "ATK": 110,
+    "DEF": 76,
+    "SPA": 65,
+    "SPD": 82,
+    "SPE": 56
+  },
+  {
+    "pokemon_id": "tsareena",
+    "HP": 72,
+    "ATK": 120,
+    "DEF": 98,
+    "SPA": 50,
+    "SPD": 98,
+    "SPE": 72
+  },
+  {
+    "pokemon_id": "turtonator",
+    "HP": 60,
+    "ATK": 78,
+    "DEF": 135,
+    "SPA": 91,
+    "SPD": 85,
+    "SPE": 36
+  },
+  {
+    "pokemon_id": "umbreon",
+    "HP": 95,
+    "ATK": 65,
+    "DEF": 110,
+    "SPA": 60,
+    "SPD": 130,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "unfezant",
+    "HP": 80,
+    "ATK": 115,
+    "DEF": 80,
+    "SPA": 65,
+    "SPD": 55,
+    "SPE": 93
+  },
+  {
+    "pokemon_id": "vanilluxe",
+    "HP": 71,
+    "ATK": 95,
+    "DEF": 85,
+    "SPA": 110,
+    "SPD": 95,
+    "SPE": 79
+  },
+  {
+    "pokemon_id": "vaporeon",
+    "HP": 130,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 110,
+    "SPD": 95,
+    "SPE": 65
+  },
+  {
+    "pokemon_id": "vespiquen",
+    "HP": 70,
+    "ATK": 80,
+    "DEF": 102,
+    "SPA": 80,
+    "SPD": 102,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "vikavolt",
+    "HP": 77,
+    "ATK": 70,
+    "DEF": 90,
+    "SPA": 145,
+    "SPD": 75,
+    "SPE": 43
+  },
+  {
+    "pokemon_id": "vileplume",
+    "HP": 75,
+    "ATK": 80,
+    "DEF": 85,
+    "SPA": 110,
+    "SPD": 90,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "wailord",
+    "HP": 170,
+    "ATK": 90,
+    "DEF": 45,
+    "SPA": 90,
+    "SPD": 45,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "weavile",
+    "HP": 70,
+    "ATK": 120,
+    "DEF": 65,
+    "SPA": 45,
+    "SPD": 85,
+    "SPE": 125
+  },
+  {
+    "pokemon_id": "weezing-galar",
+    "HP": 65,
+    "ATK": 90,
+    "DEF": 120,
+    "SPA": 85,
+    "SPD": 70,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "whimsicott",
+    "HP": 60,
+    "ATK": 67,
+    "DEF": 85,
+    "SPA": 77,
+    "SPD": 75,
+    "SPE": 116
+  },
+  {
+    "pokemon_id": "whiscash",
+    "HP": 110,
+    "ATK": 78,
+    "DEF": 73,
+    "SPA": 76,
+    "SPD": 71,
+    "SPE": 60
+  },
+  {
+    "pokemon_id": "wishiwashi-school",
+    "HP": 45,
+    "ATK": 140,
+    "DEF": 130,
+    "SPA": 140,
+    "SPD": 135,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "wishiwashi-solo",
+    "HP": 45,
+    "ATK": 20,
+    "DEF": 20,
+    "SPA": 25,
+    "SPD": 25,
+    "SPE": 40
+  },
+  {
+    "pokemon_id": "wobbuffet",
+    "HP": 190,
+    "ATK": 33,
+    "DEF": 58,
+    "SPA": 33,
+    "SPD": 58,
+    "SPE": 33
+  },
+  {
+    "pokemon_id": "wynaut",
+    "HP": 95,
+    "ATK": 23,
+    "DEF": 48,
+    "SPA": 23,
+    "SPD": 48,
+    "SPE": 23
+  },
+  {
+    "pokemon_id": "xatu",
+    "HP": 65,
+    "ATK": 75,
+    "DEF": 70,
+    "SPA": 95,
+    "SPD": 70,
+    "SPE": 95
+  },
+  {
+    "pokemon_id": "zacian",
+    "HP": 92,
+    "ATK": 120,
+    "DEF": 115,
+    "SPA": 80,
+    "SPD": 115,
+    "SPE": 138
+  }
+]

@@ -2927,6 +2927,17 @@ class AppState:
             if isinstance(slot, dict)
             and str(slot.get("move_name") or "").strip()
         }
+        # Validate required capacity before changing anything. The view performs
+        # the same check for helpful feedback, but this remains the authoritative
+        # guard against stale dialogs and duplicate submissions.
+        unique_new = {move["move_name"].casefold() for move in normalized_moves
+                      if move["move_name"].casefold() not in existing_names}
+        if len(unique_new) > slots.count(None):
+            raise ValueError(
+                f"Only {slots.count(None)} free Move Planner slot(s) remain; "
+                f"this recommendation needs {len(unique_new)}. Review existing moves "
+                "in My Journey and select which to replace."
+            )
         for move in normalized_moves:
             folded = move["move_name"].casefold()
             if folded in existing_names:
@@ -2962,6 +2973,68 @@ class AppState:
                 self.journey["my_journey"] = previous_my_journey
         return saved
 
+
+    async def replace_strategy_plan_moves(self, *, pokemon_id: str,
+                                          expected_slots: list,
+                                          slots: list) -> bool:
+        """Atomically replace four Journey slots, rejecting stale dialog snapshots."""
+        if self.journey is None:
+            return False
+        pokemon_id = str(pokemon_id or "").strip()
+        if not pokemon_id or len(slots) != 4 or len(expected_slots) != 4:
+            raise ValueError("Invalid four-slot strategy move plan.")
+        catalog = json.loads((DATA_DIR / "journey_pokemon.json").read_text(encoding="utf-8"))
+        if not any(isinstance(row, dict) and str(row.get("id") or "").strip() == pokemon_id
+                   for row in catalog):
+            raise ValueError("Pokémon is not in the Journey catalog.")
+        normalized = []
+        seen = set()
+        for slot in slots:
+            if slot is None:
+                normalized.append(None)
+                continue
+            if not isinstance(slot, dict):
+                raise ValueError("Invalid move slot.")
+            name = str(slot.get("move_name") or "").strip()
+            source = slot.get("source_item_id")
+            if not name or name.casefold() in seen:
+                raise ValueError("Move names must be nonempty and unique.")
+            if source is not None and (not isinstance(source, str) or not source.strip()):
+                raise ValueError("Invalid Move Planner source item.")
+            seen.add(name.casefold())
+            normalized.append({"move_name": name, "source_item_id": source})
+        current = self.my_journey_data
+        old_slots = current.get("planned_moves", {}).get(pokemon_id, [None]*4)
+        if old_slots != expected_slots:
+            raise ValueError("This Pokémon's move plan changed while the dialog was open. Reopen it to review the latest moves.")
+        previous = deepcopy(self.journey.get("my_journey"))
+        updated = deepcopy(current)
+        ids = list(updated.get("planned_pokemon_ids", []))
+        if pokemon_id not in ids:
+            ids.append(pokemon_id)
+        updated["planned_pokemon_ids"] = ids
+        updated["planner_initialized"] = True
+        planned_moves = deepcopy(updated.get("planned_moves", {}))
+        if any(slot is not None for slot in normalized):
+            planned_moves[pokemon_id] = normalized
+        else:
+            planned_moves.pop(pokemon_id, None)
+        updated["planned_moves"] = planned_moves
+        self.journey["my_journey"] = updated
+        try:
+            saved = await save_journey(self.storage, self.journey)
+        except (TypeError, ValueError):
+            if previous is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous
+            raise
+        if not saved:
+            if previous is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous
+        return saved
 
     async def save_planned_moves(
 

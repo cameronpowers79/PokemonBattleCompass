@@ -15,6 +15,7 @@ from ui.components.full_analysis import (
     FullAnalysis,
 )
 from ui.components.opponent_card import OpponentCard
+from ui.components.strategy_move_card import strategy_move_card
 from ui.components.other_strong_options import (
     OtherStrongOptions,
     StrongOptionData,
@@ -27,6 +28,8 @@ from engine.strategy_capabilities import (
     evaluate_strategy_recommendations,
     evaluate_strategy_viability,
     recognize_team_capabilities,
+    recognize_pokemon_capabilities,
+    recommend_strategy_pokemon_additions,
     recommend_strategy_moves_for_added_pokemon,
     strategy_move_guidance,
 )
@@ -309,6 +312,7 @@ class BattleCompassView:
                 continue
             candidate = self._strategy_candidate_record(record)
             candidate["required_badge"] = required_badge
+            candidate["_journey_starter"] = self.journey_starter
             candidate["_available_now"] = required_badge <= earned_badges
             if candidate.get("Pokemon"):
                 # Only form-dependent species are expanded. A single Journey
@@ -322,6 +326,29 @@ class BattleCompassView:
                     candidates.append(candidate)
                 seen.add(name_key)
         return candidates
+
+    def _strategy_planner_status(self, pokemon_id: str) -> tuple[bool, list[str], int]:
+        """Current Journey plan, keyed by catalog ID (including evolution lines)."""
+        state = self.app_state.my_journey_data
+        planned = pokemon_id in state.get("planned_pokemon_ids", [])
+        slots = state.get("planned_moves", {}).get(pokemon_id, [])
+        names = [str(slot.get("move_name") or "").strip()
+                 for slot in slots if isinstance(slot, dict) and slot.get("move_name")]
+        return planned, names, max(0, 4 - len([slot for slot in slots if slot is not None]))
+
+    def _strategy_plan_preflight(self, pokemon_id: str, move_names: list[str]) -> str | None:
+        """Prevent stale dialogs from trying to overwrite a filled move plan."""
+        planned, existing, free = self._strategy_planner_status(pokemon_id)
+        existing_keys = {name.casefold() for name in existing}
+        additions = {name.strip().casefold() for name in move_names
+                     if name.strip() and name.strip().casefold() not in existing_keys}
+        if len(additions) > free:
+            return (f"Already planned: this Pokémon has {free} free Move Planner slot(s), "
+                    f"but you selected {len(additions)} new move(s). "
+                    "Review its existing moves in My Journey before adding more.")
+        if planned and not additions:
+            return "Already planned in My Journey. No new moves need adding."
+        return None
 
     def _strategy_move_source_id(
         self,
@@ -406,6 +433,7 @@ class BattleCompassView:
             definition = get_strategy_definition(strategy_key)
             analysis = analyses[strategy_key]
             viability = analysis.viability
+            planned_viability, _, _, _ = self._strategy_planned_snapshot(strategy_key, rank=False)
             viability_color = self._strategy_viability_color(viability.viability)
 
             detail_controls: list[ft.Control] = [
@@ -437,11 +465,13 @@ class BattleCompassView:
                     size=13,
                     color=TEXT_SECONDARY,
                 ),
-                ft.Text(
-                    viability.summary,
-                    size=13,
-                    color=TEXT_PRIMARY,
-                ),
+                ft.Text("Current Team Readiness: " + viability.viability,
+                        size=12, color=TEXT_MUTED),
+                ft.Text(viability.summary, size=13, color=TEXT_PRIMARY),
+                ft.Text("Planned Strategy Readiness: " + planned_viability.viability,
+                        size=13, weight=ft.FontWeight.BOLD,
+                        color=self._strategy_viability_color(planned_viability.viability)),
+                ft.Text(planned_viability.summary, size=12, color=TEXT_SECONDARY),
             ]
             if viability.contributing_pokemon:
                 detail_controls.append(
@@ -490,6 +520,12 @@ class BattleCompassView:
                     ),
                 )
             detail_controls.append(action)
+            if strategy_key != "strongest_matchup" and viability.viability in {"Viable", "Strong"}:
+                detail_controls.append(ft.Button(
+                    content="Continue Planning This Strategy",
+                    icon=ft.Icons.ADD_CIRCLE_OUTLINE_ROUNDED,
+                    on_click=lambda e, key=strategy_key: self._show_strategy_build_options(e, key),
+                ))
 
             cards.append(
                 ft.Container(
@@ -568,142 +604,196 @@ class BattleCompassView:
         self.page.update()
         self.page.run_task(self._persist_team_strategy, strategy_key)
 
+    def _strategy_planned_snapshot(self, strategy_key: str, *, rank: bool = True):
+        """Projected six-member plan; unlike live readiness, uses selected planned moves.
+
+        Owned party members use their equipped moves. Unowned planned members use only
+        committed Move Planner slots. No learnable moves or hypothetical Hidden Abilities
+        are treated as already equipped/selected.
+        """
+        state = self.app_state.my_journey_data
+        planned_ids = list(state.get("planned_pokemon_ids", []))
+        planned_slots = state.get("planned_moves", {})
+        planned_forms = state.get("planned_pokemon_forms", {})
+        lookup = self.move_lookup
+        owned = [p for p in self.team_data if isinstance(p, dict) and p.get("Pokemon")]
+        # The active party defines the first slots; remaining ordered plan fills to six.
+        team = [dict(p) for p in owned[:6]]
+        results = [recognize_pokemon_capabilities(p, lookup) for p in team]
+        included_ids: list[str] = []
+        for pokemon_id in planned_ids:
+            record = next((r for r in self.strategy_pokemon_catalog
+                           if str(r.get("id") or "").strip() == pokemon_id), None)
+            if not record:
+                continue
+            if any(self.app_state._planned_pokemon_matches_owned_record(record, p) for p in owned):
+                included_ids.append(pokemon_id)
+                continue
+            if len(team) >= 6:
+                break
+            build = self._strategy_candidate_record(record)
+            preferences = planned_forms.get(pokemon_id, {})
+            if isinstance(preferences, dict):
+                if preferences.get("gender"):
+                    build["Gender"] = preferences["gender"]
+                if preferences.get("form"):
+                    build["Form"] = preferences["form"]
+            # No speculative Ability: use an explicitly stored one if available;
+            # otherwise the planned build receives move-derived capabilities only.
+            build["Ability"] = str(preferences.get("ability") or "") if isinstance(preferences, dict) else ""
+            for index, slot in enumerate(planned_slots.get(pokemon_id, [])[:4], 1):
+                if isinstance(slot, dict):
+                    build[f"Move{index}"] = str(slot.get("move_name") or "")
+            team.append(build)
+            results.append(recognize_pokemon_capabilities(build, lookup))
+            included_ids.append(pokemon_id)
+        viability = evaluate_strategy_viability(strategy_key, results, team_data=team)
+        candidates = []
+        for candidate in self._strategy_candidate_pokemon_data():
+            record = self._strategy_catalog_record_for_name(str(candidate.get("Pokemon") or ""))
+            if record and str(record.get("id") or "") in planned_ids:
+                continue
+            if any(self.app_state._planned_pokemon_matches_owned_record(record, p)
+                   for p in team if isinstance(p, dict)) if record else False:
+                continue
+            candidates.append(candidate)
+        additions = (recommend_strategy_pokemon_additions(
+            strategy_key, results, candidates, self.moves_data, self.learnsets_data,
+            limit=None) if rank and len(team) < 6 else [])
+        excluded = max(0, len(planned_ids) - len(included_ids))
+        return viability, additions, team, excluded
+
     def _show_strategy_build_options(
-        self,
-        event: ft.Event[ft.Button],
-        strategy_key: str,
+        self, event, strategy_key: str, *, from_dialog: bool = True,
+        confirmation: str | None = None, page_index: int = 0,
     ) -> None:
-        """Show supported one-change paths for an incomplete strategy."""
+        """Plan against selected Journey teammates, not live battle readiness."""
         del event
-        self.page.pop_dialog()
-        analysis = getattr(self, "_strategy_recommender_results", {}).get(strategy_key)
-        if analysis is None:
-            analysis = self._strategy_analysis(strategy_key)
+        if from_dialog:
+            self.page.pop_dialog()
+        viability, additions, planned_team, excluded = self._strategy_planned_snapshot(strategy_key)
         definition = get_strategy_definition(strategy_key)
-
-        controls: list[ft.Control] = [
-            ft.Text(
-                analysis.viability.summary,
-                size=14,
-                color=TEXT_SECONDARY,
-            ),
-        ]
-        if analysis.viability.missing_required_roles:
-            controls.append(
-                ft.Text(
-                    "Missing required roles: "
-                    + ", ".join(analysis.viability.missing_required_roles),
-                    size=13,
-                    color=WARNING,
-                    weight=ft.FontWeight.W_600,
-                )
-            )
-
-        if analysis.pokemon_additions:
-            controls.append(
-                ft.Text(
-                    "Recommended Pokémon",
-                    size=16,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                )
-            )
-            for candidate in analysis.pokemon_additions:
-                controls.append(
-                    self._build_strategy_recommendation_row(
-                        candidate.summary,
-                        "Plan this Pokémon",
-                        lambda e, name=candidate.pokemon_name, key=strategy_key:
+        self._strategy_build_page = max(0, page_index)
+        controls: list[ft.Control] = []
+        if confirmation:
+            controls.append(ft.Container(
+                content=ft.Text(confirmation, color=SUCCESS, weight=ft.FontWeight.BOLD),
+                padding=12, border=ft.Border.all(1, SUCCESS), border_radius=10))
+        controls.extend([
+            ft.Text("Planned Strategy Readiness: " + viability.viability,
+                    size=17, weight=ft.FontWeight.BOLD,
+                    color=self._strategy_viability_color(viability.viability)),
+            ft.Text(viability.summary, size=14, color=TEXT_SECONDARY),
+            ft.Text(f"Projected lineup: {len(planned_team)}/6 — "
+                    + (", ".join(str(p.get("Pokemon")) for p in planned_team) or "none"),
+                    size=12, color=TEXT_MUTED),
+        ])
+        if excluded:
+            controls.append(ft.Text(
+                f"{excluded} additional Team Planner selection(s) are outside this "
+                "six-member projection and are not credited to readiness.",
+                size=12, color=WARNING))
+        if viability.missing_required_roles:
+            controls.append(ft.Text("Still needed: " + ", ".join(viability.missing_required_roles),
+                                    color=WARNING, size=13))
+        else:
+            controls.append(ft.Text("All required planning roles are covered. "
+                "You can strengthen the package or revise planned moves.",
+                color=SUCCESS, size=13))
+        # Existing members remain editable, but never masquerade as new additions.
+        state = self.app_state.my_journey_data
+        planned_ids = list(state.get("planned_pokemon_ids", []))
+        if planned_ids:
+            controls.append(ft.Text("Already in Team Planner — review planned moves",
+                                    size=15, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY))
+            for pokemon_id in planned_ids:
+                record = next((r for r in self.strategy_pokemon_catalog
+                               if str(r.get("id") or "") == pokemon_id), None)
+                if not record:
+                    continue
+                name = str(record.get("pokemon") or "")
+                _, existing, free = self._strategy_planner_status(pokemon_id)
+                controls.append(ft.Row(controls=[
+                    ft.Text(f"{name}: {', '.join(existing) if existing else 'No moves planned'} "
+                            f"({free} free)", expand=True, size=12, color=TEXT_SECONDARY),
+                    ft.Button(content="Edit moves", on_click=lambda e, n=name, k=strategy_key:
+                              self._show_strategy_pokemon_plan(e, k, n)),
+                ], spacing=8))
+        if len(planned_team) < 6:
+            controls.append(ft.Text("Recommended new teammates", size=16,
+                                    weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY))
+            limit = 5
+            max_page = max(0, (len(additions) - 1)//limit)
+            page_index = min(max(0, page_index), max_page)
+            for candidate in additions[page_index*limit:(page_index+1)*limit]:
+                controls.append(self._build_strategy_recommendation_row(
+                    candidate.summary, "Plan this Pokémon",
+                    lambda e, name=candidate.pokemon_name, key=strategy_key:
                         self._show_strategy_pokemon_plan(e, key, name),
-                    )
-                )
+                    pokemon_name=candidate.pokemon_name))
+            if not additions:
+                controls.append(ft.Text("No further qualifying teammate suggestions.",
+                                        color=TEXT_MUTED))
+            if max_page:
+                controls.append(ft.Row(controls=[
+                    ft.Button(content="Previous 5", disabled=page_index == 0,
+                              on_click=lambda e, i=page_index-1: (
+                                  self.page.pop_dialog(), self._show_strategy_build_options(
+                                      None, strategy_key, from_dialog=False, page_index=i))),
+                    ft.Text(f"Page {page_index + 1} of {max_page + 1}"),
+                    ft.Button(content="Next 5", disabled=page_index >= max_page,
+                              on_click=lambda e, i=page_index+1: (
+                                  self.page.pop_dialog(), self._show_strategy_build_options(
+                                      None, strategy_key, from_dialog=False, page_index=i))),
+                ], spacing=10))
+        else:
+            controls.append(ft.Text("Six lineup slots are occupied. Edit the Team Planner "
+                                    "to change the lineup before adding more Pokémon.", color=TEXT_MUTED))
+        self.page.show_dialog(ft.AlertDialog(
+            modal=True, title=ft.Text(f"Build toward {definition.label}",
+                weight=ft.FontWeight.BOLD, font_family=FONT_FAMILY_HEADER,
+                color=definition.color),
+            content=ft.Container(content=ft.Column(controls=controls, spacing=12,
+                scroll=ft.ScrollMode.AUTO), width=700, height=550),
+            actions=[ft.Button(content="Back", on_click=self._return_to_strategy_recommender),
+                     ft.Button(content="Close", on_click=lambda e: self.page.pop_dialog())],
+            actions_alignment=ft.MainAxisAlignment.END))
 
-        if analysis.move_changes:
-            controls.append(
-                ft.Text(
-                    "Recommended move changes",
-                    size=16,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                )
-            )
-            for candidate in analysis.move_changes:
-                controls.append(
-                    self._build_strategy_recommendation_row(
-                        candidate.summary,
-                        "Plan this move",
-                        lambda e, rec=candidate, key=strategy_key:
-                        self._show_strategy_move_plan(e, key, rec),
-                    )
-                )
+    def _strategy_move_badge(self, move_name: str | None) -> ft.Control:
+        name = str(move_name or "Unknown Move")
+        move_type = str(self.move_lookup.get(name, {}).get("Type") or "")
+        badge_src = self._type_badge_asset(move_type) if move_type else None
+        return strategy_move_card(name, move_type, badge_src, width=174)
 
-        if not analysis.pokemon_additions and not analysis.move_changes:
-            controls.append(
-                ft.Text(
-                    (
-                        "No supported single Pokémon addition or move change currently "
-                        "improves this strategy enough to recommend automatically."
-                    ),
-                    color=TEXT_MUTED,
-                    italic=True,
-                )
-            )
-
-        self.page.show_dialog(
-            ft.AlertDialog(
-                modal=True,
-                title=ft.Text(
-                    f"Build toward {definition.label}",
-                    weight=ft.FontWeight.BOLD,
-                    font_family=FONT_FAMILY_HEADER,
-                    color=definition.color,
-                ),
-                content=ft.Container(
-                    content=ft.Column(
-                        controls=controls,
-                        spacing=12,
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
-                    width=680,
-                    height=520,
-                ),
-                actions=[
-                    ft.Button(
-                        content="Back",
-                        on_click=lambda e: self._return_to_strategy_recommender(e),
-                    ),
-                    ft.Button(
-                        content="Close",
-                        on_click=lambda e: self.page.pop_dialog(),
-                    ),
-                ],
-                actions_alignment=ft.MainAxisAlignment.END,
-            )
-        )
-
-    @staticmethod
     def _build_strategy_recommendation_row(
-        summary: str,
-        button_text: str,
-        on_click,
+        self, summary: str, button_text: str, on_click,
+        *, pokemon_name: str | None = None, move_name: str | None = None,
     ) -> ft.Control:
+        if pokemon_name:
+            gender_match = re.search(r"\((Male|Female)\)$", pokemon_name, re.IGNORECASE)
+            gender = gender_match.group(1).title() if gender_match else None
+            species = re.sub(r"\s*\((Male|Female)\)$", "", pokemon_name, flags=re.IGNORECASE)
+            src = self._pokemon_asset(species, gender=gender, use_texture=True)
+            art = (ft.Image(src=src, width=110, height=118, fit=ft.BoxFit.CONTAIN)
+                   if src else ft.Icon(ft.Icons.CATCHING_POKEMON, size=54, color=PRIMARY_BLUE))
+            visual = ft.Container(content=art, width=124, height=130, alignment=ft.Alignment.CENTER, bgcolor=SURFACE)
+            heading = ft.Text(pokemon_name, weight=ft.FontWeight.BOLD, size=17, color=TEXT_PRIMARY)
+        else:
+            visual = ft.Container(content=self._strategy_move_badge(move_name), width=188,
+                                  height=90, alignment=ft.Alignment.CENTER, bgcolor=SURFACE)
+            heading = ft.Text("Recommended move", weight=ft.FontWeight.BOLD,
+                              size=16, color=TEXT_PRIMARY)
+        details = ft.Column(controls=[
+            heading,
+            ft.Text(summary, size=13, color=TEXT_SECONDARY),
+            ft.Button(content=button_text, icon=ft.Icons.ADD_ROUNDED,
+                      bgcolor=PRIMARY_BLUE, color="#FFFFFF", icon_color="#FFFFFF", on_click=on_click),
+        ], spacing=8, tight=True, expand=True)
         return ft.Container(
-            content=ft.Column(
-                controls=[
-                    ft.Text(summary, size=13, color=TEXT_SECONDARY),
-                    ft.Button(
-                        content=button_text,
-                        icon=ft.Icons.ADD_ROUNDED,
-                        on_click=on_click,
-                    ),
-                ],
-                spacing=7,
-                tight=True,
-            ),
-            padding=12,
-            bgcolor=SURFACE_RAISED,
-            border=ft.Border.all(1, BORDER_DEFAULT),
-            border_radius=10,
+            content=ft.Row(controls=[visual, details], spacing=14,
+                           vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=12, bgcolor=SURFACE_RAISED,
+            border=ft.Border.all(1, BORDER_DEFAULT), border_radius=10,
         )
 
     def _return_to_strategy_recommender(
@@ -716,148 +806,125 @@ class BattleCompassView:
 
     def _show_strategy_pokemon_plan(
         self,
-        event: ft.Event[ft.Button],
+        event: ft.Event[ft.Button] | None,
         strategy_key: str,
         pokemon_name: str,
     ) -> None:
-        """Continue Pokémon-first planning with strategy-relevant move suggestions."""
+        """Edit the complete four-move plan, retaining existing choices by default."""
         del event
         self.page.pop_dialog()
-        catalog_record = self._strategy_catalog_record_for_name(pokemon_name)
-        if catalog_record is None:
-            self._show_strategy_message(
-                "That Pokémon could not be matched to the current Team Planner catalog."
-            )
+        record = self._strategy_catalog_record_for_name(pokemon_name)
+        if record is None:
+            self._show_strategy_build_options(None, strategy_key, from_dialog=False,
+                confirmation="This Pokémon could not be found in the Journey catalog.")
             return
-        candidate = self._strategy_candidate_record(catalog_record)
-        gender_match = re.search(r"\((Male|Female)\)$", pokemon_name, flags=re.IGNORECASE)
-        if gender_match and self._strategy_name_key(candidate.get("Pokemon")) in {"meowstic", "indeedee"}:
-            candidate["Gender"] = gender_match.group(1).title()
-        current_capabilities = recognize_team_capabilities(
-            self.team_data,
-            self.moves_data,
-        )
-        suggested_moves = recommend_strategy_moves_for_added_pokemon(
-            strategy_key,
-            current_capabilities,
-            candidate,
-            self.moves_data,
-            self.learnsets_data,
-        )
-        guidance = strategy_move_guidance(
-            strategy_key, candidate, self.moves_data, self.learnsets_data
-        )
-        checkboxes = [ft.Checkbox(label=move_name, value=True) for move_name in suggested_moves]
-        explanations = [
-            ft.Text(f"{name}: {purpose}. How to learn: {method}.", size=12, color=TEXT_SECONDARY)
-            for name, purpose, method in guidance
-        ]
+        pokemon = self._strategy_candidate_record(record)
+        gender = re.search(r"\((Male|Female)\)$", pokemon_name, re.IGNORECASE)
+        if gender and self._strategy_name_key(pokemon.get("Pokemon")) in {"meowstic", "indeedee"}:
+            pokemon["Gender"] = gender.group(1).title()
+        pokemon_id = str(record.get("id") or "").strip()
+        data = self.app_state.my_journey_data
+        original_slots = list(data.get("planned_moves", {}).get(pokemon_id, [None]*4))[:4]
+        original_slots += [None] * (4-len(original_slots))
+        existing = [str(slot.get("move_name") or "").strip() for slot in original_slots
+                    if isinstance(slot, dict) and slot.get("move_name")]
+        planned = pokemon_id in data.get("planned_pokemon_ids", [])
+        recommended = recommend_strategy_moves_for_added_pokemon(
+            strategy_key, recognize_team_capabilities(self.team_data, self.moves_data),
+            pokemon, self.moves_data, self.learnsets_data)
+        guidance = strategy_move_guidance(strategy_key, pokemon, self.moves_data, self.learnsets_data)
+        notes = {name.casefold(): (purpose, method) for name, purpose, method in guidance}
+        choices = list(dict.fromkeys([*existing, *recommended]))
+        # Additional guidance moves are optional alternatives, not preselected.
+        choices.extend(name for name, _, _ in guidance if name.casefold() not in {x.casefold() for x in choices})
+        boxes: list[ft.Checkbox] = []
+        initial_choices = {n.casefold() for n in existing}
+        if not planned:
+            initial_choices.update(n.casefold() for n in recommended[:4])
+        count = ft.Text("", size=12, color=TEXT_SECONDARY)
+        warning = ft.Text("", size=12, color=WARNING)
+        def update_count():
+            used = sum(box.value is True for box in boxes)
+            count.value = f"{used} of 4 planned move slots selected. Uncheck a move to make room for another."
+        def toggle_move(event):
+            if sum(box.value is True for box in boxes) > 4:
+                event.control.value = False
+                warning.value = "Only four moves fit. Uncheck an existing move before choosing a replacement."
+            else:
+                warning.value = ""
+            update_count()
+            self.page.update()
+        rows = []
+        for move_name in choices:
+            toggle = ft.Checkbox(value=move_name.casefold() in initial_choices,
+                                 data=move_name, on_change=toggle_move)
+            boxes.append(toggle)
+            purpose, method = notes.get(move_name.casefold(),
+                ("Currently planned" if toggle.value else "Suggested strategy alternative", "See Move Planner"))
+            rows.append(ft.Row(controls=[toggle, self._strategy_move_badge(move_name),
+                ft.Text(f"{purpose}. How to learn: {method}.", size=12,
+                        color=TEXT_SECONDARY, expand=True, max_lines=None)],
+                spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER))
+        update_count()
         definition = get_strategy_definition(strategy_key)
-        move_section: list[ft.Control]
-        if checkboxes:
-            move_section = [
-                ft.Text(
-                    "Recommended moves to plan",
-                    size=14,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                ),
-                *checkboxes,
-                *explanations,
-                ft.Text(
-                    f"The remaining {4 - len(checkboxes)} move slot(s) are yours for coverage, utility, or team preferences.",
-                    size=12, color=TEXT_MUTED,
-                ),
-            ]
-        else:
-            move_section = [
-                ft.Text(
-                    (
-                        "This Pokémon improves the strategy package without requiring "
-                        "a specific additional modeled move recommendation right now."
-                    ),
-                    size=13,
-                    color=TEXT_MUTED,
-                )
-            ]
+        self.page.show_dialog(ft.AlertDialog(
+            modal=True,
+            title=ft.Text(f"Plan {pokemon_name}", weight=ft.FontWeight.BOLD,
+                          font_family=FONT_FAMILY_HEADER, color=definition.color),
+            content=ft.Container(width=620, height=450, content=ft.Column(controls=[
+                ft.Text(("Already in Team Planner. Its current moves are checked below; "
+                         "uncheck any to replace them. Changes affect the Journey plan, not equipped moves."
+                         if planned else "Choose up to four planned moves. Suggested moves are optional."),
+                        color=TEXT_SECONDARY),
+                count, warning,
+                ft.Text("Existing moves and strategy suggestions", size=14,
+                        weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                *rows,
+            ], spacing=10, scroll=ft.ScrollMode.AUTO)),
+            actions=[
+                ft.Button(content="Back to recommendations", on_click=lambda e: (
+                    self.page.pop_dialog(), self._show_strategy_build_options(None, strategy_key, from_dialog=False))),
+                ft.Button(content="Save move plan" if planned else "Add to My Journey",
+                    icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED, bgcolor=PRIMARY_BLUE,
+                    color=TEXT_PRIMARY, icon_color=TEXT_PRIMARY,
+                    on_click=lambda e: self._confirm_strategy_full_move_plan(
+                        strategy_key, pokemon_id, pokemon, original_slots, boxes)),
+            ], actions_alignment=ft.MainAxisAlignment.END))
 
-        self.page.show_dialog(
-            ft.AlertDialog(
-                modal=True,
-                title=ft.Text(
-                    f"Plan {pokemon_name}",
-                    weight=ft.FontWeight.BOLD,
-                    font_family=FONT_FAMILY_HEADER,
-                    color=definition.color,
-                ),
-                content=ft.Container(
-                    content=ft.Column(
-                        controls=[
-                            ft.Text(
-                                (
-                                    f"Add {pokemon_name} to Team Planner for "
-                                    f"{definition.label}. You can keep or clear any "
-                                    "suggested moves before confirming."
-                                ),
-                                color=TEXT_SECONDARY,
-                            ),
-                            *move_section,
-                        ],
-                        spacing=10,
-                        scroll=ft.ScrollMode.AUTO,
-                    ),
-                    width=560,
-                    height=330,
-                ),
-                actions=[
-                    ft.Button(
-                        content="Cancel",
-                        on_click=lambda e: self.page.pop_dialog(),
-                    ),
-                    ft.Button(
-                        content="Add to My Journey",
-                        icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
-                        bgcolor=PRIMARY_BLUE,
-                        color=TEXT_PRIMARY,
-                        icon_color=TEXT_PRIMARY,
-                        on_click=lambda e, record=catalog_record, mon=candidate, boxes=checkboxes, key=strategy_key: self._confirm_strategy_pokemon_plan(
-                            e, key, record, mon, boxes
-                        ),
-                    ),
-                ],
-                actions_alignment=ft.MainAxisAlignment.END,
-            )
-        )
-
-    def _confirm_strategy_pokemon_plan(
-        self,
-        event: ft.Event[ft.Button],
-        strategy_key: str,
-        catalog_record: dict,
-        pokemon: dict,
-        checkboxes: list[ft.Checkbox],
-    ) -> None:
-        del event
-        selected_moves = [
-            str(box.label)
-            for box in checkboxes
-            if box.value is True and box.label
-        ]
-        move_slots = [
-            {
-                "move_name": move_name,
-                "source_item_id": self._strategy_move_source_id(pokemon, move_name),
-            }
-            for move_name in selected_moves
-        ]
-        pokemon_id = str(catalog_record.get("id") or "").strip()
+    def _confirm_strategy_full_move_plan(self, strategy_key, pokemon_id, pokemon,
+                                         original_slots, boxes):
+        selected = [str(box.data) for box in boxes if box.value is True]
+        if len(selected) > 4:
+            self._show_strategy_message("Choose at most four moves before saving.")
+            return
+        previous_by_name = {str(slot.get("move_name") or "").casefold(): slot
+                            for slot in original_slots if isinstance(slot, dict)}
+        slots = []
+        for name in selected:
+            old = previous_by_name.get(name.casefold())
+            slots.append(dict(old) if old else {
+                "move_name": name, "source_item_id": self._strategy_move_source_id(pokemon, name)})
+        slots += [None] * (4 - len(slots))
         self.page.pop_dialog()
-        self.page.run_task(
-            self._save_strategy_journey_plan,
-            strategy_key,
-            pokemon_id,
-            move_slots,
-        )
+        self.page.run_task(self._save_strategy_full_move_plan,
+                           strategy_key, pokemon_id, original_slots, slots)
+
+    async def _save_strategy_full_move_plan(self, strategy_key, pokemon_id, original_slots, slots):
+        try:
+            saved = await self.app_state.replace_strategy_plan_moves(
+                pokemon_id=pokemon_id, expected_slots=original_slots, slots=slots)
+        except (RuntimeError, ValueError) as error:
+            self._show_strategy_build_options(None, strategy_key, from_dialog=False,
+                confirmation=f"Move plan not saved: {error}")
+            return
+        if not saved:
+            self._show_strategy_build_options(None, strategy_key, from_dialog=False,
+                confirmation="Move plan could not be saved; your previous choices are unchanged.")
+            return
+        if self.on_journey_updated:
+            self.on_journey_updated()
+        self._show_strategy_build_options(None, strategy_key, from_dialog=False,
+            confirmation="Move plan saved in My Journey. You can continue building this strategy.")
 
     def _show_strategy_move_plan(
         self,
@@ -867,7 +934,6 @@ class BattleCompassView:
     ) -> None:
         """Confirm one recommended move change before writing it to Move Planner."""
         del event
-        self.page.pop_dialog()
         catalog_record = self._strategy_catalog_record_for_name(
             recommendation.pokemon_name
         )
@@ -885,6 +951,14 @@ class BattleCompassView:
             ),
             self._strategy_candidate_record(catalog_record),
         )
+        plan_id = str(catalog_record.get("id") or "")
+        planned, existing, free = self._strategy_planner_status(plan_id)
+        already = str(recommendation.move_name or "").casefold() in {name.casefold() for name in existing}
+        if planned:
+            self._show_strategy_pokemon_plan(None, strategy_key, recommendation.pokemon_name)
+            return
+        self.page.pop_dialog()
+        block = already or free == 0
         replacement_note = (
             f" It is intended to replace {recommendation.replace_move_name} on the live build."
             if recommendation.replace_move_name
@@ -905,6 +979,9 @@ class BattleCompassView:
                         f"{recommendation.pokemon_name}'s Move Planner row."
                         f"{replacement_note} This does not change the currently "
                         "equipped move in My Team."
+                        + (" This move is already planned; no duplicate is needed." if already else
+                           " All four move slots are occupied. Review My Journey before adding it." if free == 0 else
+                           " This Pokémon is already in Team Planner; its other moves are preserved." if planned else "")
                     ),
                     color=TEXT_SECONDARY,
                 ),
@@ -914,7 +991,8 @@ class BattleCompassView:
                         on_click=lambda e: self.page.pop_dialog(),
                     ),
                     ft.Button(
-                        content="Add to My Journey",
+                        content="Already planned" if already else "Move Planner full" if free == 0 else "Add to My Journey",
+                        disabled=block,
                         icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED,
                         bgcolor=PRIMARY_BLUE,
                         color=TEXT_PRIMARY,
@@ -943,6 +1021,10 @@ class BattleCompassView:
             "move_name": move_name,
             "source_item_id": self._strategy_move_source_id(pokemon, move_name),
         }]
+        issue = self._strategy_plan_preflight(pokemon_id, [move_name])
+        if issue:
+            self._show_strategy_message(issue)
+            return
         self.page.pop_dialog()
         self.page.run_task(
             self._save_strategy_journey_plan,
@@ -958,6 +1040,12 @@ class BattleCompassView:
         moves: list[dict[str, str | None]],
     ) -> None:
         """Persist a confirmed strategy recommendation to My Journey."""
+        previous_planned, previous_moves, _ = self._strategy_planner_status(pokemon_id)
+        old_names = {name.casefold() for name in previous_moves}
+        new_names = {str(m.get("move_name") or "").strip().casefold() for m in moves} - old_names
+        if previous_planned and not new_names:
+            self._show_strategy_message("Already planned in My Journey; nothing new to add.")
+            return
         try:
             saved = await self.app_state.add_strategy_plan_to_journey(
                 pokemon_id=pokemon_id,
@@ -977,7 +1065,8 @@ class BattleCompassView:
             self.on_journey_updated()
         definition = get_strategy_definition(strategy_key)
         self._show_strategy_message(
-            f"Added to My Journey for {definition.label}."
+            (f"Added {len(new_names)} missing move(s) for {definition.label}; existing plans preserved."
+             if previous_planned else f"Added to My Journey for {definition.label}.")
         )
 
     def _show_strategy_message(self, message: str) -> None:
