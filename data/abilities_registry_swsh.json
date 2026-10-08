@@ -1,0 +1,4503 @@
+{
+  "schema_version": 1,
+  "game": "Sword/Shield",
+  "source": "User-supplied github_ability_directory.json",
+  "description": "Normal and hidden Ability eligibility; not actual equipped Abilities or guaranteed availability. Unresolved form labels preserve source numbered forms. Klefki manually supplemented from Gen VIII Serebii reference due to missing source record. Klefki manually supplemented from Gen VIII Serebii reference due to missing source record.",
+  "pokemon": {
+    "abomasnow": {
+      "normal": [
+        "Snow Warning"
+      ],
+      "hidden": "Soundproof",
+      "source_name": "Abomasnow",
+      "source_id": 460
+    },
+    "accelgor": {
+      "normal": [
+        "Hydration",
+        "Sticky Hold"
+      ],
+      "hidden": "Unburden",
+      "source_name": "Accelgor",
+      "source_id": 617
+    },
+    "aegislash": {
+      "normal": [
+        "Stance Change"
+      ],
+      "hidden": "Stance Change",
+      "source_name": "Aegislash",
+      "source_id": 681
+    },
+    "aegislash-blade": {
+      "normal": [
+        "Stance Change"
+      ],
+      "hidden": "Stance Change",
+      "source_name": "Aegislash 1",
+      "source_id": 1098
+    },
+    "alcremie": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie",
+      "source_id": 869
+    },
+    "alcremie-form-1": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 1",
+      "source_id": 1157
+    },
+    "alcremie-form-2": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 2",
+      "source_id": 1158
+    },
+    "alcremie-form-3": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 3",
+      "source_id": 1159
+    },
+    "alcremie-form-4": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 4",
+      "source_id": 1160
+    },
+    "alcremie-form-5": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 5",
+      "source_id": 1161
+    },
+    "alcremie-form-6": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 6",
+      "source_id": 1162
+    },
+    "alcremie-form-7": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 7",
+      "source_id": 1163
+    },
+    "alcremie-form-8": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Alcremie 8",
+      "source_id": 1164
+    },
+    "appletun": {
+      "normal": [
+        "Ripen",
+        "Gluttony"
+      ],
+      "hidden": "Thick Fat",
+      "source_name": "Appletun",
+      "source_id": 842
+    },
+    "applin": {
+      "normal": [
+        "Ripen",
+        "Gluttony"
+      ],
+      "hidden": "Bulletproof",
+      "source_name": "Applin",
+      "source_id": 840
+    },
+    "araquanid": {
+      "normal": [
+        "Water Bubble"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Araquanid",
+      "source_id": 752
+    },
+    "arcanine": {
+      "normal": [
+        "Intimidate",
+        "Flash Fire"
+      ],
+      "hidden": "Justified",
+      "source_name": "Arcanine",
+      "source_id": 59
+    },
+    "arctovish": {
+      "normal": [
+        "Water Absorb",
+        "Ice Body"
+      ],
+      "hidden": "Slush Rush",
+      "source_name": "Arctovish",
+      "source_id": 883
+    },
+    "arctozolt": {
+      "normal": [
+        "Volt Absorb",
+        "Static"
+      ],
+      "hidden": "Slush Rush",
+      "source_name": "Arctozolt",
+      "source_id": 881
+    },
+    "aromatisse": {
+      "normal": [
+        "Healer"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Aromatisse",
+      "source_id": 683
+    },
+    "arrokuda": {
+      "normal": [
+        "Swift Swim"
+      ],
+      "hidden": "Propeller Tail",
+      "source_name": "Arrokuda",
+      "source_id": 846
+    },
+    "avalugg": {
+      "normal": [
+        "Own Tempo",
+        "Ice Body"
+      ],
+      "hidden": "Sturdy",
+      "source_name": "Avalugg",
+      "source_id": 713
+    },
+    "axew": {
+      "normal": [
+        "Rivalry",
+        "Mold Breaker"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Axew",
+      "source_id": 610
+    },
+    "baltoy": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Baltoy",
+      "source_id": 343
+    },
+    "barbaracle": {
+      "normal": [
+        "Tough Claws",
+        "Sniper"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Barbaracle",
+      "source_id": 689
+    },
+    "barboach": {
+      "normal": [
+        "Oblivious",
+        "Anticipation"
+      ],
+      "hidden": "Hydration",
+      "source_name": "Barboach",
+      "source_id": 339
+    },
+    "barraskewda": {
+      "normal": [
+        "Swift Swim"
+      ],
+      "hidden": "Propeller Tail",
+      "source_name": "Barraskewda",
+      "source_id": 847
+    },
+    "basculin": {
+      "normal": [
+        "Reckless",
+        "Adaptability"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Basculin",
+      "source_id": 550
+    },
+    "basculin-blue-striped": {
+      "normal": [
+        "Rock Head",
+        "Adaptability"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Basculin 1",
+      "source_id": 992
+    },
+    "beartic": {
+      "normal": [
+        "Snow Cloak",
+        "Slush Rush"
+      ],
+      "hidden": "Swift Swim",
+      "source_name": "Beartic",
+      "source_id": 614
+    },
+    "beheeyem": {
+      "normal": [
+        "Telepathy",
+        "Synchronize"
+      ],
+      "hidden": "Analytic",
+      "source_name": "Beheeyem",
+      "source_id": 606
+    },
+    "bellossom": {
+      "normal": [
+        "Chlorophyll"
+      ],
+      "hidden": "Healer",
+      "source_name": "Bellossom",
+      "source_id": 182
+    },
+    "bergmite": {
+      "normal": [
+        "Own Tempo",
+        "Ice Body"
+      ],
+      "hidden": "Sturdy",
+      "source_name": "Bergmite",
+      "source_id": 712
+    },
+    "bewear": {
+      "normal": [
+        "Fluffy",
+        "Klutz"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Bewear",
+      "source_id": 760
+    },
+    "binacle": {
+      "normal": [
+        "Tough Claws",
+        "Sniper"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Binacle",
+      "source_id": 688
+    },
+    "bisharp": {
+      "normal": [
+        "Defiant",
+        "Inner Focus"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Bisharp",
+      "source_id": 625
+    },
+    "blastoise": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Blastoise",
+      "source_id": 9
+    },
+    "blipbug": {
+      "normal": [
+        "Swarm",
+        "Compound Eyes"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Blipbug",
+      "source_id": 824
+    },
+    "boldore": {
+      "normal": [
+        "Sturdy",
+        "Weak Armor"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Boldore",
+      "source_id": 525
+    },
+    "boltund": {
+      "normal": [
+        "Strong Jaw"
+      ],
+      "hidden": "Competitive",
+      "source_name": "Boltund",
+      "source_id": 836
+    },
+    "bonsly": {
+      "normal": [
+        "Sturdy",
+        "Rock Head"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Bonsly",
+      "source_id": 438
+    },
+    "bounsweet": {
+      "normal": [
+        "Leaf Guard",
+        "Oblivious"
+      ],
+      "hidden": "Sweet Veil",
+      "source_name": "Bounsweet",
+      "source_id": 761
+    },
+    "braviary": {
+      "normal": [
+        "Keen Eye",
+        "Sheer Force"
+      ],
+      "hidden": "Defiant",
+      "source_name": "Braviary",
+      "source_id": 628
+    },
+    "brionne": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Liquid Voice",
+      "source_name": "Brionne",
+      "source_id": 729
+    },
+    "bronzong": {
+      "normal": [
+        "Levitate",
+        "Heatproof"
+      ],
+      "hidden": "Heavy Metal",
+      "source_name": "Bronzong",
+      "source_id": 437
+    },
+    "bronzor": {
+      "normal": [
+        "Levitate",
+        "Heatproof"
+      ],
+      "hidden": "Heavy Metal",
+      "source_name": "Bronzor",
+      "source_id": 436
+    },
+    "budew": {
+      "normal": [
+        "Natural Cure",
+        "Poison Point"
+      ],
+      "hidden": "Leaf Guard",
+      "source_name": "Budew",
+      "source_id": 406
+    },
+    "bulbasaur": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Bulbasaur",
+      "source_id": 1
+    },
+    "bunnelby": {
+      "normal": [
+        "Pickup",
+        "Cheek Pouch"
+      ],
+      "hidden": "Huge Power",
+      "source_name": "Bunnelby",
+      "source_id": 659
+    },
+    "butterfree": {
+      "normal": [
+        "Compound Eyes"
+      ],
+      "hidden": "Tinted Lens",
+      "source_name": "Butterfree",
+      "source_id": 12
+    },
+    "carkol": {
+      "normal": [
+        "Steam Engine",
+        "Flame Body"
+      ],
+      "hidden": "Flash Fire",
+      "source_name": "Carkol",
+      "source_id": 838
+    },
+    "caterpie": {
+      "normal": [
+        "Shield Dust"
+      ],
+      "hidden": "Run Away",
+      "source_name": "Caterpie",
+      "source_id": 10
+    },
+    "celebi": {
+      "normal": [
+        "Natural Cure"
+      ],
+      "hidden": "Natural Cure",
+      "source_name": "Celebi",
+      "source_id": 251
+    },
+    "centiskorch": {
+      "normal": [
+        "Flash Fire",
+        "White Smoke"
+      ],
+      "hidden": "Flame Body",
+      "source_name": "Centiskorch",
+      "source_id": 851
+    },
+    "chandelure": {
+      "normal": [
+        "Flash Fire",
+        "Flame Body"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Chandelure",
+      "source_id": 609
+    },
+    "charizard": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Solar Power",
+      "source_name": "Charizard",
+      "source_id": 6
+    },
+    "charjabug": {
+      "normal": [
+        "Battery"
+      ],
+      "hidden": "Battery",
+      "source_name": "Charjabug",
+      "source_id": 737
+    },
+    "charmander": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Solar Power",
+      "source_name": "Charmander",
+      "source_id": 4
+    },
+    "charmeleon": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Solar Power",
+      "source_name": "Charmeleon",
+      "source_id": 5
+    },
+    "cherrim": {
+      "normal": [
+        "Flower Gift"
+      ],
+      "hidden": "Flower Gift",
+      "source_name": "Cherrim",
+      "source_id": 421
+    },
+    "cherrim-sunshine": {
+      "normal": [
+        "Flower Gift"
+      ],
+      "hidden": "Flower Gift",
+      "source_name": "Cherrim 1",
+      "source_id": 965
+    },
+    "cherubi": {
+      "normal": [
+        "Chlorophyll"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Cherubi",
+      "source_id": 420
+    },
+    "chewtle": {
+      "normal": [
+        "Strong Jaw",
+        "Shell Armor"
+      ],
+      "hidden": "Swift Swim",
+      "source_name": "Chewtle",
+      "source_id": 833
+    },
+    "chinchou": {
+      "normal": [
+        "Volt Absorb",
+        "Illuminate"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Chinchou",
+      "source_id": 170
+    },
+    "cinccino": {
+      "normal": [
+        "Cute Charm",
+        "Technician"
+      ],
+      "hidden": "Skill Link",
+      "source_name": "Cinccino",
+      "source_id": 573
+    },
+    "cinderace": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Libero",
+      "source_name": "Cinderace",
+      "source_id": 815
+    },
+    "claydol": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Claydol",
+      "source_id": 344
+    },
+    "clefable": {
+      "normal": [
+        "Cute Charm",
+        "Magic Guard"
+      ],
+      "hidden": "Unaware",
+      "source_name": "Clefable",
+      "source_id": 36
+    },
+    "clefairy": {
+      "normal": [
+        "Cute Charm",
+        "Magic Guard"
+      ],
+      "hidden": "Friend Guard",
+      "source_name": "Clefairy",
+      "source_id": 35
+    },
+    "cleffa": {
+      "normal": [
+        "Cute Charm",
+        "Magic Guard"
+      ],
+      "hidden": "Friend Guard",
+      "source_name": "Cleffa",
+      "source_id": 173
+    },
+    "clobbopus": {
+      "normal": [
+        "Limber"
+      ],
+      "hidden": "Technician",
+      "source_name": "Clobbopus",
+      "source_id": 852
+    },
+    "cloyster": {
+      "normal": [
+        "Shell Armor",
+        "Skill Link"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Cloyster",
+      "source_id": 91
+    },
+    "coalossal": {
+      "normal": [
+        "Steam Engine",
+        "Flame Body"
+      ],
+      "hidden": "Flash Fire",
+      "source_name": "Coalossal",
+      "source_id": 839
+    },
+    "cobalion": {
+      "normal": [
+        "Justified"
+      ],
+      "hidden": "Justified",
+      "source_name": "Cobalion",
+      "source_id": 638
+    },
+    "cofagrigus": {
+      "normal": [
+        "Mummy"
+      ],
+      "hidden": "Mummy",
+      "source_name": "Cofagrigus",
+      "source_id": 563
+    },
+    "combee": {
+      "normal": [
+        "Honey Gather"
+      ],
+      "hidden": "Hustle",
+      "source_name": "Combee",
+      "source_id": 415
+    },
+    "conkeldurr": {
+      "normal": [
+        "Guts",
+        "Sheer Force"
+      ],
+      "hidden": "Iron Fist",
+      "source_name": "Conkeldurr",
+      "source_id": 534
+    },
+    "copperajah": {
+      "normal": [
+        "Sheer Force"
+      ],
+      "hidden": "Heavy Metal",
+      "source_name": "Copperajah",
+      "source_id": 879
+    },
+    "corphish": {
+      "normal": [
+        "Hyper Cutter",
+        "Shell Armor"
+      ],
+      "hidden": "Adaptability",
+      "source_name": "Corphish",
+      "source_id": 341
+    },
+    "corsola": {
+      "normal": [
+        "Hustle",
+        "Natural Cure"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Corsola",
+      "source_id": 222
+    },
+    "corsola-galar": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Corsola 1",
+      "source_id": 949
+    },
+    "corviknight": {
+      "normal": [
+        "Pressure",
+        "Unnerve"
+      ],
+      "hidden": "Mirror Armor",
+      "source_name": "Corviknight",
+      "source_id": 823
+    },
+    "corvisquire": {
+      "normal": [
+        "Keen Eye",
+        "Unnerve"
+      ],
+      "hidden": "Big Pecks",
+      "source_name": "Corvisquire",
+      "source_id": 822
+    },
+    "cosmoem": {
+      "normal": [
+        "Sturdy"
+      ],
+      "hidden": "Sturdy",
+      "source_name": "Cosmoem",
+      "source_id": 790
+    },
+    "cosmog": {
+      "normal": [
+        "Unaware"
+      ],
+      "hidden": "Unaware",
+      "source_name": "Cosmog",
+      "source_id": 789
+    },
+    "cottonee": {
+      "normal": [
+        "Prankster",
+        "Infiltrator"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Cottonee",
+      "source_id": 546
+    },
+    "cramorant": {
+      "normal": [
+        "Gulp Missile"
+      ],
+      "hidden": "Gulp Missile",
+      "source_name": "Cramorant",
+      "source_id": 845
+    },
+    "cramorant-gorging": {
+      "normal": [
+        "Gulp Missile"
+      ],
+      "hidden": "Gulp Missile",
+      "source_name": "Cramorant 2",
+      "source_id": 1153
+    },
+    "cramorant-gulping": {
+      "normal": [
+        "Gulp Missile"
+      ],
+      "hidden": "Gulp Missile",
+      "source_name": "Cramorant 1",
+      "source_id": 1152
+    },
+    "crawdaunt": {
+      "normal": [
+        "Hyper Cutter",
+        "Shell Armor"
+      ],
+      "hidden": "Adaptability",
+      "source_name": "Crawdaunt",
+      "source_id": 342
+    },
+    "croagunk": {
+      "normal": [
+        "Anticipation",
+        "Dry Skin"
+      ],
+      "hidden": "Poison Touch",
+      "source_name": "Croagunk",
+      "source_id": 453
+    },
+    "crustle": {
+      "normal": [
+        "Sturdy",
+        "Shell Armor"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Crustle",
+      "source_id": 558
+    },
+    "cubchoo": {
+      "normal": [
+        "Snow Cloak",
+        "Slush Rush"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Cubchoo",
+      "source_id": 613
+    },
+    "cufant": {
+      "normal": [
+        "Sheer Force"
+      ],
+      "hidden": "Heavy Metal",
+      "source_name": "Cufant",
+      "source_id": 878
+    },
+    "cursola": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Perish Body",
+      "source_name": "Cursola",
+      "source_id": 864
+    },
+    "cutiefly": {
+      "normal": [
+        "Honey Gather",
+        "Shield Dust"
+      ],
+      "hidden": "Sweet Veil",
+      "source_name": "Cutiefly",
+      "source_id": 742
+    },
+    "darmanitan": {
+      "normal": [
+        "Sheer Force"
+      ],
+      "hidden": "Zen Mode",
+      "source_name": "Darmanitan",
+      "source_id": 555
+    },
+    "darmanitan-galar": {
+      "normal": [
+        "Gorilla Tactics"
+      ],
+      "hidden": "Zen Mode",
+      "source_name": "Darmanitan 2",
+      "source_id": 995
+    },
+    "darmanitan-galar-zen": {
+      "normal": [
+        "Gorilla Tactics"
+      ],
+      "hidden": "Zen Mode",
+      "source_name": "Darmanitan 3",
+      "source_id": 996
+    },
+    "darmanitan-zen": {
+      "normal": [
+        "Sheer Force"
+      ],
+      "hidden": "Zen Mode",
+      "source_name": "Darmanitan 1",
+      "source_id": 994
+    },
+    "dartrix": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Long Reach",
+      "source_name": "Dartrix",
+      "source_id": 723
+    },
+    "darumaka": {
+      "normal": [
+        "Hustle"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Darumaka",
+      "source_id": 554
+    },
+    "darumaka-galar": {
+      "normal": [
+        "Hustle"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Darumaka 1",
+      "source_id": 993
+    },
+    "decidueye": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Long Reach",
+      "source_name": "Decidueye",
+      "source_id": 724
+    },
+    "deino": {
+      "normal": [
+        "Hustle"
+      ],
+      "hidden": "Hustle",
+      "source_name": "Deino",
+      "source_id": 633
+    },
+    "delibird": {
+      "normal": [
+        "Vital Spirit",
+        "Hustle"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Delibird",
+      "source_id": 225
+    },
+    "dewpider": {
+      "normal": [
+        "Water Bubble"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Dewpider",
+      "source_id": 751
+    },
+    "dhelmise": {
+      "normal": [
+        "Steelworker"
+      ],
+      "hidden": "Steelworker",
+      "source_name": "Dhelmise",
+      "source_id": 781
+    },
+    "diggersby": {
+      "normal": [
+        "Pickup",
+        "Cheek Pouch"
+      ],
+      "hidden": "Huge Power",
+      "source_name": "Diggersby",
+      "source_id": 660
+    },
+    "diglett": {
+      "normal": [
+        "Sand Veil",
+        "Arena Trap"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Diglett",
+      "source_id": 50
+    },
+    "diglett-alola": {
+      "normal": [
+        "Sand Veil",
+        "Tangling Hair"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Diglett 1",
+      "source_id": 905
+    },
+    "ditto": {
+      "normal": [
+        "Limber"
+      ],
+      "hidden": "Imposter",
+      "source_name": "Ditto",
+      "source_id": 132
+    },
+    "dottler": {
+      "normal": [
+        "Swarm",
+        "Compound Eyes"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Dottler",
+      "source_id": 825
+    },
+    "doublade": {
+      "normal": [
+        "No Guard"
+      ],
+      "hidden": "No Guard",
+      "source_name": "Doublade",
+      "source_id": 680
+    },
+    "dracovish": {
+      "normal": [
+        "Water Absorb",
+        "Strong Jaw"
+      ],
+      "hidden": "Sand Rush",
+      "source_name": "Dracovish",
+      "source_id": 882
+    },
+    "dracozolt": {
+      "normal": [
+        "Volt Absorb",
+        "Hustle"
+      ],
+      "hidden": "Sand Rush",
+      "source_name": "Dracozolt",
+      "source_id": 880
+    },
+    "dragapult": {
+      "normal": [
+        "Clear Body",
+        "Infiltrator"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Dragapult",
+      "source_id": 887
+    },
+    "drakloak": {
+      "normal": [
+        "Clear Body",
+        "Infiltrator"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Drakloak",
+      "source_id": 886
+    },
+    "drampa": {
+      "normal": [
+        "Berserk",
+        "Sap Sipper"
+      ],
+      "hidden": "Cloud Nine",
+      "source_name": "Drampa",
+      "source_id": 780
+    },
+    "drapion": {
+      "normal": [
+        "Battle Armor",
+        "Sniper"
+      ],
+      "hidden": "Keen Eye",
+      "source_name": "Drapion",
+      "source_id": 452
+    },
+    "drednaw": {
+      "normal": [
+        "Strong Jaw",
+        "Shell Armor"
+      ],
+      "hidden": "Swift Swim",
+      "source_name": "Drednaw",
+      "source_id": 834
+    },
+    "dreepy": {
+      "normal": [
+        "Clear Body",
+        "Infiltrator"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Dreepy",
+      "source_id": 885
+    },
+    "drifblim": {
+      "normal": [
+        "Aftermath",
+        "Unburden"
+      ],
+      "hidden": "Flare Boost",
+      "source_name": "Drifblim",
+      "source_id": 426
+    },
+    "drifloon": {
+      "normal": [
+        "Aftermath",
+        "Unburden"
+      ],
+      "hidden": "Flare Boost",
+      "source_name": "Drifloon",
+      "source_id": 425
+    },
+    "drilbur": {
+      "normal": [
+        "Sand Rush",
+        "Sand Force"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Drilbur",
+      "source_id": 529
+    },
+    "drizzile": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Sniper",
+      "source_name": "Drizzile",
+      "source_id": 817
+    },
+    "dubwool": {
+      "normal": [
+        "Fluffy",
+        "Steadfast"
+      ],
+      "hidden": "Bulletproof",
+      "source_name": "Dubwool",
+      "source_id": 832
+    },
+    "dugtrio": {
+      "normal": [
+        "Sand Veil",
+        "Arena Trap"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Dugtrio",
+      "source_id": 51
+    },
+    "dugtrio-alola": {
+      "normal": [
+        "Sand Veil",
+        "Tangling Hair"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Dugtrio 1",
+      "source_id": 906
+    },
+    "duosion": {
+      "normal": [
+        "Overcoat",
+        "Magic Guard"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Duosion",
+      "source_id": 578
+    },
+    "duraludon": {
+      "normal": [
+        "Light Metal",
+        "Heavy Metal"
+      ],
+      "hidden": "Stalwart",
+      "source_name": "Duraludon",
+      "source_id": 884
+    },
+    "durant": {
+      "normal": [
+        "Swarm",
+        "Hustle"
+      ],
+      "hidden": "Truant",
+      "source_name": "Durant",
+      "source_id": 632
+    },
+    "dusclops": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Frisk",
+      "source_name": "Dusclops",
+      "source_id": 356
+    },
+    "dusknoir": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Frisk",
+      "source_name": "Dusknoir",
+      "source_id": 477
+    },
+    "duskull": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Frisk",
+      "source_name": "Duskull",
+      "source_id": 355
+    },
+    "dwebble": {
+      "normal": [
+        "Sturdy",
+        "Shell Armor"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Dwebble",
+      "source_id": 557
+    },
+    "eevee": {
+      "normal": [
+        "Run Away",
+        "Adaptability"
+      ],
+      "hidden": "Anticipation",
+      "source_name": "Eevee",
+      "source_id": 133
+    },
+    "eiscue": {
+      "normal": [
+        "Ice Face"
+      ],
+      "hidden": "Ice Face",
+      "source_name": "Eiscue",
+      "source_id": 875
+    },
+    "eiscue-noice": {
+      "normal": [
+        "Ice Face"
+      ],
+      "hidden": "Ice Face",
+      "source_name": "Eiscue 1",
+      "source_id": 1165
+    },
+    "eldegoss": {
+      "normal": [
+        "Cotton Down",
+        "Regenerator"
+      ],
+      "hidden": "Effect Spore",
+      "source_name": "Eldegoss",
+      "source_id": 830
+    },
+    "electrike": {
+      "normal": [
+        "Static",
+        "Lightning Rod"
+      ],
+      "hidden": "Minus",
+      "source_name": "Electrike",
+      "source_id": 309
+    },
+    "elgyem": {
+      "normal": [
+        "Telepathy",
+        "Synchronize"
+      ],
+      "hidden": "Analytic",
+      "source_name": "Elgyem",
+      "source_id": 605
+    },
+    "escavalier": {
+      "normal": [
+        "Swarm",
+        "Shell Armor"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Escavalier",
+      "source_id": 589
+    },
+    "espeon": {
+      "normal": [
+        "Synchronize"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Espeon",
+      "source_id": 196
+    },
+    "espurr": {
+      "normal": [
+        "Keen Eye",
+        "Infiltrator"
+      ],
+      "hidden": "Own Tempo",
+      "source_name": "Espurr",
+      "source_id": 677
+    },
+    "eternatus": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Eternatus",
+      "source_id": 890
+    },
+    "eternatus-eternamax": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Eternatus 1",
+      "source_id": 1170
+    },
+    "excadrill": {
+      "normal": [
+        "Sand Rush",
+        "Sand Force"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Excadrill",
+      "source_id": 530
+    },
+    "falinks": {
+      "normal": [
+        "Battle Armor"
+      ],
+      "hidden": "Defiant",
+      "source_name": "Falinks",
+      "source_id": 870
+    },
+    "farfetch-d": {
+      "normal": [
+        "Keen Eye",
+        "Inner Focus"
+      ],
+      "hidden": "Defiant",
+      "source_name": "Farfetch’d",
+      "source_id": 83
+    },
+    "farfetch-d-galar": {
+      "normal": [
+        "Steadfast"
+      ],
+      "hidden": "Scrappy",
+      "source_name": "Farfetch’d 1",
+      "source_id": 915
+    },
+    "feebas": {
+      "normal": [
+        "Swift Swim",
+        "Oblivious"
+      ],
+      "hidden": "Adaptability",
+      "source_name": "Feebas",
+      "source_id": 349
+    },
+    "ferroseed": {
+      "normal": [
+        "Iron Barbs"
+      ],
+      "hidden": "Iron Barbs",
+      "source_name": "Ferroseed",
+      "source_id": 597
+    },
+    "ferrothorn": {
+      "normal": [
+        "Iron Barbs"
+      ],
+      "hidden": "Anticipation",
+      "source_name": "Ferrothorn",
+      "source_id": 598
+    },
+    "flapple": {
+      "normal": [
+        "Ripen",
+        "Gluttony"
+      ],
+      "hidden": "Hustle",
+      "source_name": "Flapple",
+      "source_id": 841
+    },
+    "flareon": {
+      "normal": [
+        "Flash Fire"
+      ],
+      "hidden": "Guts",
+      "source_name": "Flareon",
+      "source_id": 136
+    },
+    "flygon": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Flygon",
+      "source_id": 330
+    },
+    "fraxure": {
+      "normal": [
+        "Rivalry",
+        "Mold Breaker"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Fraxure",
+      "source_id": 611
+    },
+    "frillish": {
+      "normal": [
+        "Water Absorb",
+        "Cursed Body"
+      ],
+      "hidden": "Damp",
+      "source_name": "Frillish",
+      "source_id": 592
+    },
+    "froslass": {
+      "normal": [
+        "Snow Cloak"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Froslass",
+      "source_id": 478
+    },
+    "frosmoth": {
+      "normal": [
+        "Shield Dust"
+      ],
+      "hidden": "Ice Scales",
+      "source_name": "Frosmoth",
+      "source_id": 873
+    },
+    "gallade": {
+      "normal": [
+        "Steadfast"
+      ],
+      "hidden": "Justified",
+      "source_name": "Gallade",
+      "source_id": 475
+    },
+    "galvantula": {
+      "normal": [
+        "Compound Eyes",
+        "Unnerve"
+      ],
+      "hidden": "Swarm",
+      "source_name": "Galvantula",
+      "source_id": 596
+    },
+    "garbodor": {
+      "normal": [
+        "Stench",
+        "Weak Armor"
+      ],
+      "hidden": "Aftermath",
+      "source_name": "Garbodor",
+      "source_id": 569
+    },
+    "gardevoir": {
+      "normal": [
+        "Synchronize",
+        "Trace"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Gardevoir",
+      "source_id": 282
+    },
+    "gastly": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Gastly",
+      "source_id": 92
+    },
+    "gastrodon": {
+      "normal": [
+        "Sticky Hold",
+        "Storm Drain"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Gastrodon",
+      "source_id": 423
+    },
+    "gastrodon-east": {
+      "normal": [
+        "Sticky Hold",
+        "Storm Drain"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Gastrodon 1",
+      "source_id": 967
+    },
+    "gengar": {
+      "normal": [
+        "Cursed Body"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Gengar",
+      "source_id": 94
+    },
+    "gigalith": {
+      "normal": [
+        "Sturdy",
+        "Sand Stream"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Gigalith",
+      "source_id": 526
+    },
+    "glaceon": {
+      "normal": [
+        "Snow Cloak"
+      ],
+      "hidden": "Ice Body",
+      "source_name": "Glaceon",
+      "source_id": 471
+    },
+    "glalie": {
+      "normal": [
+        "Inner Focus",
+        "Ice Body"
+      ],
+      "hidden": "Moody",
+      "source_name": "Glalie",
+      "source_id": 362
+    },
+    "gloom": {
+      "normal": [
+        "Chlorophyll"
+      ],
+      "hidden": "Stench",
+      "source_name": "Gloom",
+      "source_id": 44
+    },
+    "goldeen": {
+      "normal": [
+        "Swift Swim",
+        "Water Veil"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Goldeen",
+      "source_id": 118
+    },
+    "golett": {
+      "normal": [
+        "Iron Fist",
+        "Klutz"
+      ],
+      "hidden": "No Guard",
+      "source_name": "Golett",
+      "source_id": 622
+    },
+    "golisopod": {
+      "normal": [
+        "Emergency Exit"
+      ],
+      "hidden": "Emergency Exit",
+      "source_name": "Golisopod",
+      "source_id": 768
+    },
+    "golurk": {
+      "normal": [
+        "Iron Fist",
+        "Klutz"
+      ],
+      "hidden": "No Guard",
+      "source_name": "Golurk",
+      "source_id": 623
+    },
+    "goodra": {
+      "normal": [
+        "Sap Sipper",
+        "Hydration"
+      ],
+      "hidden": "Gooey",
+      "source_name": "Goodra",
+      "source_id": 706
+    },
+    "goomy": {
+      "normal": [
+        "Sap Sipper",
+        "Hydration"
+      ],
+      "hidden": "Gooey",
+      "source_name": "Goomy",
+      "source_id": 704
+    },
+    "gossifleur": {
+      "normal": [
+        "Cotton Down",
+        "Regenerator"
+      ],
+      "hidden": "Effect Spore",
+      "source_name": "Gossifleur",
+      "source_id": 829
+    },
+    "gothita": {
+      "normal": [
+        "Frisk",
+        "Competitive"
+      ],
+      "hidden": "Shadow Tag",
+      "source_name": "Gothita",
+      "source_id": 574
+    },
+    "gothitelle": {
+      "normal": [
+        "Frisk",
+        "Competitive"
+      ],
+      "hidden": "Shadow Tag",
+      "source_name": "Gothitelle",
+      "source_id": 576
+    },
+    "gothorita": {
+      "normal": [
+        "Frisk",
+        "Competitive"
+      ],
+      "hidden": "Shadow Tag",
+      "source_name": "Gothorita",
+      "source_id": 575
+    },
+    "gourgeist": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Gourgeist",
+      "source_id": 711
+    },
+    "gourgeist-large": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Gourgeist 2",
+      "source_id": 1103
+    },
+    "gourgeist-small": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Gourgeist 1",
+      "source_id": 1102
+    },
+    "gourgeist-super": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Gourgeist 3",
+      "source_id": 1104
+    },
+    "grapploct": {
+      "normal": [
+        "Limber"
+      ],
+      "hidden": "Technician",
+      "source_name": "Grapploct",
+      "source_id": 853
+    },
+    "greedent": {
+      "normal": [
+        "Cheek Pouch"
+      ],
+      "hidden": "Gluttony",
+      "source_name": "Greedent",
+      "source_id": 820
+    },
+    "grimmsnarl": {
+      "normal": [
+        "Prankster",
+        "Frisk"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Grimmsnarl",
+      "source_id": 861
+    },
+    "grookey": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Grassy Surge",
+      "source_name": "Grookey",
+      "source_id": 810
+    },
+    "growlithe": {
+      "normal": [
+        "Intimidate",
+        "Flash Fire"
+      ],
+      "hidden": "Justified",
+      "source_name": "Growlithe",
+      "source_id": 58
+    },
+    "grubbin": {
+      "normal": [
+        "Swarm"
+      ],
+      "hidden": "Swarm",
+      "source_name": "Grubbin",
+      "source_id": 736
+    },
+    "gurdurr": {
+      "normal": [
+        "Guts",
+        "Sheer Force"
+      ],
+      "hidden": "Iron Fist",
+      "source_name": "Gurdurr",
+      "source_id": 533
+    },
+    "gyarados": {
+      "normal": [
+        "Intimidate"
+      ],
+      "hidden": "Moxie",
+      "source_name": "Gyarados",
+      "source_id": 130
+    },
+    "hakamo-o": {
+      "normal": [
+        "Bulletproof",
+        "Soundproof"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Hakamo-o",
+      "source_id": 783
+    },
+    "hatenna": {
+      "normal": [
+        "Healer",
+        "Anticipation"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Hatenna",
+      "source_id": 856
+    },
+    "hatterene": {
+      "normal": [
+        "Healer",
+        "Anticipation"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Hatterene",
+      "source_id": 858
+    },
+    "hattrem": {
+      "normal": [
+        "Healer",
+        "Anticipation"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Hattrem",
+      "source_id": 857
+    },
+    "haunter": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Haunter",
+      "source_id": 93
+    },
+    "hawlucha": {
+      "normal": [
+        "Limber",
+        "Unburden"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Hawlucha",
+      "source_id": 701
+    },
+    "haxorus": {
+      "normal": [
+        "Rivalry",
+        "Mold Breaker"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Haxorus",
+      "source_id": 612
+    },
+    "heatmor": {
+      "normal": [
+        "Gluttony",
+        "Flash Fire"
+      ],
+      "hidden": "White Smoke",
+      "source_name": "Heatmor",
+      "source_id": 631
+    },
+    "heliolisk": {
+      "normal": [
+        "Dry Skin",
+        "Sand Veil"
+      ],
+      "hidden": "Solar Power",
+      "source_name": "Heliolisk",
+      "source_id": 695
+    },
+    "helioptile": {
+      "normal": [
+        "Dry Skin",
+        "Sand Veil"
+      ],
+      "hidden": "Solar Power",
+      "source_name": "Helioptile",
+      "source_id": 694
+    },
+    "hippopotas": {
+      "normal": [
+        "Sand Stream"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Hippopotas",
+      "source_id": 449
+    },
+    "hippowdon": {
+      "normal": [
+        "Sand Stream"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Hippowdon",
+      "source_id": 450
+    },
+    "hitmonchan": {
+      "normal": [
+        "Keen Eye",
+        "Iron Fist"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Hitmonchan",
+      "source_id": 107
+    },
+    "hitmonlee": {
+      "normal": [
+        "Limber",
+        "Reckless"
+      ],
+      "hidden": "Unburden",
+      "source_name": "Hitmonlee",
+      "source_id": 106
+    },
+    "hitmontop": {
+      "normal": [
+        "Intimidate",
+        "Technician"
+      ],
+      "hidden": "Steadfast",
+      "source_name": "Hitmontop",
+      "source_id": 237
+    },
+    "honedge": {
+      "normal": [
+        "No Guard"
+      ],
+      "hidden": "No Guard",
+      "source_name": "Honedge",
+      "source_id": 679
+    },
+    "hoothoot": {
+      "normal": [
+        "Insomnia",
+        "Keen Eye"
+      ],
+      "hidden": "Tinted Lens",
+      "source_name": "Hoothoot",
+      "source_id": 163
+    },
+    "hydreigon": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Hydreigon",
+      "source_id": 635
+    },
+    "impidimp": {
+      "normal": [
+        "Prankster",
+        "Frisk"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Impidimp",
+      "source_id": 859
+    },
+    "incineroar": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Incineroar",
+      "source_id": 727
+    },
+    "indeedee": {
+      "normal": [
+        "Inner Focus",
+        "Synchronize"
+      ],
+      "hidden": "Psychic Surge",
+      "source_name": "Indeedee",
+      "source_id": 876
+    },
+    "indeedee-female": {
+      "normal": [
+        "Own Tempo",
+        "Synchronize"
+      ],
+      "hidden": "Psychic Surge",
+      "source_name": "Indeedee 1",
+      "source_id": 1166
+    },
+    "inkay": {
+      "normal": [
+        "Contrary",
+        "Suction Cups"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Inkay",
+      "source_id": 686
+    },
+    "inteleon": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Sniper",
+      "source_name": "Inteleon",
+      "source_id": 818
+    },
+    "ivysaur": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Ivysaur",
+      "source_id": 2
+    },
+    "jangmo-o": {
+      "normal": [
+        "Bulletproof",
+        "Soundproof"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Jangmo-o",
+      "source_id": 782
+    },
+    "jellicent": {
+      "normal": [
+        "Water Absorb",
+        "Cursed Body"
+      ],
+      "hidden": "Damp",
+      "source_name": "Jellicent",
+      "source_id": 593
+    },
+    "jirachi": {
+      "normal": [
+        "Serene Grace"
+      ],
+      "hidden": "Serene Grace",
+      "source_name": "Jirachi",
+      "source_id": 385
+    },
+    "jolteon": {
+      "normal": [
+        "Volt Absorb"
+      ],
+      "hidden": "Quick Feet",
+      "source_name": "Jolteon",
+      "source_id": 135
+    },
+    "joltik": {
+      "normal": [
+        "Compound Eyes",
+        "Unnerve"
+      ],
+      "hidden": "Swarm",
+      "source_name": "Joltik",
+      "source_id": 595
+    },
+    "karrablast": {
+      "normal": [
+        "Swarm",
+        "Shed Skin"
+      ],
+      "hidden": "No Guard",
+      "source_name": "Karrablast",
+      "source_id": 588
+    },
+    "keldeo": {
+      "normal": [
+        "Justified"
+      ],
+      "hidden": "Justified",
+      "source_name": "Keldeo",
+      "source_id": 647
+    },
+    "keldeo-resolute": {
+      "normal": [
+        "Justified"
+      ],
+      "hidden": "Justified",
+      "source_name": "Keldeo 1",
+      "source_id": 1010
+    },
+    "kingler": {
+      "normal": [
+        "Hyper Cutter",
+        "Shell Armor"
+      ],
+      "hidden": "Sheer Force",
+      "source_name": "Kingler",
+      "source_id": 99
+    },
+    "kirlia": {
+      "normal": [
+        "Synchronize",
+        "Trace"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Kirlia",
+      "source_id": 281
+    },
+    "klang": {
+      "normal": [
+        "Plus",
+        "Minus"
+      ],
+      "hidden": "Clear Body",
+      "source_name": "Klang",
+      "source_id": 600
+    },
+    "klink": {
+      "normal": [
+        "Plus",
+        "Minus"
+      ],
+      "hidden": "Clear Body",
+      "source_name": "Klink",
+      "source_id": 599
+    },
+    "klinklang": {
+      "normal": [
+        "Plus",
+        "Minus"
+      ],
+      "hidden": "Clear Body",
+      "source_name": "Klinklang",
+      "source_id": 601
+    },
+    "koffing": {
+      "normal": [
+        "Levitate",
+        "Neutralizing Gas"
+      ],
+      "hidden": "Stench",
+      "source_name": "Koffing",
+      "source_id": 109
+    },
+    "kommo-o": {
+      "normal": [
+        "Bulletproof",
+        "Soundproof"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Kommo-o",
+      "source_id": 784
+    },
+    "krabby": {
+      "normal": [
+        "Hyper Cutter",
+        "Shell Armor"
+      ],
+      "hidden": "Sheer Force",
+      "source_name": "Krabby",
+      "source_id": 98
+    },
+    "kyurem": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Kyurem",
+      "source_id": 646
+    },
+    "kyurem-black": {
+      "normal": [
+        "Turboblaze"
+      ],
+      "hidden": "Turboblaze",
+      "source_name": "Kyurem 1",
+      "source_id": 1008
+    },
+    "kyurem-white": {
+      "normal": [
+        "Teravolt"
+      ],
+      "hidden": "Teravolt",
+      "source_name": "Kyurem 2",
+      "source_id": 1009
+    },
+    "lampent": {
+      "normal": [
+        "Flash Fire",
+        "Flame Body"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Lampent",
+      "source_id": 608
+    },
+    "lanturn": {
+      "normal": [
+        "Volt Absorb",
+        "Illuminate"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Lanturn",
+      "source_id": 171
+    },
+    "lapras": {
+      "normal": [
+        "Water Absorb",
+        "Shell Armor"
+      ],
+      "hidden": "Hydration",
+      "source_name": "Lapras",
+      "source_id": 131
+    },
+    "larvitar": {
+      "normal": [
+        "Guts"
+      ],
+      "hidden": "Sand Veil",
+      "source_name": "Larvitar",
+      "source_id": 246
+    },
+    "leafeon": {
+      "normal": [
+        "Leaf Guard"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Leafeon",
+      "source_id": 470
+    },
+    "liepard": {
+      "normal": [
+        "Limber",
+        "Unburden"
+      ],
+      "hidden": "Prankster",
+      "source_name": "Liepard",
+      "source_id": 510
+    },
+    "linoone": {
+      "normal": [
+        "Pickup",
+        "Gluttony"
+      ],
+      "hidden": "Quick Feet",
+      "source_name": "Linoone",
+      "source_id": 264
+    },
+    "linoone-galar": {
+      "normal": [
+        "Pickup",
+        "Gluttony"
+      ],
+      "hidden": "Quick Feet",
+      "source_name": "Linoone 1",
+      "source_id": 951
+    },
+    "litten": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Litten",
+      "source_id": 725
+    },
+    "litwick": {
+      "normal": [
+        "Flash Fire",
+        "Flame Body"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Litwick",
+      "source_id": 607
+    },
+    "lombre": {
+      "normal": [
+        "Swift Swim",
+        "Rain Dish"
+      ],
+      "hidden": "Own Tempo",
+      "source_name": "Lombre",
+      "source_id": 271
+    },
+    "lotad": {
+      "normal": [
+        "Swift Swim",
+        "Rain Dish"
+      ],
+      "hidden": "Own Tempo",
+      "source_name": "Lotad",
+      "source_id": 270
+    },
+    "lucario": {
+      "normal": [
+        "Steadfast",
+        "Inner Focus"
+      ],
+      "hidden": "Justified",
+      "source_name": "Lucario",
+      "source_id": 448
+    },
+    "ludicolo": {
+      "normal": [
+        "Swift Swim",
+        "Rain Dish"
+      ],
+      "hidden": "Own Tempo",
+      "source_name": "Ludicolo",
+      "source_id": 272
+    },
+    "lunala": {
+      "normal": [
+        "Shadow Shield"
+      ],
+      "hidden": "Shadow Shield",
+      "source_name": "Lunala",
+      "source_id": 792
+    },
+    "lunatone": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Lunatone",
+      "source_id": 337
+    },
+    "machamp": {
+      "normal": [
+        "Guts",
+        "No Guard"
+      ],
+      "hidden": "Steadfast",
+      "source_name": "Machamp",
+      "source_id": 68
+    },
+    "machoke": {
+      "normal": [
+        "Guts",
+        "No Guard"
+      ],
+      "hidden": "Steadfast",
+      "source_name": "Machoke",
+      "source_id": 67
+    },
+    "machop": {
+      "normal": [
+        "Guts",
+        "No Guard"
+      ],
+      "hidden": "Steadfast",
+      "source_name": "Machop",
+      "source_id": 66
+    },
+    "magikarp": {
+      "normal": [
+        "Swift Swim"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Magikarp",
+      "source_id": 129
+    },
+    "malamar": {
+      "normal": [
+        "Contrary",
+        "Suction Cups"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Malamar",
+      "source_id": 687
+    },
+    "mamoswine": {
+      "normal": [
+        "Oblivious",
+        "Snow Cloak"
+      ],
+      "hidden": "Thick Fat",
+      "source_name": "Mamoswine",
+      "source_id": 473
+    },
+    "mandibuzz": {
+      "normal": [
+        "Big Pecks",
+        "Overcoat"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Mandibuzz",
+      "source_id": 630
+    },
+    "manectric": {
+      "normal": [
+        "Static",
+        "Lightning Rod"
+      ],
+      "hidden": "Minus",
+      "source_name": "Manectric",
+      "source_id": 310
+    },
+    "mantine": {
+      "normal": [
+        "Swift Swim",
+        "Water Absorb"
+      ],
+      "hidden": "Water Veil",
+      "source_name": "Mantine",
+      "source_id": 226
+    },
+    "mantyke": {
+      "normal": [
+        "Swift Swim",
+        "Water Absorb"
+      ],
+      "hidden": "Water Veil",
+      "source_name": "Mantyke",
+      "source_id": 458
+    },
+    "maractus": {
+      "normal": [
+        "Water Absorb",
+        "Chlorophyll"
+      ],
+      "hidden": "Storm Drain",
+      "source_name": "Maractus",
+      "source_id": 556
+    },
+    "mareanie": {
+      "normal": [
+        "Merciless",
+        "Limber"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Mareanie",
+      "source_id": 747
+    },
+    "marshadow": {
+      "normal": [
+        "Technician"
+      ],
+      "hidden": "Technician",
+      "source_name": "Marshadow",
+      "source_id": 802
+    },
+    "mawile": {
+      "normal": [
+        "Hyper Cutter",
+        "Intimidate"
+      ],
+      "hidden": "Sheer Force",
+      "source_name": "Mawile",
+      "source_id": 303
+    },
+    "melmetal": {
+      "normal": [
+        "Iron Fist"
+      ],
+      "hidden": "Iron Fist",
+      "source_name": "Melmetal",
+      "source_id": 809
+    },
+    "meltan": {
+      "normal": [
+        "Magnet Pull"
+      ],
+      "hidden": "Magnet Pull",
+      "source_name": "Meltan",
+      "source_id": 808
+    },
+    "meowstic-female": {
+      "normal": [
+        "Keen Eye",
+        "Infiltrator"
+      ],
+      "hidden": "Competitive",
+      "source_name": "Meowstic 1",
+      "source_id": 1097
+    },
+    "meowth": {
+      "normal": [
+        "Pickup",
+        "Technician"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Meowth",
+      "source_id": 52
+    },
+    "meowth-alola": {
+      "normal": [
+        "Pickup",
+        "Technician"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Meowth 1",
+      "source_id": 907
+    },
+    "meowth-galar": {
+      "normal": [
+        "Pickup",
+        "Tough Claws"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Meowth 2",
+      "source_id": 908
+    },
+    "metapod": {
+      "normal": [
+        "Shed Skin"
+      ],
+      "hidden": "Shed Skin",
+      "source_name": "Metapod",
+      "source_id": 11
+    },
+    "mew": {
+      "normal": [
+        "Synchronize"
+      ],
+      "hidden": "Synchronize",
+      "source_name": "Mew",
+      "source_id": 151
+    },
+    "mewtwo": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Mewtwo",
+      "source_id": 150
+    },
+    "milcery": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Milcery",
+      "source_id": 868
+    },
+    "milotic": {
+      "normal": [
+        "Marvel Scale",
+        "Competitive"
+      ],
+      "hidden": "Cute Charm",
+      "source_name": "Milotic",
+      "source_id": 350
+    },
+    "mime-jr": {
+      "normal": [
+        "Soundproof",
+        "Filter"
+      ],
+      "hidden": "Technician",
+      "source_name": "Mime Jr.",
+      "source_id": 439
+    },
+    "mimikyu": {
+      "normal": [
+        "Disguise"
+      ],
+      "hidden": "Disguise",
+      "source_name": "Mimikyu",
+      "source_id": 778
+    },
+    "mimikyu-busted": {
+      "normal": [
+        "Disguise"
+      ],
+      "hidden": "Disguise",
+      "source_name": "Mimikyu 1",
+      "source_id": 1148
+    },
+    "minccino": {
+      "normal": [
+        "Cute Charm",
+        "Technician"
+      ],
+      "hidden": "Skill Link",
+      "source_name": "Minccino",
+      "source_id": 572
+    },
+    "morelull": {
+      "normal": [
+        "Illuminate",
+        "Effect Spore"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Morelull",
+      "source_id": 755
+    },
+    "morgrem": {
+      "normal": [
+        "Prankster",
+        "Frisk"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Morgrem",
+      "source_id": 860
+    },
+    "morpeko": {
+      "normal": [
+        "Hunger Switch"
+      ],
+      "hidden": "Hunger Switch",
+      "source_name": "Morpeko",
+      "source_id": 877
+    },
+    "morpeko-hangry": {
+      "normal": [
+        "Hunger Switch"
+      ],
+      "hidden": "Hunger Switch",
+      "source_name": "Morpeko 1",
+      "source_id": 1167
+    },
+    "mr-mime": {
+      "normal": [
+        "Soundproof",
+        "Filter"
+      ],
+      "hidden": "Technician",
+      "source_name": "Mr. Mime",
+      "source_id": 122
+    },
+    "mr-mime-galar": {
+      "normal": [
+        "Vital Spirit",
+        "Screen Cleaner"
+      ],
+      "hidden": "Ice Body",
+      "source_name": "Mr. Mime 1",
+      "source_id": 921
+    },
+    "mr-rime": {
+      "normal": [
+        "Tangled Feet",
+        "Screen Cleaner"
+      ],
+      "hidden": "Ice Body",
+      "source_name": "Mr. Rime",
+      "source_id": 866
+    },
+    "mudbray": {
+      "normal": [
+        "Own Tempo",
+        "Stamina"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Mudbray",
+      "source_id": 749
+    },
+    "mudsdale": {
+      "normal": [
+        "Own Tempo",
+        "Stamina"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Mudsdale",
+      "source_id": 750
+    },
+    "munchlax": {
+      "normal": [
+        "Pickup",
+        "Thick Fat"
+      ],
+      "hidden": "Gluttony",
+      "source_name": "Munchlax",
+      "source_id": 446
+    },
+    "munna": {
+      "normal": [
+        "Forewarn",
+        "Synchronize"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Munna",
+      "source_id": 517
+    },
+    "musharna": {
+      "normal": [
+        "Forewarn",
+        "Synchronize"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Musharna",
+      "source_id": 518
+    },
+    "natu": {
+      "normal": [
+        "Synchronize",
+        "Early Bird"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Natu",
+      "source_id": 177
+    },
+    "necrozma": {
+      "normal": [
+        "Prism Armor"
+      ],
+      "hidden": "Prism Armor",
+      "source_name": "Necrozma",
+      "source_id": 800
+    },
+    "necrozma-dawn-wings": {
+      "normal": [
+        "Prism Armor"
+      ],
+      "hidden": "Prism Armor",
+      "source_name": "Necrozma 2",
+      "source_id": 1150
+    },
+    "necrozma-dusk-mane": {
+      "normal": [
+        "Prism Armor"
+      ],
+      "hidden": "Prism Armor",
+      "source_name": "Necrozma 1",
+      "source_id": 1149
+    },
+    "nickit": {
+      "normal": [
+        "Run Away",
+        "Unburden"
+      ],
+      "hidden": "Stakeout",
+      "source_name": "Nickit",
+      "source_id": 827
+    },
+    "nincada": {
+      "normal": [
+        "Compound Eyes"
+      ],
+      "hidden": "Run Away",
+      "source_name": "Nincada",
+      "source_id": 290
+    },
+    "ninetales": {
+      "normal": [
+        "Flash Fire"
+      ],
+      "hidden": "Drought",
+      "source_name": "Ninetales",
+      "source_id": 38
+    },
+    "ninetales-alola": {
+      "normal": [
+        "Snow Cloak"
+      ],
+      "hidden": "Snow Warning",
+      "source_name": "Ninetales 1",
+      "source_id": 904
+    },
+    "ninjask": {
+      "normal": [
+        "Speed Boost"
+      ],
+      "hidden": "Infiltrator",
+      "source_name": "Ninjask",
+      "source_id": 291
+    },
+    "noctowl": {
+      "normal": [
+        "Insomnia",
+        "Keen Eye"
+      ],
+      "hidden": "Tinted Lens",
+      "source_name": "Noctowl",
+      "source_id": 164
+    },
+    "noibat": {
+      "normal": [
+        "Frisk",
+        "Infiltrator"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Noibat",
+      "source_id": 714
+    },
+    "noivern": {
+      "normal": [
+        "Frisk",
+        "Infiltrator"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Noivern",
+      "source_id": 715
+    },
+    "nuzleaf": {
+      "normal": [
+        "Chlorophyll",
+        "Early Bird"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Nuzleaf",
+      "source_id": 274
+    },
+    "obstagoon": {
+      "normal": [
+        "Reckless",
+        "Guts"
+      ],
+      "hidden": "Defiant",
+      "source_name": "Obstagoon",
+      "source_id": 862
+    },
+    "octillery": {
+      "normal": [
+        "Suction Cups",
+        "Sniper"
+      ],
+      "hidden": "Moody",
+      "source_name": "Octillery",
+      "source_id": 224
+    },
+    "oddish": {
+      "normal": [
+        "Chlorophyll"
+      ],
+      "hidden": "Run Away",
+      "source_name": "Oddish",
+      "source_id": 43
+    },
+    "onix": {
+      "normal": [
+        "Rock Head",
+        "Sturdy"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Onix",
+      "source_id": 95
+    },
+    "oranguru": {
+      "normal": [
+        "Inner Focus",
+        "Telepathy"
+      ],
+      "hidden": "Symbiosis",
+      "source_name": "Oranguru",
+      "source_id": 765
+    },
+    "orbeetle": {
+      "normal": [
+        "Swarm",
+        "Frisk"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Orbeetle",
+      "source_id": 826
+    },
+    "palpitoad": {
+      "normal": [
+        "Swift Swim",
+        "Hydration"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Palpitoad",
+      "source_id": 536
+    },
+    "pancham": {
+      "normal": [
+        "Iron Fist",
+        "Mold Breaker"
+      ],
+      "hidden": "Scrappy",
+      "source_name": "Pancham",
+      "source_id": 674
+    },
+    "pangoro": {
+      "normal": [
+        "Iron Fist",
+        "Mold Breaker"
+      ],
+      "hidden": "Scrappy",
+      "source_name": "Pangoro",
+      "source_id": 675
+    },
+    "passimian": {
+      "normal": [
+        "Receiver"
+      ],
+      "hidden": "Defiant",
+      "source_name": "Passimian",
+      "source_id": 766
+    },
+    "pawniard": {
+      "normal": [
+        "Defiant",
+        "Inner Focus"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Pawniard",
+      "source_id": 624
+    },
+    "pelipper": {
+      "normal": [
+        "Keen Eye",
+        "Drizzle"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Pelipper",
+      "source_id": 279
+    },
+    "perrserker": {
+      "normal": [
+        "Battle Armor",
+        "Tough Claws"
+      ],
+      "hidden": "Steely Spirit",
+      "source_name": "Perrserker",
+      "source_id": 863
+    },
+    "persian": {
+      "normal": [
+        "Limber",
+        "Technician"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Persian",
+      "source_id": 53
+    },
+    "persian-alola": {
+      "normal": [
+        "Fur Coat",
+        "Technician"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Persian 1",
+      "source_id": 909
+    },
+    "phantump": {
+      "normal": [
+        "Natural Cure",
+        "Frisk"
+      ],
+      "hidden": "Harvest",
+      "source_name": "Phantump",
+      "source_id": 708
+    },
+    "pichu": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pichu",
+      "source_id": 172
+    },
+    "pidove": {
+      "normal": [
+        "Big Pecks",
+        "Super Luck"
+      ],
+      "hidden": "Rivalry",
+      "source_name": "Pidove",
+      "source_id": 519
+    },
+    "pikachu": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu",
+      "source_id": 25
+    },
+    "pikachu-form-1": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 1",
+      "source_id": 893
+    },
+    "pikachu-form-2": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 2",
+      "source_id": 894
+    },
+    "pikachu-form-3": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 3",
+      "source_id": 895
+    },
+    "pikachu-form-4": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 4",
+      "source_id": 896
+    },
+    "pikachu-form-5": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 5",
+      "source_id": 897
+    },
+    "pikachu-form-6": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 6",
+      "source_id": 898
+    },
+    "pikachu-form-7": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Pikachu 7",
+      "source_id": 899
+    },
+    "piloswine": {
+      "normal": [
+        "Oblivious",
+        "Snow Cloak"
+      ],
+      "hidden": "Thick Fat",
+      "source_name": "Piloswine",
+      "source_id": 221
+    },
+    "pincurchin": {
+      "normal": [
+        "Lightning Rod"
+      ],
+      "hidden": "Electric Surge",
+      "source_name": "Pincurchin",
+      "source_id": 871
+    },
+    "polteageist": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Polteageist",
+      "source_id": 855
+    },
+    "polteageist-antique": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Polteageist 1",
+      "source_id": 1156
+    },
+    "ponyta": {
+      "normal": [
+        "Run Away",
+        "Flash Fire"
+      ],
+      "hidden": "Flame Body",
+      "source_name": "Ponyta",
+      "source_id": 77
+    },
+    "ponyta-galar": {
+      "normal": [
+        "Run Away",
+        "Pastel Veil"
+      ],
+      "hidden": "Anticipation",
+      "source_name": "Ponyta 1",
+      "source_id": 913
+    },
+    "popplio": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Liquid Voice",
+      "source_name": "Popplio",
+      "source_id": 728
+    },
+    "primarina": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Liquid Voice",
+      "source_name": "Primarina",
+      "source_id": 730
+    },
+    "pumpkaboo": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Pumpkaboo",
+      "source_id": 710
+    },
+    "pumpkaboo-large": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Pumpkaboo 2",
+      "source_id": 1100
+    },
+    "pumpkaboo-small": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Pumpkaboo 1",
+      "source_id": 1099
+    },
+    "pumpkaboo-super": {
+      "normal": [
+        "Pickup",
+        "Frisk"
+      ],
+      "hidden": "Insomnia",
+      "source_name": "Pumpkaboo 3",
+      "source_id": 1101
+    },
+    "pupitar": {
+      "normal": [
+        "Shed Skin"
+      ],
+      "hidden": "Shed Skin",
+      "source_name": "Pupitar",
+      "source_id": 247
+    },
+    "purrloin": {
+      "normal": [
+        "Limber",
+        "Unburden"
+      ],
+      "hidden": "Prankster",
+      "source_name": "Purrloin",
+      "source_id": 509
+    },
+    "pyukumuku": {
+      "normal": [
+        "Innards Out"
+      ],
+      "hidden": "Unaware",
+      "source_name": "Pyukumuku",
+      "source_id": 771
+    },
+    "quagsire": {
+      "normal": [
+        "Damp",
+        "Water Absorb"
+      ],
+      "hidden": "Unaware",
+      "source_name": "Quagsire",
+      "source_id": 195
+    },
+    "qwilfish": {
+      "normal": [
+        "Poison Point",
+        "Swift Swim"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Qwilfish",
+      "source_id": 211
+    },
+    "raboot": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Libero",
+      "source_name": "Raboot",
+      "source_id": 814
+    },
+    "raichu": {
+      "normal": [
+        "Static"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Raichu",
+      "source_id": 26
+    },
+    "raichu-alola": {
+      "normal": [
+        "Surge Surfer"
+      ],
+      "hidden": "Surge Surfer",
+      "source_name": "Raichu 1",
+      "source_id": 900
+    },
+    "ralts": {
+      "normal": [
+        "Synchronize",
+        "Trace"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Ralts",
+      "source_id": 280
+    },
+    "rapidash": {
+      "normal": [
+        "Run Away",
+        "Flash Fire"
+      ],
+      "hidden": "Flame Body",
+      "source_name": "Rapidash",
+      "source_id": 78
+    },
+    "rapidash-galar": {
+      "normal": [
+        "Run Away",
+        "Pastel Veil"
+      ],
+      "hidden": "Anticipation",
+      "source_name": "Rapidash 1",
+      "source_id": 914
+    },
+    "remoraid": {
+      "normal": [
+        "Hustle",
+        "Sniper"
+      ],
+      "hidden": "Moody",
+      "source_name": "Remoraid",
+      "source_id": 223
+    },
+    "reshiram": {
+      "normal": [
+        "Turboblaze"
+      ],
+      "hidden": "Turboblaze",
+      "source_name": "Reshiram",
+      "source_id": 643
+    },
+    "reuniclus": {
+      "normal": [
+        "Overcoat",
+        "Magic Guard"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Reuniclus",
+      "source_id": 579
+    },
+    "rhydon": {
+      "normal": [
+        "Lightning Rod",
+        "Rock Head"
+      ],
+      "hidden": "Reckless",
+      "source_name": "Rhydon",
+      "source_id": 112
+    },
+    "rhyhorn": {
+      "normal": [
+        "Lightning Rod",
+        "Rock Head"
+      ],
+      "hidden": "Reckless",
+      "source_name": "Rhyhorn",
+      "source_id": 111
+    },
+    "rhyperior": {
+      "normal": [
+        "Lightning Rod",
+        "Solid Rock"
+      ],
+      "hidden": "Reckless",
+      "source_name": "Rhyperior",
+      "source_id": 464
+    },
+    "ribombee": {
+      "normal": [
+        "Honey Gather",
+        "Shield Dust"
+      ],
+      "hidden": "Sweet Veil",
+      "source_name": "Ribombee",
+      "source_id": 743
+    },
+    "rillaboom": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Grassy Surge",
+      "source_name": "Rillaboom",
+      "source_id": 812
+    },
+    "riolu": {
+      "normal": [
+        "Steadfast",
+        "Inner Focus"
+      ],
+      "hidden": "Prankster",
+      "source_name": "Riolu",
+      "source_id": 447
+    },
+    "roggenrola": {
+      "normal": [
+        "Sturdy",
+        "Weak Armor"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Roggenrola",
+      "source_id": 524
+    },
+    "rolycoly": {
+      "normal": [
+        "Steam Engine",
+        "Heatproof"
+      ],
+      "hidden": "Flash Fire",
+      "source_name": "Rolycoly",
+      "source_id": 837
+    },
+    "rookidee": {
+      "normal": [
+        "Keen Eye",
+        "Unnerve"
+      ],
+      "hidden": "Big Pecks",
+      "source_name": "Rookidee",
+      "source_id": 821
+    },
+    "roselia": {
+      "normal": [
+        "Natural Cure",
+        "Poison Point"
+      ],
+      "hidden": "Leaf Guard",
+      "source_name": "Roselia",
+      "source_id": 315
+    },
+    "roserade": {
+      "normal": [
+        "Natural Cure",
+        "Poison Point"
+      ],
+      "hidden": "Technician",
+      "source_name": "Roserade",
+      "source_id": 407
+    },
+    "rotom": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom",
+      "source_id": 479
+    },
+    "rotom-fan": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom 4",
+      "source_id": 971
+    },
+    "rotom-frost": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom 3",
+      "source_id": 970
+    },
+    "rotom-heat": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom 1",
+      "source_id": 968
+    },
+    "rotom-mow": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom 5",
+      "source_id": 972
+    },
+    "rotom-wash": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Rotom 2",
+      "source_id": 969
+    },
+    "rowlet": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Long Reach",
+      "source_name": "Rowlet",
+      "source_id": 722
+    },
+    "rufflet": {
+      "normal": [
+        "Keen Eye",
+        "Sheer Force"
+      ],
+      "hidden": "Hustle",
+      "source_name": "Rufflet",
+      "source_id": 627
+    },
+    "runerigus": {
+      "normal": [
+        "Wandering Spirit"
+      ],
+      "hidden": "Wandering Spirit",
+      "source_name": "Runerigus",
+      "source_id": 867
+    },
+    "sableye": {
+      "normal": [
+        "Keen Eye",
+        "Stall"
+      ],
+      "hidden": "Prankster",
+      "source_name": "Sableye",
+      "source_id": 302
+    },
+    "salandit": {
+      "normal": [
+        "Corrosion"
+      ],
+      "hidden": "Oblivious",
+      "source_name": "Salandit",
+      "source_id": 757
+    },
+    "salazzle": {
+      "normal": [
+        "Corrosion"
+      ],
+      "hidden": "Oblivious",
+      "source_name": "Salazzle",
+      "source_id": 758
+    },
+    "sandaconda": {
+      "normal": [
+        "Sand Spit",
+        "Shed Skin"
+      ],
+      "hidden": "Sand Veil",
+      "source_name": "Sandaconda",
+      "source_id": 844
+    },
+    "sawk": {
+      "normal": [
+        "Sturdy",
+        "Inner Focus"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Sawk",
+      "source_id": 539
+    },
+    "scorbunny": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Libero",
+      "source_name": "Scorbunny",
+      "source_id": 813
+    },
+    "scrafty": {
+      "normal": [
+        "Shed Skin",
+        "Moxie"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Scrafty",
+      "source_id": 560
+    },
+    "scraggy": {
+      "normal": [
+        "Shed Skin",
+        "Moxie"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Scraggy",
+      "source_id": 559
+    },
+    "seaking": {
+      "normal": [
+        "Swift Swim",
+        "Water Veil"
+      ],
+      "hidden": "Lightning Rod",
+      "source_name": "Seaking",
+      "source_id": 119
+    },
+    "seedot": {
+      "normal": [
+        "Chlorophyll",
+        "Early Bird"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Seedot",
+      "source_id": 273
+    },
+    "seismitoad": {
+      "normal": [
+        "Swift Swim",
+        "Poison Touch"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Seismitoad",
+      "source_id": 537
+    },
+    "shedinja": {
+      "normal": [
+        "Wonder Guard"
+      ],
+      "hidden": "Wonder Guard",
+      "source_name": "Shedinja",
+      "source_id": 292
+    },
+    "shellder": {
+      "normal": [
+        "Shell Armor",
+        "Skill Link"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Shellder",
+      "source_id": 90
+    },
+    "shellos": {
+      "normal": [
+        "Sticky Hold",
+        "Storm Drain"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Shellos",
+      "source_id": 422
+    },
+    "shellos-east": {
+      "normal": [
+        "Sticky Hold",
+        "Storm Drain"
+      ],
+      "hidden": "Sand Force",
+      "source_name": "Shellos 1",
+      "source_id": 966
+    },
+    "shelmet": {
+      "normal": [
+        "Hydration",
+        "Shell Armor"
+      ],
+      "hidden": "Overcoat",
+      "source_name": "Shelmet",
+      "source_id": 616
+    },
+    "shiftry": {
+      "normal": [
+        "Chlorophyll",
+        "Early Bird"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Shiftry",
+      "source_id": 275
+    },
+    "shiinotic": {
+      "normal": [
+        "Illuminate",
+        "Effect Spore"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Shiinotic",
+      "source_id": 756
+    },
+    "shuckle": {
+      "normal": [
+        "Sturdy",
+        "Gluttony"
+      ],
+      "hidden": "Contrary",
+      "source_name": "Shuckle",
+      "source_id": 213
+    },
+    "sigilyph": {
+      "normal": [
+        "Wonder Skin",
+        "Magic Guard"
+      ],
+      "hidden": "Tinted Lens",
+      "source_name": "Sigilyph",
+      "source_id": 561
+    },
+    "silicobra": {
+      "normal": [
+        "Sand Spit",
+        "Shed Skin"
+      ],
+      "hidden": "Sand Veil",
+      "source_name": "Silicobra",
+      "source_id": 843
+    },
+    "silvally": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally",
+      "source_id": 773
+    },
+    "silvally-form-1": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 1",
+      "source_id": 1118
+    },
+    "silvally-form-10": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 10",
+      "source_id": 1127
+    },
+    "silvally-form-11": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 11",
+      "source_id": 1128
+    },
+    "silvally-form-12": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 12",
+      "source_id": 1129
+    },
+    "silvally-form-13": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 13",
+      "source_id": 1130
+    },
+    "silvally-form-14": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 14",
+      "source_id": 1131
+    },
+    "silvally-form-15": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 15",
+      "source_id": 1132
+    },
+    "silvally-form-16": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 16",
+      "source_id": 1133
+    },
+    "silvally-form-17": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 17",
+      "source_id": 1134
+    },
+    "silvally-form-2": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 2",
+      "source_id": 1119
+    },
+    "silvally-form-3": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 3",
+      "source_id": 1120
+    },
+    "silvally-form-4": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 4",
+      "source_id": 1121
+    },
+    "silvally-form-5": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 5",
+      "source_id": 1122
+    },
+    "silvally-form-6": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 6",
+      "source_id": 1123
+    },
+    "silvally-form-7": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 7",
+      "source_id": 1124
+    },
+    "silvally-form-8": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 8",
+      "source_id": 1125
+    },
+    "silvally-form-9": {
+      "normal": [
+        "RKS System"
+      ],
+      "hidden": "RKS System",
+      "source_name": "Silvally 9",
+      "source_id": 1126
+    },
+    "sinistea": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Sinistea",
+      "source_id": 854
+    },
+    "sinistea-antique": {
+      "normal": [
+        "Weak Armor"
+      ],
+      "hidden": "Cursed Body",
+      "source_name": "Sinistea 1",
+      "source_id": 1155
+    },
+    "sirfetch-d": {
+      "normal": [
+        "Steadfast"
+      ],
+      "hidden": "Scrappy",
+      "source_name": "Sirfetch’d",
+      "source_id": 865
+    },
+    "sizzlipede": {
+      "normal": [
+        "Flash Fire",
+        "White Smoke"
+      ],
+      "hidden": "Flame Body",
+      "source_name": "Sizzlipede",
+      "source_id": 850
+    },
+    "skorupi": {
+      "normal": [
+        "Battle Armor",
+        "Sniper"
+      ],
+      "hidden": "Keen Eye",
+      "source_name": "Skorupi",
+      "source_id": 451
+    },
+    "skuntank": {
+      "normal": [
+        "Stench",
+        "Aftermath"
+      ],
+      "hidden": "Keen Eye",
+      "source_name": "Skuntank",
+      "source_id": 435
+    },
+    "skwovet": {
+      "normal": [
+        "Cheek Pouch"
+      ],
+      "hidden": "Gluttony",
+      "source_name": "Skwovet",
+      "source_id": 819
+    },
+    "sliggoo": {
+      "normal": [
+        "Sap Sipper",
+        "Hydration"
+      ],
+      "hidden": "Gooey",
+      "source_name": "Sliggoo",
+      "source_id": 705
+    },
+    "slurpuff": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Unburden",
+      "source_name": "Slurpuff",
+      "source_id": 685
+    },
+    "sneasel": {
+      "normal": [
+        "Inner Focus",
+        "Keen Eye"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Sneasel",
+      "source_id": 215
+    },
+    "snom": {
+      "normal": [
+        "Shield Dust"
+      ],
+      "hidden": "Ice Scales",
+      "source_name": "Snom",
+      "source_id": 872
+    },
+    "snorlax": {
+      "normal": [
+        "Immunity",
+        "Thick Fat"
+      ],
+      "hidden": "Gluttony",
+      "source_name": "Snorlax",
+      "source_id": 143
+    },
+    "snorunt": {
+      "normal": [
+        "Inner Focus",
+        "Ice Body"
+      ],
+      "hidden": "Moody",
+      "source_name": "Snorunt",
+      "source_id": 361
+    },
+    "snover": {
+      "normal": [
+        "Snow Warning"
+      ],
+      "hidden": "Soundproof",
+      "source_name": "Snover",
+      "source_id": 459
+    },
+    "sobble": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Sniper",
+      "source_name": "Sobble",
+      "source_id": 816
+    },
+    "solgaleo": {
+      "normal": [
+        "Full Metal Body"
+      ],
+      "hidden": "Full Metal Body",
+      "source_name": "Solgaleo",
+      "source_id": 791
+    },
+    "solosis": {
+      "normal": [
+        "Overcoat",
+        "Magic Guard"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Solosis",
+      "source_id": 577
+    },
+    "solrock": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Solrock",
+      "source_id": 338
+    },
+    "spritzee": {
+      "normal": [
+        "Healer"
+      ],
+      "hidden": "Aroma Veil",
+      "source_name": "Spritzee",
+      "source_id": 682
+    },
+    "squirtle": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Squirtle",
+      "source_id": 7
+    },
+    "steelix": {
+      "normal": [
+        "Rock Head",
+        "Sturdy"
+      ],
+      "hidden": "Sheer Force",
+      "source_name": "Steelix",
+      "source_id": 208
+    },
+    "steenee": {
+      "normal": [
+        "Leaf Guard",
+        "Oblivious"
+      ],
+      "hidden": "Sweet Veil",
+      "source_name": "Steenee",
+      "source_id": 762
+    },
+    "stonjourner": {
+      "normal": [
+        "Power Spot"
+      ],
+      "hidden": "Power Spot",
+      "source_name": "Stonjourner",
+      "source_id": 874
+    },
+    "stufful": {
+      "normal": [
+        "Fluffy",
+        "Klutz"
+      ],
+      "hidden": "Cute Charm",
+      "source_name": "Stufful",
+      "source_id": 759
+    },
+    "stunfisk": {
+      "normal": [
+        "Static",
+        "Limber"
+      ],
+      "hidden": "Sand Veil",
+      "source_name": "Stunfisk",
+      "source_id": 618
+    },
+    "stunfisk-galar": {
+      "normal": [
+        "Mimicry"
+      ],
+      "hidden": "Mimicry",
+      "source_name": "Stunfisk 1",
+      "source_id": 1004
+    },
+    "stunky": {
+      "normal": [
+        "Stench",
+        "Aftermath"
+      ],
+      "hidden": "Keen Eye",
+      "source_name": "Stunky",
+      "source_id": 434
+    },
+    "sudowoodo": {
+      "normal": [
+        "Sturdy",
+        "Rock Head"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Sudowoodo",
+      "source_id": 185
+    },
+    "swinub": {
+      "normal": [
+        "Oblivious",
+        "Snow Cloak"
+      ],
+      "hidden": "Thick Fat",
+      "source_name": "Swinub",
+      "source_id": 220
+    },
+    "swirlix": {
+      "normal": [
+        "Sweet Veil"
+      ],
+      "hidden": "Unburden",
+      "source_name": "Swirlix",
+      "source_id": 684
+    },
+    "swoobat": {
+      "normal": [
+        "Unaware",
+        "Klutz"
+      ],
+      "hidden": "Simple",
+      "source_name": "Swoobat",
+      "source_id": 528
+    },
+    "sylveon": {
+      "normal": [
+        "Cute Charm"
+      ],
+      "hidden": "Pixilate",
+      "source_name": "Sylveon",
+      "source_id": 700
+    },
+    "terrakion": {
+      "normal": [
+        "Justified"
+      ],
+      "hidden": "Justified",
+      "source_name": "Terrakion",
+      "source_id": 639
+    },
+    "thievul": {
+      "normal": [
+        "Run Away",
+        "Unburden"
+      ],
+      "hidden": "Stakeout",
+      "source_name": "Thievul",
+      "source_id": 828
+    },
+    "throh": {
+      "normal": [
+        "Guts",
+        "Inner Focus"
+      ],
+      "hidden": "Mold Breaker",
+      "source_name": "Throh",
+      "source_id": 538
+    },
+    "thwackey": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Grassy Surge",
+      "source_name": "Thwackey",
+      "source_id": 811
+    },
+    "timburr": {
+      "normal": [
+        "Guts",
+        "Sheer Force"
+      ],
+      "hidden": "Iron Fist",
+      "source_name": "Timburr",
+      "source_id": 532
+    },
+    "togedemaru": {
+      "normal": [
+        "Iron Barbs",
+        "Lightning Rod"
+      ],
+      "hidden": "Sturdy",
+      "source_name": "Togedemaru",
+      "source_id": 777
+    },
+    "togekiss": {
+      "normal": [
+        "Hustle",
+        "Serene Grace"
+      ],
+      "hidden": "Super Luck",
+      "source_name": "Togekiss",
+      "source_id": 468
+    },
+    "togepi": {
+      "normal": [
+        "Hustle",
+        "Serene Grace"
+      ],
+      "hidden": "Super Luck",
+      "source_name": "Togepi",
+      "source_id": 175
+    },
+    "togetic": {
+      "normal": [
+        "Hustle",
+        "Serene Grace"
+      ],
+      "hidden": "Super Luck",
+      "source_name": "Togetic",
+      "source_id": 176
+    },
+    "torkoal": {
+      "normal": [
+        "White Smoke",
+        "Drought"
+      ],
+      "hidden": "Shell Armor",
+      "source_name": "Torkoal",
+      "source_id": 324
+    },
+    "torracat": {
+      "normal": [
+        "Blaze"
+      ],
+      "hidden": "Intimidate",
+      "source_name": "Torracat",
+      "source_id": 726
+    },
+    "toxapex": {
+      "normal": [
+        "Merciless",
+        "Limber"
+      ],
+      "hidden": "Regenerator",
+      "source_name": "Toxapex",
+      "source_id": 748
+    },
+    "toxel": {
+      "normal": [
+        "Rattled",
+        "Static"
+      ],
+      "hidden": "Klutz",
+      "source_name": "Toxel",
+      "source_id": 848
+    },
+    "toxicroak": {
+      "normal": [
+        "Anticipation",
+        "Dry Skin"
+      ],
+      "hidden": "Poison Touch",
+      "source_name": "Toxicroak",
+      "source_id": 454
+    },
+    "toxtricity": {
+      "normal": [
+        "Punk Rock",
+        "Plus"
+      ],
+      "hidden": "Technician",
+      "source_name": "Toxtricity",
+      "source_id": 849
+    },
+    "toxtricity-low-key": {
+      "normal": [
+        "Punk Rock",
+        "Minus"
+      ],
+      "hidden": "Technician",
+      "source_name": "Toxtricity 1",
+      "source_id": 1154
+    },
+    "tranquill": {
+      "normal": [
+        "Big Pecks",
+        "Super Luck"
+      ],
+      "hidden": "Rivalry",
+      "source_name": "Tranquill",
+      "source_id": 520
+    },
+    "trapinch": {
+      "normal": [
+        "Hyper Cutter",
+        "Arena Trap"
+      ],
+      "hidden": "Sheer Force",
+      "source_name": "Trapinch",
+      "source_id": 328
+    },
+    "trevenant": {
+      "normal": [
+        "Natural Cure",
+        "Frisk"
+      ],
+      "hidden": "Harvest",
+      "source_name": "Trevenant",
+      "source_id": 709
+    },
+    "trubbish": {
+      "normal": [
+        "Stench",
+        "Sticky Hold"
+      ],
+      "hidden": "Aftermath",
+      "source_name": "Trubbish",
+      "source_id": 568
+    },
+    "tsareena": {
+      "normal": [
+        "Leaf Guard",
+        "Queenly Majesty"
+      ],
+      "hidden": "Sweet Veil",
+      "source_name": "Tsareena",
+      "source_id": 763
+    },
+    "turtonator": {
+      "normal": [
+        "Shell Armor"
+      ],
+      "hidden": "Shell Armor",
+      "source_name": "Turtonator",
+      "source_id": 776
+    },
+    "tympole": {
+      "normal": [
+        "Swift Swim",
+        "Hydration"
+      ],
+      "hidden": "Water Absorb",
+      "source_name": "Tympole",
+      "source_id": 535
+    },
+    "type-null": {
+      "normal": [
+        "Battle Armor"
+      ],
+      "hidden": "Battle Armor",
+      "source_name": "Type: Null",
+      "source_id": 772
+    },
+    "tyranitar": {
+      "normal": [
+        "Sand Stream"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Tyranitar",
+      "source_id": 248
+    },
+    "tyrogue": {
+      "normal": [
+        "Guts",
+        "Steadfast"
+      ],
+      "hidden": "Vital Spirit",
+      "source_name": "Tyrogue",
+      "source_id": 236
+    },
+    "umbreon": {
+      "normal": [
+        "Synchronize"
+      ],
+      "hidden": "Inner Focus",
+      "source_name": "Umbreon",
+      "source_id": 197
+    },
+    "unfezant": {
+      "normal": [
+        "Big Pecks",
+        "Super Luck"
+      ],
+      "hidden": "Rivalry",
+      "source_name": "Unfezant",
+      "source_id": 521
+    },
+    "vanillish": {
+      "normal": [
+        "Ice Body",
+        "Snow Cloak"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Vanillish",
+      "source_id": 583
+    },
+    "vanillite": {
+      "normal": [
+        "Ice Body",
+        "Snow Cloak"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Vanillite",
+      "source_id": 582
+    },
+    "vanilluxe": {
+      "normal": [
+        "Ice Body",
+        "Snow Warning"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Vanilluxe",
+      "source_id": 584
+    },
+    "vaporeon": {
+      "normal": [
+        "Water Absorb"
+      ],
+      "hidden": "Hydration",
+      "source_name": "Vaporeon",
+      "source_id": 134
+    },
+    "venusaur": {
+      "normal": [
+        "Overgrow"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Venusaur",
+      "source_id": 3
+    },
+    "vespiquen": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Unnerve",
+      "source_name": "Vespiquen",
+      "source_id": 416
+    },
+    "vibrava": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Vibrava",
+      "source_id": 329
+    },
+    "vikavolt": {
+      "normal": [
+        "Levitate"
+      ],
+      "hidden": "Levitate",
+      "source_name": "Vikavolt",
+      "source_id": 738
+    },
+    "vileplume": {
+      "normal": [
+        "Chlorophyll"
+      ],
+      "hidden": "Effect Spore",
+      "source_name": "Vileplume",
+      "source_id": 45
+    },
+    "virizion": {
+      "normal": [
+        "Justified"
+      ],
+      "hidden": "Justified",
+      "source_name": "Virizion",
+      "source_id": 640
+    },
+    "vullaby": {
+      "normal": [
+        "Big Pecks",
+        "Overcoat"
+      ],
+      "hidden": "Weak Armor",
+      "source_name": "Vullaby",
+      "source_id": 629
+    },
+    "vulpix": {
+      "normal": [
+        "Flash Fire"
+      ],
+      "hidden": "Drought",
+      "source_name": "Vulpix",
+      "source_id": 37
+    },
+    "vulpix-alola": {
+      "normal": [
+        "Snow Cloak"
+      ],
+      "hidden": "Snow Warning",
+      "source_name": "Vulpix 1",
+      "source_id": 903
+    },
+    "wailmer": {
+      "normal": [
+        "Water Veil",
+        "Oblivious"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Wailmer",
+      "source_id": 320
+    },
+    "wailord": {
+      "normal": [
+        "Water Veil",
+        "Oblivious"
+      ],
+      "hidden": "Pressure",
+      "source_name": "Wailord",
+      "source_id": 321
+    },
+    "wartortle": {
+      "normal": [
+        "Torrent"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Wartortle",
+      "source_id": 8
+    },
+    "weavile": {
+      "normal": [
+        "Pressure"
+      ],
+      "hidden": "Pickpocket",
+      "source_name": "Weavile",
+      "source_id": 461
+    },
+    "weezing": {
+      "normal": [
+        "Levitate",
+        "Neutralizing Gas"
+      ],
+      "hidden": "Stench",
+      "source_name": "Weezing",
+      "source_id": 110
+    },
+    "weezing-galar": {
+      "normal": [
+        "Levitate",
+        "Neutralizing Gas"
+      ],
+      "hidden": "Misty Surge",
+      "source_name": "Weezing 1",
+      "source_id": 920
+    },
+    "whimsicott": {
+      "normal": [
+        "Prankster",
+        "Infiltrator"
+      ],
+      "hidden": "Chlorophyll",
+      "source_name": "Whimsicott",
+      "source_id": 547
+    },
+    "whiscash": {
+      "normal": [
+        "Oblivious",
+        "Anticipation"
+      ],
+      "hidden": "Hydration",
+      "source_name": "Whiscash",
+      "source_id": 340
+    },
+    "wimpod": {
+      "normal": [
+        "Wimp Out"
+      ],
+      "hidden": "Wimp Out",
+      "source_name": "Wimpod",
+      "source_id": 767
+    },
+    "wingull": {
+      "normal": [
+        "Keen Eye",
+        "Hydration"
+      ],
+      "hidden": "Rain Dish",
+      "source_name": "Wingull",
+      "source_id": 278
+    },
+    "wishiwashi": {
+      "normal": [
+        "Schooling"
+      ],
+      "hidden": "Schooling",
+      "source_name": "Wishiwashi",
+      "source_id": 746
+    },
+    "wishiwashi-school": {
+      "normal": [
+        "Schooling"
+      ],
+      "hidden": "Schooling",
+      "source_name": "Wishiwashi 1",
+      "source_id": 1117
+    },
+    "wobbuffet": {
+      "normal": [
+        "Shadow Tag"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Wobbuffet",
+      "source_id": 202
+    },
+    "woobat": {
+      "normal": [
+        "Unaware",
+        "Klutz"
+      ],
+      "hidden": "Simple",
+      "source_name": "Woobat",
+      "source_id": 527
+    },
+    "wooloo": {
+      "normal": [
+        "Fluffy",
+        "Run Away"
+      ],
+      "hidden": "Bulletproof",
+      "source_name": "Wooloo",
+      "source_id": 831
+    },
+    "wooper": {
+      "normal": [
+        "Damp",
+        "Water Absorb"
+      ],
+      "hidden": "Unaware",
+      "source_name": "Wooper",
+      "source_id": 194
+    },
+    "wynaut": {
+      "normal": [
+        "Shadow Tag"
+      ],
+      "hidden": "Telepathy",
+      "source_name": "Wynaut",
+      "source_id": 360
+    },
+    "xatu": {
+      "normal": [
+        "Synchronize",
+        "Early Bird"
+      ],
+      "hidden": "Magic Bounce",
+      "source_name": "Xatu",
+      "source_id": 178
+    },
+    "yamask": {
+      "normal": [
+        "Mummy"
+      ],
+      "hidden": "Mummy",
+      "source_name": "Yamask",
+      "source_id": 562
+    },
+    "yamask-galar": {
+      "normal": [
+        "Wandering Spirit"
+      ],
+      "hidden": "Wandering Spirit",
+      "source_name": "Yamask 1",
+      "source_id": 997
+    },
+    "yamper": {
+      "normal": [
+        "Ball Fetch"
+      ],
+      "hidden": "Rattled",
+      "source_name": "Yamper",
+      "source_id": 835
+    },
+    "zacian": {
+      "normal": [
+        "Intrepid Sword"
+      ],
+      "hidden": "Intrepid Sword",
+      "source_name": "Zacian",
+      "source_id": 888
+    },
+    "zacian-crowned": {
+      "normal": [
+        "Intrepid Sword"
+      ],
+      "hidden": "Intrepid Sword",
+      "source_name": "Zacian 1",
+      "source_id": 1168
+    },
+    "zamazenta": {
+      "normal": [
+        "Dauntless Shield"
+      ],
+      "hidden": "Dauntless Shield",
+      "source_name": "Zamazenta",
+      "source_id": 889
+    },
+    "zamazenta-crowned": {
+      "normal": [
+        "Dauntless Shield"
+      ],
+      "hidden": "Dauntless Shield",
+      "source_name": "Zamazenta 1",
+      "source_id": 1169
+    },
+    "zekrom": {
+      "normal": [
+        "Teravolt"
+      ],
+      "hidden": "Teravolt",
+      "source_name": "Zekrom",
+      "source_id": 644
+    },
+    "zeraora": {
+      "normal": [
+        "Volt Absorb"
+      ],
+      "hidden": "Volt Absorb",
+      "source_name": "Zeraora",
+      "source_id": 807
+    },
+    "zigzagoon": {
+      "normal": [
+        "Pickup",
+        "Gluttony"
+      ],
+      "hidden": "Quick Feet",
+      "source_name": "Zigzagoon",
+      "source_id": 263
+    },
+    "zigzagoon-galar": {
+      "normal": [
+        "Pickup",
+        "Gluttony"
+      ],
+      "hidden": "Quick Feet",
+      "source_name": "Zigzagoon 1",
+      "source_id": 950
+    },
+    "zweilous": {
+      "normal": [
+        "Hustle"
+      ],
+      "hidden": "Hustle",
+      "source_name": "Zweilous",
+      "source_id": 634
+    },
+    "klefki": {
+      "normal": [
+        "Prankster"
+      ],
+      "hidden": "Magician",
+      "source_name": "Klefki",
+      "source_id": 707
+    },
+    "meowstic-male": {
+      "normal": [
+        "Keen Eye",
+        "Infiltrator"
+      ],
+      "hidden": "Prankster",
+      "source_name": "Meowstic",
+      "source_id": 678
+    }
+  }
+}

@@ -28,6 +28,7 @@ from engine.strategy_capabilities import (
     evaluate_strategy_viability,
     recognize_team_capabilities,
     recommend_strategy_moves_for_added_pokemon,
+    strategy_move_guidance,
 )
 from engine.strategy_definitions import (
     RECOMMENDER_STRATEGY_IDS,
@@ -239,7 +240,7 @@ class BattleCompassView:
 
     def _strategy_catalog_record_for_name(self, pokemon_name: str) -> dict | None:
         """Resolve a recommendation name back to its Team Planner catalog row."""
-        wanted = self._strategy_name_key(pokemon_name)
+        wanted = self._strategy_name_key(re.sub(r"\s+\((?:male|female)\)$", "", pokemon_name, flags=re.IGNORECASE))
         if not wanted:
             return None
         for record in self.strategy_pokemon_catalog:
@@ -286,7 +287,7 @@ class BattleCompassView:
         return candidate
 
     def _strategy_candidate_pokemon_data(self) -> list[dict]:
-        """Return currently obtainable Sword catalog candidates not already active."""
+        """Return all Sword catalog final forms, regardless of earned badges."""
         earned_badges = self.app_state.earned_badges
         active_names = {
             self._strategy_name_key(pokemon.get("Pokemon"))
@@ -303,14 +304,22 @@ class BattleCompassView:
                 required_badge = int(record.get("required_badge", 0) or 0)
             except (TypeError, ValueError):
                 required_badge = 0
-            if required_badge > earned_badges:
-                continue
             name_key = self._strategy_name_key(name)
             if name_key in active_names or name_key in seen:
                 continue
             candidate = self._strategy_candidate_record(record)
+            candidate["required_badge"] = required_badge
+            candidate["_available_now"] = required_badge <= earned_badges
             if candidate.get("Pokemon"):
-                candidates.append(candidate)
+                # Only form-dependent species are expanded. A single Journey
+                # objective still represents the species; recommendations
+                # evaluate both learnsets and Ability eligibility separately.
+                if name_key in {"meowstic", "indeedee"} and not candidate.get("Gender"):
+                    for gender in ("Male", "Female"):
+                        variant = dict(candidate, Gender=gender, _strategy_gender_variant=True)
+                        candidates.append(variant)
+                else:
+                    candidates.append(candidate)
                 seen.add(name_key)
         return candidates
 
@@ -721,6 +730,9 @@ class BattleCompassView:
             )
             return
         candidate = self._strategy_candidate_record(catalog_record)
+        gender_match = re.search(r"\((Male|Female)\)$", pokemon_name, flags=re.IGNORECASE)
+        if gender_match and self._strategy_name_key(candidate.get("Pokemon")) in {"meowstic", "indeedee"}:
+            candidate["Gender"] = gender_match.group(1).title()
         current_capabilities = recognize_team_capabilities(
             self.team_data,
             self.moves_data,
@@ -732,9 +744,13 @@ class BattleCompassView:
             self.moves_data,
             self.learnsets_data,
         )
-        checkboxes = [
-            ft.Checkbox(label=move_name, value=True)
-            for move_name in suggested_moves
+        guidance = strategy_move_guidance(
+            strategy_key, candidate, self.moves_data, self.learnsets_data
+        )
+        checkboxes = [ft.Checkbox(label=move_name, value=True) for move_name in suggested_moves]
+        explanations = [
+            ft.Text(f"{name}: {purpose}. How to learn: {method}.", size=12, color=TEXT_SECONDARY)
+            for name, purpose, method in guidance
         ]
         definition = get_strategy_definition(strategy_key)
         move_section: list[ft.Control]
@@ -747,6 +763,11 @@ class BattleCompassView:
                     color=TEXT_PRIMARY,
                 ),
                 *checkboxes,
+                *explanations,
+                ft.Text(
+                    f"The remaining {4 - len(checkboxes)} move slot(s) are yours for coverage, utility, or team preferences.",
+                    size=12, color=TEXT_MUTED,
+                ),
             ]
         else:
             move_section = [

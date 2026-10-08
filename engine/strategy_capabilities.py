@@ -20,7 +20,9 @@ from engine.calculations import (
 )
 
 from engine.mechanics import get_item_speed_multiplier
-from engine.learnsets import supported_strategy_move_names
+from engine.learnsets import supported_strategy_move_names, supported_strategy_move_methods
+from engine.ability_registry import eligible_abilities, ability_eligibility
+from engine.pokemon_identity import resolve_pokemon_id
 
 CAPABILITY_LABELS: dict[str, str] = {
     # Existing keys stay in their original order for compatibility.
@@ -37,6 +39,7 @@ CAPABILITY_LABELS: dict[str, str] = {
     "SCREEN": "Screen Support",
     "DEFENSE_SETUP": "Defensive Setup",
     "MERCILESS": "Merciless",
+    "REGENERATOR_SUSTAIN": "Regenerator Switching Sustain",
     "CORROSION": "Corrosion",
 
     # Screen Control beneficiaries / delivery.
@@ -481,6 +484,9 @@ def _recognize_capability_keys(
 
     if ability == "corrosion":
         capability_keys.add("CORROSION")
+    if ability == "regenerator":
+        capability_keys.add("REGENERATOR_SUSTAIN")
+
     if ability == "merciless":
         capability_keys.add("MERCILESS")
         capability_keys.add("STATUS_EXPLOIT_DAMAGE")
@@ -641,9 +647,47 @@ def _matched_weather_roles(
     return bool(matched), tuple(matched), tuple(contributing)
 
 
+def _screen_offensive_beneficiaries(team_data: list[dict] | None, screeners: set[str]) -> tuple[str, ...]:
+    """Identify offense-leaning saved teammates from their own comparable stats.
+
+    Avoid inventing base stats or using move presence as a proxy for offensive fit.
+    Compare stats within a Pokémon so mixed team levels do not bias the assessment.
+    """
+    def stat(mon: dict, *keys: str) -> float | None:
+        for key in keys:
+            value = mon.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0:
+                return float(value)
+        return None
+
+    beneficiaries: list[str] = []
+    for mon in team_data or []:
+        if not isinstance(mon, dict):
+            continue
+        name = str(mon.get("Pokemon") or "").strip()
+        if not name or name in screeners:
+            continue
+        attack = stat(mon, "ATK", "Atk", "Attack")
+        spa = stat(mon, "SPA", "SpA", "SpecialAttack", "Special Attack")
+        defense = stat(mon, "DEF", "Def", "Defense")
+        spd = stat(mon, "SPD", "SpD", "SpecialDefense", "Special Defense")
+        speed = stat(mon, "SPE", "Spe", "Speed")
+        if (attack is None and spa is None) or defense is None or spd is None:
+            continue
+        offense = max(x for x in (attack, spa) if x is not None)
+        bulk = (defense + spd) / 2
+        # Emphasize hard hitters whose offenses materially exceed their defenses;
+        # Speed modestly strengthens the profile but cannot qualify a weak attacker.
+        if offense >= bulk * 1.20 and (speed is None or speed >= bulk * 0.75):
+            beneficiaries.append(name)
+    return tuple(beneficiaries)
+
+
 def evaluate_strategy_viability(
     strategy_key: str,
     capability_results: list[StrategicCapabilityResult],
+    *,
+    team_data: list[dict] | None = None,
 ) -> StrategyViabilityResult:
     """Evaluate generic team readiness as Incomplete, Viable, or Strong.
 
@@ -683,48 +727,54 @@ def evaluate_strategy_viability(
         ]
         supports = [
             ("Corrosion access", {"CORROSION"}),
-            ("setup or sustain", {"SPECIAL_SETUP", "PHYSICAL_SETUP", "RELIABLE_RECOVERY", "DAMAGE_RECOVERY"}),
+            ("setup or sustain", {"SPECIAL_SETUP", "PHYSICAL_SETUP", "RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN"}),
         ]
     elif key == "poison_attrition":
         required = [
             ("reliable poison", {"STATUS_POISON_RELIABLE", "STATUS_POISON_TEAM_SETUP", "STATUS_POISON_CONTACT"}),
-            ("attrition anchor", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "PROTECTION", "DEFENSE_SETUP", "SCREEN"}),
+            ("attrition anchor", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN", "PROTECTION", "DEFENSE_SETUP", "SCREEN"}),
         ]
         supports = [
             ("poison control/payoff", {"POISON_EXPLOIT_CONTROL", "POISON_EXPLOIT_DAMAGE", "MERCILESS"}),
             ("setup denial", {"SETUP_DENIAL"}),
         ]
     elif key == "screen_control":
-        required = [
-            ("screen setter", {"SCREEN"}),
-            ("offensive beneficiary", {"OFFENSIVE_PHYSICAL", "OFFENSIVE_SPECIAL", "OFFENSIVE_MIXED"}),
-        ]
+        # The setter is the lynchpin. Attack moves on that setter (or any other
+        # teammate) do not, by themselves, make this a Strong screen team.
+        screeners = [r for r in capability_results if "DUAL_SCREEN" in r.capability_keys]
+        screen_names = {r.pokemon_name for r in screeners}
+        beneficiaries = _screen_offensive_beneficiaries(team_data, screen_names)
+        required = [("reliable screen setter", {"DUAL_SCREEN"})]
         supports = [
-            ("dual screens", {"DUAL_SCREEN"}),
-            ("fast/priority delivery", {"FAST_SCREEN", "PRIORITY_SCREEN"}),
-            ("physical offense", {"OFFENSIVE_PHYSICAL"}),
-            ("special offense", {"OFFENSIVE_SPECIAL"}),
+            ("priority screen delivery", {"PRIORITY_SCREEN"}),
+            ("fast screen delivery", {"FAST_SCREEN"}),
         ]
-        screeners = [result for result in capability_results if "SCREEN" in result.capability_keys]
-        attackers = [
-            result for result in capability_results
-            if {"OFFENSIVE_PHYSICAL", "OFFENSIVE_SPECIAL", "OFFENSIVE_MIXED"}.intersection(result.capability_keys)
-        ]
-        distinct_beneficiary = any(
-            screener.pokemon_name != attacker.pokemon_name
-            for screener in screeners
-            for attacker in attackers
+        if not screeners:
+            status = "Incomplete"
+            detail = "no reliable dual-screen setter yet; seek Reflect + Light Screen."
+        elif beneficiaries:
+            status = "Strong"
+            detail = ("reliable screen setup supports offense-oriented teammates: "
+                      + ", ".join(beneficiaries) + ".")
+        else:
+            status = "Viable"
+            detail = ("the setter can establish screens. For greater payoff, favor "
+                      "fast, hard-hitting teammates with comparatively low bulk "
+                      "(for example Salazzle or Gengar); individual stat evidence "
+                      "is needed before rating this team Strong.")
+        return StrategyViabilityResult(
+            strategy_key=key,
+            viability=status,
+            viability_rank=_VIABILITY_RANK[status],
+            summary=f"Screen Control is {status.lower()}: {detail}",
+            required_roles=("reliable screen setter",),
+            satisfied_required_roles=("reliable screen setter",) if screeners else (),
+            missing_required_roles=() if screeners else ("reliable screen setter",),
+            supporting_roles=tuple(name for name, keys in supports
+                                   if _role_satisfied(capability_results, keys)),
+            contributing_pokemon=tuple(dict.fromkeys([*screen_names, *beneficiaries])),
+            one_change_away=False,
         )
-        if not distinct_beneficiary:
-            # A lone Pokémon carrying a screen and attacks is not a team Screen Control package.
-            required[1] = ("offensive beneficiary", set())
-        strong_bonus = (
-            distinct_beneficiary
-            and _role_satisfied(capability_results, {"DUAL_SCREEN"})
-            and _role_satisfied(capability_results, {"OFFENSIVE_PHYSICAL"})
-            and _role_satisfied(capability_results, {"OFFENSIVE_SPECIAL"})
-        )
-        strong_support_threshold = 3
     elif key == "setup_offense":
         required = [
             ("offensive setup", {"PHYSICAL_SETUP", "SPECIAL_SETUP", "MIXED_SETUP"}),
@@ -733,7 +783,7 @@ def evaluate_strategy_viability(
         supports = [
             ("Speed control", {"SPEED_SETUP", "SPEED_BOOST"}),
             ("facilitation", {"SETUP_FACILITATION", "SCREEN"}),
-            ("sustain", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "PROTECTION"}),
+            ("sustain", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN", "PROTECTION"}),
         ]
         strong_bonus = _role_satisfied(capability_results, {"SPEED_BOOST", "SPEED_SETUP"})
     elif key == "status_control_punish":
@@ -744,7 +794,7 @@ def evaluate_strategy_viability(
         supports = [
             ("any-status damage payoff", {"STATUS_EXPLOIT_ANY_DAMAGE"}),
             ("setup denial", {"SETUP_DENIAL"}),
-            ("sustain/protection", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "PROTECTION"}),
+            ("sustain/protection", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN", "PROTECTION"}),
         ]
         strong_bonus = _role_satisfied(capability_results, {"STATUS_EXPLOIT_ANY_DAMAGE"})
     elif key == "weather_control":
@@ -798,7 +848,7 @@ def evaluate_strategy_viability(
         )
     elif key == "defensive_attrition":
         required = [
-            ("survival loop", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "PROTECTION", "DEFENSE_SETUP"}),
+            ("survival loop", {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN", "PROTECTION", "DEFENSE_SETUP"}),
             ("attrition pressure", {"BODY_PRESS", "CONTACT_PUNISHMENT", "PASSIVE_CHIP"}),
         ]
         supports = [
@@ -943,7 +993,10 @@ def _recommendation_candidate(
 
     gains: list[str] = []
     if roles_filled:
-        gains.append("fills " + ", ".join(roles_filled))
+        if recommendation_kind == "pokemon":
+            gains.append("team gains " + ", ".join(roles_filled))
+        else:
+            gains.append("team gains " + ", ".join(roles_filled))
     if support_added:
         gains.append("adds " + ", ".join(support_added))
     gain_text = "; ".join(gains) if gains else "improves the strategy package"
@@ -965,6 +1018,104 @@ def _recommendation_candidate(
     )
 
 
+def _potential_ability_options(pokemon: dict) -> tuple[tuple[str, str | None], ...]:
+    """Enumerate actual individual Ability builds; unresolved species are conservative."""
+    pokemon_id = resolve_pokemon_id(
+        pokemon.get("Pokemon"), gender=pokemon.get("Gender"),
+        nature=pokemon.get("Nature"), form=pokemon.get("Form"),
+    )
+    if not pokemon_id:
+        return ((str(pokemon.get("Ability") or ""), None),)
+    try:
+        names = eligible_abilities(pokemon_id)
+    except (OSError, ValueError, KeyError):
+        names = ()
+    if not names:
+        return ((str(pokemon.get("Ability") or ""), None),)
+    return tuple((name, ability_eligibility(pokemon_id, name)) for name in names)
+
+
+def _ability_strategy_bonus(strategy_key: str, ability: str, capabilities: set[str]) -> float:
+    """Reward abilities only if they assist a strategy-specific role."""
+    key = _canonical_strategy_key(strategy_key)
+    a = ability.casefold()
+    bonus = {
+        "poison_offensive_pressure": {"merciless": 55, "corrosion": 45},
+        "poison_attrition": {"regenerator": 65, "corrosion": 30, "merciless": 15},
+        "screen_control": {"prankster": 15},
+        "setup_offense": {"speed boost": 55, "simple": 40, "contrary": 25, "moxie": 25},
+        "status_control_punish": {"prankster": 25, "merciless": 20},
+        "weather_control": {"drizzle": 65, "drought": 65, "sand stream": 65,
+                            "snow warning": 65, "swift swim": 30, "chlorophyll": 30,
+                            "sand rush": 30, "slush rush": 30, "solar power": 25},
+        "defensive_attrition": {"regenerator": 60, "iron barbs": 50,
+                                "rough skin": 50, "stamina": 35, "magic guard": 25,
+                                "fur coat": 35, "fluffy": 30},
+    }.get(key, {})
+    value = float(bonus.get(a, 0))
+    if a == "prankster" and not ({"SCREEN", "STATUS_ANY_RELIABLE", "STATUS_POISON_RELIABLE",
+                                 "SETUP_FACILITATION"} & capabilities or
+                                any(c.startswith("WEATHER_SET_") for c in capabilities)):
+        return 0.0
+    if a in {"swift swim", "chlorophyll", "sand rush", "slush rush", "solar power"} and not any(c.startswith("WEATHER_BENEFIT_") for c in capabilities):
+        return 0.0
+    return value
+
+
+_NATURAL_SCREEN_METHODS = {"level", "evolution", "relearner", "reminder"}
+
+
+def _screen_acquisition_tier(pokemon: dict, learnsets_data: dict) -> tuple[int, bool]:
+    """Screen performance first: Prankster dual screens beat natural-only access."""
+    natural = 0
+    supported = 0
+    for name in ("Reflect", "Light Screen"):
+        methods = supported_strategy_move_methods(pokemon, name, learnsets_data)
+        if methods:
+            supported += 1
+            if any(str(m.get("method") or "").casefold() in _NATURAL_SCREEN_METHODS for m in methods):
+                natural += 1
+    prankster = str(pokemon.get("Ability") or "").casefold() == "prankster"
+    if supported == 2 and prankster:
+        return (8 if natural == 2 else 7), prankster
+    if supported == 2:
+        return (6 if natural == 2 else 5 if natural == 1 else 4), prankster
+    if supported == 1:
+        return (3 if prankster else 2 if natural else 1), prankster
+    return 0, prankster
+
+
+def _prankster_status_bonus(strategy_key: str, pokemon: dict, learnsets_data: dict, moves_data: list[dict]) -> float:
+    """Small delivery bonus only for a relevant learnable status move."""
+    if str(pokemon.get("Ability") or "").casefold() != "prankster":
+        return 0.0
+    key = _canonical_strategy_key(strategy_key)
+    categories = {
+        "screen_control": {"Reflect", "Light Screen"},
+        "weather_control": {"Rain Dance", "Sunny Day", "Sandstorm", "Hail"},
+        "poison_offensive_pressure": {"Toxic", "Poison Gas"},
+        "poison_attrition": {"Toxic", "Poison Gas"},
+    }
+    names = set(supported_strategy_move_names(pokemon, learnsets_data, moves_data))
+    if key in categories:
+        relevant = names & categories[key]
+    elif key == "status_control_punish":
+        lookup = {m.get("Move"): m for m in moves_data if isinstance(m, dict)}
+        relevant = {name for name in names if name in lookup and
+                    str(lookup[name].get("Category") or "") == "Status" and
+                    (str(lookup[name].get("StatusEffect") or "").casefold() in
+                     {"burn", "paralysis", "paralyze", "sleep", "poison"} or name == "Yawn")}
+    elif key in {"setup_offense", "defensive_attrition"}:
+        lookup = {m.get("Move"): m for m in moves_data if isinstance(m, dict)}
+        relevant = {name for name in names if name in lookup and
+                    str(lookup[name].get("Category") or "") == "Status" and
+                    (name in {"Reflect", "Light Screen", "Taunt", "Thunder Wave", "Will-O-Wisp", "Toxic"} or
+                     _target_negative_stage_changes(lookup[name]))}
+    else:
+        relevant = set()
+    return 15.0 if relevant else 0.0
+
+
 def _recommendation_sort_key(candidate: StrategyRecommendationCandidate) -> tuple:
     # Python's sort is stable, so exact ties preserve caller/data order instead of
     # introducing an arbitrary alphabetical preference.
@@ -976,6 +1127,36 @@ def _recommendation_sort_key(candidate: StrategyRecommendationCandidate) -> tupl
     )
 
 
+
+
+# Recommendation-side capability scoring. No move-combination search.
+def _weighted_role_quality(strategy_key: str, pokemon: dict, names: set[str], caps: set[str], learnsets_data: dict) -> float:
+    key = _canonical_strategy_key(strategy_key)
+    ability = str(pokemon.get("Ability") or "").casefold()
+    has = names.__contains__
+    if key == "screen_control":
+        tier, _ = _screen_acquisition_tier(pokemon, learnsets_data)
+        # Delivery tier is a real priority, not a tiny bonus after viability.
+        return tier * 130 + (110 if {"Reflect", "Light Screen"} <= names else 0)
+    if key == "poison_attrition":
+        poison = 100 if (names & {"Toxic", "Toxic Spikes", "Poison Gas", "Baneful Bunker"}) else 0
+        sustain = 115 if has("Recover") else (55 if has("Rest") else 0)
+        defense = 90 if has("Baneful Bunker") else (35 if names & {"Protect", "Spiky Shield", "Obstruct"} else 0)
+        return poison + sustain + defense + (95 if ability == "regenerator" else 0) + (30 if has("Toxic Spikes") else 0)
+    if key == "poison_offensive_pressure":
+        return (115 if names & {"Toxic", "Toxic Spikes", "Poison Gas"} else 0) + (125 if names & {"Venoshock", "Hex"} else 0) + (80 if ability == "merciless" else 0) + (65 if ability == "corrosion" else 0)
+    if key == "status_control_punish":
+        return (100 if "STATUS_ANY_RELIABLE" in caps else 0) + (125 if names & {"Hex", "Venoshock"} else 0) + (65 if ability == "prankster" and "STATUS_ANY_RELIABLE" in caps else 0)
+    if key == "weather_control":
+        automatic = {"drizzle", "drought", "sand stream", "snow warning"}
+        return (200 if ability in automatic else 0) + (90 if any(c.startswith("WEATHER_SET_") for c in caps) else 0) + (80 if any(c.startswith("WEATHER_BENEFIT_") for c in caps) else 0)
+    if key == "setup_offense":
+        return (125 if caps & {"PHYSICAL_SETUP", "SPECIAL_SETUP"} else 0) + (80 if caps & {"SPEED_SETUP", "SPEED_BOOST"} else 0) + (65 if caps & {"SETUP_FACILITATION", "SCREEN"} else 0)
+    if key == "defensive_attrition":
+        return (110 if names & {"Recover", "Roost", "Slack Off", "Shore Up", "Strength Sap"} else 0) + (110 if {"Iron Defense", "Body Press"} <= names else 0) + (85 if caps & {"CONTACT_PUNISHMENT", "PASSIVE_CHIP"} else 0) + (85 if ability == "regenerator" else 0)
+    return 0.0
+
+
 def recommend_strategy_pokemon_additions(
     strategy_key: str,
     current_capability_results: list[StrategicCapabilityResult],
@@ -985,38 +1166,99 @@ def recommend_strategy_pokemon_additions(
     *,
     limit: int | None = 5,
 ) -> list[StrategyRecommendationCandidate]:
-    """Rank supported Pokémon additions by simulated strategy improvement.
-
-    `candidate_pokemon_data` should already be filtered for game/version/progression
-    availability by the caller. Each candidate is evaluated using supported learnable
-    moves, not as though those moves are already equipped on the live team.
-    """
+    """Rank final-form potential directly, without inventing a full moveset."""
     before = evaluate_strategy_viability(strategy_key, current_capability_results)
     if before.viability == "Strong":
         return []
-
-    candidates: list[StrategyRecommendationCandidate] = []
+    lookup = {m["Move"]: m for m in moves_data if isinstance(m, dict) and isinstance(m.get("Move"), str)}
+    out = []
     for pokemon in candidate_pokemon_data:
         if not isinstance(pokemon, dict) or not pokemon.get("Pokemon"):
             continue
-        potential = recognize_learnable_pokemon_capabilities(pokemon, moves_data, learnsets_data)
-        after_results = [*current_capability_results, potential]
-        after = evaluate_strategy_viability(strategy_key, after_results)
-        recommendation = _recommendation_candidate(
-            strategy_key=strategy_key,
-            recommendation_kind="pokemon",
-            pokemon_name=potential.pokemon_name,
-            move_name=None,
-            replace_move_name=None,
-            before=before,
-            after=after,
-            capability_keys_added=set(potential.capability_keys),
-        )
-        if recommendation is not None:
-            candidates.append(recommendation)
+        names = set(supported_strategy_move_names(pokemon, learnsets_data, moves_data))
+        best = None
+        for ability, eligibility in _potential_ability_options(pokemon):
+            build = dict(pokemon, Ability=ability)
+            caps = _recognize_capability_keys(build, tuple(names), lookup)
+            display_name = str(build["Pokemon"])
+            if build.get("_strategy_gender_variant") and build.get("Gender") in {"Male", "Female"}:
+                display_name = f'{display_name} ({build["Gender"]})'
+            result = StrategicCapabilityResult(display_name, tuple(k for k in _CAPABILITY_ORDER if k in caps), tuple(CAPABILITY_LABELS[k] for k in _CAPABILITY_ORDER if k in caps))
+            after = evaluate_strategy_viability(strategy_key, [*current_capability_results, result])
+            rec = _recommendation_candidate(strategy_key=strategy_key, recommendation_kind="pokemon", pokemon_name=result.pokemon_name, move_name=None, replace_move_name=None, before=before, after=after, capability_keys_added=caps)
+            if rec is None:
+                continue
+            quality = _weighted_role_quality(strategy_key, build, names, caps, learnsets_data)
+            # Strategic role fit dominates viability/support flag counts.
+            score = quality + max(0, len(before.missing_required_roles) - len(after.missing_required_roles)) * 20 + max(0, after.viability_rank - before.viability_rank) * 15
+            score += (0 if _canonical_strategy_key(strategy_key) == "screen_control" else _ability_strategy_bonus(strategy_key, ability, caps) * 0.35)
+            if _canonical_strategy_key(strategy_key) != "screen_control":
+                score += _prankster_status_bonus(strategy_key, build, learnsets_data, moves_data)
+            if pokemon.get("_available_now") is True:
+                score += 0.5
+            label = (f" Recommended Ability: {ability}" + (" (Hidden Ability; acquisition must be verified)" if eligibility == "hidden" else " (normal Ability)" if eligibility == "normal" else " (saved Ability)") + ".") if ability else ""
+            rec = replace(rec, score=score, summary=rec.summary + label)
+            if best is None or rec.score > best.score:
+                best = rec
+        if best:
+            try:
+                badge = int(pokemon.get("required_badge"))
+            except (TypeError, ValueError):
+                badge = None
+            availability = ("Available at your current badge count." if pokemon.get("_available_now") is True else f"Available after {badge} badge(s); you can plan it now." if badge is not None else "Availability depends on Journey progression.")
+            out.append(replace(best, summary=best.summary + " " + availability))
+    out.sort(key=lambda c: c.score, reverse=True)
+    return out if limit is None else out[:max(0, limit)]
 
-    candidates.sort(key=_recommendation_sort_key, reverse=True)
-    return candidates if limit is None else candidates[:max(limit, 0)]
+
+_STRATEGY_MOVE_PURPOSES = {
+    "screen_control": (("Reflect", "Core — protects the team from physical attacks"), ("Light Screen", "Core — protects the team from special attacks")),
+    "poison_attrition": (("Toxic Spikes", "Core option — poisons incoming grounded opponents"), ("Toxic", "Core option — poisons the current target"), ("Baneful Bunker", "Support — protects while punishing contact"), ("Recover", "Support — sustains the attrition loop")),
+    "poison_offensive_pressure": (("Toxic Spikes", "Core option — poisons switch-ins"), ("Toxic", "Core option — poisons the current opponent"), ("Venoshock", "Payoff — doubles power against poisoned targets"), ("Hex", "Payoff — doubles power against statused targets")),
+    "status_control_punish": (("Will-O-Wisp", "Core option — reliable burn setup"), ("Thunder Wave", "Core option — reliable paralysis"), ("Yawn", "Core option — forces sleep or a switch"), ("Hex", "Payoff — doubles power against statused targets")),
+    "setup_offense": (("Swords Dance", "Core option — raises physical Attack"), ("Nasty Plot", "Core option — raises Special Attack"), ("Calm Mind", "Core option — boosts special offense and defense"), ("Agility", "Support — increases Speed")),
+    "weather_control": (("Rain Dance", "Core option — sets rain"), ("Sunny Day", "Core option — sets sun"), ("Sandstorm", "Core option — sets sand"), ("Hail", "Core option — sets hail")),
+    "defensive_attrition": (("Iron Defense", "Support — increases Defense"), ("Body Press", "Payoff — converts Defense into damage"), ("Leech Seed", "Support — persistent chip and healing"), ("Recover", "Support — restores HP"), ("Protect", "Support — buys a safe turn")),
+}
+
+
+def strategy_move_guidance(strategy_key: str, pokemon: dict, moves_data: list[dict], learnsets_data: dict, *, limit: int = 4) -> tuple[tuple[str, str, str], ...]:
+    """Offer only role-relevant moves, with purpose and supported acquisition."""
+    if limit <= 0:
+        return ()
+    names = set(supported_strategy_move_names(pokemon, learnsets_data, moves_data))
+    key = _canonical_strategy_key(strategy_key)
+    output = []
+    for name, purpose in _STRATEGY_MOVE_PURPOSES.get(key, ()):
+        if name not in names:
+            continue
+        methods = supported_strategy_move_methods(pokemon, name, learnsets_data)
+        labels = []
+        for method in methods:
+            how = str(method.get("method") or "").casefold()
+            item = method.get("item")
+            label = str(item) if item else "Move Reminder" if how in {"relearner", "reminder", "evolution"} else f"Level {method.get('level')}" if how == "level" and method.get("level") is not None else how.title()
+            if label not in labels:
+                labels.append(label)
+        output.append((name, purpose, " / ".join(labels) or "Supported method"))
+        if len(output) >= min(limit, 4):
+            break
+    # Dual-screen setters only need two moves; never pad with unrelated attacks.
+    return tuple(output)
+
+
+def recommend_strategy_moves_for_added_pokemon(
+    strategy_key: str,
+    current_capability_results: list[StrategicCapabilityResult],
+    pokemon: dict,
+    moves_data: list[dict],
+    learnsets_data: dict,
+    *,
+    limit: int = 4,
+) -> tuple[str, ...]:
+    """Compatibility helper for planning: moves with explicit strategic purposes only."""
+    del current_capability_results
+    return tuple(name for name, _, _ in strategy_move_guidance(strategy_key, pokemon, moves_data, learnsets_data, limit=limit))
 
 
 def _move_change_slots(pokemon: dict) -> list[int]:
@@ -1105,86 +1347,6 @@ def recommend_strategy_move_changes(
 
 
 
-def recommend_strategy_moves_for_added_pokemon(
-    strategy_key: str,
-    current_capability_results: list[StrategicCapabilityResult],
-    pokemon: dict,
-    moves_data: list[dict],
-    learnsets_data: dict,
-    *,
-    limit: int = 4,
-) -> tuple[str, ...]:
-    """Greedily build a supported strategy moveset for a proposed addition.
-
-    This is recommendation-side planning only. The returned moves are never treated
-    as equipped in live battle analysis. Each step adds the move that most improves
-    the same generic viability evaluator used everywhere else, then stops once no
-    remaining supported move improves strategy roles/support or the strategy reaches
-    Strong readiness.
-    """
-    if limit <= 0:
-        return ()
-
-    move_lookup = {
-        move["Move"]: move
-        for move in moves_data
-        if isinstance(move, dict)
-        and isinstance(move.get("Move"), str)
-        and move.get("Move")
-    }
-    available = [
-        name
-        for name in supported_strategy_move_names(
-            pokemon, learnsets_data, moves_data
-        )
-        if name in move_lookup
-    ]
-    if not available:
-        return ()
-
-    candidate = dict(pokemon)
-    for slot in range(1, 5):
-        candidate[f"Move{slot}"] = ""
-
-    selected: list[str] = []
-    current_result = recognize_pokemon_capabilities(candidate, move_lookup)
-    current_viability = evaluate_strategy_viability(
-        strategy_key, [*current_capability_results, current_result]
-    )
-
-    while len(selected) < min(limit, 4):
-        best: tuple[tuple[float, int, int, int], str, StrategicCapabilityResult, StrategyViabilityResult] | None = None
-        for move_name in available:
-            if move_name in selected:
-                continue
-            hypothetical = dict(candidate)
-            hypothetical[f"Move{len(selected) + 1}"] = move_name
-            result = recognize_pokemon_capabilities(hypothetical, move_lookup)
-            after = evaluate_strategy_viability(
-                strategy_key, [*current_capability_results, result]
-            )
-            added = set(result.capability_keys) - set(current_result.capability_keys)
-            viability_gain, required_gain, support_gain = _recommendation_improvement(
-                current_viability, after
-            )
-            score = _recommendation_score(current_viability, after, added)
-            rank = (score, viability_gain, required_gain, support_gain)
-            if not added and score <= 0:
-                continue
-            if best is None or rank > best[0]:
-                best = (rank, move_name, result, after)
-
-        if best is None or best[0][0] <= 0:
-            break
-
-        _, move_name, current_result, current_viability = best
-        candidate[f"Move{len(selected) + 1}"] = move_name
-        selected.append(move_name)
-        if current_viability.viability == "Strong":
-            break
-
-    return tuple(selected)
-
 def evaluate_strategy_recommendations(
     strategy_key: str,
     team_data: list[dict],
@@ -1202,7 +1364,7 @@ def evaluate_strategy_recommendations(
     reaches Viable or Strong. This is the gate intended for future near-readiness UI.
     """
     current_results = recognize_team_capabilities(team_data, moves_data)
-    current = evaluate_strategy_viability(strategy_key, current_results)
+    current = evaluate_strategy_viability(strategy_key, current_results, team_data=team_data)
 
     team_size = sum(
         1 for pokemon in team_data

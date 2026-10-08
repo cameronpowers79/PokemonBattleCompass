@@ -91,39 +91,35 @@ def require(name: str, condition: bool, detail: object = None) -> None:
 def main() -> None:
     total = 0
 
-    # Screen Control
+    # Screen Control: the setter alone establishes viability. Strong requires
+    # saved stat evidence for a separate offense-leaning teammate.
+    screen_team = [
+        mon("Orbeetle", "", "Reflect", "Light Screen"),
+        mon("Salazzle", "", "Psychic"),
+    ]
+    screen_team[1].update({"SPA": 170, "DEF": 80, "SPD": 75, "SPE": 155})
     result = evaluate_strategy_viability(
-        "screen_control",
-        capabilities([
-            mon("Orbeetle", "", "Reflect", "Light Screen"),
-            mon("Machamp", "", "Close Combat"),
-            mon("Alakazam", "", "Psychic"),
-        ]),
+        "screen_control", capabilities(screen_team), team_data=screen_team,
     )
-    require("Screen Control: dual screens + physical/special beneficiaries => Strong",
+    require("Screen Control: dual screens + offense-leaning teammate => Strong",
             result.viability == "Strong", result)
     total += 1
 
     result = evaluate_strategy_viability(
         "screen_control",
-        capabilities([
-            mon("Orbeetle", "", "Reflect", "Light Screen"),
-            mon("Machamp", "", "Close Combat"),
-        ]),
+        capabilities([mon("Orbeetle", "", "Reflect", "Light Screen")]),
     )
-    require("Screen Control: dual screens + one distinct attacker => Viable",
-            result.viability == "Viable", result)
+    require("Screen Control: dual-screen setter alone => Viable",
+            result.viability == "Viable" and not result.missing_required_roles, result)
     total += 1
 
     result = evaluate_strategy_viability(
         "screen_control",
-        capabilities([
-            mon("Orbeetle", "", "Reflect", "Light Screen", "Psychic"),
-        ]),
+        capabilities([mon("Orbeetle", "", "Reflect", "Psychic")]),
     )
-    require("Screen Control: lone screener/attacker does not count as a team package",
+    require("Screen Control: only one screen => Incomplete",
             result.viability == "Incomplete"
-            and "offensive beneficiary" in result.missing_required_roles,
+            and "reliable screen setter" in result.missing_required_roles,
             result)
     total += 1
 
