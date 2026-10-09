@@ -263,8 +263,10 @@ def get_effective_move_power(
         if user_speed <= 0:
             return 40
         speed_ratio = target_speed / user_speed
+        if speed_ratio >= 1:
+            return 40
         if speed_ratio > 0.5:
-            return 60 if speed_ratio <= 1 else 40
+            return 60
         if speed_ratio > (1 / 3):
             return 80
         if speed_ratio > 0.25:

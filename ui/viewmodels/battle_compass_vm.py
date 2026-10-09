@@ -854,6 +854,143 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
     ), projected
 
 
+def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Model an equipped self-boost followed by that same Pokémon's attack.
+
+    Project one setup turn only. No boosts are transferred to teammates or
+    inferred from earlier opponents. Full Analysis remains unboosted.
+    """
+    from engine.mechanics import get_item_speed_multiplier, get_guaranteed_weather
+    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    opponent_speed = float(get_stat(opponent, "SPE")) * float(get_item_speed_multiplier(opponent, items))
+    weather = get_guaranteed_weather({}, opponent)
+    weather_ability = {"swift swim": "Rain", "chlorophyll": "Sun",
+                       "sand rush": "Sandstorm", "slush rush": "Hail"}
+    required = weather_ability.get(str(opponent.get("Ability") or "").casefold())
+    if required and weather == required:
+        opponent_speed *= 2
+    uncertain_weather = bool(required and weather is None)
+    candidates = []
+    setup_lookup = _build_move_lookup(moves_data)
+    for member in team_data:
+        name = str(member.get("Pokemon") or "")
+        row = by_name.get(name)
+        if row is None:
+            continue
+        notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
+        if {"Likely Incoming OHKO", "Possible Incoming OHKO"} & notes:
+            continue
+        incoming = float(row.get("Incoming Worst Score") or 0)
+        hp = float(get_stat(member, "HP"))
+        # Move Score is not HP damage: use the actual damage-range model for
+        # the incoming threat instead of treating IWS as a damage estimate.
+        from engine.calculations import calculate_damage_range
+        worst_name = str(row.get("Worst Incoming Move") or "")
+        incoming_move = next((m for m in get_moves(opponent, moves_data)
+                              if m.get("Move") == worst_name), None)
+        if incoming_move is None:
+            continue
+        _, worst_max = calculate_damage_range(opponent, member, incoming_move, items, ability_rules)
+        if worst_max is None or float(worst_max) >= hp:
+            continue
+        own_speed = float(get_stat(member, "SPE")) * float(get_item_speed_multiplier(member, items))
+        own_weather_ability = weather_ability.get(str(member.get("Ability") or "").casefold())
+        entry_weather = get_guaranteed_weather(member, opponent)
+        if own_weather_ability and entry_weather == own_weather_ability:
+            own_speed *= 2
+        for equipped_setup in get_moves(member, moves_data):
+            setup = {**equipped_setup, **setup_lookup.get(str(equipped_setup.get("Move") or ""), {})}
+            if setup.get("Category") != "Status" or setup.get("StageChangeTarget") != "User":
+                continue
+            fields = (("ATK", "AtkStageChange"), ("SPA", "SpAStageChange"),
+                      ("SPE", "SpeStageChange"))
+            boosts = {stat: float(setup.get(field) or 0) for stat, field in fields}
+            if not any(value > 0 for value in boosts.values()):
+                continue
+            if any(value < 0 for value in boosts.values()):
+                continue
+            if str(setup.get("Move") or "") in {"Belly Drum", "Shell Smash"}:
+                # HP payment and defensive drops require additional survival modeling.
+                continue
+            speed_after = own_speed * ((2 + boosts["SPE"]) / 2 if boosts["SPE"] else 1)
+            speed_flip = bool(not uncertain_weather and own_speed <= opponent_speed < speed_after)
+            boosted_member = dict(member)
+            for stat in ("ATK", "SPA", "SPE"):
+                stage = boosts[stat]
+                if stage:
+                    # Speed-dependent attacks (particularly Electro Ball) must
+                    # receive the same boosted Speed as turn-order analysis.
+                    boosted_member[stat] = float(get_stat(member, stat)) * (2 + stage) / 2
+            attacks = []
+            for attack in get_moves(member, moves_data):
+                if attack.get("Category") not in {"Physical", "Special"}:
+                    continue
+                base = float(calculate_move_score(member, opponent, attack, items, ability_rules))
+                projected = float(calculate_move_score(boosted_member, opponent, attack, items, ability_rules))
+                if projected > 0:
+                    attacks.append((projected, base, attack))
+            if not attacks:
+                continue
+            boosted_score, base_score, attack = max(attacks, key=lambda item: item[0])
+            direct_score = float(row.get("Best MoveScore") or 0)
+            damage_gain = boosted_score / max(direct_score, 1)
+            if damage_gain < 1.15 and not speed_flip:
+                continue
+            setup_name = str(setup.get("Move") or "")
+            priority = int(float(setup.get("Priority") or 0))
+            if str(member.get("Ability") or "").casefold() == "prankster":
+                priority += 1
+            acts_first = priority > 0 or (priority == 0 and own_speed >= opponent_speed and not uncertain_weather)
+            risk_ratio = float(worst_max) / hp
+            # Unsafe two-turn setup is not justified by a hypothetical payoff.
+            if risk_ratio > 0.70 and not acts_first:
+                continue
+            if risk_ratio > 0.85:
+                continue
+            score = (min(damage_gain, 4) * 2.0 + (1.3 if speed_flip else 0)
+                     + min(float(row.get("Ratio") or 0), 5) * 0.35
+                     - risk_ratio * 1.4 + (0.25 if acts_first else 0))
+            candidates.append((score, member, setup_name, attack, row, boosted_score,
+                               base_score, speed_flip, own_speed, opponent_speed,
+                               speed_after, risk_ratio, uncertain_weather))
+    if not candidates:
+        return "No safe, worthwhile one-turn offensive setup was modeled. Use the strongest direct matchup."
+    (score, member, setup_name, attack, row, boosted_score, base_score,
+     flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(candidates, key=lambda x:x[0])
+    name = str(member.get("Pokemon") or "")
+    move_name = str(attack.get("Move") or "")
+    strong = damage_risk <= 0.4 and (boosted_score >= base_score * 1.5 or flip)
+    fit, rank = ("Strong", 3) if strong else ("Viable", 2)
+    speed_text = (f" Setup changes turn order: Speed {own_speed:.0f} → {speed_after:.0f} "
+                  f"versus {enemy_speed:.0f}." if flip else "")
+    assumption = (f"Assumes {name} successfully used {setup_name} and kept its stat boosts. "
+                  "Switching removes these boosts. The Compass cannot verify live battle state.")
+    detail = (f"Step 1: {name} uses {setup_name} if at sufficient HP to survive setup. "
+              f"Step 2: stay in and use {move_name}. Projected Move Score {boosted_score:.2f} "
+              f"versus {base_score:.2f} before setup.{speed_text} "
+              "Boosts are not carried over after switching or to another teammate.")
+    return dict(
+        pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+        lead_move=setup_name, fit=fit, fit_rank=rank,
+        summary=f"{setup_name} → {move_name}", reason=detail,
+        action=f"Set up with {name}", action_detail=detail,
+        plan_kind="offensive_setup", can_override_direct=True,
+        opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
+        opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
+        opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(row.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
+        strategy_branch="setup_offense", action_type="Offensive Setup", plan_role="Setup Sweeper",
+        fit_explanation=(f"{setup_name} enables {move_name} ({base_score:.2f} → {boosted_score:.2f}). "
+                         + ("Speed advantage gained. " if flip else "")
+                         + "Check HP before boosting."),
+        sequence_heading=f"{name} → {setup_name} → {move_name}",
+        state_assumption="No stat boosts are assumed active at entry.",
+        fallback_if_assumption_fails="If setup is unsafe or interrupted, use the named direct fallback.",
+        condition_detail=assumption,
+    )
+
+
 def build_battle_compass_view_model(
     *,
     team_data: list[dict],
@@ -1092,6 +1229,27 @@ def build_battle_compass_view_model(
                     f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
                     "Full Analysis retains unconditioned scores."
                 )
+    elif team_strategy == "setup_offense":
+        if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
+            fallback_reason = "Setup Offense uses Strongest Matchup for modeled doubles and Dynamax opponents."
+            why_text = f"{fallback_reason} {direct_why_text}".strip()
+        else:
+            setup_result = _setup_offense_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            if isinstance(setup_result, str):
+                fallback_reason = setup_result
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            elif setup_result is None:
+                fallback_reason = "No supported offensive setup found; use Strongest Matchup."
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            else:
+                selected_strategy_plan = StrategyPlanViewModel(**setup_result)
+                strategy_plans = [selected_strategy_plan]
+                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                why_text = (f"{selected_strategy_plan.state_assumption} "
+                            f"{selected_strategy_plan.action_detail} "
+                            f"Direct fallback: {direct_name} → "
+                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            "Full Analysis retains unboosted scores.")
     elif team_strategy == "screen_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = (

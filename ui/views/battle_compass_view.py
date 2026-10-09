@@ -2200,7 +2200,7 @@ class BattleCompassView:
         if view_model.team_strategy == "strongest_matchup":
             return None
 
-        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control", "status_control_punish"}:
+        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control", "status_control_punish", "setup_offense"}:
             readiness = evaluate_strategy_viability(
                 view_model.team_strategy,
                 recognize_team_capabilities(self.team_data, self.moves_data),
@@ -2260,7 +2260,7 @@ class BattleCompassView:
         if plan is not None:
             action = plan.sequence_heading or plan.action
             detail = plan.action_detail
-            if view_model.team_strategy in {"screen_control", "status_control_punish"}:
+            if view_model.team_strategy in {"screen_control", "status_control_punish", "setup_offense"}:
                 footer = " ".join(part for part in (
                     plan.state_assumption if plan.plan_kind == "screen_followup_assumed" else None,
                     plan.fallback_if_assumption_fails,

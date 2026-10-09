@@ -1649,6 +1649,108 @@ def strategy_move_guidance(strategy_key: str, pokemon: dict, moves_data: list[di
         attacks.sort(key=lambda row: (-row[1]["Power"], row[0]))
         purposes = [(name, "Optional payoff — STAB attack uses its stronger offensive stat while screens provide protection")
                     for name, _ in attacks[:2]]
+    if key == "setup_offense":
+        # Recommend a *small executable plan*, not four moves for four slots:
+        # one stat-appropriate boost and, where possible, one attacking payoff
+        # for each of the species' STAB types. Do not confuse raw BP with a
+        # usable setup payoff (e.g. Foul Play uses the target's Attack).
+        lookup = {m.get("Move"): m for m in moves_data if isinstance(m, dict) and m.get("Move")}
+        stats = role_base_stats(pokemon, "offense") or {}
+        atk, spa, spe = (float(stats.get(k) or 0) for k in ("ATK", "SPA", "SPE"))
+        favored = "Physical" if atk >= spa else "Special"
+        mixed = min(atk, spa) >= max(atk, spa) * 0.85 if max(atk, spa) else False
+        eligible_categories = {favored, "Special" if favored == "Physical" else "Physical"} if mixed else {favored}
+        pokemon_types = _planning_types(pokemon)
+
+        def _positive(move, field):
+            return (str(move.get("StageChangeTarget") or "") == "User"
+                    and float(move.get(field) or 0) > 0)
+
+        setup = []
+        for name in names:
+            move = lookup.get(name, {})
+            if move.get("Category") != "Status":
+                continue
+            physical, special, speed = (_positive(move, k) for k in
+                                        ("AtkStageChange", "SpAStageChange", "SpeStageChange"))
+            if not (physical or special or speed):
+                continue
+            if physical and favored != "Physical" and not mixed:
+                continue
+            if special and favored != "Special" and not mixed:
+                continue
+            if speed and not (physical or special) and spe >= 110 and "Electro Ball" not in names:
+                continue
+            offense_boost = float(move.get("AtkStageChange") or 0) if favored == "Physical" else float(move.get("SpAStageChange") or 0)
+            speed_boost = float(move.get("SpeStageChange") or 0)
+            defensive_boost = float(move.get("DefStageChange") or 0) + float(move.get("SpDStageChange") or 0)
+            merit = offense_boost * 18 + speed_boost * (17 if spe < 105 else 6) + defensive_boost * 4
+            if not (physical or special):
+                merit -= 12
+            setup.append((merit, name))
+        setup.sort(key=lambda row: (-row[0], row[1]))
+        purposes = []
+        if setup:
+            chosen_setup = setup[0][1]
+            purposes.append((chosen_setup, "Core setup — improves the selected attack or its Speed-based power"))
+            chosen = lookup[chosen_setup]
+            buffs = {"Physical": _positive(chosen, "AtkStageChange"),
+                     "Special": _positive(chosen, "SpAStageChange")}
+            speed_buff = _positive(chosen, "SpeStageChange")
+            attacks_by_type = {}
+            for name in names:
+                move = lookup.get(name, {})
+                category = move.get("Category")
+                if category not in eligible_categories:
+                    continue
+                # Foul Play and fixed-damage attacks are not improved by one's
+                # own boosted offensive stats. Speed changes only help moves
+                # explicitly modeled using the Speed ratio.
+                method = str(move.get("DamageMethod") or "")
+                if method in {"TargetATK", "Fixed", "TargetLevel"}:
+                    continue
+                receives_boost = buffs.get(category, False) or (speed_buff and method == "SpeedRatioDirect")
+                if not receives_boost:
+                    continue
+                # Steel Beam is postgame in Sword/Shield; recoil/recharge moves
+                # are poor default guidance for a setup sweeper.
+                if name in {"Steel Beam", "Giga Impact", "Hyper Beam", "Self-Destruct", "Explosion", "Mind Blown"}:
+                    continue
+                power = float(move.get("Power") or 0)
+                if method == "SpeedRatioDirect" and speed_buff:
+                    power = 80  # representative bracket; live engine determines actual BP
+                if power < 40:
+                    continue
+                move_type = str(move.get("Type") or "").casefold()
+                if move_type not in pokemon_types:
+                    continue
+                accuracy = float(move.get("Accuracy") or 100)
+                # Strong, reliable, accessible STAB beats a nominally high BP
+                # move with a major downside or postgame acquisition.
+                merit = power * min(max(accuracy, 1), 100) / 100
+                if category != favored:
+                    merit *= 0.85
+                if name in {"Outrage", "Petal Dance", "Thrash"}:
+                    merit *= 0.65
+                if name in {"Close Combat", "Superpower", "Draco Meteor", "Leaf Storm", "Overheat"}:
+                    merit *= 0.75
+                methods = supported_strategy_move_methods(pokemon, name, learnsets_data)
+                # Prefer learnable-by-level/TM/TR moves without postgame-only
+                # gates; a generic acquisition path may still be optional.
+                if methods and all(str(m.get("method") or "").casefold() in {"egg", "breeding"} for m in methods):
+                    continue
+                attacks_by_type.setdefault(move_type, []).append((merit, name))
+            # Journey catalog candidates store their types under a species-keyed
+            # `types` mapping, not necessarily Type1/Type2. Use the already
+            # resolved typing rather than reading missing flattened fields.
+            for move_type in sorted(pokemon_types):
+                options = attacks_by_type.get(move_type, [])
+                if not options:
+                    continue
+                options.sort(key=lambda row: (-row[0], row[1]))
+                purposes.append((options[0][1], "Payoff — STAB attack benefits from the chosen setup"))
+        # A one- or two-move recommendation is preferable to filler. Coverage
+        # and competing boosts are player choices, not mandatory commitments.
     if key == "weather_control":
         weather = str(pokemon.get("_strategy_weather_focus") or "").upper()
         role = str(pokemon.get("_strategy_weather_role") or "")
