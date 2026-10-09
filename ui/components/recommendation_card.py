@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import re
+import math
 from typing import Any, cast
 
 import flet as ft
@@ -75,6 +76,12 @@ class RecommendationCard(ft.Container):
         move_panel_label: str = "Best Move",
         score_label: str = "Move Score",
         score_text: str | None = None,
+        strategy_fit: str | None = None,
+        strategy_fit_explanation: str = "",
+        action_type: str = "",
+        plan_role: str = "",
+        condition_detail: str = "",
+        show_move_score: bool = True,
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -90,6 +97,12 @@ class RecommendationCard(ft.Container):
         self.move_panel_label = move_panel_label
         self.score_label = score_label
         self.score_text = score_text
+        self.strategy_fit = strategy_fit
+        self.strategy_fit_explanation = strategy_fit_explanation
+        self.action_type = action_type
+        self.plan_role = plan_role
+        self.condition_detail = condition_detail
+        self.show_move_score = show_move_score
 
         self.item_boosted = item_boosted
         self.held_item = held_item or "Held item"
@@ -353,7 +366,8 @@ class RecommendationCard(ft.Container):
         self._tutorial_best_move_panel = best_move_panel
 
         matchup_panel = ft.Container(
-            content=self._build_matchup_meter(),
+            content=(ft.Column(controls=[self._build_strategy_fit_meter(), ft.Divider(color=BORDER_DEFAULT), self._build_matchup_meter()], spacing=13)
+                     if self.strategy_fit else self._build_matchup_meter()),
             col={
                 "xs": 12,
                 "md": 5,
@@ -378,82 +392,65 @@ class RecommendationCard(ft.Container):
         )
 
     def _build_best_move_panel(self) -> ft.Control:
+        """Show role first, then action and its score; conditions are separate."""
         score_value = self.score_text if self.score_text is not None else f"{self.move_score:.2f}"
-        score_controls = cast(
-            list[ft.Control],
-            [
-                ft.Text(
-                    score_value,
-                    size=TEXT_SIZE_METRIC,
-                    weight=ft.FontWeight.BOLD,
-                    color=TEXT_PRIMARY,
-                ),
-            ],
-        )
-
+        score_controls: list[ft.Control] = [ft.Text(
+            score_value, size=TEXT_SIZE_METRIC, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY,
+        )]
         if self.item_boosted:
-            score_controls.append(
-                self._build_item_boost_popup()
-            )
-
-        return ft.Column(
-            controls=cast(
-                list[ft.Control],
-                [
-                    ft.Text(
-                        self.move_panel_label,
-                        size=TEXT_SIZE_BODY,
-                        color=TEXT_SECONDARY,
-                    ),
-                    ft.Row(
-                        controls=cast(
-                            list[ft.Control],
-                            [
-                                ft.Text(
-                                    self.best_move,
-                                    size=TEXT_SIZE_HERO_MOVE,
-                                    weight=ft.FontWeight.BOLD,
-                                    color=TEXT_PRIMARY,
-                                ),
-                                self._build_tutorial_move_type_badge(),
-                            ],
-                        ),
-                        spacing=9,
-                        wrap=True,
-                        vertical_alignment=(
-                            ft.CrossAxisAlignment.CENTER
-                        ),
-                    ),
-                    ft.Container(
-                        content=ft.Text(
-                            self.effectiveness_label,
-                            size=TEXT_SIZE_BODY_LARGE,
-                            weight=ft.FontWeight.BOLD,
-                            color=self.effectiveness_color,
-                        ),
-                        padding=ft.Padding.symmetric(
-                            horizontal=14,
-                            vertical=9,
-                        ),
-                        bgcolor="#182A24",
-                        border_radius=10,
-                    ),
-                    ft.Text(
-                        self.score_label,
-                        size=TEXT_SIZE_BODY,
-                        color=TEXT_SECONDARY,
-                    ),
-                    ft.Row(
-                        controls=score_controls,
-                        spacing=8,
-                        vertical_alignment=(
-                            ft.CrossAxisAlignment.CENTER
-                        ),
-                    ),
-                ],
-            ),
-            spacing=9,
-        )
+            score_controls.append(self._build_item_boost_popup())
+        controls: list[ft.Control] = []
+        if self.plan_role:
+            controls.extend([
+                ft.Text("Plan Role", size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
+                ft.Text(self.plan_role, size=TEXT_SIZE_BODY_LARGE,
+                        weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                ft.Divider(color=BORDER_DEFAULT, height=1),
+            ])
+        controls.extend([
+            ft.Text(self.move_panel_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
+            ft.Row(controls=[
+                ft.Text(self.best_move, size=TEXT_SIZE_HERO_MOVE,
+                        weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                self._build_tutorial_move_type_badge(),
+            ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+        ])
+        if self.action_type:
+            # Existing colored label is the Action Type; don't repeat its text.
+            controls.append(ft.Row(controls=[
+                ft.Container(content=ft.Text(self.action_type,
+                    size=TEXT_SIZE_BODY_LARGE, weight=ft.FontWeight.BOLD,
+                    color=self.effectiveness_color),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                    bgcolor="#182A24", border_radius=10),
+                *([ft.Text("Conditional", size=TEXT_SIZE_BODY, color=PRIMARY_BLUE_LIGHT),
+                    ft.PopupMenuButton(
+                    icon=ft.Icons.INFO_OUTLINE_ROUNDED,
+                    icon_color=PRIMARY_BLUE_LIGHT,
+                    tooltip="Conditional — tap to view assumed battle state",
+                    items=[ft.PopupMenuItem(
+                        content=ft.Container(content=ft.Column(controls=[
+                            ft.Text("Conditional recommendation", weight=ft.FontWeight.BOLD,
+                                    color=TEXT_PRIMARY, size=TEXT_SIZE_BODY),
+                            ft.Text(self.condition_detail, color=TEXT_SECONDARY,
+                                    size=TEXT_SIZE_BODY, no_wrap=False),
+                        ], spacing=8), width=280, padding=10),
+                    )],
+                )] if self.condition_detail else []),
+            ], spacing=8, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER))
+        else:
+            controls.append(ft.Container(content=ft.Text(self.effectiveness_label,
+                size=TEXT_SIZE_BODY_LARGE, weight=ft.FontWeight.BOLD,
+                color=self.effectiveness_color),
+                padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                bgcolor="#182A24", border_radius=10))
+        if self.show_move_score:
+            controls.extend([
+                ft.Text(self.score_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
+                ft.Row(controls=score_controls, spacing=8,
+                       vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ])
+        return ft.Column(controls=controls, spacing=9)
 
     def _build_tutorial_move_type_badge(self) -> ft.Control:
         """Build the clickable move-type badge used by the tutorial target."""
@@ -644,6 +641,33 @@ class RecommendationCard(ft.Container):
             ],
         )
 
+    def _build_strategy_fit_meter(self) -> ft.Control:
+        """An ordinal four-zone semicircular indicator; not a second Ratio meter."""
+        levels = {"Unsafe": 0, "Risky": 1, "Viable": 2, "Strong": 3}
+        index = levels.get(self.strategy_fit or "", 1)
+        colors = ["#D95A5A", "#E99A42", "#D8C44F", "#4ABB83"]
+        # Each quarter of the semicircle is a separate arc. The needle points
+        # at the midpoint of the currently selected qualitative zone.
+        chunks = []
+        for i, color in enumerate(colors):
+            a1 = math.pi - i * math.pi / 4
+            a2 = math.pi - (i + 1) * math.pi / 4
+            x1,y1 = 110 + 78*math.cos(a1), 101 - 78*math.sin(a1)
+            x2,y2 = 110 + 78*math.cos(a2), 101 - 78*math.sin(a2)
+            chunks.append(f'<path d="M {x1:.1f} {y1:.1f} A 78 78 0 0 1 {x2:.1f} {y2:.1f}" fill="none" stroke="{color}" stroke-width="16" opacity="{1 if i==index else .42}"/>')
+        angle = math.pi - (index+.5)*math.pi/4
+        x,y = 110+61*math.cos(angle),101-61*math.sin(angle)
+        svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="220" height="115" viewBox="0 0 220 115">'
+               + ''.join(chunks) + f'<path d="M110 101 L{x:.1f} {y:.1f}" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>'
+               + '<circle cx="110" cy="101" r="6" fill="#FFFFFF"/></svg>')
+        figure = ft.Image(src=svg, width=220, height=115, fit=ft.BoxFit.CONTAIN)
+        return ft.Column(controls=[
+            ft.Text("Strategic Fit", size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
+            figure,
+            ft.Text(self.strategy_fit or "Viable", size=20, weight=ft.FontWeight.BOLD, color=colors[index]),
+            ft.Text(self.strategy_fit_explanation, size=14, color=TEXT_SECONDARY, no_wrap=False),
+        ], spacing=5, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+
     def _build_matchup_meter(self) -> ft.Control:
         segment_colors = [
             "#C84B4B",
@@ -697,7 +721,7 @@ class RecommendationCard(ft.Container):
                 list[ft.Control],
                 [
                     ft.Text(
-                        "Matchup Strength",
+                        "Direct Matchup" if self.strategy_fit else "Matchup Strength",
                         size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY,
                     ),

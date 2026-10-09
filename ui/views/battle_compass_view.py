@@ -1201,6 +1201,41 @@ class BattleCompassView:
 
     def build(self) -> ft.Control:
         """Return the complete interactive Battle Compass view."""
+        # Keep each dropdown in normal left-to-right direction; reversing an
+        # entire Row also reverses the arrows and floating labels in Flet.
+        self.team_strategy_dropdown.width = 215
+        opponent_field = ft.Container(
+            content=self.opponent_dropdown,
+            col={"xs": 12, "md": 4},
+            alignment=ft.Alignment.CENTER_LEFT,
+        )
+        strategy_field = ft.Container(
+            content=ft.Row(
+                controls=[self.team_strategy_dropdown, self.strategy_recommender_button],
+                spacing=6,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.START,
+            ),
+            col={"xs": 12, "md": 4},
+            alignment=ft.Alignment.CENTER_LEFT,
+        )
+        explanation_field = ft.Container(
+            content=ft.Column(
+                controls=[self.strategy_description_text, self.strategy_status],
+                spacing=5,
+                tight=True,
+            ),
+            col={"xs": 12, "md": 4},
+            alignment=ft.Alignment.CENTER_LEFT,
+        )
+        # On narrow/mobile builds the frequently used Opponent selector goes
+        # last. Desktop puts it first, aligned with Your Starter above.
+        narrow = float(self.page.width or 940) < 900
+        settings_fields = (
+            [strategy_field, explanation_field, opponent_field]
+            if narrow else
+            [opponent_field, strategy_field, explanation_field]
+        )
         settings_card = ft.Container(
             content=ft.Column(
                 controls=cast(
@@ -1226,70 +1261,12 @@ class BattleCompassView:
                             spacing=14,
                             run_spacing=14,
                         ),
-                        ft.Container(
-                            content=ft.Row(
-                                controls=cast(
-                                    list[ft.Control],
-                                    [
-                                        ft.Container(
-                                            content=self.opponent_dropdown,
-                                            width=240,
-                                        ),
-                                        ft.Container(
-                                            content=ft.ResponsiveRow(
-                                                controls=[
-                                                    ft.Container(
-                                                        content=ft.Column(
-                                                            controls=[
-                                                                ft.Row(
-                                                                    controls=[
-                                                                        self.team_strategy_dropdown,
-                                                                        self.strategy_recommender_button,
-                                                                    ],
-                                                                    spacing=6,
-                                                                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                                                ),
-                                                                self.strategy_status,
-                                                            ],
-                                                            spacing=3,
-                                                            tight=True,
-                                                        ),
-                                                        col={
-                                                            "xs": 12,
-                                                            "md": 7,
-                                                        },
-                                                    ),
-                                                    ft.Container(
-                                                        content=self.strategy_description_text,
-                                                        col={
-                                                            "xs": 12,
-                                                            "md": 5,
-                                                        },
-                                                        padding=ft.Padding.only(
-                                                            top=4,
-                                                        ),
-                                                    ),
-                                                ],
-                                                columns=12,
-                                                spacing=12,
-                                                run_spacing=6,
-                                                vertical_alignment=(
-                                                    ft.CrossAxisAlignment.CENTER
-                                                ),
-                                            ),
-                                            width=650,
-                                        ),
-                                    ],
-                                ),
-                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                spacing=14,
-                                run_spacing=14,
-                                wrap=True,
-                                vertical_alignment=(
-                                    ft.CrossAxisAlignment.CENTER
-                                ),
-                            ),
-                            width=float("inf"),
+                        ft.ResponsiveRow(
+                            controls=cast(list[ft.Control], settings_fields),
+                            columns=12,
+                            spacing=14,
+                            run_spacing=12,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                     ],
                 ),
@@ -1928,39 +1905,38 @@ class BattleCompassView:
         score_text: str | None = None
 
         selected_plan = view_model.selected_strategy_plan
+        action_type = ""
+        plan_role = ""
+        fit_explanation = ""
+        tactical_fit = None
+        show_move_score = True
         if selected_plan is not None:
-            display_matchup_label = f"{selected_plan.fit} Strategic Fit"
-            display_matchup_level = {
-                "Strong": 3,
-                "Viable": 2,
-            }.get(selected_plan.fit, 1)
-
-            strategic_move = dict(
-                self.move_lookup.get(
-                    selected_plan.lead_move,
-                    {},
-                )
-            )
+            tactical_fit = selected_plan.fit
+            fit_explanation = selected_plan.fit_explanation
+            action_type = selected_plan.action_type
+            plan_role = selected_plan.plan_role
+            strategic_move = dict(self.move_lookup.get(selected_plan.lead_move, {}))
             strategic_move["Move"] = selected_plan.lead_move
-
             card_move = strategic_move
-            card_move_score = 0.0
-            card_item_boosted = False
-            is_screen_setup = selected_plan.plan_kind == "screen_setup"
-            if is_screen_setup:
-                card_effectiveness_label = "Screen setup"
-                card_effectiveness_color = strategy_color(view_model.team_strategy)
-                score_text = "Screen Setter"
-            elif selected_plan.plan_kind == "screen_followup_assumed":
-                card_effectiveness_label = "Conditional follow-up"
-                card_effectiveness_color = strategy_color(view_model.team_strategy)
-                score_text = "Protected Attacker"
-            else:
-                card_effectiveness_label = "Strategic action"
-                card_effectiveness_color = strategy_color(view_model.team_strategy)
-                score_text = "Strategy Plan"
             move_panel_label = "Recommended Move"
-            score_label = "Plan Role"
+            show_move_score = (str(card_move.get("Category") or "") in {"Physical", "Special"}
+                               and float(card_move.get("Power") or 0) > 0)
+            card_item_boosted = False
+            if show_move_score:
+                if selected_plan.attack_move_score is not None:
+                    card_move_score = selected_plan.attack_move_score
+                elif card_move.get("Move") == recommendation.best_move.get("Move"):
+                    card_move_score = recommendation.best_move_score
+                    card_item_boosted = recommendation.item_boosted
+                else:
+                    # Never present a different move's score as this attack's.
+                    show_move_score = False
+                if selected_plan.attack_score_conditional:
+                    score_label = ("Conditional Move Score (status active)"
+                                   if view_model.team_strategy == "status_control_punish"
+                                   else "Conditional Move Score (poison active)")
+            card_effectiveness_label = action_type or "Strategic Action"
+            card_effectiveness_color = strategy_color(view_model.team_strategy)
 
         recommendation_card = RecommendationCard(
             pokemon_name=recommendation.pokemon["Pokemon"],
@@ -2010,6 +1986,12 @@ class BattleCompassView:
             move_panel_label=move_panel_label,
             score_label=score_label,
             score_text=score_text,
+            strategy_fit=tactical_fit if view_model.team_strategy != "strongest_matchup" else None,
+            strategy_fit_explanation=fit_explanation,
+            action_type=action_type,
+            plan_role=plan_role,
+            condition_detail=(selected_plan.condition_detail if selected_plan else ""),
+            show_move_score=show_move_score,
         )
 
         threat_score = recommendation.incoming_worst_score
@@ -2218,7 +2200,7 @@ class BattleCompassView:
         if view_model.team_strategy == "strongest_matchup":
             return None
 
-        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control"}:
+        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control", "status_control_punish"}:
             readiness = evaluate_strategy_viability(
                 view_model.team_strategy,
                 recognize_team_capabilities(self.team_data, self.moves_data),
@@ -2259,7 +2241,7 @@ class BattleCompassView:
                      or ("Live Screen Control tactics are active. The Recommendation Card "
                          "shows the screen setup or conditional follow-up; actual screen "
                          "duration and field state must be confirmed during play."
-                         if view_model.team_strategy == "screen_control"
+                         if view_model.team_strategy in {"screen_control", "status_control_punish"}
                          else "This strategy's live tactical branch is not yet specialized.")),
                     size=12,
                     color=TEXT_MUTED,
@@ -2276,9 +2258,9 @@ class BattleCompassView:
 
         plan = view_model.selected_strategy_plan
         if plan is not None:
-            action = plan.action
+            action = plan.sequence_heading or plan.action
             detail = plan.action_detail
-            if view_model.team_strategy == "screen_control":
+            if view_model.team_strategy in {"screen_control", "status_control_punish"}:
                 footer = " ".join(part for part in (
                     plan.state_assumption if plan.plan_kind == "screen_followup_assumed" else None,
                     plan.fallback_if_assumption_fails,

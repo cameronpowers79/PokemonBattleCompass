@@ -12,9 +12,12 @@ engine output into UI-friendly objects without depending on Streamlit.
 
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TypedDict
-from engine.calculations import evaluate_team_matchups, find_best_team_member
+from engine.calculations import (
+    calculate_move_score, evaluate_team_matchups, find_best_team_member,
+    get_moves, get_stat, get_deterministic_fixed_damage, resolve_move_for_matchup,
+)
 from engine.data_loader import load_json
 from engine.strategy_capabilities import (
     describe_poison_attrition_fallback,
@@ -107,6 +110,13 @@ class StrategyPlanViewModel:
     recommended_pokemon_name: str = ""
     conditional_move_name: str | None = None
     conditional_move_score: float | None = None
+    action_type: str = ""
+    plan_role: str = ""
+    fit_explanation: str = ""
+    attack_move_score: float | None = None
+    attack_score_conditional: bool = False
+    sequence_heading: str = ""
+    condition_detail: str = ""
 @dataclass(frozen=True)
 
 
@@ -124,6 +134,7 @@ class BattleCompassViewModel:
     selected_strategy_plan: StrategyPlanViewModel | None = None
     strategy_fallback_reason: str | None = None
     direct_recommendation_name: str | None = None
+    direct_fallback_move_name: str | None = None
 
 
 def get_matchup_strength(ratio: float, is_immune: bool = False) -> tuple[str, int]:
@@ -386,6 +397,35 @@ def _strategy_why_text(plan: StrategyPlanViewModel, opponent: dict, poisoned_fol
     return "\n\n".join(paragraph for paragraph in paragraphs if paragraph)
 
 
+def _screened_worst_incoming(opponent, defender, screen, moves_data, items, ability_rules):
+    """Re-rank incoming Move Scores under one assumed active screen (singles).
+
+    Direct Matchup continues to use the unscreened scores. Screen effects are
+    conditional and do not apply to fixed damage, screen-breaking attacks,
+    attacks from Infiltrator, or critical hits (which aren't simulated).
+    """
+    protected_category = {"Reflect": "Physical", "Light Screen": "Special"}.get(screen)
+    if protected_category is None:
+        return None
+
+    infiltrator = str(opponent.get("Ability") or "").strip().casefold() == "infiltrator"
+    screen_breakers = {"Brick Break", "Psychic Fangs"}
+    scored = []
+    for move in get_moves(opponent, moves_data):
+        resolved = resolve_move_for_matchup(opponent, defender, move)
+        score = calculate_move_score(opponent, defender, move, items, ability_rules)
+        covered = (
+            resolved.get("Category") == protected_category
+            and get_deterministic_fixed_damage(opponent, resolved) is None
+            and not infiltrator
+            and str(resolved.get("Move") or "") not in screen_breakers
+        )
+        if covered:
+            score *= 0.5
+        scored.append((str(resolved.get("Move") or "Unknown move"), score))
+    return max(scored, key=lambda item: item[1]) if scored else None
+
+
 def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
     """Conservative single-opponent screen sequence, using only equipped moves.
 
@@ -482,10 +522,54 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
                   "The Compass cannot verify whether the screen is still active.")
         assumed = True
         assumption = f"Conditional: assumes {screen} was established on an earlier turn and remains active."
+    # These are *tactical* grades, distinct from the direct-matchup meter.
+    # A safe screen opener with priority and a useful follow-up earns Strong;
+    # uncertain post-setup survival/exit earns Viable or Risky.
+    setter_ratio = float(result.get("Ratio") or 0)
+    incoming_notes = {str(n.get("text") or "") for n in result.get("Battle Notes", []) if isinstance(n, dict)}
+    strong_payoff = bool(payoff and float(payoff.get("Ratio") or 0) >= 2)
+    if plan_kind == "screen_followup_assumed" and payoff:
+        attacker_ratio = float(payoff.get("Ratio") or 0)
+        attacker_notes = {str(n.get("text") or "") for n in payoff.get("Battle Notes", []) if isinstance(n, dict)}
+        threatened = bool({"Likely Incoming OHKO", "Possible Incoming OHKO"} & attacker_notes)
+        if threatened:
+            fit, rank = "Risky", 1
+        elif attacker_ratio >= 3:
+            fit, rank = "Strong", 3
+        elif attacker_ratio >= 1.5:
+            fit, rank = "Viable", 2
+        else:
+            fit, rank = "Risky", 1
+    elif setter_ratio < 1 and not priority:
+        fit, rank = "Risky", 1
+    elif strong_payoff and (priority or setter_ratio >= 2):
+        fit, rank = "Strong", 3
+    else:
+        fit, rank = "Viable", 2
+    chosen_member = next((m for m in team_data if str(m.get("Pokemon") or "") == action_name), {})
+    chosen_moves = {str(chosen_member.get(f"Move{i}") or "") for i in range(1, 5)}
+    pivot = next((m for m in ("U-turn", "Volt Switch", "Parting Shot", "Flip Turn", "Baton Pass") if m in chosen_moves), None)
+    contingency = f"{pivot} offers a pivot option, subject to surviving until it acts." if pivot else "An ordinary switch to the protected attacker is the modeled exit."
+    if plan_kind == "screen_followup_assumed" and payoff:
+        explanation = (f"{payoff_move} has a favorable direct matchup (Ratio "
+                       f"{float(payoff.get('Ratio') or 0):.2f}). "
+                       f"{screen} adds protection; fall back if it expires.")
+    else:
+        explanation = (f"{'Prankster priority' if priority else 'Modeled survival'} supports {screen}. "
+                       + (f"{payoff_name} offers a favorable follow-up. " if strong_payoff else "Follow-up is less secure. ")
+                       + (f"Exit: {pivot}." if pivot else "Exit: switch to the attacker."))
     return dict(
+        action_type="Screen Setup" if plan_kind == "screen_setup" else "Screen Payoff",
+        condition_detail=(f"Assumes {screen} was established earlier and is still active. "
+                          "If it has expired or was removed, use the named direct fallback."
+                          if assumed else ""),
+        plan_role="Screen Setter" if plan_kind == "screen_setup" else "Protected Attacker",
+        fit_explanation=explanation,
+        attack_move_score=float(payoff.get("Best MoveScore") or 0) if plan_kind == "screen_followup_assumed" and payoff else None,
+        sequence_heading=f"{screen} → {payoff_name}" if payoff_name else f"{setter} → {screen}",
         pokemon_name=action_name, recommended_pokemon_name=action_name,
         lead_pokemon_name=setter, lead_move=selected_move,
-        fit="Viable", fit_rank=2, summary=action, reason=detail,
+        fit=fit, fit_rank=rank, summary=action, reason=detail,
         action=action, action_detail=detail, plan_kind=plan_kind,
         can_override_direct=True,
         opener_threat_move=threat, opener_threat_category=threat_category or None,
@@ -498,6 +582,276 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
             if assumed else "If the setter is already damaged or unsafe, use Strongest Matchup instead."
         ),
     ), action_name, None
+
+
+# Status Control & Punish: each opposing Pokémon starts without an assumed status.
+# A later payoff is shown as a conditional *option*, not a status carried over
+# from the preceding opposing Pokémon.
+_STATUS_MOVES = {
+    "Will-O-Wisp": "burn", "Thunder Wave": "paralysis",
+    "Glare": "paralysis", "Stun Spore": "paralysis",
+    "Toxic": "poison", "Poison Gas": "poison",
+    "Hypnosis": "sleep", "Sleep Powder": "sleep", "Spore": "sleep",
+    
+}
+
+
+def _status_applicable(opponent: dict, move_name: str, status: str) -> bool:
+    """Conservative checks for known immunities; unknown interactions fall back."""
+    types = {str(opponent.get("Type1") or ""), str(opponent.get("Type2") or "")}
+    ability = str(opponent.get("Ability") or "").casefold().strip()
+    if ability in {"magic bounce", "good as gold", "comatose", "purifying salt"}:
+        return False
+    if status == "burn" and ("Fire" in types or ability in {"water veil", "water bubble"}):
+        return False
+    if status == "paralysis" and ("Electric" in types or ability in {"limber"}):
+        return False
+    if move_name == "Thunder Wave" and "Ground" in types:
+        return False
+    if status == "poison" and ("Poison" in types or "Steel" in types or ability in {"immunity", "pastel veil"}):
+        return False
+    if status == "sleep" and ability in {"insomnia", "vital spirit", "sweet veil"}:
+        return False
+    if move_name in {"Sleep Powder", "Stun Spore", "Spore"} and (
+        "Grass" in types or ability in {"overcoat", "sap sipper"}
+    ):
+        return False
+    return True
+
+
+def _status_payoff(team_data, opponent, moves_data, items, ability_rules, status=None):
+    """Highest real Move Score payoff compatible with the *proposed* status.
+
+    Hex works for any major status; Venoshock only when poisoned. The caller
+    must never project a poison-only payoff from burn or paralysis.
+    """
+    options = []
+    for member in team_data:
+        for move in get_moves(member, moves_data):
+            condition = str(move.get("ActivationCondition") or "")
+            if condition != "TargetAnyStatus" and not (
+                condition == "TargetPoisoned" and status in (None, "poison")
+            ):
+                continue
+            if str(move.get("Category") or "") not in {"Special", "Physical"}:
+                continue
+            multiplier = float(move.get("ActivationPowerMultiplier") or 1)
+            if multiplier <= 1:
+                continue
+            normal = float(calculate_move_score(member, opponent, move, items, ability_rules))
+            boosted_move = dict(move, Power=float(move.get("Power") or 0) * multiplier)
+            boosted = float(calculate_move_score(member, opponent, boosted_move, items, ability_rules))
+            if boosted > 0:
+                options.append((boosted, normal, member, str(move.get("Move") or "")))
+    return max(options, key=lambda row: row[0]) if options else None
+
+
+def _status_speed_analysis(setter, opponent, status, items):
+    """Compare actual equipped Speed against modeled opposing Speed.
+
+    Only deterministic entry weather is assumed; manually-set rain and
+    weather changes during the fight remain unmodeled. Paralysis halves
+    effective Speed in Gen VIII. Do not claim a flip if weather is uncertain.
+    """
+    from engine.mechanics import get_item_speed_multiplier, get_guaranteed_weather
+    own = float(setter.get("SPE") or 0) * float(get_item_speed_multiplier(setter, items))
+    enemy = float(get_stat(opponent, "SPE")) * float(get_item_speed_multiplier(opponent, items))
+    weather = get_guaranteed_weather(setter, opponent)
+    ability = str(opponent.get("Ability") or "").casefold()
+    weather_speed_abilities = {
+        "swift swim": "Rain", "chlorophyll": "Sun",
+        "sand rush": "Sandstorm", "slush rush": "Hail",
+    }
+    required_weather = weather_speed_abilities.get(ability)
+    if required_weather and weather == required_weather:
+        enemy *= 2
+    uncertain = bool(required_weather and weather is None)
+    if own <= 0 or enemy <= 0 or status != "paralysis":
+        return 0, ""
+    after = enemy * 0.5
+    flip = own <= enemy and own > after
+    if uncertain:
+        return 0, (f"Paralysis can reduce {opponent.get('Pokemon', 'the target')}'s Speed, but "
+                   f"{opponent.get('Ability')} may alter turn order if its weather is active; "
+                   "no guaranteed Speed flip is credited. ")
+    if flip:
+        return 1, (f"Paralysis flips turn order: {setter.get('Pokemon')} Speed {own:.0f} "
+                   f"versus opponent {enemy:.0f} before, {after:.0f} afterward. ")
+    return 0, (f"Paralysis lowers modeled opponent Speed {enemy:.0f} → {after:.0f}; "
+               f"{setter.get('Pokemon')}'s Speed is {own:.0f}, so no turn-order flip is projected. ")
+
+
+def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Plan setup against THIS target; never infer persistent status from its slot.
+
+    The Compass has no battle-state feedback, so it cannot assert a target is
+    already burned, poisoned, etc. Setup is the actionable first step; an
+    amplified attack is a *projected* follow-up, possibly from another member.
+    """
+    lookup = {str(r.get("Pokemon")): r for r in matchups}
+    # Evaluate each setter’s own payoff, rather than giving the team’s globally
+    # highest Hex user automatic priority as the setter.
+    candidates = []
+    opponent_moves = get_moves(opponent, moves_data)
+    physical_threat = any(m.get("Category") == "Physical" and float(m.get("Power") or 0) > 0
+                          for m in opponent_moves)
+    for member in team_data:
+        name = str(member.get("Pokemon") or "")
+        result = lookup.get(name)
+        if result is None:
+            continue
+        notes = {str(n.get("text") or "") for n in result.get("Battle Notes", []) if isinstance(n, dict)}
+        if {"Likely Incoming OHKO", "Possible Incoming OHKO"} & notes:
+            continue
+        for move in get_moves(member, moves_data):
+            move_name = str(move.get("Move") or "")
+            status = _STATUS_MOVES.get(move_name)
+            if not status or not _status_applicable(opponent, move_name, status):
+                continue
+            accuracy = float(move.get("Accuracy") or 0)
+            if accuracy <= 0:
+                accuracy = 100 if move_name in {"Glare", "Spore"} else 0
+            if accuracy < 70:
+                continue
+            priority = str(member.get("Ability") or "").casefold() == "prankster"
+            if priority and "Dark" in {opponent.get("Type1"), opponent.get("Type2")}:
+                continue
+            ratio = float(result.get("Ratio") or 0)
+            if ratio < 0.75 and not priority:
+                continue
+            # Status control retains value even when Hex cannot affect this target.
+            # Burn is especially helpful versus physical threats, independently
+            # of any projected status-amplified attack.
+            speed_flip, speed_note = _status_speed_analysis(member, opponent, status, items)
+            control_value = (3 if status == "burn" and physical_threat else
+                             2 if status == "paralysis" else 1)
+            pivot = any(member.get(f"Move{i}") in {"U-turn", "Volt Switch", "Parting Shot", "Flip Turn"}
+                        for i in range(1, 5))
+            own_payoff = _status_payoff([member], opponent, moves_data, items, ability_rules, status)
+            team_payoff = _status_payoff(team_data, opponent, moves_data, items, ability_rules, status)
+            # The original lexicographic tuple prioritized self-contained Hex
+            # above *any* defensive or offensive advantage. That could select a
+            # frail, poor-matchup setter over an excellent status setter with a
+            # much safer alternate attack. The direct ratio is a useful safety
+            # and contingency signal, but status control still adds value.
+            # Cap extreme ratios so an immunity does not dominate indefinitely.
+            own_boosted = float(own_payoff[0]) if own_payoff else 0.0
+            direct_score = float(result.get("Best MoveScore") or 0)
+            incoming = float(result.get("Incoming Worst Score") or 0)
+            is_status_payoff = bool(own_payoff and own_boosted > 0)
+            grade = (
+                min(max(ratio, 0.0), 8.0) * 1.25
+                + (0.85 if is_status_payoff else 0.0)
+                + (0.65 if priority else 0.0)
+                + control_value * 0.20
+                + (1.75 if speed_flip else 0.0)
+                + (0.35 if team_payoff and team_payoff[0] > 0 else 0.0)
+                + (0.20 if pivot else 0.0)
+                + min(max(accuracy - 70.0, 0.0), 30.0) / 100.0
+                + min(direct_score / max(incoming, 1.0), 5.0) * 0.12
+            )
+            candidates.append((grade, member, move_name, status, result, accuracy, pivot, own_payoff, team_payoff, speed_note, speed_flip))
+    if not candidates:
+        return None, "No reliable, safely modeled status setter can affect this opponent; use Strongest Matchup."
+    _, setter, move_name, status, result, accuracy, pivot, own_payoff, payoff, speed_note, speed_flip = max(candidates, key=lambda c: c[0])
+    # Judge the entire follow-through, not just the largest conditional Hex.
+    # A switch costs a turn and exposes the incoming Pokémon. The current
+    # unconditioned matchup is our conservative safety baseline: never project
+    # a switch into a recorded incoming OHKO or a clearly unfavorable matchup.
+    # Status may mitigate some physical attacks, but that is not sufficient to
+    # declare a previously unsafe switch safe without redoing the damage model.
+    setter_direct_score = float(result.get("Best MoveScore") or 0.0)
+    setter_direct_move = str(result.get("Best Move") or "")
+    if own_payoff and (not payoff or own_payoff[0] >= 0.70 * payoff[0]):
+        payoff = own_payoff
+    if payoff is not None:
+        projected_score, _, projected_member, _ = payoff
+        projected_name = str(projected_member.get("Pokemon") or "")
+        if projected_name != str(setter.get("Pokemon") or ""):
+            projected_matchup = lookup.get(projected_name)
+            projected_notes = {
+                str(note.get("text") or "")
+                for note in (projected_matchup or {}).get("Battle Notes", [])
+                if isinstance(note, dict)
+            }
+            projected_ratio = float((projected_matchup or {}).get("Ratio") or 0.0)
+            unsafe_switch = (
+                projected_matchup is None
+                or projected_ratio < 1.0
+                or bool({"Likely Incoming OHKO", "Possible Incoming OHKO"} & projected_notes)
+            )
+            # A cross-team payoff also needs enough upside to justify giving
+            # up a safe immediate attack from the Pokémon already on the field.
+            inadequate_gain = setter_direct_score > 0 and projected_score < setter_direct_score * 1.25
+            if unsafe_switch or inadequate_gain:
+                payoff = own_payoff
+        # Compare even a *self-contained* conditional payoff with the user's
+        # actual immediate attack. For example, Runerigus's Body Press is much
+        # better into Dark-type Scrafty than its resisted boosted Hex.
+        if payoff is not None and str(payoff[2].get("Pokemon") or "") == str(setter.get("Pokemon") or ""):
+            if setter_direct_score > 0 and float(payoff[0]) <= setter_direct_score:
+                payoff = None
+    name = str(setter.get("Pokemon") or "")
+    ratio = float(result.get("Ratio") or 0)
+    priority = str(setter.get("Ability") or "").casefold() == "prankster"
+    if (ratio >= 1.5 and accuracy >= 85) or (priority and ratio >= 0.8 and accuracy >= 85):
+        fit, rank = "Strong", 3
+    elif ratio >= 0.9:
+        fit, rank = "Viable", 2
+    else:
+        fit, rank = "Risky", 1
+
+    projected = None
+    if payoff is not None:
+        boosted, unboosted, payoff_member, payoff_move = payoff
+        payoff_name = str(payoff_member.get("Pokemon") or "")
+        same = name == payoff_name
+        followup = (f"stay in and use {payoff_move}" if same else
+                    f"switch to {payoff_name} and use {payoff_move}")
+        detail = (f"Step 1: {name} uses {move_name} to inflict {status} on this opponent. "
+                  f"Step 2: if status lands, {followup}. "
+                  "Reapply status separately against each new opponent.")
+        heading = (f"{name} → {move_name} → {payoff_move}" if same else
+                   f"{name} → {move_name} → {payoff_name} ({payoff_move})")
+        projected = (payoff_name, payoff_move, boosted, unboosted, status)
+        payoff_comment = ("The setter supplies its own payoff." if same else
+                          f"{payoff_name} supplies the payoff after a switch.")
+    else:
+        detail = (f"Step 1: {name} uses {move_name} to inflict {status} on this opponent. "
+                  "This provides status control even without a supported boosted attack. "
+                  "Choose a safe ordinary attack or switch afterward; reassess status for each new opponent.")
+        # No status-boosted move is usable, but the selected setter may still
+        # have a solid direct attack. Put that contingency in the quick heading.
+        direct_move = str(result.get("Best Move") or "").strip()
+        direct_score = float(result.get("Best MoveScore") or 0)
+        heading = (f"{name} → {move_name} → {direct_move}"
+                   if direct_move and direct_score > 0 else f"{name} → {move_name}")
+        if direct_move and direct_score > 0:
+            detail = (f"Step 1: {name} uses {move_name} to inflict {status} on this opponent. "
+                      f"Step 2: {direct_move} provides an immediate damaging alternative. "
+                      "Reassess status separately against each new opponent.")
+        payoff_comment = "The setter's direct attack is the safer or stronger follow-up here."
+    return dict(
+        pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+        lead_move=move_name, fit=fit, fit_rank=rank,
+        summary=f"Inflict {status} with {name}", reason=detail,
+        action=f"Establish {status} with {name}", action_detail=detail,
+        plan_kind="status_setup", can_override_direct=True,
+        opener_threat_move=str(result.get("Worst Incoming Move") or "") or None,
+        opener_threat_category=str(result.get("Worst Incoming Move Category") or "") or None,
+        opener_threat_type=str(result.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(result.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(result.get("Incoming Multiplier") or 1),
+        strategy_branch="status_control_punish", action_type="Status Setup",
+        plan_role="Status Setter",
+        fit_explanation=(f"{move_name}: {accuracy:g}% accuracy. "
+                         f"{'Prankster priority. ' if priority else ''}"
+                         f"{'Speed advantage projected. ' if speed_flip else ''}{payoff_comment}"),
+        sequence_heading=heading,
+        state_assumption="No status is assumed on this opponent before setup. " + speed_note,
+        fallback_if_assumption_fails="If status misses or cannot be established, use the named direct fallback.",
+        condition_detail="",
+    ), projected
 
 
 def build_battle_compass_view_model(
@@ -638,6 +992,57 @@ def build_battle_compass_view_model(
                     if plan.pokemon_name == selected_raw_plan.pokemon_name
                     and plan.plan_kind == selected_raw_plan.plan_kind
                 )
+                poison_kind = selected_strategy_plan.plan_kind
+                move_name = str(selected_strategy_plan.lead_move or "")
+                move_lookup = _build_move_lookup(moves_data)
+                move_record = move_lookup.get(move_name, {})
+                attack = (str(move_record.get("Category") or "") in {"Physical", "Special"}
+                          and float(move_record.get("Power") or 0) > 0)
+                recovery = move_name in {"Recover", "Roost", "Slack Off", "Soft-Boiled", "Rest", "Synthesis", "Moonlight", "Morning Sun", "Shore Up", "Milk Drink"}
+                defensive = move_name in {"Baneful Bunker", "Obstruct", "Protect", "Detect", "King's Shield", "Spiky Shield", "Iron Defense", "Amnesia", "Cosmic Power", "Stockpile", "Calm Mind"}
+                poison_setup_move = move_name in {"Toxic", "Toxic Spikes", "Poison Gas"}
+                assumed_poison = bool(selected_strategy_plan.assumed_poisoned)
+                payoff = (attack and assumed_poison
+                          and selected_strategy_plan.conditional_move_score is not None)
+                if recovery or defensive:
+                    action_type, plan_role = "Attrition", "Attrition Anchor"
+                elif poison_setup_move:
+                    action_type, plan_role = "Poison Setup", "Poison Setter"
+                elif payoff:
+                    action_type, plan_role = "Poison Payoff", "Poison Punisher"
+                elif attack:
+                    action_type, plan_role = "Direct Attack", "Direct Attacker"
+                elif "setup" in poison_kind or "toxic" in poison_kind:
+                    action_type, plan_role = "Poison Setup", "Poison Setter"
+                else:
+                    action_type, plan_role = "Attrition", "Attrition Anchor"
+                raw_fit = selected_strategy_plan.fit
+                fit = "Unsafe" if raw_fit == "Blocked" else raw_fit
+                if recovery or defensive:
+                    fit_reason = (f"{move_name} sustains the defensive plan. "
+                                  "Use it when healing or protection is needed; reassess incoming threats.")
+                elif payoff:
+                    fit_reason = (f"{move_name} exploits the assumed poison state. "
+                                  "Use the direct fallback if poison is absent.")
+                elif poison_setup_move:
+                    fit_reason = (f"{move_name} establishes poison pressure. "
+                                  "Use the direct fallback if setup is unsafe.")
+                else:
+                    fit_reason = ("The tactical plan balances matchup safety with poison pressure. "
+                                  "Use the direct fallback if conditions change.")
+                condition_detail = (
+                    "Assumes the opponent was poisoned on an earlier turn and is still poisoned. "
+                    "Battle Compass cannot verify live status; if poison is absent, use the named direct fallback."
+                    if payoff else ""
+                )
+                selected_strategy_plan = replace(
+                    selected_strategy_plan, fit=fit,
+                    action_type=action_type, plan_role=plan_role,
+                    fit_explanation=fit_reason,
+                    condition_detail=condition_detail,
+                    attack_move_score=selected_strategy_plan.conditional_move_score if payoff else None,
+                    attack_score_conditional=payoff,
+                )
                 recommended_name = selected_raw_plan.recommended_pokemon_name or selected_raw_plan.lead_pokemon_name or selected_raw_plan.pokemon_name
                 strategy_matchup = matchup_lookup.get(recommended_name)
                 if strategy_matchup is not None:
@@ -656,6 +1061,37 @@ def build_battle_compass_view_model(
                     strategy_branch=team_strategy,
                 )
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
+    elif team_strategy == "status_control_punish":
+        if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
+            fallback_reason = "Status Control & Punish falls back to direct offense for modeled doubles and Dynamax encounters."
+            why_text = f"{fallback_reason} {direct_why_text}".strip()
+        else:
+            status_result, payoff = _status_control_battle_plan(
+                team_data, opponent, matchup_results, moves_data, items, ability_rules
+            )
+            if status_result is None:
+                fallback_reason = payoff
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            else:
+                selected_strategy_plan = StrategyPlanViewModel(**status_result)
+                strategy_plans = [selected_strategy_plan]
+                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                payoff_detail = ""
+                if payoff is not None:
+                    payoff_name, payoff_move, boosted, unboosted, status = payoff
+                    payoff_detail = (
+                        f"With {status} active on THIS opponent, {payoff_name}'s {payoff_move} "
+                        f"has a projected conditional Move Score of {boosted:.2f} "
+                        f"versus {unboosted:.2f} without status. "
+                    )
+                why_text = (
+                    f"{selected_strategy_plan.state_assumption} "
+                    f"{selected_strategy_plan.action_detail} "
+                    f"{payoff_detail}"
+                    f"Direct fallback: {direct_name} → "
+                    f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                    "Full Analysis retains unconditioned scores."
+                )
     elif team_strategy == "screen_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = (
@@ -674,10 +1110,40 @@ def build_battle_compass_view_model(
                 selected_strategy_plan = StrategyPlanViewModel(**screen_plan)
                 strategy_plans = [selected_strategy_plan]
                 recommendation = matchup_lookup.get(screen_name, recommendation)
+                screen_move = (selected_strategy_plan.lead_move
+                               if selected_strategy_plan.plan_kind == "screen_setup"
+                               else "")
+                # Follow-up plans store the attack in lead_move. Recover the
+                # assumed screen from the explicit battle-state assumption.
+                if not screen_move:
+                    assumption = selected_strategy_plan.state_assumption or ""
+                    screen_move = ("Light Screen" if "Light Screen" in assumption
+                                   else "Reflect" if "Reflect" in assumption else "")
+                chosen_defender = next(
+                    (member for member in team_data if member.get("Pokemon") == screen_name),
+                    None,
+                )
+                screened = (
+                    _screened_worst_incoming(
+                        opponent, chosen_defender, screen_move,
+                        moves_data, items, ability_rules,
+                    )
+                    if chosen_defender is not None else None
+                )
+                mitigation_text = (
+                    f"With {screen_move} active, the Incoming Worst Move against "
+                    f"{screen_name} is {screened[0]}, with an Incoming Worst "
+                    f"Score of {screened[1]:.2f}. "
+                    "This assumes a single battle without a critical hit; "
+                    "Full Analysis retains the unscreened score."
+                    if screened is not None else ""
+                )
                 why_text = " ".join(filter(None, (
                     selected_strategy_plan.state_assumption,
+                    mitigation_text,
                     selected_strategy_plan.action_detail,
                     selected_strategy_plan.fallback_if_assumption_fails,
+                    f"Direct fallback if the screen is absent: {direct_name} → {recommendation.best_move.get('Move') if recommendation and recommendation.pokemon.get('Pokemon') == direct_name else next((r.get('Best Move') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}.",
                     "Full Analysis remains strategy-neutral for direct comparisons."
                 )))
     elif team_strategy != "strongest_matchup":
@@ -702,6 +1168,7 @@ def build_battle_compass_view_model(
         selected_strategy_plan=selected_strategy_plan,
         strategy_fallback_reason=fallback_reason,
         direct_recommendation_name=direct_name or None,
+        direct_fallback_move_name=next((str(r.get("Best Move") or "") for r in matchup_results if r.get("Pokemon") == direct_name), None),
     )
 
 
