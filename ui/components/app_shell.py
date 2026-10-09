@@ -76,7 +76,16 @@ class AppShell:
         self.pending_view: str | None = None
         self._my_journey_overlay_controls: list[ft.Control] = []
         self._return_to_top_threshold = 600.0
+        # A Journey import reconstructs AppShell without reconstructing Page.
+        # Remove any floating button left by older shells (including versions
+        # which used page.overlay); otherwise its scroll listener/control key
+        # can outlive the shell that owns it.
+        for old_control in list(self.page.overlay):
+            if getattr(old_control, "key", None) == "app-return-to-top-overlay":
+                self.page.overlay.remove(old_control)
+
         self._return_to_top_overlay = self._build_return_to_top_overlay()
+        self._return_to_top_overlay.visible = False
         self._return_to_top_is_attached = False
 
         # Live metrics from the shell-owned scrollable Column. These let
@@ -242,19 +251,21 @@ class AppShell:
         self,
         should_attach: bool,
     ) -> None:
-        """Attach or remove the button only when its state changes."""
+        """Show or hide a permanently mounted button without editing page.overlay.
 
+        Keeping the button in the shell's Stack prevents scroll events from
+        changing the Page overlay's child indices during a Journey reload.
+        """
         if should_attach == self._return_to_top_is_attached:
             return
-
-        if should_attach:
-            if self._return_to_top_overlay not in self.page.overlay:
-                self.page.overlay.append(self._return_to_top_overlay)
-        elif self._return_to_top_overlay in self.page.overlay:
-            self.page.overlay.remove(self._return_to_top_overlay)
-
         self._return_to_top_is_attached = should_attach
-        self.page.update()
+        self._return_to_top_overlay.visible = should_attach
+        try:
+            self._return_to_top_overlay.update()
+        except (RuntimeError, AssertionError):
+            # During a shell replacement, the old control may be unmounted.
+            # The new shell mounts with its own initially hidden button.
+            pass
 
     def _handle_shell_scroll(
         self,
@@ -340,7 +351,10 @@ class AppShell:
         """Return the complete application shell."""
 
         return ft.Container(
-            content=self.scroll_host,
+            content=ft.Stack(
+                controls=[self.scroll_host, self._return_to_top_overlay],
+                expand=True,
+            ),
             expand=True,
             bgcolor=APP_BACKGROUND,
             alignment=ft.Alignment.TOP_CENTER,

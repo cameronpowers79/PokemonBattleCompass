@@ -386,6 +386,120 @@ def _strategy_why_text(plan: StrategyPlanViewModel, opponent: dict, poisoned_fol
     return "\n\n".join(paragraph for paragraph in paragraphs if paragraph)
 
 
+def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Conservative single-opponent screen sequence, using only equipped moves.
+
+    Returns a selected tactical plan and its target recommendation, or a reason
+    to keep Strongest Matchup. No persistent battle-state assumptions are stored.
+    """
+    lookup = _build_move_lookup(moves_data)
+    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    opponents = [str(opponent.get(f"Move{i}") or "") for i in range(1, 5)]
+    damaging = [lookup.get(name, {}) for name in opponents]
+    physical = any(m.get("Category") == "Physical" and float(m.get("Power") or 0) > 0 for m in damaging)
+    special = any(m.get("Category") == "Special" and float(m.get("Power") or 0) > 0 for m in damaging)
+    if not physical and not special:
+        return None, None, "The opponent's damaging move category is not modeled; screen selection cannot be justified safely."
+
+    candidates = []
+    for mon in team_data:
+        name = str(mon.get("Pokemon") or "")
+        result = by_name.get(name)
+        if not result:
+            continue
+        equipped = {str(mon.get(f"Move{i}") or "") for i in range(1, 5)}
+        options = (["Reflect"] if physical and "Reflect" in equipped else []) + (["Light Screen"] if special and "Light Screen" in equipped else [])
+        if not options and "Aurora Veil" in equipped:
+            # Aurora Veil requires hail already active; weather is not modeled here.
+            continue
+        if not options:
+            continue
+        notes = {str(n.get("text") or "") for n in result.get("Battle Notes", []) if isinstance(n, dict)}
+        if {"Likely Incoming OHKO", "Possible Incoming OHKO"} & notes:
+            continue
+        worst_move = lookup.get(str(result.get("Worst Incoming Move") or ""), {})
+        worst_category = worst_move.get("Category") or result.get("Worst Incoming Move Category")
+        preferred = "Reflect" if worst_category == "Physical" else "Light Screen" if worst_category == "Special" else ""
+        selected = preferred if preferred in options else options[0]
+        ability = str(mon.get("Ability") or "").casefold()
+        priority = ability == "prankster"
+        speed = float(mon.get("SPE") or 0)
+        safety = float(result.get("Ratio") or 0)
+        candidates.append((int(priority), safety, speed, name, selected, result, options))
+
+    if not candidates:
+        return None, None, "No equipped screen setter has a supported safe opening against this opponent; use the strongest direct matchup."
+    candidates.sort(reverse=True)
+    priority, safety, speed, setter, screen, result, options = candidates[0]
+    threat = str(result.get("Worst Incoming Move") or "the opponent's strongest modeled move")
+    threat_category = str(result.get("Worst Incoming Move Category") or "")
+    delivered = "Prankster priority" if priority else "its modeled survivability"
+    slot = opponent.get("Slot")
+    is_lead = str(slot) in {"1", "1.0"}
+
+    # Re-evaluate ONLY the follow-up options with delayed attacks removed. Future
+    # Sight is useful strategically, but its delayed hit is not an immediate payoff.
+    # Preserve the original matchup results for the UI and Strongest Matchup.
+    delayed = {"Future Sight", "Doom Desire"}
+    immediate_team = []
+    for original in team_data:
+        member = dict(original)
+        for i in range(1, 5):
+            if str(member.get(f"Move{i}") or "") in delayed:
+                member[f"Move{i}"] = ""
+        immediate_team.append(member)
+    immediate_matchups = evaluate_team_matchups(
+        immediate_team, opponent, items, ability_rules, moves_data
+    )
+    attackers = [r for r in immediate_matchups
+                 if r.get("Pokemon") != setter
+                 and str(r.get("Best Move") or "") not in delayed
+                 and float(r.get("Best MoveScore") or 0) > 0]
+    attackers.sort(key=lambda r: (float(r.get("Ratio") or 0),
+                                  float(r.get("Best MoveScore") or 0)), reverse=True)
+    payoff = attackers[0] if attackers else None
+    payoff_name = str(payoff.get("Pokemon") or "") if payoff else ""
+    payoff_move = str(payoff.get("Best Move") or "") if payoff else ""
+    if is_lead or not payoff:
+        action_name = setter
+        selected_move = screen
+        plan_kind = "screen_setup"
+        action = f"Establish {screen} with {setter}"
+        detail = (f"Step 1: {setter} establishes {screen} to reduce incoming "
+                  f"{'physical' if screen == 'Reflect' else 'special'} damage. "
+                  f"The setter has {delivered} against {threat}. "
+                  + (f"Step 2: switch to {payoff_name} and attack with {payoff_move} behind the screen. " if payoff else "No safe immediate follow-up is modeled."))
+        assumed = False
+        assumption = "Screens have not yet been assumed active for the lead." if is_lead else "Screen setup is still needed; no protected attacker could be established."
+    else:
+        action_name = payoff_name
+        selected_move = payoff_move
+        plan_kind = "screen_followup_assumed"
+        action = f"Follow up with {payoff_name} using {payoff_move}"
+        detail = (f"Step 1: {setter} establishes {screen}. "
+                  f"Step 2: {payoff_name} uses {payoff_move} behind that screen. "
+                  "The attacking move is modeled as immediate damage; delayed-hit moves are excluded. "
+                  "The Compass cannot verify whether the screen is still active.")
+        assumed = True
+        assumption = f"Conditional: assumes {screen} was established on an earlier turn and remains active."
+    return dict(
+        pokemon_name=action_name, recommended_pokemon_name=action_name,
+        lead_pokemon_name=setter, lead_move=selected_move,
+        fit="Viable", fit_rank=2, summary=action, reason=detail,
+        action=action, action_detail=detail, plan_kind=plan_kind,
+        can_override_direct=True,
+        opener_threat_move=threat, opener_threat_category=threat_category or None,
+        opener_threat_type=str(result.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(result.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(result.get("Incoming Multiplier") or 1),
+        strategy_branch="screen_control", assumed_poisoned=False,
+        state_assumption=assumption, fallback_if_assumption_fails=(
+            "If the screen is absent or expired, establish it safely first or use Strongest Matchup."
+            if assumed else "If the setter is already damaged or unsafe, use Strongest Matchup instead."
+        ),
+    ), action_name, None
+
+
 def build_battle_compass_view_model(
     *,
     team_data: list[dict],
@@ -542,6 +656,30 @@ def build_battle_compass_view_model(
                     strategy_branch=team_strategy,
                 )
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
+    elif team_strategy == "screen_control":
+        if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
+            fallback_reason = (
+                "Screen Control's single-opponent sequence is not modeled safely for "
+                "this Double Battle or Dynamax opponent; Strongest Matchup is used."
+            )
+            why_text = f"{fallback_reason} {direct_why_text}".strip()
+        else:
+            screen_plan, screen_name, screen_fallback = _screen_control_battle_plan(
+                team_data, opponent, matchup_results, moves_data, items, ability_rules
+            )
+            if screen_plan is None:
+                fallback_reason = screen_fallback
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            else:
+                selected_strategy_plan = StrategyPlanViewModel(**screen_plan)
+                strategy_plans = [selected_strategy_plan]
+                recommendation = matchup_lookup.get(screen_name, recommendation)
+                why_text = " ".join(filter(None, (
+                    selected_strategy_plan.state_assumption,
+                    selected_strategy_plan.action_detail,
+                    selected_strategy_plan.fallback_if_assumption_fails,
+                    "Full Analysis remains strategy-neutral for direct comparisons."
+                )))
     elif team_strategy != "strongest_matchup":
         fallback_reason = (
             "This strategy is selected for team-building analysis, but its live "

@@ -885,12 +885,39 @@ def evaluate_strategy_viability(
         if contributor_keys.intersection(result.capability_keys)
     )
 
-    # A single excellent Pokémon can fulfill both required roles, making a
-    # strategy Viable. Except for Screen Control (handled separately above),
-    # Strong means actual team participation, not one member's entire learnset.
+    # Poison plans become Strong through actual redundant/coordinated roles,
+    # not merely by collecting unrelated support categories such as Corrosion.
     distinct_contributors = len(set(contributors))
+    poison_detail = None
+    poison_synergy = False
+    if key in {"poison_attrition", "poison_offensive_pressure"}:
+        poison_sources = set(_capability_provider_names(
+            capability_results,
+            {"STATUS_POISON_RELIABLE", "STATUS_POISON_TEAM_SETUP", "STATUS_POISON_CONTACT"},
+        ))
+        target_keys = ({"POISON_EXPLOIT_DAMAGE", "MERCILESS"}
+                       if key == "poison_offensive_pressure" else
+                       {"RELIABLE_RECOVERY", "DAMAGE_RECOVERY", "REGENERATOR_SUSTAIN",
+                        "PROTECTION", "DEFENSE_SETUP", "SCREEN"})
+        partners = set(_capability_provider_names(capability_results, target_keys))
+        # Require role coverage across more than one teammate AND useful role depth.
+        # One hybrid can establish a viable plan, but not a Strong team by itself.
+        coordinated = any(source != partner for source in poison_sources for partner in partners)
+        depth = len(poison_sources) >= 2 or len(partners) >= 2
+        poison_synergy = coordinated and depth
+        if poison_synergy:
+            poison_detail = (
+                "coordinated poison setup and "
+                + ("damage payoff" if key == "poison_offensive_pressure" else "defensive sustain")
+                + " across teammates, with redundant coverage ("
+                + f"{len(poison_sources)} poison source(s), {len(partners)} "
+                + ("payoff" if key == "poison_offensive_pressure" else "anchor")
+                + " provider(s))."
+            )
     if missing:
         viability = "Incomplete"
+    elif key in {"poison_attrition", "poison_offensive_pressure"}:
+        viability = "Strong" if poison_synergy else "Viable"
     elif distinct_contributors >= 2 and (strong_bonus or len(support_satisfied) >= strong_support_threshold):
         viability = "Strong"
     else:
@@ -898,6 +925,10 @@ def evaluate_strategy_viability(
 
     if viability == "Incomplete":
         detail = "missing " + ", ".join(missing) + "."
+    elif poison_synergy and poison_detail:
+        detail = poison_detail
+    elif key in {"poison_attrition", "poison_offensive_pressure"}:
+        detail = "required roles are covered; add another poison source or complementary teammate for a resilient team-wide plan."
     elif viability == "Strong":
         detail = "all required roles are covered with meaningful supporting depth."
     else:

@@ -433,7 +433,7 @@ class BattleCompassView:
             definition = get_strategy_definition(strategy_key)
             analysis = analyses[strategy_key]
             viability = analysis.viability
-            planned_viability, _, _, _ = self._strategy_planned_snapshot(strategy_key, rank=False)
+            planned_viability, _, projected_members, omitted_count = self._strategy_planned_snapshot(strategy_key, rank=False)
             viability_color = self._strategy_viability_color(viability.viability)
 
             detail_controls: list[ft.Control] = [
@@ -472,6 +472,9 @@ class BattleCompassView:
                         size=13, weight=ft.FontWeight.BOLD,
                         color=self._strategy_viability_color(planned_viability.viability)),
                 ft.Text(planned_viability.summary, size=12, color=TEXT_SECONDARY),
+                ft.Text("Counted in plan: " + (", ".join(str(p.get("Pokemon")) for p in projected_members) or "none")
+                        + (f" ({omitted_count} planned selection(s) beyond six; see planning details)" if omitted_count else ""),
+                        size=12, color=TEXT_MUTED),
             ]
             if viability.contributing_pokemon:
                 detail_controls.append(
@@ -685,13 +688,30 @@ class BattleCompassView:
                     color=self._strategy_viability_color(viability.viability)),
             ft.Text(viability.summary, size=14, color=TEXT_SECONDARY),
             ft.Text(f"Projected lineup: {len(planned_team)}/6 — "
-                    + (", ".join(str(p.get("Pokemon")) for p in planned_team) or "none"),
+                    + (", ".join(f"{p.get('Pokemon')} ({'My Team' if index < sum(1 for m in self.team_data if isinstance(m, dict) and m.get('Pokemon')) else 'Team Planner'})"
+                                 for index, p in enumerate(planned_team)) or "none"),
                     size=12, color=TEXT_MUTED),
         ])
         if excluded:
+            # Show the precise omitted selections, not just a mysterious count.
+            credited_planned = set()
+            for member in planned_team:
+                for record in self.strategy_pokemon_catalog:
+                    record_id = str(record.get("id") or "")
+                    if record_id in self.app_state.my_journey_data.get("planned_pokemon_ids", []) and (
+                        self.app_state._planned_pokemon_matches_owned_record(record, member)
+                        or self._strategy_name_key(record.get("pokemon"))
+                        == self._strategy_name_key(member.get("Pokemon"))
+                    ):
+                        credited_planned.add(record_id)
+            omitted = [r for pokemon_id in self.app_state.my_journey_data.get("planned_pokemon_ids", [])
+                       for r in self.strategy_pokemon_catalog
+                       if str(r.get("id") or "") == pokemon_id and pokemon_id not in credited_planned]
+            names = ", ".join(str(r.get("pokemon") or r.get("acquire_as") or r.get("id"))
+                              for r in omitted)
             controls.append(ft.Text(
-                f"{excluded} additional Team Planner selection(s) are outside this "
-                "six-member projection and are not credited to readiness.",
+                f"Not counted (outside the six-member projection): {names or str(excluded) + ' selection(s)'}. "
+                "My Team fills slots first, then Team Planner order; edit either list to change the projection.",
                 size=12, color=WARNING))
         if viability.missing_required_roles:
             controls.append(ft.Text("Still needed: " + ", ".join(viability.missing_required_roles),
@@ -1926,11 +1946,21 @@ class BattleCompassView:
             card_move = strategic_move
             card_move_score = 0.0
             card_item_boosted = False
-            card_effectiveness_label = "Strategic opener"
-            card_effectiveness_color = strategy_color(view_model.team_strategy)
+            is_screen_setup = selected_plan.plan_kind == "screen_setup"
+            if is_screen_setup:
+                card_effectiveness_label = "Screen setup"
+                card_effectiveness_color = strategy_color(view_model.team_strategy)
+                score_text = "Screen Setter"
+            elif selected_plan.plan_kind == "screen_followup_assumed":
+                card_effectiveness_label = "Conditional follow-up"
+                card_effectiveness_color = strategy_color(view_model.team_strategy)
+                score_text = "Protected Attacker"
+            else:
+                card_effectiveness_label = "Strategic action"
+                card_effectiveness_color = strategy_color(view_model.team_strategy)
+                score_text = "Strategy Plan"
             move_panel_label = "Recommended Move"
             score_label = "Plan Role"
-            score_text = "Engine Setup"
 
         recommendation_card = RecommendationCard(
             pokemon_name=recommendation.pokemon["Pokemon"],
@@ -2188,10 +2218,11 @@ class BattleCompassView:
         if view_model.team_strategy == "strongest_matchup":
             return None
 
-        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure"}:
+        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control"}:
             readiness = evaluate_strategy_viability(
                 view_model.team_strategy,
                 recognize_team_capabilities(self.team_data, self.moves_data),
+                team_data=self.team_data,
             )
             readiness_color = self._strategy_viability_color(readiness.viability)
             details: list[ft.Control] = [
@@ -2224,10 +2255,12 @@ class BattleCompassView:
                 )
             details.append(
                 ft.Text(
-                    (
-                        view_model.strategy_fallback_reason
-                        or "This strategy's live tactical branch is not yet specialized."
-                    ),
+                    (view_model.strategy_fallback_reason
+                     or ("Live Screen Control tactics are active. The Recommendation Card "
+                         "shows the screen setup or conditional follow-up; actual screen "
+                         "duration and field state must be confirmed during play."
+                         if view_model.team_strategy == "screen_control"
+                         else "This strategy's live tactical branch is not yet specialized.")),
                     size=12,
                     color=TEXT_MUTED,
                 )
@@ -2245,17 +2278,28 @@ class BattleCompassView:
         if plan is not None:
             action = plan.action
             detail = plan.action_detail
-            footer = (
-                "The Recommendation Card shows step one of this plan. Full Analysis "
-                "remains strategy-neutral so you can still compare direct options."
-            )
+            if view_model.team_strategy == "screen_control":
+                footer = " ".join(part for part in (
+                    plan.state_assumption if plan.plan_kind == "screen_followup_assumed" else None,
+                    plan.fallback_if_assumption_fails,
+                    "The Recommendation Card shows the recommended action for this opponent. "
+                    "Full Analysis remains strategy-neutral for direct comparisons.",
+                ) if part)
+            else:
+                footer = (
+                    "The Recommendation Card shows step one of this plan. Full Analysis "
+                    "remains strategy-neutral so you can still compare direct options."
+                )
         else:
             action = "Direct fallback recommended"
             detail = (
                 view_model.strategy_fallback_reason
-                or "No safe opening is available for the selected Poison strategy in this matchup."
+                or "No safe strategy opening is available for this matchup."
             )
             footer = (
+                "Screen Control remains selected; use the direct recommendation until a safe "
+                "screen sequence is available."
+                if view_model.team_strategy == "screen_control" else
                 "The selected strategy is still active; Battle Compass is deviating "
                 "because the modeled matchup does not support a safe strategic opener."
             )
@@ -2264,7 +2308,7 @@ class BattleCompassView:
             content=ft.Column(
                 controls=[
                     ft.Text(
-                        TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Poison Strategy") + " Plan",
+                        TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
                         size=TEXT_SIZE_CARD_TITLE,
                         weight=ft.FontWeight.BOLD,
                         font_family=FONT_FAMILY_HEADER,
