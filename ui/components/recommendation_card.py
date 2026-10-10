@@ -54,7 +54,7 @@ class RecommendationCard(ft.Container):
         type_badges: list[tuple[str, str]],
         best_move: str,
         best_move_type: str,
-        best_move_type_badge_src: str,
+        best_move_type_badge_src: str | None,
         effectiveness_label: str,
         effectiveness_color: str,
         move_score: float,
@@ -82,6 +82,7 @@ class RecommendationCard(ft.Container):
         plan_role: str = "",
         condition_detail: str = "",
         show_move_score: bool = True,
+        strategic_effectiveness_label: str | None = None,
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -103,6 +104,7 @@ class RecommendationCard(ft.Container):
         self.plan_role = plan_role
         self.condition_detail = condition_detail
         self.show_move_score = show_move_score
+        self.strategic_effectiveness_label = strategic_effectiveness_label
 
         self.item_boosted = item_boosted
         self.held_item = held_item or "Held item"
@@ -412,7 +414,8 @@ class RecommendationCard(ft.Container):
             ft.Row(controls=[
                 ft.Text(self.best_move, size=TEXT_SIZE_HERO_MOVE,
                         weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                self._build_tutorial_move_type_badge(),
+                *([self._build_tutorial_move_type_badge()]
+                  if self.best_move_type and self.best_move_type_badge_src else []),
             ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
         ])
         if self.action_type:
@@ -438,6 +441,12 @@ class RecommendationCard(ft.Container):
                     )],
                 )] if self.condition_detail else []),
             ], spacing=8, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER))
+            if self.strategic_effectiveness_label:
+                controls.append(ft.Text(
+                    self.strategic_effectiveness_label,
+                    size=TEXT_SIZE_BODY,
+                    color=TEXT_SECONDARY,
+                ))
         else:
             controls.append(ft.Container(content=ft.Text(self.effectiveness_label,
                 size=TEXT_SIZE_BODY_LARGE, weight=ft.FontWeight.BOLD,
@@ -454,6 +463,12 @@ class RecommendationCard(ft.Container):
 
     def _build_tutorial_move_type_badge(self) -> ft.Control:
         """Build the clickable move-type badge used by the tutorial target."""
+
+        # Entry Abilities (Drizzle, Drought, etc.) have no move type.
+        # No badge and no tutorial move-type target should be fabricated.
+        if not self.best_move_type or not self.best_move_type_badge_src:
+            self._tutorial_move_type_target = None
+            return ft.Container(visible=False)
 
         clickable_badge = ft.GestureDetector(
             content=ft.Image(

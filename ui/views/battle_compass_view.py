@@ -1915,10 +1915,15 @@ class BattleCompassView:
             fit_explanation = selected_plan.fit_explanation
             action_type = selected_plan.action_type
             plan_role = selected_plan.plan_role
-            strategic_move = dict(self.move_lookup.get(selected_plan.lead_move, {}))
-            strategic_move["Move"] = selected_plan.lead_move
+            if view_model.team_strategy == 'weather_control' and not selected_plan.lead_move:
+                ability = str(recommendation.pokemon.get('Ability') or 'Weather Ability')
+                strategic_move = {'Move': f'{ability} (on entry)', 'Category': 'Status'}
+                move_panel_label = 'Automatic Weather Ability'
+            else:
+                strategic_move = dict(self.move_lookup.get(selected_plan.lead_move, {}))
+                strategic_move['Move'] = selected_plan.lead_move
+                move_panel_label = 'Recommended Move'
             card_move = strategic_move
-            move_panel_label = "Recommended Move"
             show_move_score = (str(card_move.get("Category") or "") in {"Physical", "Special"}
                                and float(card_move.get("Power") or 0) > 0)
             card_item_boosted = False
@@ -1932,11 +1937,37 @@ class BattleCompassView:
                     # Never present a different move's score as this attack's.
                     show_move_score = False
                 if selected_plan.attack_score_conditional:
-                    score_label = ("Conditional Move Score (status active)"
-                                   if view_model.team_strategy == "status_control_punish"
-                                   else "Conditional Move Score (poison active)")
+                    if view_model.team_strategy == "weather_control":
+                        weather_name = next((name for name in ("Rain", "Sun", "Sandstorm", "Hail")
+                                             if f"→ {name} →" in selected_plan.sequence_heading), "weather")
+                        score_label = f"Conditional Move Score ({weather_name.lower()} active)"
+                    elif view_model.team_strategy == "status_control_punish":
+                        score_label = "Conditional Move Score (status active)"
+                    elif view_model.team_strategy in {"poison_attrition", "poison_offensive_pressure"}:
+                        score_label = "Conditional Move Score (poison active)"
+                    else:
+                        score_label = "Conditional Move Score (setup active)"
             card_effectiveness_label = action_type or "Strategic Action"
             card_effectiveness_color = strategy_color(view_model.team_strategy)
+
+        # A strategy action badge describes the tactic, not type effectiveness.
+        # Keep the attacking move's matchup indicator alongside it.
+        strategic_effectiveness_label = None
+        if selected_plan is not None and show_move_score:
+            from engine.mechanics import get_type_multiplier
+            attacking_type = str(card_move.get("Type") or "")
+            if (view_model.team_strategy == "weather_control"
+                    and str(card_move.get("Move") or "") == "Weather Ball"):
+                weather_type = {"Rain": "Water", "Sun": "Fire",
+                                "Sandstorm": "Rock", "Hail": "Ice"}
+                attacking_type = next((weather_type[weather] for weather in weather_type
+                                       if f"→ {weather} →" in selected_plan.sequence_heading), attacking_type)
+            if attacking_type:
+                multiplier = get_type_multiplier(attacking_type, get_effective_pokemon_types(opponent))
+                strategic_effectiveness_label = get_effectiveness_label(multiplier, mode="offense")
+                # Weather Ball's displayed type should agree with its projected effect.
+                if attacking_type != card_move.get("Type"):
+                    card_move = dict(card_move, Type=attacking_type)
 
         recommendation_card = RecommendationCard(
             pokemon_name=recommendation.pokemon["Pokemon"],
@@ -1957,11 +1988,13 @@ class BattleCompassView:
             best_move_type=str(
                 card_move.get("Type") or "Unknown"
             ),
-            best_move_type_badge_src=self._type_badge_asset(
-                card_move.get("Type")
+            best_move_type_badge_src=(
+                self._type_badge_asset(card_move.get("Type"))
+                if card_move.get("Type") else None
             ),
             effectiveness_label=card_effectiveness_label,
             effectiveness_color=card_effectiveness_color,
+            strategic_effectiveness_label=strategic_effectiveness_label,
             move_score=card_move_score,
             item_boosted=card_item_boosted,
             held_item=recommendation.held_item,
@@ -2013,7 +2046,8 @@ class BattleCompassView:
             threat_move_type = strategy_plan.opener_threat_type or "Unknown"
             threat_multiplier = strategy_plan.opener_threat_multiplier
             threat_score_label = "Opener Threat Score"
-            threat_move_label = f"Worst Response to {strategy_plan.lead_move}"
+            threat_move_label = (f"Worst Response to {strategy_plan.lead_move}"
+                                 if strategy_plan.lead_move else 'Worst Incoming Move on Entry')
         has_trainer = (
             self.selected_trainer.strip()
             != str(
@@ -2200,7 +2234,7 @@ class BattleCompassView:
         if view_model.team_strategy == "strongest_matchup":
             return None
 
-        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control", "status_control_punish", "setup_offense"}:
+        if view_model.team_strategy not in {"poison_attrition", "poison_offensive_pressure", "screen_control", "status_control_punish", "setup_offense", "defensive_attrition", "weather_control"}:
             readiness = evaluate_strategy_viability(
                 view_model.team_strategy,
                 recognize_team_capabilities(self.team_data, self.moves_data),
@@ -2260,7 +2294,7 @@ class BattleCompassView:
         if plan is not None:
             action = plan.sequence_heading or plan.action
             detail = plan.action_detail
-            if view_model.team_strategy in {"screen_control", "status_control_punish", "setup_offense"}:
+            if view_model.team_strategy in {"screen_control", "status_control_punish", "setup_offense", "defensive_attrition", "weather_control"}:
                 footer = " ".join(part for part in (
                     plan.state_assumption if plan.plan_kind == "screen_followup_assumed" else None,
                     plan.fallback_if_assumption_fails,

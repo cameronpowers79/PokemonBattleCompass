@@ -351,18 +351,38 @@ def fixed_damage_to_move_score(attacker, fixed_damage):
     )
 
 
+def _weather_resolved_move(attacker, defender, move, weather_override):
+    """Apply active weather only to move mechanics that alter move identity.
+
+    Uses real entry weather for normal scoring, or projected weather for
+    conditional tactical scores. Does not fabricate manually activated weather.
+    """
+    # Weather Ball changes identity only in explicitly projected weather here.
+    # Ordinary Full Analysis keeps its original unconditioned move identity.
+    weather = weather_override
+    if str(move.get('Move') or '') != 'Weather Ball' or weather not in {'Sun', 'Rain', 'Sandstorm', 'Hail'}:
+        return move
+    weather_type = {'Sun': 'Fire', 'Rain': 'Water', 'Sandstorm': 'Rock', 'Hail': 'Ice'}[weather]
+    result = dict(move)
+    result['Type'] = weather_type
+    result['Power'] = 100
+    return result
+
+
 def calculate_move_score(
     attacker,
     defender,
     move,
     items=None,
     ability_rules=None,
+    weather_override=None,
 ):
     move = resolve_move_for_matchup(
         attacker,
         defender,
         move,
     )
+    move = _weather_resolved_move(attacker, defender, move, weather_override)
     if move["Category"] == "Status":
         return 0
     if items is None:
@@ -437,10 +457,7 @@ def calculate_move_score(
         move,
         ability_rules,
     )
-    weather = get_guaranteed_weather(
-        attacker,
-        defender,
-    )
+    weather = weather_override if weather_override is not None else get_guaranteed_weather(attacker, defender)
     weather_damage_multiplier = get_weather_damage_multiplier(
         move,
         weather,
@@ -508,6 +525,7 @@ def calculate_damage_range(
     ability_rules=None,
     attacker_opponent_iv_override=None,
     defender_opponent_iv_override=None,
+    weather_override=None,
 ):
     """Estimate minimum and maximum damage using the in-game formula shape.
     The estimate uses the same modeled stats and multipliers as Move Score,
@@ -521,6 +539,7 @@ def calculate_damage_range(
         attacker_opponent_iv_override,
         defender_opponent_iv_override,
     )
+    move = _weather_resolved_move(attacker, defender, move, weather_override)
     if move["Category"] == "Status":
         return None, None
     if items is None:
@@ -595,10 +614,7 @@ def calculate_damage_range(
         move,
         ability_rules,
     )
-    weather = get_guaranteed_weather(
-        attacker,
-        defender,
-    )
+    weather = weather_override if weather_override is not None else get_guaranteed_weather(attacker, defender)
     weather_damage_multiplier = get_weather_damage_multiplier(
         move,
         weather,

@@ -991,6 +991,595 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
     )
 
 
+
+def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Consider high-confidence contact-punishing protection (single battle).
+
+    Opponent move choice and prior Protect uses are unknown. A contact-heavy
+    attacking moveset is evidence of value, not a guarantee that contact occurs.
+    """
+    from engine.calculations import calculate_damage_range
+
+    lookup = _build_move_lookup(moves_data)
+    by_name = {str(r.get("Pokemon") or ""): r for r in matchups}
+    incoming = [m for m in get_moves(opponent, moves_data)
+                if m.get("Category") in {"Physical", "Special"}]
+    if not incoming:
+        return None
+    contact = [m for m in incoming if m.get("MakesContact") is True]
+    if not contact:
+        return None
+    contact_share = len(contact) / len(incoming)
+    # Mixed noncontact moves make the expected punishment too speculative to
+    # override an otherwise sound Iron Defense line.
+    if contact_share < 1.0:
+        return None
+    target_types = {str(opponent.get("Type1") or ""), str(opponent.get("Type2") or "")}
+    target_ability = str(opponent.get("Ability") or "").casefold()
+    candidates = []
+    for member in team_data:
+        name = str(member.get("Pokemon") or "")
+        row = by_name.get(name)
+        if not row:
+            continue
+        notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
+        if notes & {"Likely Incoming OHKO", "Possible Incoming OHKO"}:
+            continue
+        hp = float(get_stat(member, "HP") or 0)
+        if hp <= 0:
+            continue
+        worst = []
+        for move in incoming:
+            _, upper = calculate_damage_range(opponent, member, move, items, ability_rules)
+            if upper is None:
+                break
+            worst.append(float(upper))
+        if len(worst) != len(incoming) or max(worst) >= hp:
+            continue
+        risk = max(worst) / hp
+        equipped = {str(member.get(f"Move{i}") or "") for i in range(1, 5)}
+        for guard in ("Baneful Bunker", "Obstruct"):
+            if guard not in equipped:
+                continue
+            if guard == "Baneful Bunker":
+                # Unlike direct Toxic, Baneful Bunker's contact poisoning is not
+                # modeled as Corrosion bypassing type immunity.
+                if (target_types & {"Poison", "Steel"}
+                    or target_ability in {"immunity", "pastel veil", "comatose", "purifying salt"}):
+                    continue
+                payoff = None
+                venoshock = lookup.get("Venoshock") if "Venoshock" in equipped else None
+                if venoshock:
+                    normal = float(calculate_move_score(member, opponent, venoshock, items, ability_rules))
+                    boosted = dict(venoshock, Power=float(venoshock.get("Power") or 0) * 2)
+                    projected = float(calculate_move_score(member, opponent, boosted, items, ability_rules))
+                    if projected > 0:
+                        payoff = ("Venoshock", normal, projected)
+                follow = payoff[0] if payoff else str(row.get("Best Move") or "")
+                if not follow:
+                    continue
+                detail = (f"Step 1: {name} uses Baneful Bunker to block an attack. "
+                          "If the opponent chooses a contact move, it becomes poisoned. "
+                          + (f"Step 2: use Venoshock (projected conditional Move Score "
+                             f"{payoff[2]:.2f} versus {payoff[1]:.2f} unpoisoned). " if payoff else
+                             f"Step 2: use {follow} or continue attrition. ")
+                          + "Contact and successful poison are not guaranteed; repeated protection can fail.")
+                role = "Poison Setter" if payoff else "Attrition Anchor"
+                action = "Poison Setup" if payoff else "Attrition"
+                note = (f"Contact-only damaging moves favor Baneful Bunker. "
+                        + ("Venoshock rewards a successful poison." if payoff else "The move denies damage while applying poison."))
+                quality = 3 if payoff else 2
+            else:
+                # Obstruct is a Defense drop on the *opponent*, not a boost to
+                # the user's Defense. Project damage by changing the defender.
+                # Opponent records use base stats and a modeled IV. Convert
+                # the defender to explicit effective stats before projecting a
+                # stage drop; otherwise get_stat() would ignore the override.
+                dropped = dict(opponent)
+                for stat in ("HP", "ATK", "DEF", "SPA", "SPD", "SPE"):
+                    dropped[stat] = float(get_stat(opponent, stat))
+                dropped.pop("Trainer", None)
+                dropped.pop("Battle", None)
+                dropped["DEF"] *= 0.5
+                attacks = []
+                for move in get_moves(member, moves_data):
+                    if move.get("Category") not in {"Physical", "Special"}:
+                        continue
+                    if move.get("Category") != "Physical" and move.get("Move") != "Body Press":
+                        continue
+                    normal = float(calculate_move_score(member, opponent, move, items, ability_rules))
+                    projected = float(calculate_move_score(member, dropped, move, items, ability_rules))
+                    if projected > 0:
+                        attacks.append((projected, normal, str(move.get("Move") or "")))
+                if not attacks:
+                    continue
+                projected, normal, follow = max(attacks)
+                detail = (f"Step 1: {name} uses Obstruct to block an attack. "
+                          "If the opponent chooses a contact move, its Defense falls two stages. "
+                          f"Step 2: use {follow} (projected Move Score {projected:.2f} "
+                          f"versus {normal:.2f} without the Defense drop). "
+                          "Contact is not guaranteed; repeated protection can fail.")
+                role, action = "Attrition Anchor", "Attrition"
+                note = "Contact-only damaging moves make Obstruct's Defense reduction a credible payoff."
+                quality = 2 if projected >= normal * 1.4 else 1
+            fit = "Strong" if quality >= 2 and risk < 0.5 else "Viable"
+            # Give contact punishment a role, but preserve much stronger
+            # Iron Defense/Body Press plans via a later comparison.
+            score = 2.2 + quality * 0.45 + min(float(row.get("Ratio") or 0), 4) * 0.2 - risk
+            candidates.append((score, dict(
+                pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+                lead_move=guard, fit=fit, fit_rank=3 if fit == "Strong" else 2,
+                summary=f"{guard} → {follow}", reason=detail,
+                action=f"Punish contact with {name}", action_detail=detail,
+                plan_kind="contact_punishment", can_override_direct=True,
+                opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
+                opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
+                opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
+                opener_threat_score=float(row.get("Incoming Worst Score") or 0),
+                opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
+                strategy_branch="defensive_attrition", action_type=action, plan_role=role,
+                fit_explanation=note,
+                sequence_heading=f"{name} → {guard} → {follow}",
+                state_assumption="No contact or status is assumed active at entry.",
+                fallback_if_assumption_fails="If the opponent uses a noncontact or status move, reassess and use the direct fallback.",
+                condition_detail=(f"Assumes {guard} succeeds and the opponent chooses a contact attack. "
+                                  "This is a conditional tactical projection, not a confirmed battle state."),
+            )))
+    return max(candidates, key=lambda x: x[0]) if candidates else None
+
+
+def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Select a cautious defensive setup and project its immediate payoff.
+
+    Scores and damage forecasts are conditional; no live boosts or HP are assumed.
+    Iron Defense contributes +2 Defense stages, capped at +6 after three uses.
+    """
+    from engine.calculations import calculate_damage_range
+
+    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    move_lookup = _build_move_lookup(moves_data)
+    candidates = []
+    for member in team_data:
+        name = str(member.get("Pokemon") or "")
+        row = by_name.get(name)
+        if row is None:
+            continue
+        notes = {str(note.get("text") or "") for note in row.get("Battle Notes", []) if isinstance(note, dict)}
+        if {"Likely Incoming OHKO", "Possible Incoming OHKO"} & notes:
+            continue
+        hp = float(get_stat(member, "HP"))
+        incoming_moves = [move for move in get_moves(opponent, moves_data) if move.get("Category") in {"Physical", "Special"}]
+        if not incoming_moves:
+            continue
+        incoming_ranges = [(move, calculate_damage_range(opponent, member, move, items, ability_rules)) for move in incoming_moves]
+        if any(upper is None for _, (_, upper) in incoming_ranges):
+            continue
+        worst_max = max(float(upper) for _, (_, upper) in incoming_ranges)
+        if worst_max >= hp or worst_max / max(hp, 1) > 0.75:
+            continue
+        equipped = {str(member.get(f"Move{i}") or "") for i in range(1, 5)}
+        original_def = float(get_stat(member, "DEF"))
+        body_press = move_lookup.get("Body Press") if "Body Press" in equipped else None
+        base_bp = float(calculate_move_score(member, opponent, body_press, items, ability_rules)) if body_press else 0
+        direct_score = float(row.get("Best MoveScore") or 0)
+        direct_move = str(row.get("Best Move") or "")
+        # Never spend a free turn boosting if the team's direct line already has
+        # a modeled immediate OHKO from this Pokémon.
+        if {"Likely OHKO", "Likely Survival OHKO"} & notes:
+            continue
+        for setup_name, defense_stages in (("Iron Defense", 2), ("Amnesia", 0), ("Cosmic Power", 1), ("Stockpile", 1)):
+            if setup_name not in equipped:
+                continue
+            # Favor Iron Defense when it mitigates actual physical pressure or
+            # produces a worthwhile Body Press damage payoff.
+            new_member = dict(member)
+            if defense_stages:
+                new_member["DEF"] = original_def * (2 + defense_stages) / 2
+            post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
+            post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
+            original_worst = float(row.get("Incoming Worst Score") or 0)
+            mitigation = max(0, original_worst - post_iws)
+            if setup_name == "Amnesia":
+                # Calculate the SpD gain, not just Defense.
+                new_member["SPD"] = float(get_stat(member, "SPD")) * 2
+                post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
+                post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
+                mitigation = max(0, original_worst - post_iws)
+            if setup_name in {"Cosmic Power", "Stockpile"}:
+                new_member["SPD"] = float(get_stat(member, "SPD")) * 1.5
+                post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
+                post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
+                mitigation = max(0, original_worst - post_iws)
+            boosted_bp = float(calculate_move_score(new_member, opponent, body_press, items, ability_rules)) if body_press else 0
+            bp_gain = max(0, boosted_bp - base_bp)
+            if mitigation < original_worst * 0.08 and bp_gain < max(20, base_bp * 0.35):
+                continue
+            attack_name = "Body Press" if boosted_bp > direct_score * 1.1 else direct_move
+            attack_score = boosted_bp if attack_name == "Body Press" else direct_score
+            # A useful setup needs to compensate for a lost turn and yield either
+            # stronger offense or genuine mitigation of the opponent's attacks.
+            score = (mitigation / max(original_worst, 1) * 3
+                     + max(0, attack_score - direct_score) / max(direct_score, 1) * 1.3
+                     + min(float(row.get("Ratio") or 0), 4) * 0.30
+                     - worst_max / hp)
+            candidates.append((score, member, row, setup_name, attack_name, attack_score, post_worst_move, post_iws, worst_max / hp, body_press, original_def))
+    if not candidates:
+        return "No sufficiently safe, valuable defensive setup was modeled; use Strongest Matchup."
+    _, member, row, setup_name, attack_name, attack_score, post_move, post_iws, risk, body_press, original_def = max(candidates, key=lambda entry: entry[0])
+    name = str(member.get("Pokemon") or "")
+    detailed = ""
+    if setup_name == "Iron Defense" and body_press is not None:
+        base = float(calculate_move_score(member, opponent, body_press, items, ability_rules))
+        milestones = []
+        first_ko = None
+        target_hp = float(get_stat(opponent, "HP"))
+        for uses in (1, 2, 3):
+            boosted = dict(member)
+            # +2/+4/+6 stages = 2x/3x/4x Defense respectively.
+            boosted["DEF"] = original_def * (1 + uses)
+            value = float(calculate_move_score(boosted, opponent, body_press, items, ability_rules))
+            minimum, maximum = calculate_damage_range(boosted, opponent, body_press, items, ability_rules)
+            ko = bool(minimum is not None and target_hp > 0 and float(minimum) >= target_hp)
+            if ko and first_ko is None:
+                first_ko = uses
+            milestones.append(f"{uses}: {value:.2f}" + (" (Likely OHKO)" if ko else ""))
+        detailed = (f"Body Press Move Scores after Iron Defense(s) (unboosted {base:.2f}): "
+                    + "; ".join(milestones) + ". ")
+        if first_ko is not None:
+            detailed += f"The first projected Likely OHKO occurs after {first_ko} Iron Defense(s); additional boosts may be unnecessary. "
+        else:
+            detailed += "No guaranteed-range OHKO is projected within three Iron Defenses. "
+        detailed += "Likely OHKO assumes Body Press can hit and the opponent does not interrupt setup; the damage range uses its modeled HP. "
+    fit = "Strong" if risk < 0.40 and (attack_score >= float(row.get("Best MoveScore") or 0) * 1.5 or post_iws < float(row.get("Incoming Worst Score") or 0) * 0.7) else "Viable"
+    return dict(
+        pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+        lead_move=setup_name, fit=fit, fit_rank=3 if fit == "Strong" else 2,
+        summary=f"{setup_name} → {attack_name}",
+        reason=f"{name} sets up {setup_name} before attacking with {attack_name}.",
+        action=f"Set up defenses with {name}",
+        action_detail=(f"Step 1: {name} uses {setup_name} when sufficiently healthy. "
+                       f"Step 2: use {attack_name}. With one setup, the modeled Incoming Worst Move "
+                       f"is {post_move} (IWS {post_iws:.2f}). " + detailed
+                       + "Boosts are lost when switching."),
+        plan_kind="defensive_setup", can_override_direct=True,
+        opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
+        opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
+        opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(row.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
+        strategy_branch="defensive_attrition", action_type="Defensive Setup",
+        plan_role="Defensive Anchor" if attack_name != "Body Press" else "Attrition Attacker",
+        fit_explanation=f"{setup_name} reduces modeled incoming pressure; {attack_name} provides the follow-up. Check HP before boosting.",
+        sequence_heading=f"{name} → {setup_name} → {attack_name}",
+        state_assumption="No defensive boosts are assumed active at entry.",
+        fallback_if_assumption_fails="If setup is unsafe or interrupted, use the named direct fallback.",
+        condition_detail=f"Assumes {setup_name} succeeded and {name} remains on the field.",
+    )
+
+def _anti_setup_interception(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Find a credible immediate KO before a dangerous opposing offensive boost.
+
+    Only the opponent's EQUIPPED setup moves count. This does not treat a high
+    Move Score as HP damage: a modeled minimum damage range must meet target HP.
+    Setup is not automatically overridden against non-threatening defensive boosts.
+    """
+    from engine.calculations import calculate_damage_range
+
+    move_lookup = _build_move_lookup(moves_data)
+    threats = []
+    for move in get_moves(opponent, moves_data):
+        record = {**move, **move_lookup.get(str(move.get("Move") or ""), {})}
+        if record.get("Category") != "Status" or record.get("StageChangeTarget") != "User":
+            continue
+        attack_boost = max(float(record.get("AtkStageChange") or 0),
+                           float(record.get("SpAStageChange") or 0))
+        speed_boost = float(record.get("SpeStageChange") or 0)
+        if attack_boost >= 2 or (attack_boost >= 1 and speed_boost >= 1):
+            threats.append(str(record.get("Move") or ""))
+    if not threats:
+        return None
+    # A survival effect can make a nominal OHKO fail; don't promise interception.
+    if str(opponent.get("Ability") or "").casefold() in {"sturdy", "disguise"}:
+        return None
+    if str(opponent.get("Held Item") or "").casefold() == "focus sash":
+        return None
+    hp = float(get_stat(opponent, "HP") or 0)
+    if hp <= 0:
+        return None
+    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    candidates = []
+    for member in team_data:
+        name = str(member.get("Pokemon") or "")
+        row = by_name.get(name)
+        if row is None:
+            continue
+        notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
+        if notes & {"Likely Incoming OHKO", "Possible Incoming OHKO"}:
+            continue
+        for move in get_moves(member, moves_data):
+            if move.get("Category") not in {"Physical", "Special"}:
+                continue
+            try:
+                minimum, maximum = calculate_damage_range(member, opponent, move, items, ability_rules)
+            except (ValueError, TypeError, ZeroDivisionError):
+                continue
+            if minimum is None or float(minimum) < hp:
+                continue
+            accuracy = float(move.get("Accuracy") or 100)
+            if accuracy < 80:
+                continue
+            move_name = str(move.get("Move") or "")
+            score = float(calculate_move_score(member, opponent, move, items, ability_rules))
+            # Every candidate already has a conservative on-hit OHKO and >=80%
+            # accuracy. Prefer survival/matchup safety before hit chance: a
+            # 95%-accurate KO from a vulnerable attacker must not outrank an
+            # 85%-accurate KO from a teammate that safely walls the opponent.
+            # Accuracy and offensive score break ties between similarly safe picks.
+            candidates.append((float(row.get("Ratio") or 0), accuracy, score, name, move_name))
+    if not candidates:
+        return None
+    ratio, accuracy, score, name, attack = max(candidates)
+    return name, attack, threats[0], accuracy
+
+
+
+# Weather Control uses the same four weather families as guided onboarding.
+_WEATHER_MOVES = {"Rain Dance": "Rain", "Sunny Day": "Sun", "Sandstorm": "Sandstorm", "Hail": "Hail"}
+_WEATHER_ABILITIES = {"Drizzle": "Rain", "Drought": "Sun", "Sand Stream": "Sandstorm", "Snow Warning": "Hail"}
+_WEATHER_SPEED_ABILITIES = {"Swift Swim": "Rain", "Chlorophyll": "Sun", "Sand Rush": "Sandstorm", "Slush Rush": "Hail"}
+_WEATHER_EXTENSION_ITEMS = {"Rain": "Damp Rock", "Sun": "Heat Rock", "Sandstorm": "Smooth Rock", "Hail": "Icy Rock"}
+
+
+def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Rank actionable weather setter -> beneficiary sequences, not isolated moves.
+
+    Weather is only assumed after the indicated setup/entry. The Compass does
+    not know whether manual weather is still active later in the battle.
+    """
+    from engine.mechanics import get_guaranteed_weather, get_item_speed_multiplier
+    from engine.calculations import calculate_damage_range
+
+    by_name = {str(r.get('Pokemon') or ''): r for r in matchups}
+    weather_options = []
+    for setter in team_data:
+        name = str(setter.get('Pokemon') or '')
+        result = by_name.get(name)
+        if not result:
+            continue
+        known = _WEATHER_ABILITIES.get(str(setter.get('Ability') or ''))
+        options = [(known, None)] if known else []
+        for move in get_moves(setter, moves_data):
+            move_name = str(move.get('Move') or '')
+            if move_name in _WEATHER_MOVES:
+                options.append((_WEATHER_MOVES[move_name], move_name))
+        for weather, setup_move in options:
+            if not weather:
+                continue
+            # Competing weather entry abilities cannot be ordered without more
+            # battle-state information, so don't declare the weather guaranteed.
+            opponent_weather = _WEATHER_ABILITIES.get(str(opponent.get('Ability') or ''))
+            if opponent_weather and opponent_weather != weather and setup_move is None:
+                # Competing entry Abilities need activation order; a manually
+                # used weather move, however, reliably overwrites entry weather.
+                continue
+            notes = {str(n.get('text') or '') for n in result.get('Battle Notes', []) if isinstance(n, dict)}
+            if {'Likely Incoming OHKO', 'Possible Incoming OHKO'} & notes:
+                continue
+            if setup_move:
+                # A weather move consumes a vulnerable turn. Test modeled damage,
+                # not IWS (which is not an HP estimate).
+                threat = str(result.get('Worst Incoming Move') or '')
+                incoming = next((m for m in get_moves(opponent, moves_data) if m.get('Move') == threat), None)
+                if incoming is None:
+                    continue
+                _, max_damage = calculate_damage_range(opponent, setter, incoming, items, ability_rules)
+                if max_damage is None or max_damage >= float(get_stat(setter, 'HP')) * 0.8:
+                    continue
+            weather_options.append((setter, result, weather, setup_move))
+
+    if not weather_options:
+        return 'No safe, supported weather setter can establish a useful weather condition here.'
+
+    candidates = []
+    for setter, setter_row, weather, setup_move in weather_options:
+        setter_name = str(setter.get('Pokemon') or '')
+        duration = 8 if str(setter.get('Held Item') or '') == _WEATHER_EXTENSION_ITEMS[weather] else 5
+        # Ability-triggered weather is established on entry; manual weather costs
+        # a turn. A change of Pokémon consumes a further weather turn.
+        entry = setup_move is None
+        for beneficiary in team_data:
+            bname = str(beneficiary.get('Pokemon') or '')
+            b_row = by_name.get(bname)
+            if b_row is None:
+                continue
+            # Switching in a different auto-weather setter immediately erases
+            # the proposed weather. Never credit a cross-weather payoff.
+            beneficiary_entry_weather = _WEATHER_ABILITIES.get(str(beneficiary.get('Ability') or ''))
+            if bname != setter_name and beneficiary_entry_weather and beneficiary_entry_weather != weather:
+                continue
+            bnotes = {str(n.get('text') or '') for n in b_row.get('Battle Notes', []) if isinstance(n, dict)}
+            if {'Likely Incoming OHKO', 'Possible Incoming OHKO'} & bnotes:
+                continue
+            if bname != setter_name and float(b_row.get('Ratio') or 0) < 0.8:
+                continue
+            baseline_weather = get_guaranteed_weather(beneficiary, opponent)
+            best_attack = None
+            for attack in get_moves(beneficiary, moves_data):
+                if str(attack.get('Category') or '') not in {'Physical', 'Special'}:
+                    continue
+                # Score through the shared damage model with explicit projected
+                # weather, retaining the member's actual Ability and held item.
+                normal = float(calculate_move_score(beneficiary, opponent, attack, items, ability_rules, weather_override=""))
+                projected = float(calculate_move_score(beneficiary, opponent, attack, items, ability_rules, weather_override=weather))
+                if projected <= 0:
+                    continue
+                candidate = (projected, normal, attack)
+                if best_attack is None or candidate[0] > best_attack[0]:
+                    best_attack = candidate
+            if not best_attack:
+                continue
+            projected, normal, attack = best_attack
+            bmove = str(attack.get('Move') or '')
+            accurate_weather_move = (weather == 'Rain' and bmove in {'Thunder', 'Hurricane'}) or (weather == 'Hail' and bmove == 'Blizzard')
+            instant_solar_move = weather == 'Sun' and bmove in {'Solar Beam', 'Solar Blade'}
+            bability = str(beneficiary.get('Ability') or '')
+            # Extend the generic weather calculator for the specific attacker's
+            # supported weather-triggered abilities without changing its real
+            # Ability in the damage model.
+            if weather == 'Sandstorm' and bability == 'Sand Force' and attack.get('Type') in {'Rock', 'Ground', 'Steel'}:
+                projected *= 1.3
+            if weather == 'Sun' and bability == 'Solar Power' and attack.get('Category') == 'Special':
+                projected *= 1.5
+            speed_ability = _WEATHER_SPEED_ABILITIES.get(str(beneficiary.get('Ability') or ''))
+            before_speed = float(get_stat(beneficiary, 'SPE')) * float(get_item_speed_multiplier(beneficiary, items))
+            after_speed = before_speed * (2 if speed_ability == weather else 1)
+            opponent_speed = float(get_stat(opponent, 'SPE')) * float(get_item_speed_multiplier(opponent, items))
+            enemy_weather = _WEATHER_SPEED_ABILITIES.get(str(opponent.get('Ability') or ''))
+            if enemy_weather == weather:
+                opponent_speed *= 2
+            flip = bool(before_speed <= opponent_speed < after_speed)
+            # A nominal STAB attack alone isn't enough: weather must deliver a
+            # real payoff in damage, Speed, or sand-based defense.
+            sand_wall = weather == 'Sandstorm' and 'Rock' in {beneficiary.get('Type1'), beneficiary.get('Type2')}
+            benefit = max(projected - normal, 0.0) / max(normal, 1.0)
+            if benefit < 0.12 and not flip and not sand_wall and not accurate_weather_move and not instant_solar_move:
+                continue
+            if bname != setter_name and duration - 1 <= 1:
+                continue
+            # Score the actual opponent's moves under the proposed weather.
+            # Rock typing only grants sandstorm defense versus SPECIAL attacks;
+            # a physical Water move remains dangerous even in sandstorm.
+            opposing_attacks = [m for m in get_moves(opponent, moves_data)
+                                if m.get('Category') in {'Physical', 'Special'}]
+            projected_incoming = [(m, float(calculate_move_score(
+                opponent, beneficiary, m, items, ability_rules, weather_override=weather)))
+                                  for m in opposing_attacks]
+            worst_weather_move, weather_iws = max(projected_incoming, key=lambda x: x[1],
+                                                   default=(None, 0.0))
+            baseline_iws = max((float(calculate_move_score(
+                opponent, beneficiary, m, items, ability_rules, weather_override=''))
+                for m in opposing_attacks), default=0.0)
+            # A switch must be evaluated under the proposed weather, not only
+            # the strategy-neutral matchup (which can include Drizzle/Drought).
+            if bname != setter_name and weather_iws > 0 and projected / weather_iws < 0.85:
+                continue
+            max_incoming_hp_damage = 0.0
+            for incoming_move in opposing_attacks:
+                _, high = calculate_damage_range(opponent, beneficiary, incoming_move,
+                                                 items, ability_rules, weather_override=weather)
+                if high is not None:
+                    max_incoming_hp_damage = max(max_incoming_hp_damage, float(high))
+            beneficiary_hp = float(get_stat(beneficiary, 'HP') or 1)
+            # A plan that risks being KO'd before attacking is not a sensible
+            # weather payoff; First Impression and other priority remain threats.
+            if max_incoming_hp_damage >= beneficiary_hp:
+                continue
+            incoming_reduction = ((baseline_iws - weather_iws) / max(baseline_iws, 1.0))
+            # Raw offensive score and conditional safety matter together.
+            # Avoid granting a generic Rock-in-sand reward: the actual incoming
+            # damage calculations already incorporate its special-defense boost.
+            weather_ratio = projected / max(weather_iws, 1.0)
+            offensive_gain = max(projected - normal, 0.0) / max(normal, 1.0)
+            score = (min(weather_ratio, 7.0) * 0.92
+                     + min(offensive_gain, 2.5) * 2.0
+                     + max(min(incoming_reduction, 1.0), -1.0) * 2.7
+                     + (1.1 if flip else 0.0)
+                     + (0.3 if accurate_weather_move else 0.0)
+                     + (0.35 if instant_solar_move else 0.0)
+                     + (0.18 if entry else -0.12)
+                     - (0.65 if bname != setter_name else 0))
+            candidates.append((score, setter, setup_move, beneficiary, attack, weather,
+                               projected, normal, before_speed, after_speed, opponent_speed,
+                               flip, duration, sand_wall, baseline_weather,
+                               accurate_weather_move, instant_solar_move,
+                               weather_iws, baseline_iws, max_incoming_hp_damage))
+
+    if not candidates:
+        return 'No useful, safe weather beneficiary or projected weather payoff is modeled; use the direct matchup.'
+    (score, setter, setup_move, beneficiary, attack, weather, projected, normal,
+     before_speed, after_speed, enemy_speed, flip, duration, sand_wall, baseline_weather,
+     accurate_weather_move, instant_solar_move, weather_iws, baseline_iws,
+     maximum_incoming_damage) = max(candidates, key=lambda row: row[0])
+    setter_name = str(setter.get('Pokemon') or '')
+    attacker_name = str(beneficiary.get('Pokemon') or '')
+    attack_name = str(attack.get('Move') or '')
+    is_switch = setter_name != attacker_name
+    step = setup_move or f'{setter_name} enters ({setter.get("Ability")})'
+    heading = f'{setter_name} → {setup_move or weather} → ' + (f'{attacker_name} ({attack_name})' if is_switch else attack_name)
+    # When entry weather is automatic, recommending an already-active setter's
+    # damaging action as weather setup would falsely spend a move. Use the real
+    # attacking move whenever the setter also supplies the payoff.
+    # An automatic entry Ability isn't a move. For a cross-team payoff the
+    # setter has no commanded action; only self-beneficiaries display an attack.
+    lead_move = setup_move or (attack_name if not is_switch else '')
+    opening_name = setter_name
+    b_row = by_name[attacker_name]
+    ratio = float(b_row.get('Ratio') or 0)
+    weather_ratio = projected / max(weather_iws, 1.0)
+    weather_improvement = baseline_iws > 0 and weather_iws <= baseline_iws * 0.8
+    if weather_ratio < 1.0 or maximum_incoming_damage > get_stat(beneficiary, 'HP') * 0.75:
+        fit, rank = 'Risky', 1
+    elif weather_ratio >= 2.0 and (flip or projected >= normal * 1.25 or weather_improvement):
+        fit, rank = 'Strong', 3
+    else:
+        fit, rank = 'Viable', 2
+    speed_note = (f' {attacker_name} Speed {before_speed:.0f} → {after_speed:.0f} versus target {enemy_speed:.0f}; turn order flips.' if flip else '')
+    sand_note = (' Sandstorm raises Rock-type Special Defense against special attacks.' if sand_wall else '')
+    attack_note = (f' {weather} does not increase {attack_name} damage; its value here is '
+                   'weather control and matchup protection.' if abs(projected - normal) < 0.01 else '')
+    weather_safety_note = (f' Incoming Worst Score against {attacker_name} without weather: '
+                           f'{baseline_iws:.2f} versus {weather_iws:.2f} with {weather}. '
+                           f'Modeled maximum incoming hit: {maximum_incoming_damage:.0f} '
+                           f'of {get_stat(beneficiary, "HP"):.0f} HP.')
+    line = (f'Step 1: {step}. ' if setup_move else f'Step 1: {setter_name} establishes {weather} on entry via {setter.get("Ability")}. ')
+    other_weather = _WEATHER_ABILITIES.get(str(opponent.get('Ability') or ''))
+    if setup_move and other_weather and other_weather != weather:
+        line += f'{setup_move} replaces the opposing {other_weather} weather. '
+    if is_switch:
+        line += f'Step 2: switch to {attacker_name}; then use {attack_name} while {weather} remains active. '
+    else:
+        line += f'Step 2: use {attack_name} while {weather} remains active. '
+    accuracy_note = (' Weather makes this move bypass normal accuracy checks.' if accurate_weather_move else '')
+    charge_note = (' Sun removes this move’s charging turn.' if instant_solar_move else '')
+    weather_incoming = [
+        (str(incoming_move.get('Move') or ''), float(calculate_move_score(
+            opponent, beneficiary, incoming_move, items, ability_rules, weather_override=weather)))
+        for incoming_move in get_moves(opponent, moves_data)
+        if incoming_move.get('Category') in {'Physical', 'Special'}
+    ]
+    weather_threat = max(weather_incoming, key=lambda x: x[1]) if weather_incoming else None
+    incoming_note = (f' With {weather} active, Incoming Worst Move against {attacker_name}: '
+                     f'{weather_threat[0]} (IWS {weather_threat[1]:.2f}).' if weather_threat else '')
+    line += (f'Projected {attack_name} Move Score {normal:.2f} → {projected:.2f} in {weather}.{attack_note}{speed_note}{sand_note}{weather_safety_note}'
+             f'{accuracy_note}{charge_note}{incoming_note} '
+             f'Weather lasts up to {duration} turns from activation; switching consumes a turn.')
+    condition = (f'Assumes {weather} is active and not overridden; Battle Compass cannot verify remaining turns. '
+                 'If the weather changes or expires, use the direct matchup or re-establish weather.')
+    return dict(
+        pokemon_name=opening_name, recommended_pokemon_name=opening_name, lead_pokemon_name=setter_name,
+        lead_move=lead_move, fit=fit, fit_rank=rank, summary=heading, reason=line,
+        action=f'Establish {weather} with {setter_name}', action_detail=line,
+        plan_kind='weather_setup' if setup_move or is_switch else 'weather_entry_payoff',
+        can_override_direct=True,
+        opener_threat_move=str(by_name[setter_name].get('Worst Incoming Move') or '') or None,
+        opener_threat_category=str(by_name[setter_name].get('Worst Incoming Move Category') or '') or None,
+        opener_threat_type=str(by_name[setter_name].get('Worst Incoming Move Type') or '') or None,
+        opener_threat_score=float(by_name[setter_name].get('Incoming Worst Score') or 0),
+        opener_threat_multiplier=float(by_name[setter_name].get('Incoming Multiplier') or 1),
+        strategy_branch='weather_control', action_type=('Weather Setup' if setup_move else
+            'Weather Payoff' if not is_switch else 'Automatic Weather'),
+        plan_role='Weather Setter' if setup_move or is_switch else 'Weather Beneficiary',
+        fit_explanation=((f'{weather} supports {attack_name} ({normal:.2f} → {projected:.2f}). ' if projected > normal + 0.01 else f'{weather} does not boost {attack_name} damage. ') +
+                         ('Weather changes turn order. ' if flip else '') +
+                         ('Check switch safety.' if is_switch else 'No switch needed.')),
+        attack_move_score=(projected if not setup_move and not is_switch else None),
+        attack_score_conditional=not setup_move and not is_switch,
+        sequence_heading=heading, state_assumption='No manual weather is assumed active before setup.',
+        fallback_if_assumption_fails='If weather setup is unsafe or weather expires, use the direct fallback.',
+        condition_detail=condition if not setup_move and not is_switch else '',
+    )
+
+
 def build_battle_compass_view_model(
     *,
     team_data: list[dict],
@@ -1079,7 +1668,27 @@ def build_battle_compass_view_model(
     strategy_plans: list[StrategyPlanViewModel] = []
     selected_strategy_plan: StrategyPlanViewModel | None = None
     fallback_reason: str | None = None
-    if team_strategy in {"poison_attrition", "poison_offensive_pressure"}:
+    anti_setup = (
+        _anti_setup_interception(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+        if team_strategy != "strongest_matchup"
+        and not _force_strongest_matchup_for_known_doubles(opponent)
+        and not _opponent_is_dynamaxed(opponent)
+        else None
+    )
+    if anti_setup is not None:
+        intercept_name, intercept_move, enemy_setup, accuracy = anti_setup
+        intercept_matchup = matchup_lookup.get(intercept_name)
+        if intercept_matchup is not None:
+            recommendation = intercept_matchup
+            fallback_reason = (
+                f"Anti-setup interception: {opponent.get('Pokemon', 'the opponent')} knows {enemy_setup}, "
+                f"which could sharply increase its offensive threat. "
+                f"{intercept_name} can knock it out immediately with {intercept_move} "
+                f"(modeled minimum damage reaches its HP; move accuracy {accuracy:g}%). "
+                "Attack now rather than spend a turn setting up. The selected strategy remains active."
+            )
+            why_text = fallback_reason + " Full Analysis shows the ordinary direct matchup scores."
+    elif team_strategy in {"poison_attrition", "poison_offensive_pressure"}:
         if _force_strongest_matchup_for_known_doubles(opponent):
             fallback_reason = (
                 "This is a Double Battle. Battle Compass currently models single-opponent tactical states, so strategy-specific recommendations are disabled here and Strongest Matchup is being used instead."
@@ -1229,6 +1838,48 @@ def build_battle_compass_view_model(
                     f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
                     "Full Analysis retains unconditioned scores."
                 )
+    elif team_strategy == "defensive_attrition":
+        if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
+            fallback_reason = "Defensive Attrition uses Strongest Matchup for modeled doubles and Dynamax opponents."
+            why_text = f"{fallback_reason} {direct_why_text}".strip()
+        else:
+            contact_candidate = _contact_punishment_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            defensive_result = _defensive_attrition_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            # Prefer contact punishment when the opposing damaging moveset is
+            # entirely contact-based; neither plan assumes a live battle state.
+            if contact_candidate is not None and (isinstance(defensive_result, str) or
+                    contact_candidate[0] >= 3.0):
+                defensive_result = contact_candidate[1]
+            if isinstance(defensive_result, str):
+                fallback_reason = defensive_result
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            else:
+                selected_strategy_plan = StrategyPlanViewModel(**defensive_result)
+                strategy_plans = [selected_strategy_plan]
+                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                why_text = (f"{selected_strategy_plan.state_assumption} "
+                            f"{selected_strategy_plan.action_detail} "
+                            f"Direct fallback: {direct_name} → "
+                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            "Full Analysis retains unboosted scores.")
+    elif team_strategy == "weather_control":
+        if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
+            fallback_reason = "Weather Control uses Strongest Matchup for modeled doubles and Dynamax opponents."
+            why_text = f"{fallback_reason} {direct_why_text}".strip()
+        else:
+            result = _weather_control_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            if isinstance(result, str):
+                fallback_reason = result
+                why_text = f"{fallback_reason} {direct_why_text}".strip()
+            else:
+                selected_strategy_plan = StrategyPlanViewModel(**result)
+                strategy_plans = [selected_strategy_plan]
+                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                why_text = (f"{selected_strategy_plan.action_detail} "
+                            f"{selected_strategy_plan.condition_detail} "
+                            f"Direct fallback: {direct_name} → "
+                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            "Full Analysis retains the ordinary matchup scores.")
     elif team_strategy == "setup_offense":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = "Setup Offense uses Strongest Matchup for modeled doubles and Dynamax opponents."
