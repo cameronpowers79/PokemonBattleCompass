@@ -962,7 +962,7 @@ async def main(page: ft.Page) -> None:
 
                     title=ft.Text(
 
-                        "Want a quick tour?",
+                        "Explore Battle Compass with the Tutorial?",
 
                         weight=ft.FontWeight.BOLD,
 
@@ -978,15 +978,13 @@ async def main(page: ft.Page) -> None:
 
                                     (
 
-                                        "Battle Compass has a few useful "
+                                        "The guided Tutorial explains the main "
 
-                                        "features that are not immediately "
+                                        "controls, how battle recommendations work, "
 
-                                        "obvious. The guided tour will point "
+                                        "and all eight Team Strategies, with practical "
 
-                                        "out the important controls and explain "
-
-                                        "how recommendations are calculated."
+                                        "examples to help you find your own playstyle."
 
                                     )
 
@@ -996,9 +994,11 @@ async def main(page: ft.Page) -> None:
 
                                     (
 
-                                        "It only takes a few steps, and you can "
+                                        "You can take your time, skip it for now, "
 
-                                        "replay it later from About."
+                                        "or revisit the entire Tutorial whenever "
+
+                                        "you like from About."
 
                                     ),
 
@@ -1036,7 +1036,7 @@ async def main(page: ft.Page) -> None:
 
                         ft.Button(
 
-                            content="Take the Tour",
+                            content="Start Tutorial",
 
                             icon=ft.Icons.EXPLORE_ROUNDED,
 

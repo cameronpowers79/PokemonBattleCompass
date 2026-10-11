@@ -647,7 +647,9 @@ class OnboardingView:
         return self._onboarding_panel("Build a team your way", [
             ft.Text(
                 "Battle Compass can help you choose a team strategy, find Pokémon that support it, "
-                "and plan useful moves and where to obtain them. Your starter is always part of your Journey.",
+                "and plan useful moves and where to obtain them. Your starter is always part of your Journey. "
+                "You choose how to build your team; for a full explanation of every strategy, "
+                "see the Tutorial after onboarding or visit About any time.",
                 color=TEXT_SECONDARY, size=17,
             ),
             ft.Container(
@@ -737,7 +739,8 @@ class OnboardingView:
             self.content_host.content = self._build_team_planning()
             self.page.update()
         return self._onboarding_panel("Choose your Team Strategy", [
-            ft.Text("Pick the kind of battles you'd like to fight. You can change strategies later.",
+            ft.Text("Pick the kind of battles you'd like to fight. You can change strategies later. "
+                    "For detailed examples, see the Tutorial after onboarding or the About page.",
                     color=TEXT_SECONDARY, size=17),
             ft.Container(content=ft.Column(controls=[selector, description], spacing=18),
                          padding=22, bgcolor=SURFACE_RAISED,

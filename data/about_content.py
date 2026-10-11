@@ -33,9 +33,88 @@ class VersionEntry:
 
 HERO_TITLE = "Pokémon Battle Compass"
 HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword"
-HERO_VERSION = "v0.2.2 Beta"
+HERO_VERSION = "v0.3.0 Beta"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
+
+# Strategy reference: each entry is a standard About card so existing About-page
+# assembly automatically displays it. AboutCard supplies its artwork and color.
+STRATEGY_ABOUT_SECTIONS = (
+    AboutSection(
+        title="Understanding Team Strategies", icon="account_tree",
+        paragraphs=(
+            "A Team Strategy is a general battle plan, not a required team type. Instead of asking only which Pokémon hits hardest right now, you can ask how your team should create an advantage: by boosting, spreading status, controlling weather, or surviving until the opponent runs out of options.",
+            "Strategies first appear during Journey onboarding. You may accept planning help, skip it, or change strategies later. Your Pokémon choices are always yours; the Compass adapts to the Pokémon, moves, and Abilities you actually enter.",
+            "The Strategy Recommender assesses the current equipped team and can suggest additions and moves through My Journey. Its readiness grades describe the available tools, not whether you are allowed to select a strategy. In battle, Strategic Fit evaluates the proposed tactical plan; Direct Matchup and Full Analysis remain available for straightforward comparisons.",
+            "A conditional plan assumes a particular battle state, such as an active screen, poisoned target, or surviving weather. Battle Compass cannot see the actual fight or know whether you followed an earlier recommendation. Check those assumptions before acting. A dangerous opposing setup move or a safer immediate knockout can also justify temporarily deviating from your chosen strategy.",
+            "The eight modes below can work independently or be combined by an experienced player. You do not need to know competitive terminology to use them; start with whichever description sounds fun."
+        ), accent="blue",
+    ),
+    AboutSection(
+        title="Strongest Matchup", icon="target",
+        paragraphs=(
+            "The simplest starting point: choose the Pokémon with the best modeled immediate matchup against the selected opponent. The Compass weighs how hard its attacks hit against the danger of the opponent's strongest available attack, including type effectiveness, defenses, Abilities, and supported held items.",
+            "Example: if your Ground-type can safely defeat an opposing Electric-type with Earthquake, this mode can recommend that direct answer without asking you to set anything up first.",
+            "Choose it when you want uncomplicated battle guidance, when you are unfamiliar with strategy modes, or when a special plan is too dangerous to attempt. Strongest Matchup is always available and serves as the fallback when a tactical assumption cannot be supported."
+        ), accent="blue",
+    ),
+    AboutSection(
+        title="Poison – Offensive Pressure", icon="target",
+        paragraphs=(
+            "Poison first, damage second. Establish poison through an equipped move such as Toxic or Toxic Spikes, then exploit the poisoned target with attacks that become stronger or more useful while poison is active—especially Venoshock, Hex, or a suitable Merciless attacker.",
+            "Example: Roserade poisons an opponent, then Salazzle uses Venoshock for amplified damage. Toxic Spikes can help with later incoming foes, but it does not poison the opponent already standing on the field.",
+            "A successful team needs reliable poison application and a meaningful offensive payoff. Poison and Steel types generally cannot be poisoned, except that Corrosion can allow its user to poison them; Steel still resists or is immune to the relevant attacking types normally. The Compass evaluates these matchups and may choose immediate offense instead of forcing a poison setup."
+        ), accent="purple",
+    ),
+    AboutSection(
+        title="Poison – Attrition", icon="target",
+        paragraphs=(
+            "Poison is the clock, and staying alive is the plan. After poisoning the target, use recovery, protection, bulky Pokémon, and defensive control to let poison damage accumulate over several turns.",
+            "Example: a poison setter such as Roserade establishes Toxic, then Toxapex uses Recover and Baneful Bunker to limit damage while the opponent's health ticks down. Teammates with protection or resistance can maintain pressure even without a huge immediate attack.",
+            "This works best against targets that can be poisoned and cannot quickly break through your defenses. A poison-immune foe, a dangerous setup sweeper, or an immediate knockout opportunity may call for a different answer. Toxic Spikes on the field are not proof that the current opponent is poisoned."
+        ), accent="purple",
+    ),
+    AboutSection(
+        title="Screen Control", icon="target",
+        paragraphs=(
+            "Reflect reduces incoming physical damage and Light Screen reduces special damage in singles. A screen setter creates a safer window for a teammate that is powerful but might otherwise struggle to take a hit.",
+            "Example: a male Meowstic with Prankster uses Reflect or Light Screen, then a hard-hitting partner enters with extra protection. Light Clay can extend ordinary screen duration, providing more useful protected turns.",
+            "A good screen team has a dependable setter plus at least one attacker that really benefits from the protection. Switching consumes a turn, screens expire, and some attacks or Abilities bypass or remove them. The Compass identifies the relevant opponent's attack category but cannot confirm a screen established earlier is still active."
+        ), accent="blue",
+    ),
+    AboutSection(
+        title="Setup Offense", icon="target",
+        paragraphs=(
+            "Spend a relatively safe turn strengthening your Pokémon, then convert the boost into stronger attacks or a Speed advantage. Swords Dance raises physical Attack, Nasty Plot raises Special Attack, and Calm Mind raises Special Attack and Special Defense.",
+            "Example: Weavile uses Swords Dance and follows with Ice Punch or Throat Chop; another team might use a Calm Mind special attacker or a Pokémon whose Ability raises Speed. Screens or status control can help create the opening, even though they are separate modes in the Compass.",
+            "The crucial question is whether you can afford the setup turn. Boosts do not help if the opponent knocks you out first, and some opponents can remove boosts or become lethal through their own setup. The Compass estimates the projected payoff and can recommend attacking immediately instead."
+        ), accent="orange",
+    ),
+    AboutSection(
+        title="Status Control & Punish", icon="target",
+        paragraphs=(
+            "Use a reliable burn, paralysis, or sleep effect to disrupt the opponent, and then benefit from the change in battle conditions. Burn weakens most physical attackers, paralysis reduces Speed, and sleep can create free turns. A move such as Hex provides extra damage against targets with major status conditions.",
+            "Example: Chandelure uses Will-O-Wisp to burn a physical attacker, then hits with a stronger Hex. A Thunder Wave user may instead let a slower teammate move first. Unlike Poison strategies, the value here can come from control even without Venoshock or poison damage.",
+            "A chance of status as a move's minor secondary effect is not the same as a dependable setter. Type and Ability immunities matter. Each newly encountered opponent starts without an assumed major status; conditional damage is an opportunity, not a claim that the opponent is already afflicted."
+        ), accent="purple",
+    ),
+    AboutSection(
+        title="Weather Control", icon="target",
+        paragraphs=(
+            "Change the battlefield's weather to create a useful advantage. Rain strengthens Water attacks and weakens Fire attacks; sun does the reverse. Sandstorm can protect Rock-types from special attacks, while hail can support Ice-oriented effects in Pokémon Sword. Weather-dependent Abilities and moves provide further benefits.",
+            "Example: Pelipper's Drizzle starts rain for a Swift Swim Barraskewda; Torkoal's Drought empowers its own Fire attacks or lets an ally use Solar Blade without charging; Gigalith's Sand Stream can support an Excadrill with Sand Force. Onboarding helps build matched setter-and-beneficiary pairs by weather.",
+            "Weather has a limited duration. A teammate with a different automatic weather Ability replaces the current weather upon entering; incompatible setters must not be treated as one continuous plan. Sometimes the setter's own attack is the best payoff, and sometimes the strongest decision is to avoid weather that would help the opponent. Conditional projections do not prove the weather is still active."
+        ), accent="blue",
+    ),
+    AboutSection(
+        title="Defensive Attrition", icon="target",
+        paragraphs=(
+            "Win through defensive staying power rather than a quick knockout. Moves such as Iron Defense can make physical hits less dangerous, and Body Press converts the user's Defense into attacking power. Protect, recovery, and contact-punishing moves can create other ways to gain ground.",
+            "Example: Ferrothorn uses Iron Defense and then Body Press, or Toxapex uses Baneful Bunker to poison a contact attacker before attacking with Venoshock. Obstagoon can use Obstruct to lower a contact attacker's Defense, then punish with Throat Chop or Body Press.",
+            "Protection is not universally safe: the opponent might choose a noncontact move, boost its stats, or simply overwhelm the defender. Consecutive protection attempts can fail. The Compass evaluates the actual incoming attacks and can abandon setup when an immediate knockout is safer."
+        ), accent="blue",
+    ),
+)
 
 ABOUT_SECTIONS = (
     AboutSection(
@@ -74,7 +153,8 @@ ABOUT_SECTIONS = (
             ),
         ),
         bullets=(
-            "Recommends the strongest current team matchup.",
+            "Recommends the strongest current team matchup or an opponent-aware strategy action.",
+            "Offers eight optional Team Strategies, guided team-building, and tactical plans.",
             "Identifies each teammate’s best attacking move.",
             "Compares projected offense and incoming danger.",
             "Shows Matchup Strength and a full-team analysis.",
@@ -124,7 +204,9 @@ ABOUT_SECTIONS = (
                 "team member, Best Move, Matchup Strength, explanation, and "
                 "relevant Battle Notes. Check Full Analysis when you want to "
                 "compare the rest of the team instead of stopping at the top "
-                "recommendation."
+                "recommendation. Select a Team Strategy if you want battle plans "
+                "that use setup, protection, status, or weather rather than "
+                "ranking direct damage alone."
             ),
             (
                 "My Journey — Use the Badge Tracker to keep your story progress "
@@ -189,6 +271,7 @@ ABOUT_SECTIONS = (
         ),
         accent="purple",
     ),
+    *STRATEGY_ABOUT_SECTIONS,
     AboutSection(
         title="Saving Your Journey",
         icon="save",
@@ -332,6 +415,7 @@ ABOUT_SECTIONS = (
 )
 
 
+
 NERD_STUFF_INTRO = (
     "This section is optional in the same way that reading every Pokédex entry "
     "is optional: technically true, but some of us were always going to click."
@@ -375,7 +459,7 @@ NERD_STUFF_GROUPS = (
         "Still intentionally outside the model",
         (
             "Doubles-specific targeting and partner interactions",
-            "Conditional or turn-by-turn weather and terrain simulation",
+            "Full turn-by-turn simulation of weather duration, terrain, and changing battle state",
             "Nature effects in battle calculations, IVs, EV spreads, and competitive optimization",
             "Long-form turn-by-turn battle simulation",
             "Every wonderfully strange edge case Game Freak has invented",
@@ -386,8 +470,20 @@ NERD_STUFF_GROUPS = (
 
 VERSION_HISTORY = (
     VersionEntry(
-        name="v0.2.2",
+        name="v0.3.0",
         status="Current Beta",
+        summary="Team Strategies: guided planning and opponent-aware tactical battle recommendations.",
+        bullets=(
+            "Added eight selectable strategies, from Strongest Matchup to weather, screens, setup, status, poison, and defensive attrition",
+            "Added a Strategy Recommender and onboarding support for team members, Abilities, and planned moves",
+            "Introduced strategic roles, projected conditional Move Scores, Strategic Fit, and strategy-specific action explanations",
+            "Added safer tactical fallbacks for dangerous setup opponents, contact punishment, switching, and weather changes",
+            "Expanded the Tutorial and About reference to explain strategies with practical examples",
+        ),
+    ),
+    VersionEntry(
+        name="v0.2.2",
+        status="Previous Beta",
         summary=(
             "Move planning, deterministic Ability-set weather, and a focused "
             "stability and Journey-refinement pass for the next validation run."

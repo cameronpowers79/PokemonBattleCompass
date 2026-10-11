@@ -1,6 +1,6 @@
 [project]
 name = "pokemon-battle-compass"
-version = "0.2.2"
+version = "0.3.0"
 description = "A fan-made Pokémon Sword battle decision-support tool."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
@@ -14,7 +14,7 @@ dependencies = [
 product = "Pokémon Battle Compass"
 company = "Pokémon Battle Compass"
 copyright = "Copyright © 2026"
-build_number = 1
+build_number = 2
 
 [tool.flet.app]
 path = "."

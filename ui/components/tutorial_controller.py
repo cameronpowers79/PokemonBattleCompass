@@ -15,6 +15,8 @@ from typing import cast
 
 import flet as ft
 
+from engine.strategy_definitions import STRATEGY_COLORS
+
 from ui.theme import (
     BORDER_DEFAULT,
     PRIMARY_BLUE,
@@ -51,6 +53,9 @@ class TutorialStep:
     image_height: int
     paragraphs: tuple[str, ...]
     highlights: tuple[TutorialHighlight, ...] = ()
+    strategy_key: str | None = None
+    image_folder: str = "tutorial"
+    image_first: bool = False
 
 
 TUTORIAL_STEPS = (
@@ -249,6 +254,107 @@ TUTORIAL_STEPS = (
         ),
     ),
     TutorialStep(
+        title="Understanding Team Strategies",
+        filename="",
+        image_width=0, image_height=0,
+        image_folder="strategy images", image_first=False,
+        paragraphs=(
+            "During onboarding, you saw that Battle Compass can help you plan a team around a strategy. A strategy is simply a preferred way to approach battles: attack immediately, inflict status, protect allies, boost your stats, or use weather to gain an advantage. You do not need competitive Pokémon experience to use one.",
+            "The decision is always yours. Choose whichever Pokémon and moves you enjoy; strategies are optional, and you can change the selected strategy whenever you like. Battle Compass uses the team, moves, Abilities, items, and opponent information you provide to recommend the strongest supported plan it can find.",
+            "The Strategy Recommender checks which approaches your actual team can support. 'Strong' or 'Viable' describes readiness, not a requirement or guarantee of victory. Some suggestions assume a move has been used or a condition is active; the Compass calls these out as conditional, because it cannot see the state of your game.",
+            "The following eight slides explain each strategy, when it shines, and some ways to build toward it. You can revisit these explanations in About later.",
+        ),
+    ),
+    TutorialStep(
+        title="Strongest Matchup",
+        strategy_key="strongest_matchup", filename="strongest_matchup.png",
+        image_folder="strategy images", image_first=True,
+        image_width=640, image_height=360,
+        paragraphs=(
+            "The straightforward approach: pick the team member with the most favorable modeled exchange of damage against the selected opponent. Battle Compass considers your best available attack and the most dangerous incoming attack, including type matchups and supported move, stat, Ability, and item interactions.",
+            "This is a great starting point when you are learning type matchups, playing with favorite Pokémon, or simply do not want to build around a particular trick. There is no required setter, sweeper, or supporting role.",
+            "Example: a Ground-type attacker can often deal with an Electric-type opponent, while a bulky Water-type might be safer against a Fire-type. The better answer depends on the *actual* moves and stats involved, not just species types. An immediate reliable knockout may be preferable to a higher long-term matchup ratio.",
+            "Best when: your team has diverse coverage, you prefer direct decisions, or your chosen strategy has no safe setup against the current opponent.",
+        ),
+    ),
+    TutorialStep(
+        title="Poison – Offensive Pressure",
+        strategy_key="poison_offensive_pressure", filename="poison_offensive_pressure.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Poison does more than gradually reduce HP: it can make your next attack much stronger. The idea is to poison the opponent safely, then capitalize with an offensive 'punisher' before the opponent can recover or take control.",
+            "Venoshock doubles its base power against poisoned targets; Hex doubles its base power against *any* major-status target. An Ability such as Merciless can also reward attacking a poisoned Pokémon. The Compass looks for both a way to apply poison and an equipped move that can exploit it.",
+            "Example team core: Roserade uses Toxic or Toxic Spikes, then Salazzle or another attacker follows with Venoshock. Toxic Spikes affects suitable Pokémon that switch in; it does not poison an opponent already on the field. A move like Toxic can help with that first target.",
+            "Best when: your team can establish poison reliably and has meaningful damaging follow-ups. Steel and Poison types normally cannot be poisoned; Corrosion allows its user to poison them, but does not remove Steel's immunity to Poison-type attacks. Poison payoffs are conditional until poison is actually active.",
+        ),
+    ),
+    TutorialStep(
+        title="Poison – Attrition",
+        strategy_key="poison_attrition", filename="poison-attrition.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Attrition means winning a little at a time. Instead of rushing to knock out the opponent, establish poison and then survive: heal, protect, resist attacks, and give the poison damage time to accumulate.",
+            "A bulky Pokémon such as Toxapex can use Baneful Bunker, Recover, and Leftovers to prolong the fight. Roserade can lay Toxic Spikes for future opponents, while a teammate that handles Steel- and Poison-types prevents the plan from getting stuck.",
+            "Example sequence: poison a vulnerable target, protect against its attack, restore HP when needed, and finish with a suitable damaging move. Baneful Bunker can also poison a foe that makes contact with it, but only if that foe actually chooses a contact move.",
+            "Best when: you have defensive Pokémon and reliable recovery or protection. It is less appealing against a dangerous boosting opponent, a poison-immune target, or anything that can defeat your wall before poison has time to matter.",
+        ),
+    ),
+    TutorialStep(
+        title="Status Control & Punish",
+        strategy_key="status_control_punish", filename="status_control_and_punish.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "A major status condition changes what the opponent can do. Burn lowers the power of most physical attacks, paralysis reduces Speed and can prevent action, sleep restricts turns, and poison wears down HP. Status Control deliberately creates these disadvantages.",
+            "The 'Punish' half means taking advantage of the opening: Hex hits harder against a status-affected opponent, Venoshock benefits specifically from poison, and even a regular attack may become safer after a burn or paralysis-induced Speed change.",
+            "Example core: a Will-O-Wisp user burns a physical attacker, then a Chandelure with Hex exploits that status. Alternatively, a Prankster status user can slow an opponent so another teammate acts first.",
+            "Best when: you can apply status accurately and have a useful payoff. Type and Ability immunities matter, and the Compass never assumes the next opponent inherited a previous Pokémon's status condition.",
+        ),
+    ),
+    TutorialStep(
+        title="Screen Control",
+        strategy_key="screen_control", filename="screen_control.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Reflect and Light Screen put protective barriers on your side of the field. In single battles, Reflect halves most incoming physical damage and Light Screen halves most incoming special damage while active. They make fragile offensive teammates much more comfortable taking a hit.",
+            "The team normally needs a screen setter and at least one attacker who benefits from protection. A setter with Prankster can put many status moves up with increased priority. Light Clay extends screen duration from five turns to eight.",
+            "Example core: male Meowstic with Prankster establishes Reflect or Light Screen, then a powerful teammate switches in to attack or boost. Choose the screen that actually addresses the opponent's available attacks; one screen does not protect against both categories.",
+            "Best when: a reliable setter supports an offensive Pokémon with limited natural bulk. Setting a screen and switching consumes turns, and the Compass cannot confirm whether an earlier screen is still active.",
+        ),
+    ),
+    TutorialStep(
+        title="Setup Offense",
+        strategy_key="setup_offense", filename="setup_offense.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Setup Offense spends a turn improving your Pokémon so later attacks become harder to withstand. Swords Dance sharply raises Attack; Nasty Plot sharply raises Special Attack; Calm Mind raises Special Attack and Special Defense. Speed-boosting moves can help a sweeper attack before the opponent.",
+            "Setup is worthwhile only if your Pokémon can survive the opening and exploit the boost. The Compass looks for a usable boosting move, a damaging payoff, and a matchup that leaves enough room to take that setup turn.",
+            "Example core: Perrserker uses Swords Dance and then Iron Head, or a special attacker uses Nasty Plot followed by a strong STAB attack. Reflect or Light Screen from a teammate can make setup safer, although the Compass does not automatically track those active screens.",
+            "Best when: a boost can meaningfully change the outcome. Against a threatening Shell Smash user or when you already have a safe knockout, attacking immediately may be wiser than taking another setup turn.",
+        ),
+    ),
+    TutorialStep(
+        title="Weather Control",
+        strategy_key="weather_control", filename="weather_control.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Weather changes the battlefield for both sides. Rain strengthens Water attacks and weakens Fire attacks; sun does the opposite. Sandstorm protects Rock types from special damage through a Special Defense boost. Hail chips eligible Pokémon and can support certain Ice-related moves and Abilities.",
+            "Weather teams often work as pairs: one Pokémon sets the weather, another benefits from it. Automatic setters include Pelipper (Drizzle), Torkoal (Drought), Gigalith (Sand Stream), and Pokémon with Snow Warning. Swift Swim, Chlorophyll, Sand Rush, and Slush Rush can double Speed in their matching weather.",
+            "Example cores: Pelipper sets rain for Swift Swim Barraskewda; Torkoal sets sun for a Fire attacker or a Pokémon using Solar Blade; Gigalith starts sandstorm for Sand Force Excadrill. A setter may also be its own best beneficiary—for example, Torkoal attacking immediately in sun.",
+            "Best when: weather provides real offensive, defensive, or Speed value without making the opponent more dangerous. Switching to a Pokémon whose Ability changes the weather cancels the original plan. Weather generally lasts five turns, so switching and setup use precious time. Conditional projections are not proof that weather remains active.",
+        ),
+    ),
+    TutorialStep(
+        title="Defensive Attrition",
+        strategy_key="defensive_attrition", filename="defensive_attrition.png",
+        image_folder="strategy images", image_first=True, image_width=640, image_height=360,
+        paragraphs=(
+            "Defensive Attrition makes the opponent's attacks less effective while steadily creating chances to deal damage. Unlike Poison – Attrition, it does not require poisoning the opponent. Its foundation is staying power: defense boosts, protection, recovery, and punishing contact.",
+            "Iron Defense sharply raises Defense. Body Press is special because it uses the user's Defense stat when calculating its damage, so Iron Defense can improve both physical protection and offensive pressure. Other moves such as Amnesia, Cosmic Power, and Stockpile provide different defensive advantages.",
+            "Example core: Mudsdale uses Iron Defense followed by Body Press; Toxapex uses Baneful Bunker to poison an attacking contact user; Obstagoon uses Obstruct to punish contact with a Defense drop, then follows with a physical attack like Throat Chop.",
+            "Best when: you can safely absorb hits and your defensive turns create useful follow-up damage or control. A critical hit, a strong special attack, a setup sweeper, or an immediate knockout opportunity can change that calculation; the Compass may recommend direct offense rather than another boost.",
+        ),
+    ),
+    TutorialStep(
         title="You're Ready!",
         filename="08_my_journey_overview.png",
         image_width=1225,
@@ -294,10 +400,10 @@ class TutorialController:
         self.current_index = 0
         self._show_step()
 
-    def _asset_src(self, filename: str) -> str:
+    def _asset_src(self, filename: str, folder: str = "tutorial") -> str:
         if sys.platform == "emscripten":
-            return f"tutorial/{filename}"
-        return str(ASSETS_DIR / "tutorial" / filename)
+            return f"{folder}/{filename}"
+        return str(ASSETS_DIR / folder / filename)
 
     def _show_step(self) -> None:
         if not self._is_active:
@@ -327,10 +433,12 @@ class TutorialController:
                     controls=cast(
                         list[ft.Control],
                         [
-                            self._build_explanation(step),
-                            self._build_screenshot(
-                                step,
-                                available_width=content_width - 20,
+                            *(
+                                [self._build_screenshot(step, available_width=content_width - 20), self._build_explanation(step)]
+                                if step.filename and step.image_first else
+                                [self._build_explanation(step), self._build_screenshot(step, available_width=content_width - 20)]
+                                if step.filename else
+                                [self._build_explanation(step)]
                             ),
                         ],
                     ),
@@ -405,7 +513,7 @@ class TutorialController:
                                     size=21,
                                     weight=ft.FontWeight.BOLD,
                                     font_family=FONT_FAMILY_HEADER,
-                                    color=TEXT_PRIMARY,
+                                    color=STRATEGY_COLORS.get(step.strategy_key, TEXT_PRIMARY),
                                 ),
                                 ft.Text(
                                     f"Tutorial · Step {self.current_index + 1} of {len(TUTORIAL_STEPS)}",
@@ -436,16 +544,17 @@ class TutorialController:
         *,
         available_width: float,
     ) -> ft.Control:
-        scale = min(
-            available_width / float(step.image_width),
-            1.0,
-        )
+        # Strategy illustrations should not dominate the dialog even if a
+        # higher-resolution asset is supplied later. Tutorial screenshots keep
+        # their existing sizing and callout coordinates.
+        max_width = min(available_width, 640.0) if step.strategy_key else available_width
+        scale = min(max_width / float(step.image_width), 1.0)
         display_width = step.image_width * scale
         display_height = step.image_height * scale
 
         controls: list[ft.Control] = [
             ft.Image(
-                src=self._asset_src(step.filename),
+                src=self._asset_src(step.filename, step.image_folder),
                 width=display_width,
                 height=display_height,
                 fit=ft.BoxFit.CONTAIN,
@@ -493,12 +602,17 @@ class TutorialController:
                     )
                 )
 
+        illustration = ft.Stack(
+            controls=controls,
+            width=display_width,
+            height=display_height,
+        )
+        if step.strategy_key:
+            # Strategy illustrations are standalone artwork, not annotated UI
+            # screenshots. No surrounding border, panel fill, or extra padding.
+            return ft.Container(content=illustration, alignment=ft.Alignment.CENTER)
         return ft.Container(
-            content=ft.Stack(
-                controls=controls,
-                width=display_width,
-                height=display_height,
-            ),
+            content=illustration,
             alignment=ft.Alignment.CENTER,
             padding=10,
             bgcolor=SURFACE_RAISED,

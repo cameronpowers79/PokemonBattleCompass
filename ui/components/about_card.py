@@ -5,6 +5,10 @@ Reusable documentation cards for the About page.
 from __future__ import annotations
 
 from typing import cast
+import sys
+from pathlib import Path
+
+from engine.strategy_definitions import STRATEGY_DEFINITIONS
 
 import flet as ft
 
@@ -45,6 +49,19 @@ ICON_LOOKUP = {
 }
 
 
+# Strategy artwork lives alongside the Tutorial's corresponding images.
+_STRATEGY_IMAGES = {
+    "strongest_matchup": "strongest_matchup.png",
+    "poison_offensive_pressure": "poison_offensive_pressure.png",
+    "poison_attrition": "poison-attrition.png",
+    "screen_control": "screen_control.png",
+    "setup_offense": "setup_offense.png",
+    "status_control_punish": "status_control_and_punish.png",
+    "weather_control": "weather_control.png",
+    "defensive_attrition": "defensive_attrition.png",
+}
+
+
 class AboutCard(ft.Container):
     """One reusable card for player-facing About-page documentation."""
 
@@ -61,6 +78,26 @@ class AboutCard(ft.Container):
             accent,
             ACCENT_STYLES["blue"],
         )
+
+        strategy = next((definition for definition in STRATEGY_DEFINITIONS.values()
+                         if definition.label == title), None)
+        if strategy is not None:
+            accent_color = strategy.color
+        illustration = None
+        if strategy is not None:
+            filename = _STRATEGY_IMAGES.get(strategy.key)
+            if filename:
+                root = Path(__file__).resolve().parents[2] / "assets" / "strategy images"
+                path = root / filename
+                # Avoid file-length exceptions if one image is absent from a deployment.
+                if path.is_file() or sys.platform == "emscripten":
+                    source = (f"strategy images/{filename}" if sys.platform == "emscripten"
+                              else str(path))
+                    illustration = ft.Container(
+                        content=ft.Image(src=source, width=640, height=360,
+                                         fit=ft.BoxFit.CONTAIN, semantics_label=title),
+                        alignment=ft.Alignment.CENTER,
+                    )
 
         super().__init__(
             content=ft.Column(
@@ -91,7 +128,7 @@ class AboutCard(ft.Container):
                                         size=22,
                                         weight=ft.FontWeight.BOLD,
                                         font_family=FONT_FAMILY_HEADER,
-                                        color=TEXT_PRIMARY,
+                                        color=accent_color if strategy else TEXT_PRIMARY,
                                         expand=True,
                                     ),
                                 ],
@@ -99,6 +136,7 @@ class AboutCard(ft.Container):
                             spacing=12,
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
+                        *([illustration] if illustration is not None else []),
                         *[
                             ft.Text(
                                 paragraph,

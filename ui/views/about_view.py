@@ -76,9 +76,16 @@ class AboutView:
     def build(self) -> ft.Control:
         """Return the complete About page."""
 
-        section_cards = cast(
-            list[ft.Control],
-            [
+        # Build documentation in source order. The old fixed [ :6 ], [6:8 ],
+        # [8: ] slices broke as soon as Strategy reference sections were added.
+        # Insert the two special cards at semantic section boundaries instead.
+        section_cards: list[ft.Control] = []
+        for section in ABOUT_SECTIONS:
+            if section.title == "Architecture":
+                section_cards.append(self._build_nerd_stuff_card())
+            if section.title == "Credits":
+                section_cards.append(self._build_version_history())
+            section_cards.append(
                 AboutCard(
                     title=section.title,
                     icon=section.icon,
@@ -86,13 +93,7 @@ class AboutView:
                     bullets=section.bullets,
                     accent=section.accent,
                 )
-                for section in ABOUT_SECTIONS
-            ],
-        )
-
-        welcome_and_features = section_cards[:6]
-        architecture_and_roadmap = section_cards[6:8]
-        credits_and_disclaimer = section_cards[8:]
+            )
 
         return ft.Container(
             content=ft.Column(
@@ -106,11 +107,7 @@ class AboutView:
                             tagline=HERO_TAGLINE,
                         ),
                         self._build_tutorial_card(),
-                        *welcome_and_features,
-                        self._build_nerd_stuff_card(),
-                        *architecture_and_roadmap,
-                        self._build_version_history(),
-                        *credits_and_disclaimer,
+                        *section_cards,
                         FooterCard(
                             title=FOOTER_TITLE,
                             paragraphs=FOOTER_PARAGRAPHS,
