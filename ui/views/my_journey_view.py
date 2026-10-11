@@ -226,10 +226,8 @@ class MyJourneyView:
             for item_id, record in self.item_objectives.items()
         }
         self.pokemon_obtained = {
-            str(pokemon.get("id")): app_state.is_pokemon_obtained(
-                str(pokemon.get("id"))
-            )
-            for pokemon in self.pokemon_catalog
+            planned_id: app_state.is_pokemon_obtained(planned_id)
+            for planned_id in self.planned_pokemon_ids
         }
         self._root: ft.Column | None = None
         self._top_journey_row: ft.ResponsiveRow | None = None
@@ -337,6 +335,21 @@ class MyJourneyView:
                 lookup[name.casefold()] = move_type
         return lookup
 
+    @staticmethod
+    def _catalog_id(planned_id: str) -> str:
+        """The reference/catalog species behind a unique planner-row ID."""
+        return planned_id.split("~", 1)[0]
+
+    def _next_planned_instance_id(self, catalog_id: str) -> str:
+        """Allocate a stable, unused identity without changing existing rows."""
+        occupied = set(self.planned_pokemon_ids)
+        if catalog_id not in occupied:
+            return catalog_id
+        number = 2
+        while f"{catalog_id}~{number}" in occupied:
+            number += 1
+        return f"{catalog_id}~{number}"
+
     def _load_planned_pokemon_ids(self) -> list[str]:
         """Load the saved planner roster; a new Journey starts empty."""
 
@@ -360,7 +373,7 @@ class MyJourneyView:
             pokemon_id = str(raw_id).strip()
             if (
                 pokemon_id
-                and pokemon_id in catalog_id_set
+                and self._catalog_id(pokemon_id) in catalog_id_set
                 and pokemon_id not in planned_ids
             ):
                 planned_ids.append(pokemon_id)
@@ -375,15 +388,17 @@ class MyJourneyView:
             if str(pokemon.get("id", "")).strip()
         }
         return [
-            records_by_id[pokemon_id]
-            for pokemon_id in self.planned_pokemon_ids
-            if pokemon_id in records_by_id
+            {**deepcopy(records_by_id[self._catalog_id(planned_id)]),
+             "id": planned_id,
+             "catalog_id": self._catalog_id(planned_id)}
+            for planned_id in self.planned_pokemon_ids
+            if self._catalog_id(planned_id) in records_by_id
         ]
 
     def _load_planned_pokemon_forms(self) -> dict[str, dict[str, str]]:
         """Read optional form/gender planning preferences (legacy saves: empty)."""
         raw = self.app_state.my_journey_data.get("planned_pokemon_forms", {})
-        valid_ids = {str(record.get("id")) for record in self.pokemon_catalog}
+        valid_ids = set(self.planned_pokemon_ids)
         if not isinstance(raw, dict):
             return {}
         return {
@@ -694,11 +709,8 @@ class MyJourneyView:
         # resolve acquired state from current AppState when the planner roster
         # changes instead of reusing the view's older cached values.
         self.pokemon_obtained = {
-            str(pokemon.get("id", "")):
-            self.app_state.is_pokemon_obtained(
-                str(pokemon.get("id", ""))
-            )
-            for pokemon in self.pokemon_catalog
+            planned_id: self.app_state.is_pokemon_obtained(planned_id)
+            for planned_id in self.planned_pokemon_ids
         }
 
         self.derived_item_requirements = (
@@ -955,10 +967,8 @@ class MyJourneyView:
         self.planned_moves = self._load_planned_moves()
         self._reload_planner_dependencies()
         self.pokemon_obtained = {
-            str(pokemon.get("id")): self.app_state.is_pokemon_obtained(
-                str(pokemon.get("id"))
-            )
-            for pokemon in self.pokemon_catalog
+            planned_id: self.app_state.is_pokemon_obtained(planned_id)
+            for planned_id in self.planned_pokemon_ids
         }
         self._refresh()
 
@@ -3781,12 +3791,8 @@ class MyJourneyView:
         """Search the unplanned catalog and add one exact Pokémon match."""
 
         del event
-        available_pokemon = [
-            pokemon
-            for pokemon in self.pokemon_catalog
-            if str(pokemon.get("id", "")).strip()
-            not in self.planned_pokemon_ids
-        ]
+        # Multiple individuals of the same species are legal in Sword.
+        available_pokemon = list(self.pokemon_catalog)
         if not available_pokemon:
             self.page.show_dialog(
                 ft.SnackBar(
@@ -4021,10 +4027,8 @@ class MyJourneyView:
     ) -> None:
         """Persist one new Team Planner Pokémon."""
 
-        if pokemon_id in self.planned_pokemon_ids:
-            return
-
-        updated_ids = [*self.planned_pokemon_ids, pokemon_id]
+        instance_id = self._next_planned_instance_id(pokemon_id)
+        updated_ids = [*self.planned_pokemon_ids, instance_id]
         save_succeeded = await self.app_state.save_planned_pokemon_ids(
             updated_ids
         )
@@ -4037,7 +4041,7 @@ class MyJourneyView:
         self.planned_pokemon_ids = updated_ids
         if selected_form or selected_gender:
             updated = deepcopy(self.planned_pokemon_forms)
-            updated[pokemon_id] = {
+            updated[instance_id] = {
                 **({"form": selected_form} if selected_form else {}),
                 **({"gender": selected_gender} if selected_gender else {}),
             }

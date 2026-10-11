@@ -28,7 +28,7 @@ JOURNEY_STORAGE_KEY = "pokemon_battle_compass.journey.v1"
 
 JOURNEY_BACKUP_STORAGE_KEY = "pokemon_battle_compass.journey.backup.v1"
 
-JOURNEY_SCHEMA_VERSION = 1
+JOURNEY_SCHEMA_VERSION = 2
 
 JOURNEY_EXPORT_FORMAT = "pokemon-battle-compass-journey"
 
@@ -140,10 +140,9 @@ def _migrate_journey_to_current(
 ) -> tuple[dict | None, str | None]:
     """
     Return Journey data upgraded to the current schema version.
-    Version 1 is currently the only released schema, so there are no
-    historical migration steps yet. The migration pipeline is intentionally
-    in place before a future schema bump so load/import behavior does not need
-    to be redesigned when version 2 is introduced.
+    Version 2 permits unique planned-member instance IDs while retaining the
+    original catalog ID for legacy first instances. Legacy IDs, form choices,
+    moves, acquired objectives and Journey progress are preserved verbatim.
     """
     if not isinstance(journey, dict):
         return None, "Stored Journey data is not an object."
@@ -208,13 +207,16 @@ def _migrate_journey_to_current(
             "Stored Journey could not be migrated to the current schema.",
         )
     return migrated_journey, None
-# Maps a Journey schema version to the function that upgrades that version
+def _migrate_v1_to_v2(journey: dict) -> dict:
+    """Accept old planner IDs unchanged; new duplicates get distinct IDs."""
+    migrated = deepcopy(journey)
+    migrated["schema_version"] = 2
+    return migrated
 
-# to its immediate successor. Version 1 is the first released schema, so the
 
-# registry is intentionally empty until a future schema version is introduced.
-
-JOURNEY_MIGRATIONS: dict[int, Callable[[dict], dict]] = {}
+JOURNEY_MIGRATIONS: dict[int, Callable[[dict], dict]] = {
+    1: _migrate_v1_to_v2,
+}
 
 
 def _validate_journey(
@@ -310,6 +312,12 @@ def _validate_journey(
                     "Stored My Journey "
                     f"{field_name} is invalid."
                 )
+        planned_ids = my_journey.get("planned_pokemon_ids", [])
+        if not isinstance(planned_ids, list) or any(
+            not isinstance(identifier, str) or not identifier.strip()
+            for identifier in planned_ids
+        ) or len(set(planned_ids)) != len(planned_ids):
+            return "Stored Team Planner Pokémon IDs must be unique nonempty text."
         aegislash_stat_guidance_dismissed = my_journey.get(
             "aegislash_stat_guidance_dismissed",
             False,

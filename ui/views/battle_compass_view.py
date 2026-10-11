@@ -472,7 +472,7 @@ class BattleCompassView:
                         size=13, weight=ft.FontWeight.BOLD,
                         color=self._strategy_viability_color(planned_viability.viability)),
                 ft.Text(planned_viability.summary, size=12, color=TEXT_SECONDARY),
-                ft.Text("Counted in plan: " + (", ".join(str(p.get("Pokemon")) for p in projected_members) or "none")
+                ft.Text("Counted in plan: " + (", ".join(self._strategy_member_display(p) for p in projected_members) or "none")
                         + (f" ({omitted_count} planned selection(s) beyond six; see planning details)" if omitted_count else ""),
                         size=12, color=TEXT_MUTED),
             ]
@@ -607,6 +607,20 @@ class BattleCompassView:
         self.page.update()
         self.page.run_task(self._persist_team_strategy, strategy_key)
 
+    @staticmethod
+    def _strategy_member_display(pokemon: dict) -> str:
+        """Show known gender/form without altering the species used by the engine."""
+        name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
+        gender = str(pokemon.get("Gender") or "").strip()
+        form = str(pokemon.get("Form") or "").strip()
+        if name in {"Meowstic", "Indeedee"} and gender in {"Male", "Female"}:
+            return f"{name} ({gender})"
+        if name == "Toxtricity" and form in {"Amped", "Low Key"}:
+            return f"{name} ({form})"
+        if form and form.casefold() != name.casefold() and not name.casefold().startswith(form.casefold()):
+            return f"{name} ({form})"
+        return name
+
     def _strategy_planned_snapshot(self, strategy_key: str, *, rank: bool = True):
         """Projected six-member plan; unlike live readiness, uses selected planned moves.
 
@@ -626,7 +640,7 @@ class BattleCompassView:
         included_ids: list[str] = []
         for pokemon_id in planned_ids:
             record = next((r for r in self.strategy_pokemon_catalog
-                           if str(r.get("id") or "").strip() == pokemon_id), None)
+                           if str(r.get("id") or "").strip() == pokemon_id.split("~", 1)[0]), None)
             if not record:
                 continue
             if any(self.app_state._planned_pokemon_matches_owned_record(record, p) for p in owned):
@@ -654,7 +668,7 @@ class BattleCompassView:
         candidates = []
         for candidate in self._strategy_candidate_pokemon_data():
             record = self._strategy_catalog_record_for_name(str(candidate.get("Pokemon") or ""))
-            if record and str(record.get("id") or "") in planned_ids:
+            if record and any(pid.split("~", 1)[0] == str(record.get("id") or "") for pid in planned_ids):
                 continue
             if any(self.app_state._planned_pokemon_matches_owned_record(record, p)
                    for p in team if isinstance(p, dict)) if record else False:
@@ -688,7 +702,7 @@ class BattleCompassView:
                     color=self._strategy_viability_color(viability.viability)),
             ft.Text(viability.summary, size=14, color=TEXT_SECONDARY),
             ft.Text(f"Projected lineup: {len(planned_team)}/6 — "
-                    + (", ".join(f"{p.get('Pokemon')} ({'My Team' if index < sum(1 for m in self.team_data if isinstance(m, dict) and m.get('Pokemon')) else 'Team Planner'})"
+                    + (", ".join(f"{self._strategy_member_display(p)} ({'My Team' if index < sum(1 for m in self.team_data if isinstance(m, dict) and m.get('Pokemon')) else 'Team Planner'})"
                                  for index, p in enumerate(planned_team)) or "none"),
                     size=12, color=TEXT_MUTED),
         ])
@@ -728,16 +742,22 @@ class BattleCompassView:
                                     size=15, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY))
             for pokemon_id in planned_ids:
                 record = next((r for r in self.strategy_pokemon_catalog
-                               if str(r.get("id") or "") == pokemon_id), None)
+                               if str(r.get("id") or "") == pokemon_id.split("~", 1)[0]), None)
                 if not record:
                     continue
                 name = str(record.get("pokemon") or "")
+                preferences = state.get("planned_pokemon_forms", {}).get(pokemon_id, {})
+                label = self._strategy_member_display({
+                    "Pokemon": name,
+                    "Gender": preferences.get("gender", ""),
+                    "Form": preferences.get("form", ""),
+                })
                 _, existing, free = self._strategy_planner_status(pokemon_id)
                 controls.append(ft.Row(controls=[
-                    ft.Text(f"{name}: {', '.join(existing) if existing else 'No moves planned'} "
+                    ft.Text(f"{label}: {', '.join(existing) if existing else 'No moves planned'} "
                             f"({free} free)", expand=True, size=12, color=TEXT_SECONDARY),
-                    ft.Button(content="Edit moves", on_click=lambda e, n=name, k=strategy_key:
-                              self._show_strategy_pokemon_plan(e, k, n)),
+                    ft.Button(content="Edit moves", on_click=lambda e, n=label, k=strategy_key, pid=pokemon_id:
+                              self._show_strategy_pokemon_plan(e, k, n, planned_id=pid)),
                 ], spacing=8))
         if len(planned_team) < 6:
             controls.append(ft.Text("Recommended new teammates", size=16,
@@ -829,8 +849,10 @@ class BattleCompassView:
         event: ft.Event[ft.Button] | None,
         strategy_key: str,
         pokemon_name: str,
+        *,
+        planned_id: str | None = None,
     ) -> None:
-        """Edit the complete four-move plan, retaining existing choices by default."""
+        """Edit one individual planned Pokémon, preserving its saved gender/form."""
         del event
         self.page.pop_dialog()
         record = self._strategy_catalog_record_for_name(pokemon_name)
@@ -842,8 +864,29 @@ class BattleCompassView:
         gender = re.search(r"\((Male|Female)\)$", pokemon_name, re.IGNORECASE)
         if gender and self._strategy_name_key(pokemon.get("Pokemon")) in {"meowstic", "indeedee"}:
             pokemon["Gender"] = gender.group(1).title()
-        pokemon_id = str(record.get("id") or "").strip()
+        catalog_id = str(record.get("id") or "").strip()
         data = self.app_state.my_journey_data
+        known_ids = list(data.get("planned_pokemon_ids", []))
+        if planned_id is not None:
+            if planned_id not in known_ids or planned_id.split("~", 1)[0] != catalog_id:
+                self._show_strategy_build_options(None, strategy_key, from_dialog=False,
+                    confirmation="That planned Pokémon is no longer available. Reopen the plan.")
+                return
+            pokemon_id = planned_id
+        else:
+            candidates = [item for item in known_ids if item.split("~", 1)[0] == catalog_id]
+            requested_gender = gender.group(1).title() if gender else None
+            if requested_gender:
+                candidates = [item for item in candidates
+                    if data.get("planned_pokemon_forms", {}).get(item, {}).get("gender") == requested_gender]
+            pokemon_id = candidates[0] if candidates else catalog_id
+        prefs = data.get("planned_pokemon_forms", {}).get(pokemon_id, {})
+        if isinstance(prefs, dict):
+            if prefs.get("gender"):
+                pokemon["Gender"] = prefs["gender"]
+            if prefs.get("form"):
+                pokemon["Form"] = prefs["form"]
+        pokemon_name = self._strategy_member_display(pokemon)
         original_slots = list(data.get("planned_moves", {}).get(pokemon_id, [None]*4))[:4]
         original_slots += [None] * (4-len(original_slots))
         existing = [str(slot.get("move_name") or "").strip() for slot in original_slots
@@ -899,12 +942,18 @@ class BattleCompassView:
                 count, warning,
                 ft.Text("Existing moves and strategy suggestions", size=14,
                         weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                *rows,
+                *(rows if rows else [ft.Text(
+                    "No additional supported Screen Control moves were found for this Pokémon. "
+                    "Screen Control focuses on the screen setter; other teammates can be "
+                    "built for offense, setup, or coverage in Move Planner. "
+                    "Try Setup Offense for setup-specific recommendations.",
+                    size=13, color=TEXT_SECONDARY)]),
             ], spacing=10, scroll=ft.ScrollMode.AUTO)),
             actions=[
                 ft.Button(content="Back to recommendations", on_click=lambda e: (
                     self.page.pop_dialog(), self._show_strategy_build_options(None, strategy_key, from_dialog=False))),
                 ft.Button(content="Save move plan" if planned else "Add to My Journey",
+                    disabled=not bool(rows) and planned,
                     icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED, bgcolor=PRIMARY_BLUE,
                     color=TEXT_PRIMARY, icon_color=TEXT_PRIMARY,
                     on_click=lambda e: self._confirm_strategy_full_move_plan(

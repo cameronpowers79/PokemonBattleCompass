@@ -1414,47 +1414,51 @@ class AppState:
 
 
 
-        acquired_records: list[dict[str, object]] = []
+        # Catalog IDs identify species; planned IDs identify *individuals*.
+        # The first planned member keeps the historical catalog ID, while extra
+        # members use catalog_id~2, catalog_id~3, etc. Match owned Pokémon
+        # one-to-one, preferring gender/form-specific objectives over generic ones.
+        by_catalog = {
+            str(record.get("id") or "").strip(): record
+            for record in planned_pokemon if isinstance(record, dict)
+        }
+        journey_state = self.my_journey_data
+        forms = journey_state.get("planned_pokemon_forms", {})
+        pending: list[tuple[str, dict, dict]] = []
+        for planned_id in journey_state.get("planned_pokemon_ids", []):
+            catalog_id = planned_id.split("~", 1)[0]
+            record = by_catalog.get(catalog_id)
+            if record is not None:
+                pending.append((planned_id, record, forms.get(planned_id, {})))
 
-        for planned in planned_pokemon:
+        # First allocate owned Pokémon to rows with explicit gender or form.
+        pending.sort(key=lambda entry: bool(entry[2].get("gender") or entry[2].get("form")), reverse=True)
+        available_owned = list(owned_pokemon)
+        acquired_by_id: set[str] = set()
+        for planned_id, planned, preferences in pending:
+            for index, owned in enumerate(available_owned):
+                if not self._planned_pokemon_matches_owned_record(planned, owned):
+                    continue
+                expected_gender = str(preferences.get("gender") or "").strip().casefold()
+                if expected_gender and str(owned.get("Gender") or "").strip().casefold() != expected_gender:
+                    continue
+                expected_form = str(preferences.get("form") or "").strip()
+                if expected_form and expected_form not in {"Amped", "Low Key"}:
+                    # Regional variants have distinct canonical names or Form fields.
+                    owned_form = str(owned.get("Form") or "").strip()
+                    owned_name = str(owned.get("Pokemon") or "").strip()
+                    if (expected_form.casefold() not in {owned_form.casefold(), owned_name.casefold()}
+                            and expected_form.casefold() != str(planned.get("pokemon") or "").casefold()):
+                        continue
+                acquired_by_id.add(planned_id)
+                available_owned.pop(index)
+                break
 
-            if not isinstance(planned, dict):
-
-                continue
-
-
-
-            pokemon_id = str(planned.get("id", "")).strip()
-
-            if not pokemon_id:
-
-                continue
-
-
-
-            if any(
-
-                self._planned_pokemon_matches_owned_record(
-
-                    planned,
-
-                    owned,
-
-                )
-
-                for owned in owned_pokemon
-
-            ):
-
-                acquired_records.append({
-
-                    "id": pokemon_id,
-
-                    "obtained": True,
-
-                })
-
-
+        acquired_records: list[dict[str, object]] = [
+            {"id": planned_id, "obtained": True}
+            for planned_id in journey_state.get("planned_pokemon_ids", [])
+            if planned_id in acquired_by_id
+        ]
 
         updated_my_journey = deepcopy(self.my_journey_data)
 
@@ -2984,7 +2988,7 @@ class AppState:
         if not pokemon_id or len(slots) != 4 or len(expected_slots) != 4:
             raise ValueError("Invalid four-slot strategy move plan.")
         catalog = json.loads((DATA_DIR / "journey_pokemon.json").read_text(encoding="utf-8"))
-        if not any(isinstance(row, dict) and str(row.get("id") or "").strip() == pokemon_id
+        if not any(isinstance(row, dict) and str(row.get("id") or "").strip() == pokemon_id.split("~", 1)[0]
                    for row in catalog):
             raise ValueError("Pokémon is not in the Journey catalog.")
         normalized = []
