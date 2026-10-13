@@ -8260,6 +8260,16 @@
         "map_locations": [
           "stow_on_side"
         ]
+      },
+      {
+        "id": "pixie_plate_route_8",
+        "method": "fixed_pickup",
+        "location": "Route 8",
+        "location_detail": "Fixed pickup on Route 8.",
+        "required_badge": 5,
+        "map_locations": [
+          "route_8"
+        ]
       }
     ],
     "source_url": "https://www.serebii.net/swordshield/items.shtml",
