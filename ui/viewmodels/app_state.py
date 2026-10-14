@@ -51,6 +51,7 @@ from ui.storage.journey_storage import (
     load_journey,
 
     save_journey,
+    ensure_owned_member_ids,
 
 )
 
@@ -328,6 +329,7 @@ class AppState:
             "planned_pokemon_forms": {},
 
             "planned_moves": {},
+            "show_nicknames": False,
 
             "aegislash_stat_guidance_dismissed": False,
 
@@ -613,6 +615,7 @@ class AppState:
             "planned_pokemon_forms": planned_pokemon_forms,
 
             "planned_moves": planned_moves,
+            "show_nicknames": my_journey.get("show_nicknames") is True,
 
             "aegislash_stat_guidance_dismissed": (
 
@@ -1224,6 +1227,7 @@ class AppState:
 
 
 
+        ensure_owned_member_ids({"team": updated_team, "box": self.box_data})
         self.journey["team"] = updated_team
 
 
@@ -1500,9 +1504,10 @@ class AppState:
 
 
 
-        self.journey["team"] = deepcopy(team_data)
-
-        self.journey["box"] = deepcopy(box_data)
+        owned = {"team": deepcopy(team_data), "box": deepcopy(box_data)}
+        ensure_owned_member_ids(owned)
+        self.journey["team"] = owned["team"]
+        self.journey["box"] = owned["box"]
 
         self._sync_pokemon_objectives_from_owned_pokemon(
 
@@ -1771,6 +1776,29 @@ class AppState:
         return save_succeeded
 
 
+
+    async def save_nickname_column_preference(self, visible: bool) -> bool:
+        """Save a UI preference without changing the team or its dirty state."""
+        if self.journey is None:
+            return False
+        previous = deepcopy(self.journey.get("my_journey"))
+        state = deepcopy(self.my_journey_data)
+        state["show_nicknames"] = bool(visible)
+        self.journey["my_journey"] = state
+        try:
+            saved = await save_journey(self.storage, self.journey)
+        except (TypeError, ValueError):
+            if previous is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous
+            raise
+        if not saved:
+            if previous is None:
+                self.journey.pop("my_journey", None)
+            else:
+                self.journey["my_journey"] = previous
+        return saved
 
     async def save_journey_filter_preferences(
 

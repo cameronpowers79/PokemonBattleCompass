@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 
 from copy import deepcopy
+from uuid import uuid4
 
 from dataclasses import dataclass
 
@@ -98,6 +99,27 @@ def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def ensure_owned_member_ids(journey: dict) -> bool:
+    """Assign stable opaque IDs to party/Box members without changing their data.
+
+    Existing unique IDs are retained, including when a Pokémon moves to Box.
+    Duplicate or invalid identifiers are replaced. Returns whether data changed.
+    """
+    changed = False
+    seen: set[str] = set()
+    for section in ("team", "box"):
+        for member in journey.get(section, []):
+            if not isinstance(member, dict):
+                continue
+            member_id = member.get("MemberID")
+            if not isinstance(member_id, str) or not member_id.strip() or member_id in seen:
+                member_id = f"pkm_{uuid4().hex}"
+                member["MemberID"] = member_id
+                changed = True
+            seen.add(member_id)
+    return changed
+
+
 def create_journey(
     *,
     starter: str,
@@ -109,7 +131,7 @@ def create_journey(
             f"Unsupported starter: {starter}"
         )
     timestamp = _utc_timestamp()
-    return {
+    record = {
         "schema_version": JOURNEY_SCHEMA_VERSION,
         "starter": starter,
         "team": deepcopy(team or []),
@@ -127,12 +149,15 @@ def create_journey(
             "item_objectives": [],
             "pokemon_objectives": [],
             "planned_moves": {},
+            "show_nicknames": False,
             "planned_pokemon_forms": {},
             "aegislash_stat_guidance_dismissed": False,
         },
         "created_at": timestamp,
         "updated_at": timestamp,
     }
+    ensure_owned_member_ids(record)
+    return record
 
 
 def _migrate_journey_to_current(
@@ -206,6 +231,7 @@ def _migrate_journey_to_current(
             None,
             "Stored Journey could not be migrated to the current schema.",
         )
+    ensure_owned_member_ids(migrated_journey)
     return migrated_journey, None
 def _migrate_v1_to_v2(journey: dict) -> dict:
     """Accept old planner IDs unchanged; new duplicates get distinct IDs."""
@@ -312,6 +338,8 @@ def _validate_journey(
                     "Stored My Journey "
                     f"{field_name} is invalid."
                 )
+        if not isinstance(my_journey.get("show_nicknames", False), bool):
+            return "Stored nickname-column preference is invalid."
         planned_ids = my_journey.get("planned_pokemon_ids", [])
         if not isinstance(planned_ids, list) or any(
             not isinstance(identifier, str) or not identifier.strip()
@@ -636,6 +664,7 @@ async def save_journey(
     as the last-known-good backup.
     """
     journey_to_save = deepcopy(journey)
+    ensure_owned_member_ids(journey_to_save)
     journey_to_save["schema_version"] = (
         JOURNEY_SCHEMA_VERSION
     )

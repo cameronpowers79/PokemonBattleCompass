@@ -97,6 +97,8 @@ class StrategicCapabilityResult:
     pokemon_name: str
     capability_keys: tuple[str, ...]
     capabilities: tuple[str, ...]
+    member_id: str | None = None
+    display_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -177,6 +179,20 @@ class PoisonAttritionPlanResult:
     recommended_pokemon_name: str = ""
     conditional_move_name: str | None = None
     conditional_move_score: float | None = None
+    member_id: str | None = None
+    lead_member_id: str | None = None
+    recommended_member_id: str | None = None
+    followup_member_id: str | None = None
+
+
+def _member_key(pokemon: dict) -> str:
+    """Unique owned member key, falling back only for historical test data."""
+    return str(pokemon.get("MemberID") or pokemon.get("Pokemon") or "Unknown Pokémon")
+
+
+def _member_label(pokemon: dict) -> str:
+    """Player-facing name; keep Pokemon as the canonical species for mechanics."""
+    return str(pokemon.get("Nickname") or "").strip() or str(pokemon.get("Pokemon") or "Unknown Pokémon")
 
 
 def _move_names(pokemon: dict) -> list[str]:
@@ -503,6 +519,8 @@ def recognize_pokemon_capabilities(pokemon: dict, move_lookup: dict[str, dict]) 
         pokemon_name=str(pokemon.get("Pokemon") or "Unknown Pokémon"),
         capability_keys=ordered_keys,
         capabilities=tuple(CAPABILITY_LABELS[key] for key in ordered_keys),
+        member_id=str(pokemon.get("MemberID") or "") or None,
+        display_name=_member_label(pokemon),
     )
 
 
@@ -535,6 +553,8 @@ def recognize_learnable_pokemon_capabilities(
         pokemon_name=str(pokemon.get("Pokemon") or "Unknown Pokémon"),
         capability_keys=ordered_keys,
         capabilities=tuple(CAPABILITY_LABELS[key] for key in ordered_keys),
+        member_id=str(pokemon.get("MemberID") or "") or None,
+        display_name=_member_label(pokemon),
     )
 
 
@@ -610,12 +630,21 @@ def _canonical_strategy_key(strategy_key: str) -> str:
     return _STRATEGY_ALIASES.get(raw.casefold(), raw.casefold().replace(" ", "_"))
 
 
+def _capability_member_key(result: StrategicCapabilityResult) -> str:
+    """Use owned instance identity, with species fallback for catalog candidates."""
+    return result.member_id or result.pokemon_name
+
+
+def _capability_label(result: StrategicCapabilityResult) -> str:
+    return result.display_name or result.pokemon_name
+
+
 def _capability_provider_names(
     capability_results: list[StrategicCapabilityResult],
     accepted_keys: set[str],
 ) -> tuple[str, ...]:
     return tuple(
-        result.pokemon_name
+        _capability_member_key(result)
         for result in capability_results
         if accepted_keys.intersection(result.capability_keys)
     )
@@ -639,12 +668,13 @@ def _matched_weather_roles(
         beneficiary = f"WEATHER_BENEFIT_{weather}"
         setters = [result for result in capability_results if setter in result.capability_keys]
         beneficiaries = [result for result in capability_results if beneficiary in result.capability_keys]
-        if not any(a.pokemon_name != b.pokemon_name for a in setters for b in beneficiaries):
+        if not any(_capability_member_key(a) != _capability_member_key(b) for a in setters for b in beneficiaries):
             continue
         matched.append(weather.title())
         for result in (*setters, *beneficiaries):
-            if result.pokemon_name not in contributing:
-                contributing.append(result.pokemon_name)
+            label = _capability_label(result)
+            if label not in contributing:
+                contributing.append(label)
     return bool(matched), tuple(matched), tuple(contributing)
 
 
@@ -666,7 +696,7 @@ def _screen_offensive_beneficiaries(team_data: list[dict] | None, screeners: set
         if not isinstance(mon, dict):
             continue
         name = str(mon.get("Pokemon") or "").strip()
-        if not name or name in screeners:
+        if not name or _member_key(mon) in screeners:
             continue
         attack = stat(mon, "ATK", "Atk", "Attack")
         spa = stat(mon, "SPA", "SpA", "SpecialAttack", "Special Attack")
@@ -680,7 +710,7 @@ def _screen_offensive_beneficiaries(team_data: list[dict] | None, screeners: set
         # Emphasize hard hitters whose offenses materially exceed their defenses;
         # Speed modestly strengthens the profile but cannot qualify a weak attacker.
         if offense >= bulk * 1.20 and (speed is None or speed >= bulk * 0.75):
-            beneficiaries.append(name)
+            beneficiaries.append(_member_label(mon))
     return tuple(beneficiaries)
 
 
@@ -743,8 +773,9 @@ def evaluate_strategy_viability(
         # The setter is the lynchpin. Attack moves on that setter (or any other
         # teammate) do not, by themselves, make this a Strong screen team.
         screeners = [r for r in capability_results if "DUAL_SCREEN" in r.capability_keys]
-        screen_names = {r.pokemon_name for r in screeners}
-        beneficiaries = _screen_offensive_beneficiaries(team_data, screen_names)
+        screen_keys = {_capability_member_key(r) for r in screeners}
+        screen_names = [_capability_label(r) for r in screeners]
+        beneficiaries = _screen_offensive_beneficiaries(team_data, screen_keys)
         required = [("reliable screen setter", {"DUAL_SCREEN"})]
         supports = [
             ("priority screen delivery", {"PRIORITY_SCREEN"}),
@@ -819,7 +850,7 @@ def evaluate_strategy_viability(
             name for name, keys in supports if _role_satisfied(capability_results, keys)
         )
         contributors = special_contributors or tuple(
-            result.pokemon_name
+            _capability_label(result)
             for result in capability_results
             if any(k.startswith("WEATHER_") for k in result.capability_keys)
         )
@@ -879,15 +910,13 @@ def evaluate_strategy_viability(
     )
 
     contributor_keys = set().union(*(keys for _, keys in required), *(keys for _, keys in supports))
-    contributors = tuple(
-        result.pokemon_name
-        for result in capability_results
-        if contributor_keys.intersection(result.capability_keys)
-    )
+    contributing_results = [result for result in capability_results
+                            if contributor_keys.intersection(result.capability_keys)]
+    contributors = tuple(_capability_label(result) for result in contributing_results)
 
     # Poison plans become Strong through actual redundant/coordinated roles,
     # not merely by collecting unrelated support categories such as Corrosion.
-    distinct_contributors = len(set(contributors))
+    distinct_contributors = len({_capability_member_key(result) for result in contributing_results})
     poison_detail = None
     poison_synergy = False
     if key in {"poison_attrition", "poison_offensive_pressure"}:
@@ -2243,7 +2272,7 @@ def _corrosion_only_callout(
     target_name = str(opponent.get("Pokemon") or "this opponent")
     type_text = "/".join(blocked_types)
     return (
-        f"{provider_name} is the only Pokémon on this team that can establish poison "
+        f"{_member_label(provider)} is the only Pokémon on this team that can establish poison "
         f"against {target_name}; Corrosion bypasses its {type_text} typing."
     )
 
@@ -2300,7 +2329,7 @@ def _toxic_spikes_profile(
 
 
 def _direct_poison_sources(team_data: list[dict], opponent: dict, move_lookup: dict[str, dict]) -> list[tuple[str, int, str]]:
-    """Return valid current-target poison sources as (name, reliability, method)."""
+    """Return valid poison sources as (member ID, reliability, method)."""
     contact_available = _opponent_has_contact_move(opponent, move_lookup)
     sources: list[tuple[str, int, str]] = []
     for pokemon in team_data:
@@ -2320,7 +2349,7 @@ def _direct_poison_sources(team_data: list[dict], opponent: dict, move_lookup: d
             reliability, method = max(direct_moves, key=lambda row: row[0])
             if "CORROSION" in keys and _pokemon_types(opponent).intersection({"Poison", "Steel"}):
                 reliability += 2
-            sources.append((capability.pokemon_name, reliability, method))
+            sources.append((_member_key(pokemon), reliability, method))
     return sources
 
 
@@ -2544,8 +2573,8 @@ def _best_setup_denial(team_data: list[dict], opponent: dict, move_lookup: dict[
     candidates: list[tuple[tuple[float, ...], str, str]] = []
     defender_types = list(_pokemon_types(opponent))
     for pokemon in team_data:
-        name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
-        matchup = matchup_lookup.get(name, {})
+        name = _member_label(pokemon)
+        matchup = matchup_lookup.get(_member_key(pokemon), {})
         notes = _note_texts(matchup)
         if "Likely Incoming OHKO" in notes:
             continue
@@ -2612,7 +2641,7 @@ def _physical_burn_risk(pokemon: dict, move_name: str | None, move_lookup: dict[
 def _offensive_pressure_comparison_text(team_data: list[dict], opponent: dict, move_lookup: dict[str, dict], matchup_lookup: dict[str, dict], items: list[dict], ability_rules: list[dict]) -> str | None:
     conditional: list[tuple[float, str, str]] = []
     for pokemon in team_data:
-        name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
+        name = _member_label(pokemon)
         move_name, score, uses_poison = _best_offensive_payoff(pokemon, opponent, move_lookup, items, ability_rules)
         if move_name and uses_poison and score > 0:
             conditional.append((score, name, move_name))
@@ -2625,7 +2654,9 @@ def _offensive_pressure_comparison_text(team_data: list[dict], opponent: dict, m
     if direct_candidates:
         direct = max(direct_candidates, key=lambda result: float(result.get("Best MoveScore") or 0.0))
         direct_note = " Likely OHKO." if _likely_direct_ohko(direct) else "."
-        parts.append(f"Best immediate non-conditional option: {direct.get('Pokemon')} {direct.get('Best Move')} {float(direct.get('Best MoveScore') or 0.0):.2f}.{direct_note}".replace("..", "."))
+        owner = next((p for p in team_data if _member_key(p) == str(direct.get('MemberID') or direct.get('Pokemon'))), None)
+        direct_name = _member_label(owner) if owner is not None else str(direct.get('Pokemon') or 'Unknown Pokémon')
+        parts.append(f"Best immediate non-conditional option: {direct_name} {direct.get('Best Move')} {float(direct.get('Best MoveScore') or 0.0):.2f}.{direct_note}".replace("..", "."))
     return " ".join(parts) or None
 
 
@@ -2717,7 +2748,7 @@ def _attrition_profile(pokemon: dict, opponent: dict, matchup: dict, move_lookup
         features.append("setup denial")
     best_score, best_move = max(scored, key=lambda row: row[0])
     value = best_score + synergy
-    description = f"{pokemon.get('Pokemon') or 'This Pokémon'} can anchor attrition with {best_move}"
+    description = f"{_member_label(pokemon)} can anchor attrition with {best_move}"
     if features:
         description += ", backed by " + ", ".join(features)
     if best_move in {"Baneful Bunker", "Obstruct"} and contact_available:
@@ -2730,21 +2761,22 @@ def _preferred_attrition_move(pokemon: dict, opponent: dict, matchup: dict, move
     return _attrition_profile(pokemon, opponent, matchup, move_lookup, setup_threat)[0]
 
 
-def _best_followup(team_data: list[dict], opponent: dict, move_lookup: dict[str, dict], matchup_lookup: dict[str, dict], items: list[dict], ability_rules: list[dict], strategy_branch: str, poisoned: bool, current_pokemon_name: str | None = None) -> tuple[str, str | None, float | None]:
-    candidates: list[tuple[tuple[float, ...], str, str | None, float | None]] = []
+def _best_followup(team_data: list[dict], opponent: dict, move_lookup: dict[str, dict], matchup_lookup: dict[str, dict], items: list[dict], ability_rules: list[dict], strategy_branch: str, poisoned: bool, current_pokemon_name: str | None = None) -> tuple[str, str | None, float | None, str]:
+    candidates: list[tuple[tuple[float, ...], str, str | None, float | None, str]] = []
     setup_move, setup_severity = _dangerous_setup_move(opponent, move_lookup)
     burn_move = _opponent_burn_move(opponent, move_lookup)
     setup_threat = setup_move is not None and setup_severity >= 2.0
     for pokemon in team_data:
-        name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
-        matchup = matchup_lookup.get(name, {})
+        name = _member_label(pokemon)
+        key = _member_key(pokemon)
+        matchup = matchup_lookup.get(key, {})
         keys = set(recognize_pokemon_capabilities(pokemon, move_lookup).capability_keys)
         safety = _safety_score(matchup, keys)
         notes = _note_texts(matchup)
         if "Likely Incoming OHKO" in notes:
             continue
         ratio = float(matchup.get("Ratio") or 0.0)
-        stay_bonus = 1.0 if current_pokemon_name and name == current_pokemon_name else 0.0
+        stay_bonus = 1.0 if current_pokemon_name and key == current_pokemon_name else 0.0
         if strategy_branch == "poison_offensive_pressure":
             move_name, conditional_score, uses_poison = _best_offensive_payoff(pokemon, opponent, move_lookup, items, ability_rules)
             if not poisoned:
@@ -2752,23 +2784,24 @@ def _best_followup(team_data: list[dict], opponent: dict, move_lookup: dict[str,
                 conditional_score = float(matchup.get("Best MoveScore") or 0.0)
                 move_name = str(matchup.get("Best Move") or "") or move_name
             burn_penalty = 0.72 if burn_move and _physical_burn_risk(pokemon, move_name, move_lookup) and not _likely_direct_ohko(matchup) else 1.0
-            switch_factor = 1.0 if not current_pokemon_name or name == current_pokemon_name else 0.80
+            switch_factor = 1.0 if not current_pokemon_name or key == current_pokemon_name else 0.80
             adjusted_score = conditional_score * burn_penalty * switch_factor
             depth = _strategic_depth(keys, strategy_branch)
             rank = (1.0 if poisoned and uses_poison else 0.0, adjusted_score, safety, depth, stay_bonus, ratio)
-            candidates.append((rank, name, move_name, conditional_score if poisoned and uses_poison else None))
+            candidates.append((rank, name, move_name, conditional_score if poisoned and uses_poison else None, key))
         else:
             attrition_move, attrition_value, _ = _attrition_profile(pokemon, opponent, matchup, move_lookup, setup_threat=setup_threat)
             depth = _strategic_depth(keys, strategy_branch)
             has_attrition_tools = attrition_move is not None
             denial_bonus = 2.0 if setup_threat and "SETUP_DENIAL" in keys else 0.0
             rank = (1.0 if has_attrition_tools else 0.0, denial_bonus, safety, attrition_value, depth, stay_bonus, ratio)
-            candidates.append((rank, name, attrition_move, None))
+            candidates.append((rank, name, attrition_move, None, key))
     if not candidates:
-        first = str(team_data[0].get("Pokemon") or "Unknown Pokémon") if team_data else "Unknown Pokémon"
-        return first, None, None
-    _, name, move_name, conditional_score = max(candidates, key=lambda row: row[0])
-    return name, move_name, conditional_score
+        first = _member_label(team_data[0]) if team_data else "Unknown Pokémon"
+        key = _member_key(team_data[0]) if team_data else ""
+        return first, None, None, key
+    _, name, move_name, conditional_score, key = max(candidates, key=lambda row: row[0])
+    return name, move_name, conditional_score, key
 
 
 def project_poisoned_followup(team_data: list[dict], opponent: dict, moves_data: list[dict], matchup_results: list[dict], items: list[dict] | None = None, ability_rules: list[dict] | None = None, strategy_branch: str = "poison_attrition", current_pokemon_name: str | None = None) -> tuple[str, str | None, float | None]:
@@ -2776,12 +2809,13 @@ def project_poisoned_followup(team_data: list[dict], opponent: dict, moves_data:
     items = items or []
     ability_rules = ability_rules or []
     move_lookup = {move["Move"]: move for move in moves_data if isinstance(move, dict) and isinstance(move.get("Move"), str) and move.get("Move")}
-    matchup_lookup: dict[str, dict] = {str(result["Pokemon"]): result for result in matchup_results if isinstance(result, dict) and isinstance(result.get("Pokemon"), str) and result.get("Pokemon")}
-    return _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, True, current_pokemon_name=current_pokemon_name)
+    matchup_lookup: dict[str, dict] = {str(result.get("MemberID") or result.get("Pokemon")): result for result in matchup_results if isinstance(result, dict) and result.get("Pokemon")}
+    name, move, score, _ = _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, True, current_pokemon_name=current_pokemon_name)
+    return name, move, score
 
 
-def _switch_cost_context(current_name: str, follow_name: str, strategy_branch: str) -> str | None:
-    if not current_name or current_name == follow_name:
+def _switch_cost_context(current_name: str, follow_name: str, strategy_branch: str, *, same_member: bool | None = None) -> str | None:
+    if not current_name or (same_member if same_member is not None else current_name == follow_name):
         return "Staying in avoids spending an additional turn on a switch." if current_name else None
     if strategy_branch == "poison_offensive_pressure":
         return f"The follow-up comparison includes a switch-turn penalty; {follow_name}'s offensive payoff remains strong enough to justify leaving {current_name}."
@@ -2818,11 +2852,12 @@ def _attrition_action_detail(move_name: str | None, move_lookup: dict[str, dict]
     return f"use {move_name} as the preferred attrition tool"
 
 
-def _direct_fallback_text(matchup_results: list[dict]) -> str:
+def _direct_fallback_text(matchup_results: list[dict], team_data: list[dict] | None = None) -> str:
     if not matchup_results:
         return "Use Full Analysis or Strongest Matchup for a direct alternative."
     best = max(matchup_results, key=lambda result: (float(result.get("Ratio") or 0.0), float(result.get("Best MoveScore") or 0.0)))
-    name = str(best.get("Pokemon") or "the strongest direct matchup")
+    owner = next((p for p in (team_data or []) if _member_key(p) == str(best.get("MemberID") or best.get("Pokemon"))), None)
+    name = _member_label(owner) if owner is not None else str(best.get("Pokemon") or "the strongest direct matchup")
     move = str(best.get("Best Move") or "its best move")
     return f"If the strategy state is no longer valid, the current strongest direct fallback is {name} with {move}."
 
@@ -2841,13 +2876,13 @@ def describe_poison_attrition_fallback(team_data: list[dict], opponent: dict, mo
         unsafe: list[str] = []
         safe: list[str] = []
         for source_name, _, source_method in raw_sources:
-            pokemon = next((p for p in team_data if str(p.get("Pokemon") or "") == source_name), {})
+            pokemon = next((p for p in team_data if _member_key(p) == source_name), {})
             is_safe, _, _, threat_move, _ = _safe_setup_source(pokemon, opponent, source_method, move_lookup, moves_data, items, ability_rules)
             if is_safe:
-                safe.append(source_name)
+                safe.append(_member_label(pokemon))
             else:
                 threat = str(threat_move.get("Move")) if threat_move else "the modeled incoming response"
-                unsafe.append(f"{source_name} ({threat})")
+                unsafe.append(f"{_member_label(pokemon)} ({threat})")
         if not safe and unsafe:
             return f"Poison is available against {target_name}, but establishing it is unsafe with the available setters: {', '.join(unsafe)}. Battle Compass is deviating to the strongest direct matchup."
         if safe:
@@ -2902,8 +2937,8 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
     items = items or []
     ability_rules = ability_rules or []
     move_lookup = {move["Move"]: move for move in moves_data if isinstance(move, dict) and isinstance(move.get("Move"), str) and move.get("Move")}
-    matchup_lookup: dict[str, dict] = {str(result["Pokemon"]): result for result in matchup_results if isinstance(result, dict) and isinstance(result.get("Pokemon"), str) and result.get("Pokemon")}
-    pokemon_lookup = {str(pokemon.get("Pokemon") or ""): pokemon for pokemon in team_data if isinstance(pokemon, dict) and pokemon.get("Pokemon")}
+    matchup_lookup: dict[str, dict] = {str(result.get("MemberID") or result.get("Pokemon")): result for result in matchup_results if isinstance(result, dict) and result.get("Pokemon")}
+    pokemon_lookup = {_member_key(pokemon): pokemon for pokemon in team_data if isinstance(pokemon, dict) and pokemon.get("Pokemon")}
     confirmed_lead = _is_confirmed_battle_lead(opponent)
     lead_record: dict | None = None
     lead_plan: PoisonAttritionPlanResult | None = None
@@ -2936,25 +2971,29 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
         setter_name, setter_move, setup_risks = expected_setup
         if strategy_branch == "poison_attrition" and _magic_guard_attrition_note(opponent):
             return [PoisonAttritionPlanResult(
-                pokemon_name=str(result.get("Pokemon") or "Unknown Pokémon"), fit="Blocked", fit_rank=_FIT_RANK["Blocked"],
+                pokemon_name=_member_label(pokemon_lookup.get(str(result.get("MemberID") or result.get("Pokemon")), result)), fit="Blocked", fit_rank=_FIT_RANK["Blocked"],
                 summary="Poison can be present, but residual-damage attrition is neutralized.",
                 reason=_magic_guard_attrition_note(opponent) or "Attrition value is blocked.", action="Direct fallback",
                 action_detail="Use Full Analysis or Strongest Matchup for a direct alternative.", plan_kind="low_value_attrition_override",
                 can_override_direct=False, source_reliability=3, strategic_depth=0.0, safety_score=0.0, team_setup_priority=0,
-                incoming_worst_score=float(result.get("Incoming Worst Score") or 0.0), lead_pokemon_name=str(result.get("Pokemon") or "Unknown Pokémon"),
+                incoming_worst_score=float(result.get("Incoming Worst Score") or 0.0), lead_pokemon_name=_member_label(pokemon_lookup.get(str(result.get("MemberID") or result.get("Pokemon")), result)),
                 lead_move=str(result.get("Best Move") or ""), opener_threat_move=None, opener_threat_category=None, opener_threat_type=None,
                 opener_threat_score=0.0, opener_threat_multiplier=0.0, strategy_branch=strategy_branch, assumed_poisoned=True,
                 state_assumption=f"Assuming the recommendation against the confirmed lead was followed, {setter_name} established {setter_move}; {opponent.get('Pokemon') or 'this opponent'} therefore enters poisoned.",
-                fallback_if_assumption_fails=_direct_fallback_text(matchup_results), recommended_pokemon_name=str(result.get("Pokemon") or "Unknown Pokémon"),
+                fallback_if_assumption_fails=_direct_fallback_text(matchup_results, team_data), recommended_pokemon_name=_member_label(pokemon_lookup.get(str(result.get("MemberID") or result.get("Pokemon")), result)),
                 conditional_move_name=None, conditional_move_score=None,
+                member_id=str(result.get("MemberID") or result.get("Pokemon")),
+                lead_member_id=str(result.get("MemberID") or result.get("Pokemon")),
+                recommended_member_id=str(result.get("MemberID") or result.get("Pokemon")),
             ) for result in matchup_results if isinstance(result, dict)]
         assumption = f"Assuming the recommendation against the confirmed lead was followed, {setter_name} established {setter_move}; {opponent.get('Pokemon') or 'this opponent'} therefore enters poisoned."
         if setup_risks:
             assumption += " This remains conditional because " + " ".join(setup_risks)
-        fallback = _direct_fallback_text(matchup_results)
+        fallback = _direct_fallback_text(matchup_results, team_data)
         for pokemon in team_data:
-            name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
-            matchup = matchup_lookup.get(name, {})
+            name = _member_label(pokemon)
+            member_key = _member_key(pokemon)
+            matchup = matchup_lookup.get(member_key, {})
             keys = set(recognize_pokemon_capabilities(pokemon, move_lookup).capability_keys)
             safety = _safety_score(matchup, keys)
             notes = _note_texts(matchup)
@@ -3004,18 +3043,20 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                 opener_threat_type=None, opener_threat_score=0.0, opener_threat_multiplier=0.0, strategy_branch=strategy_branch,
                 assumed_poisoned=True, state_assumption=assumption, fallback_if_assumption_fails=fallback, recommended_pokemon_name=name,
                 conditional_move_name=conditional_name, conditional_move_score=conditional_value,
+                member_id=member_key, lead_member_id=member_key, recommended_member_id=member_key,
             ))
         return results
     for pokemon in team_data:
-        name = str(pokemon.get("Pokemon") or "Unknown Pokémon")
-        matchup = matchup_lookup.get(name, {})
+        name = _member_label(pokemon)
+        member_key = _member_key(pokemon)
+        matchup = matchup_lookup.get(member_key, {})
         keys = set(recognize_pokemon_capabilities(pokemon, move_lookup).capability_keys)
         effective_keys = _effective_strategy_keys(keys, opponent)
         safety = _safety_score(matchup, effective_keys)
         notes = _note_texts(matchup)
         incoming_score = float(matchup.get("Incoming Worst Score") or 0.0)
         depth = _strategic_depth(effective_keys, strategy_branch)
-        own_source = next((source for source in safe_direct_sources if source[0] == name), None)
+        own_source = next((source for source in safe_direct_sources if source[0] == member_key), None)
         source = own_source or team_source
         fit = "Blocked"
         summary = "No meaningful Poison strategy role is available for this Pokémon."
@@ -3028,11 +3069,14 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
         lead_name = name
         lead_move = ""
         recommended_name = name
+        lead_key = member_key
+        recommended_key = member_key
+        follow_key: str | None = None
         conditional_name = None
         conditional_score = None
         state_assumption = replan_context
         fallback = None
-        if confirmed_lead and setup_threat_move is not None and setup_threat_severity >= 2.0 and likely_ohko_direct is not None and str(likely_ohko_direct.get("Pokemon") or "") == name:
+        if confirmed_lead and setup_threat_move is not None and setup_threat_severity >= 2.0 and likely_ohko_direct is not None and str(likely_ohko_direct.get("MemberID") or likely_ohko_direct.get("Pokemon") or "") == member_key:
             direct_move = str(likely_ohko_direct.get("Best Move") or "")
             plan_kind = "setup_threat_direct_override"
             setup_priority = 8
@@ -3061,7 +3105,7 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
             use_team_setup = "STATUS_POISON_TEAM_SETUP" in keys and team_setup_targets > 0 and safe_spikes and (confirmed_lead or expected_setup is None)
             if use_toxic_then_spikes or use_team_setup:
                 poisoned_current = use_toxic_then_spikes
-                follow_name, follow_move, follow_score = _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, poisoned_current, current_pokemon_name=name)
+                follow_name, follow_move, follow_score, follow_key = _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, poisoned_current, current_pokemon_name=member_key)
                 setup_sequence = "Toxic → Toxic Spikes" if use_toxic_then_spikes else "Toxic Spikes"
                 plan_kind = "lead_toxic_then_spikes" if use_toxic_then_spikes else "lead_team_setup"
                 setup_priority = 4 if use_toxic_then_spikes else 3
@@ -3084,7 +3128,7 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                     reason += f" Setup warning: {setup_threat_text}"
                     if setup_denial:
                         reason += f" {setup_denial[0]} can use {setup_denial[1]} to reset those boosts if needed."
-                if follow_name == name:
+                if follow_key == member_key:
                     action = f"{setup_sequence} → stay with {name}"
                     action_detail = f"Use {setup_sequence}. After setup, keep {name} in because it remains the preferred immediate follow-up"
                 else:
@@ -3097,12 +3141,12 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                         action_detail += f" and use {follow_move} as the preferred next action."
                 else:
                     action_detail += "."
-                switch_context = _switch_cost_context(name, follow_name, strategy_branch)
+                switch_context = _switch_cost_context(name, follow_name, strategy_branch, same_member=(member_key == follow_key))
                 if switch_context:
                     reason += f" {switch_context}"
                 if strategy_branch == "poison_attrition":
-                    follow_pokemon = pokemon_lookup.get(follow_name, {})
-                    follow_matchup = matchup_lookup.get(follow_name, {})
+                    follow_pokemon = pokemon_lookup.get(follow_key, {})
+                    follow_matchup = matchup_lookup.get(follow_key, {})
                     reason += f" {_attrition_context(follow_pokemon, opponent, follow_matchup, move_lookup, setup_threat=setup_threat_move is not None and setup_threat_severity >= 2.0)}"
                 source_reliability = 3
                 safety = spikes_safety
@@ -3112,8 +3156,12 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                 threat_move = spikes_threat
                 threat_multiplier = spikes_multiplier
             elif source is not None:
-                provider_name, source_reliability, provider_method = source
-                provider_matchup = matchup_lookup.get(provider_name, {})
+                provider_key, source_reliability, provider_method = source
+                provider = pokemon_lookup.get(provider_key, {})
+                provider_name = _member_label(provider)
+                lead_key = provider_key
+                recommended_key = provider_key
+                provider_matchup = matchup_lookup.get(provider_key, {})
                 provider_best_move = str(provider_matchup.get("Best Move") or "")
                 if provider_best_move and _likely_direct_ohko(provider_matchup):
                     plan_kind = "low_value_direct_override"
@@ -3126,7 +3174,7 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                     action_detail = f"Use {provider_best_move} instead of spending a turn on {provider_method}."
                     summary = f"Poison is available, but {provider_name} can likely remove the target immediately."
                     reason = f"{provider_method} can establish poison, but {provider_best_move} is already modeled as a Likely OHKO. Spending a setup turn would add unnecessary exposure before an opponent that can likely be removed now, so the Compass is deviating from the selected Poison plan on value rather than availability."
-                    corrosion_callout = _corrosion_only_callout(provider_name, opponent, pokemon_lookup, raw_direct_sources)
+                    corrosion_callout = _corrosion_only_callout(provider_key, opponent, pokemon_lookup, raw_direct_sources)
                     if corrosion_callout:
                         reason = f"{corrosion_callout} {reason}"
                     conditional_name = None
@@ -3135,7 +3183,7 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                     threat_multiplier = 0.0
                 else:
                     poisoned_after_setup = True
-                    follow_name, follow_move, follow_score = _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, poisoned_after_setup, current_pokemon_name=provider_name)
+                    follow_name, follow_move, follow_score, follow_key = _best_followup(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules, strategy_branch, poisoned_after_setup, current_pokemon_name=provider_key)
                     plan_kind = "direct_poison_then_pressure" if strategy_branch == "poison_offensive_pressure" else "direct_poison_then_attrition"
                     setup_priority = 2
                     fit = "Strong" if safety >= 0 else "Viable"
@@ -3143,7 +3191,7 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                     lead_move = provider_method
                     recommended_name = provider_name
                     summary = f"{provider_name} can establish poison, then {follow_name} can execute the selected branch."
-                    if provider_name == follow_name:
+                    if provider_key == follow_key:
                         action = f"{provider_name}: {provider_method} → stay in"
                         action_detail = f"Use {provider_method} to establish poison, then keep {provider_name} in"
                     else:
@@ -3157,12 +3205,12 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                     else:
                         action_detail += "."
                     reason = "Poison can be established safely and the follow-up directly serves Offensive Pressure." if strategy_branch == "poison_offensive_pressure" else "Poison can be established safely and the follow-up provides the strongest modeled wall/stall continuation."
-                    switch_context = _switch_cost_context(provider_name, follow_name, strategy_branch)
+                    switch_context = _switch_cost_context(provider_name, follow_name, strategy_branch, same_member=(provider_key == follow_key))
                     if switch_context:
                         reason += f" {switch_context}"
                     if strategy_branch == "poison_attrition":
-                        follow_pokemon = pokemon_lookup.get(follow_name, {})
-                        follow_matchup = matchup_lookup.get(follow_name, {})
+                        follow_pokemon = pokemon_lookup.get(follow_key, {})
+                        follow_matchup = matchup_lookup.get(follow_key, {})
                         reason += f" {_attrition_context(follow_pokemon, opponent, follow_matchup, move_lookup, setup_threat=setup_threat_move is not None and setup_threat_severity >= 2.0)}"
                     if strategy_branch == "poison_offensive_pressure":
                         payoff_context = _conditional_payoff_context(follow_move, opponent, move_lookup)
@@ -3171,10 +3219,10 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
                         comparison = _offensive_pressure_comparison_text(team_data, opponent, move_lookup, matchup_lookup, items, ability_rules)
                         if comparison:
                             reason += f" {comparison}"
-                        follow_pokemon = pokemon_lookup.get(follow_name, {})
+                        follow_pokemon = pokemon_lookup.get(follow_key, {})
                         if burn_move and _physical_burn_risk(follow_pokemon, follow_move, move_lookup):
                             reason += f" {opponent.get('Pokemon') or 'The opponent'} knows {burn_move}; a physical continuation can be weakened by burn, so comparable special pressure is preferred when available."
-                    corrosion_callout = _corrosion_only_callout(provider_name, opponent, pokemon_lookup, raw_direct_sources)
+                    corrosion_callout = _corrosion_only_callout(provider_key, opponent, pokemon_lookup, raw_direct_sources)
                     if corrosion_callout:
                         reason = f"{corrosion_callout} {reason}"
                     conditional_name = follow_move if strategy_branch == "poison_offensive_pressure" else None
@@ -3201,6 +3249,8 @@ def evaluate_poison_attrition_plans(team_data: list[dict], opponent: dict, moves
             strategy_branch=strategy_branch, assumed_poisoned=False, state_assumption=state_assumption,
             fallback_if_assumption_fails=fallback, recommended_pokemon_name=recommended_name,
             conditional_move_name=conditional_name, conditional_move_score=conditional_score,
+            member_id=member_key, lead_member_id=lead_key,
+            recommended_member_id=recommended_key, followup_member_id=follow_key,
         ))
     return results
 
@@ -3210,8 +3260,8 @@ def select_poison_attrition_plan(plans: list[PoisonAttritionPlanResult], matchup
     candidates = [plan for plan in plans if plan.can_override_direct]
     if not candidates:
         return None
-    ratio_lookup = {str(result.get("Pokemon")): float(result.get("Ratio") or 0.0) for result in matchup_results if isinstance(result, dict) and result.get("Pokemon")}
+    ratio_lookup = {str(result.get("MemberID") or result.get("Pokemon")): float(result.get("Ratio") or 0.0) for result in matchup_results if isinstance(result, dict) and result.get("Pokemon")}
     return max(candidates, key=lambda plan: (
         plan.team_setup_priority, plan.fit_rank, plan.strategic_depth, plan.safety_score,
-        -plan.incoming_worst_score, plan.source_reliability, ratio_lookup.get(plan.pokemon_name, 0.0),
+        -plan.incoming_worst_score, plan.source_reliability, ratio_lookup.get(plan.member_id or plan.pokemon_name, 0.0),
     ))

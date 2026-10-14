@@ -1480,6 +1480,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
         )
         results.append({
             "Pokemon": pokemon["Pokemon"],
+            "MemberID": pokemon.get("MemberID"),
             "Gender": pokemon.get("Gender"),
             "Best Move": best_move["Move"],
             "Best MoveScore": round(best_score, 2),

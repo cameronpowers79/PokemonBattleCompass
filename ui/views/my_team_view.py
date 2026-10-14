@@ -16,6 +16,7 @@ from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 
 from ui.viewmodels.app_state import AppState
+from ui.pokemon_display import pokemon_display_name
 from ui.diagnostics import log_event
 from ui.storage.journey_storage import (
     journey_export_filename,
@@ -24,6 +25,7 @@ from ui.storage.journey_storage import (
 )
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
+from uuid import uuid4
 from pathlib import Path
 from typing import cast
 
@@ -115,6 +117,7 @@ BUTTON_DISABLED_TEXT = "#B8C1CF"
 
 EDITABLE_COLUMNS = [
     "Pokemon",
+    "Nickname",
     "Gender",
     "Nature",
     "Type1",
@@ -496,6 +499,7 @@ class MyTeamView:
         self.learnsets = self._load_learnsets()
         self._confirmed_unverified_move_keys: set[tuple[int, str, str]] = set()
         self._pending_unverified_moves: list[tuple[int, str, str]] = []
+        self.show_nicknames = bool(app_state.my_journey_data.get("show_nicknames", False))
         self.working_team = deepcopy(self.team_data)
         self.saved_team_snapshot = deepcopy(self.team_data)
         self.working_box = deepcopy(self.box_data)
@@ -933,6 +937,11 @@ class MyTeamView:
             ),
         )
 
+        self.nickname_toggle_button = ft.TextButton(
+            content="Hide Nicknames" if self.show_nicknames else "Want to give your Pokémon nicknames? Click here",
+            icon=ft.Icons.EDIT_OUTLINED,
+            on_click=self._toggle_nickname_column,
+        )
         self.table_host = ft.Container(
             content=self._build_editor_table(),
         )
@@ -1198,6 +1207,7 @@ class MyTeamView:
 
         return {
             "Pokemon": "",
+            "MemberID": f"pkm_{uuid4().hex}",
             "Gender": "",
             "Nature": "",
             "Type1": "",
@@ -1799,6 +1809,7 @@ class MyTeamView:
                             color=TEXT_MUTED,
                             italic=True,
                         ),
+                        self.nickname_toggle_button,
                         self.table_host,
                         self.aegislash_entry_notice,
                         ft.Row(
@@ -1990,7 +2001,7 @@ class MyTeamView:
                         ft.DataCell(sprite),
                         ft.DataCell(
                             ft.Text(
-                                pokemon_name,
+                                pokemon_display_name(pokemon),
                                 color=TEXT_PRIMARY,
                                 weight=ft.FontWeight.W_600,
                             )
@@ -2607,11 +2618,27 @@ class MyTeamView:
         )
         control.update()
 
+    def _toggle_nickname_column(self, event) -> None:
+        """Show/hide the optional column without changing any team records."""
+        del event
+        self.show_nicknames = not self.show_nicknames
+        self.nickname_toggle_button.content = (
+            "Hide Nicknames" if self.show_nicknames else "Show Nicknames"
+        )
+        self.editor_controls.clear()
+        self.table_host.content = self._build_editor_table()
+        self.page.update()
+        self.page.run_task(self.app_state.save_nickname_column_preference, self.show_nicknames)
+
+    def _editor_columns(self) -> list[str]:
+        return [name for name in EDITABLE_COLUMNS if name != "Nickname" or self.show_nicknames]
+
     def _build_editor_table(self) -> ft.Control:
         """Build the editor as one horizontally scrollable table with Pokémon sticky."""
 
         column_widths = {
             "Pokemon": 134,
+            "Nickname": 160,
             "Gender": 120,
             "Nature": 130,
             "Type1": 116,
@@ -2633,7 +2660,7 @@ class MyTeamView:
 
         table_min_width = sum(
             column_widths[column]
-            for column in EDITABLE_COLUMNS
+            for column in self._editor_columns()
         )
 
         # DataTable2 owns the horizontal scrolling. Keeping every column in
@@ -2650,7 +2677,7 @@ class MyTeamView:
                     ),
                     fixed_width=column_widths[column],
                 )
-                for column in EDITABLE_COLUMNS
+                for column in self._editor_columns()
             ],
             rows=[
                 self._build_editor_row(
@@ -2685,7 +2712,7 @@ class MyTeamView:
     ) -> ft.DataRow:
         cells: list[ft.DataCell] = []
 
-        for column in EDITABLE_COLUMNS:
+        for column in self._editor_columns():
             editor_control = self._build_editor_control(
                 row_index=row_index,
                 column=column,
@@ -2752,6 +2779,15 @@ class MyTeamView:
                         field,
                     )
                 ),
+            )
+        elif column == "Nickname":
+            control = ft.TextField(
+                value=str(value or ""), width=152, dense=True, text_size=12,
+                hint_text="Optional nickname", max_length=24,
+                on_blur=lambda event, row=row_index, field=column:
+                    self._handle_text_commit(event, row, field),
+                on_submit=lambda event, row=row_index, field=column:
+                    self._handle_text_submit(event, row, field),
             )
         elif column == "Gender":
             control = ft.Dropdown(
@@ -3377,6 +3413,8 @@ class MyTeamView:
 
         if column == "Pokemon":
             value = normalized_display_name(value)
+        elif column == "Nickname":
+            value = str(value or "").strip()
 
         previous_value = self.working_team[
             row_index
@@ -3634,7 +3672,7 @@ class MyTeamView:
                 ft.DropdownOption(
                     key=f"party:{index}",
                     text=str(
-                        pokemon.get("Pokemon")
+                        pokemon_display_name(pokemon)
                         or f"Team Slot {index + 1}"
                     ),
                 )
@@ -3658,7 +3696,7 @@ class MyTeamView:
                 ft.DropdownOption(
                     key=f"box:{index}",
                     text=str(
-                        pokemon.get("Pokemon")
+                        pokemon_display_name(pokemon)
                         or f"Box Slot {index + 1}"
                     ),
                 )

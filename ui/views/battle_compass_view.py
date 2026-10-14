@@ -5,6 +5,7 @@ Battle Compass ViewModel, and renders live recommendation components.
 """
 from __future__ import annotations
 from collections.abc import Callable
+from dataclasses import replace
 import json
 from pathlib import Path
 import re
@@ -61,6 +62,7 @@ from ui.theme import (
     FONT_FAMILY_HEADER,
 )
 from ui.viewmodels.app_state import AppState
+from ui.pokemon_display import pokemon_display_name
 from ui.strategy_ui import (
     TEAM_STRATEGY_LABELS,
     strategy_color,
@@ -2019,7 +2021,7 @@ class BattleCompassView:
                     card_move = dict(card_move, Type=attacking_type)
 
         recommendation_card = RecommendationCard(
-            pokemon_name=recommendation.pokemon["Pokemon"],
+            pokemon_name=pokemon_display_name(recommendation.pokemon),
             gender_symbol=self._gender_symbol(
                 recommendation.pokemon.get("Gender")
             ),
@@ -2234,8 +2236,12 @@ class BattleCompassView:
                 self._show_offensive_type_matchups
             ),
         )
+        # FullAnalysis consumes display-only copies; species-based calculations
+        # and the original member records retain their canonical Pokemon names.
         full_analysis = FullAnalysis(
-            matchups=view_model.all_matchups,
+            matchups=[replace(matchup, pokemon={**matchup.pokemon,
+                      "Pokemon": pokemon_display_name(matchup.pokemon)})
+                      for matchup in view_model.all_matchups],
         )
         strategy_action_panel = self._build_strategy_action_panel(view_model)
         result_controls: list[ft.Control] = []
@@ -2445,7 +2451,7 @@ class BattleCompassView:
         pokemon = matchup.pokemon
         return StrongOptionData(
             rank=rank,
-            pokemon_name=pokemon["Pokemon"],
+            pokemon_name=pokemon_display_name(pokemon),
             sprite_src=self._pokemon_asset(
                 pokemon["Pokemon"],
                 gender=pokemon.get("Gender"),

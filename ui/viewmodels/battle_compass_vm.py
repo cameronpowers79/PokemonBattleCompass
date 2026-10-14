@@ -13,6 +13,7 @@ engine output into UI-friendly objects without depending on Streamlit.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field, replace
+from ui.pokemon_display import pokemon_display_name
 from typing import TypedDict
 from engine.calculations import (
     calculate_move_score, evaluate_team_matchups, find_best_team_member,
@@ -117,6 +118,9 @@ class StrategyPlanViewModel:
     attack_score_conditional: bool = False
     sequence_heading: str = ""
     condition_detail: str = ""
+    member_id: str | None = None
+    setter_member_id: str | None = None
+    payoff_member_id: str | None = None
 @dataclass(frozen=True)
 
 
@@ -326,7 +330,7 @@ def _poison_safety_tradeoff_text(raw_plans: list, selected_plan) -> str | None:
     strongest = max(candidates, key=lambda plan: float(plan.conditional_move_score or 0.0))
     selected_score = float(selected_plan.conditional_move_score or 0.0)
     strongest_score = float(strongest.conditional_move_score or 0.0)
-    if strongest.pokemon_name == selected_plan.pokemon_name or strongest_score <= selected_score:
+    if (strongest.member_id or strongest.pokemon_name) == (selected_plan.member_id or selected_plan.pokemon_name) or strongest_score <= selected_score:
         return None
     selected_iws = float(selected_plan.incoming_worst_score or 0.0)
     strongest_iws = float(strongest.incoming_worst_score or 0.0)
@@ -426,6 +430,16 @@ def _screened_worst_incoming(opponent, defender, screen, moves_data, items, abil
     return max(scored, key=lambda item: item[1]) if scored else None
 
 
+def _matchup_index(matchups: list[dict]) -> dict[str, dict]:
+    indexed = {}
+    for row in matchups:
+        member_id = row.get("MemberID")
+        if member_id:
+            indexed[str(member_id)] = row
+        indexed.setdefault(str(row.get("Pokemon") or ""), row)
+    return indexed
+
+
 def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
     """Conservative single-opponent screen sequence, using only equipped moves.
 
@@ -433,7 +447,7 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     to keep Strongest Matchup. No persistent battle-state assumptions are stored.
     """
     lookup = _build_move_lookup(moves_data)
-    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    by_name = _matchup_index(matchups)
     opponents = [str(opponent.get(f"Move{i}") or "") for i in range(1, 5)]
     damaging = [lookup.get(name, {}) for name in opponents]
     physical = any(m.get("Category") == "Physical" and float(m.get("Power") or 0) > 0 for m in damaging)
@@ -444,7 +458,7 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     candidates = []
     for mon in team_data:
         name = str(mon.get("Pokemon") or "")
-        result = by_name.get(name)
+        result = by_name.get(mon.get("MemberID")) or by_name.get(name)
         if not result:
             continue
         equipped = {str(mon.get(f"Move{i}") or "") for i in range(1, 5)}
@@ -469,8 +483,12 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
 
     if not candidates:
         return None, None, "No equipped screen setter has a supported safe opening against this opponent; use the strongest direct matchup."
-    candidates.sort(reverse=True)
+    candidates.sort(key=lambda c: (c[0], c[1], c[2]), reverse=True)
     priority, safety, speed, setter, screen, result, options = candidates[0]
+    setter_id = result.get("MemberID")
+    setter_member = next((m for m in team_data if m.get("MemberID") == setter_id), None)
+    if setter_member is not None:
+        setter = pokemon_display_name(setter_member)
     threat = str(result.get("Worst Incoming Move") or "the opponent's strongest modeled move")
     threat_category = str(result.get("Worst Incoming Move Category") or "")
     delivered = "Prankster priority" if priority else "its modeled survivability"
@@ -492,13 +510,14 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         immediate_team, opponent, items, ability_rules, moves_data
     )
     attackers = [r for r in immediate_matchups
-                 if r.get("Pokemon") != setter
+                 if r.get("MemberID") != result.get("MemberID")
                  and str(r.get("Best Move") or "") not in delayed
                  and float(r.get("Best MoveScore") or 0) > 0]
     attackers.sort(key=lambda r: (float(r.get("Ratio") or 0),
                                   float(r.get("Best MoveScore") or 0)), reverse=True)
     payoff = attackers[0] if attackers else None
-    payoff_name = str(payoff.get("Pokemon") or "") if payoff else ""
+    payoff_member = next((m for m in team_data if m.get("MemberID") == payoff.get("MemberID")), None) if payoff else None
+    payoff_name = pokemon_display_name(payoff_member) if payoff_member else (str(payoff.get("Pokemon") or "") if payoff else "")
     payoff_move = str(payoff.get("Best Move") or "") if payoff else ""
     if is_lead or not payoff:
         action_name = setter
@@ -546,7 +565,9 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         fit, rank = "Strong", 3
     else:
         fit, rank = "Viable", 2
-    chosen_member = next((m for m in team_data if str(m.get("Pokemon") or "") == action_name), {})
+    action_id = (setter_id if plan_kind == "screen_setup" else
+                 payoff.get("MemberID") if payoff else None)
+    chosen_member = next((m for m in team_data if m.get("MemberID") == action_id), {})
     chosen_moves = {str(chosen_member.get(f"Move{i}") or "") for i in range(1, 5)}
     pivot = next((m for m in ("U-turn", "Volt Switch", "Parting Shot", "Flip Turn", "Baton Pass") if m in chosen_moves), None)
     contingency = f"{pivot} offers a pivot option, subject to surviving until it acts." if pivot else "An ordinary switch to the protected attacker is the modeled exit."
@@ -559,6 +580,7 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
                        + (f"{payoff_name} offers a favorable follow-up. " if strong_payoff else "Follow-up is less secure. ")
                        + (f"Exit: {pivot}." if pivot else "Exit: switch to the attacker."))
     return dict(
+        member_id=action_id, setter_member_id=setter_id, payoff_member_id=payoff.get("MemberID") if payoff else None,
         action_type="Screen Setup" if plan_kind == "screen_setup" else "Screen Payoff",
         condition_detail=(f"Assumes {screen} was established earlier and is still active. "
                           "If it has expired or was removed, use the named direct fallback."
@@ -581,7 +603,7 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
             "If the screen is absent or expired, establish it safely first or use Strongest Matchup."
             if assumed else "If the setter is already damaged or unsafe, use Strongest Matchup instead."
         ),
-    ), action_name, None
+    ), action_id or action_name, None
 
 
 # Status Control & Punish: each opposing Pokémon starts without an assumed status.
@@ -688,7 +710,7 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
     already burned, poisoned, etc. Setup is the actionable first step; an
     amplified attack is a *projected* follow-up, possibly from another member.
     """
-    lookup = {str(r.get("Pokemon")): r for r in matchups}
+    lookup = _matchup_index(matchups)
     # Evaluate each setter’s own payoff, rather than giving the team’s globally
     # highest Hex user automatic priority as the setter.
     candidates = []
@@ -697,7 +719,7 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
                           for m in opponent_moves)
     for member in team_data:
         name = str(member.get("Pokemon") or "")
-        result = lookup.get(name)
+        result = lookup.get(member.get("MemberID")) or lookup.get(name)
         if result is None:
             continue
         notes = {str(n.get("text") or "") for n in result.get("Battle Notes", []) if isinstance(n, dict)}
@@ -767,8 +789,8 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
     if payoff is not None:
         projected_score, _, projected_member, _ = payoff
         projected_name = str(projected_member.get("Pokemon") or "")
-        if projected_name != str(setter.get("Pokemon") or ""):
-            projected_matchup = lookup.get(projected_name)
+        if projected_member.get("MemberID") != setter.get("MemberID"):
+            projected_matchup = lookup.get(projected_member.get("MemberID")) or lookup.get(projected_name)
             projected_notes = {
                 str(note.get("text") or "")
                 for note in (projected_matchup or {}).get("Battle Notes", [])
@@ -788,10 +810,10 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
         # Compare even a *self-contained* conditional payoff with the user's
         # actual immediate attack. For example, Runerigus's Body Press is much
         # better into Dark-type Scrafty than its resisted boosted Hex.
-        if payoff is not None and str(payoff[2].get("Pokemon") or "") == str(setter.get("Pokemon") or ""):
+        if payoff is not None and payoff[2].get("MemberID") == setter.get("MemberID"):
             if setter_direct_score > 0 and float(payoff[0]) <= setter_direct_score:
                 payoff = None
-    name = str(setter.get("Pokemon") or "")
+    name = pokemon_display_name(setter)
     ratio = float(result.get("Ratio") or 0)
     priority = str(setter.get("Ability") or "").casefold() == "prankster"
     if (ratio >= 1.5 and accuracy >= 85) or (priority and ratio >= 0.8 and accuracy >= 85):
@@ -802,10 +824,11 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
         fit, rank = "Risky", 1
 
     projected = None
+    payoff_member = None
     if payoff is not None:
         boosted, unboosted, payoff_member, payoff_move = payoff
-        payoff_name = str(payoff_member.get("Pokemon") or "")
-        same = name == payoff_name
+        payoff_name = pokemon_display_name(payoff_member)
+        same = setter.get("MemberID") == payoff_member.get("MemberID")
         followup = (f"stay in and use {payoff_move}" if same else
                     f"switch to {payoff_name} and use {payoff_move}")
         detail = (f"Step 1: {name} uses {move_name} to inflict {status} on this opponent. "
@@ -832,6 +855,8 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
                       "Reassess status separately against each new opponent.")
         payoff_comment = "The setter's direct attack is the safer or stronger follow-up here."
     return dict(
+        member_id=setter.get("MemberID"), setter_member_id=setter.get("MemberID"),
+        payoff_member_id=payoff_member.get("MemberID") if payoff_member else None,
         pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
         lead_move=move_name, fit=fit, fit_rank=rank,
         summary=f"Inflict {status} with {name}", reason=detail,
@@ -861,7 +886,7 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
     inferred from earlier opponents. Full Analysis remains unboosted.
     """
     from engine.mechanics import get_item_speed_multiplier, get_guaranteed_weather
-    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    by_name = _matchup_index(matchups)
     opponent_speed = float(get_stat(opponent, "SPE")) * float(get_item_speed_multiplier(opponent, items))
     weather = get_guaranteed_weather({}, opponent)
     weather_ability = {"swift swim": "Rain", "chlorophyll": "Sun",
@@ -874,7 +899,7 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
     setup_lookup = _build_move_lookup(moves_data)
     for member in team_data:
         name = str(member.get("Pokemon") or "")
-        row = by_name.get(name)
+        row = by_name.get(member.get("MemberID")) or by_name.get(name)
         if row is None:
             continue
         notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
@@ -957,7 +982,7 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
         return "No safe, worthwhile one-turn offensive setup was modeled. Use the strongest direct matchup."
     (score, member, setup_name, attack, row, boosted_score, base_score,
      flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(candidates, key=lambda x:x[0])
-    name = str(member.get("Pokemon") or "")
+    name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
     strong = damage_risk <= 0.4 and (boosted_score >= base_score * 1.5 or flip)
     fit, rank = ("Strong", 3) if strong else ("Viable", 2)
@@ -970,6 +995,7 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
               f"versus {base_score:.2f} before setup.{speed_text} "
               "Boosts are not carried over after switching or to another teammate.")
     return dict(
+        member_id=member.get("MemberID"),
         pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
         lead_move=setup_name, fit=fit, fit_rank=rank,
         summary=f"{setup_name} → {move_name}", reason=detail,
@@ -1001,7 +1027,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
     from engine.calculations import calculate_damage_range
 
     lookup = _build_move_lookup(moves_data)
-    by_name = {str(r.get("Pokemon") or ""): r for r in matchups}
+    by_name = _matchup_index(matchups)
     incoming = [m for m in get_moves(opponent, moves_data)
                 if m.get("Category") in {"Physical", "Special"}]
     if not incoming:
@@ -1019,7 +1045,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
     candidates = []
     for member in team_data:
         name = str(member.get("Pokemon") or "")
-        row = by_name.get(name)
+        row = by_name.get(member.get("MemberID")) or by_name.get(name)
         if not row:
             continue
         notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
@@ -1038,6 +1064,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
             continue
         risk = max(worst) / hp
         equipped = {str(member.get(f"Move{i}") or "") for i in range(1, 5)}
+        display_name = pokemon_display_name(member)
         for guard in ("Baneful Bunker", "Obstruct"):
             if guard not in equipped:
                 continue
@@ -1058,7 +1085,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
                 follow = payoff[0] if payoff else str(row.get("Best Move") or "")
                 if not follow:
                     continue
-                detail = (f"Step 1: {name} uses Baneful Bunker to block an attack. "
+                detail = (f"Step 1: {display_name} uses Baneful Bunker to block an attack. "
                           "If the opponent chooses a contact move, it becomes poisoned. "
                           + (f"Step 2: use Venoshock (projected conditional Move Score "
                              f"{payoff[2]:.2f} versus {payoff[1]:.2f} unpoisoned). " if payoff else
@@ -1094,7 +1121,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
                 if not attacks:
                     continue
                 projected, normal, follow = max(attacks)
-                detail = (f"Step 1: {name} uses Obstruct to block an attack. "
+                detail = (f"Step 1: {display_name} uses Obstruct to block an attack. "
                           "If the opponent chooses a contact move, its Defense falls two stages. "
                           f"Step 2: use {follow} (projected Move Score {projected:.2f} "
                           f"versus {normal:.2f} without the Defense drop). "
@@ -1107,10 +1134,11 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
             # Iron Defense/Body Press plans via a later comparison.
             score = 2.2 + quality * 0.45 + min(float(row.get("Ratio") or 0), 4) * 0.2 - risk
             candidates.append((score, dict(
-                pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+                member_id=member.get("MemberID"),
+                pokemon_name=display_name, recommended_pokemon_name=display_name, lead_pokemon_name=display_name,
                 lead_move=guard, fit=fit, fit_rank=3 if fit == "Strong" else 2,
                 summary=f"{guard} → {follow}", reason=detail,
-                action=f"Punish contact with {name}", action_detail=detail,
+                action=f"Punish contact with {display_name}", action_detail=detail,
                 plan_kind="contact_punishment", can_override_direct=True,
                 opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
                 opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
@@ -1119,7 +1147,7 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
                 opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
                 strategy_branch="defensive_attrition", action_type=action, plan_role=role,
                 fit_explanation=note,
-                sequence_heading=f"{name} → {guard} → {follow}",
+                sequence_heading=f"{display_name} → {guard} → {follow}",
                 state_assumption="No contact or status is assumed active at entry.",
                 fallback_if_assumption_fails="If the opponent uses a noncontact or status move, reassess and use the direct fallback.",
                 condition_detail=(f"Assumes {guard} succeeds and the opponent chooses a contact attack. "
@@ -1136,12 +1164,12 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
     """
     from engine.calculations import calculate_damage_range
 
-    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    by_name = _matchup_index(matchups)
     move_lookup = _build_move_lookup(moves_data)
     candidates = []
     for member in team_data:
         name = str(member.get("Pokemon") or "")
-        row = by_name.get(name)
+        row = by_name.get(member.get("MemberID")) or by_name.get(name)
         if row is None:
             continue
         notes = {str(note.get("text") or "") for note in row.get("Battle Notes", []) if isinstance(note, dict)}
@@ -1206,7 +1234,7 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
     if not candidates:
         return "No sufficiently safe, valuable defensive setup was modeled; use Strongest Matchup."
     _, member, row, setup_name, attack_name, attack_score, post_move, post_iws, risk, body_press, original_def = max(candidates, key=lambda entry: entry[0])
-    name = str(member.get("Pokemon") or "")
+    name = pokemon_display_name(member)
     detailed = ""
     if setup_name == "Iron Defense" and body_press is not None:
         base = float(calculate_move_score(member, opponent, body_press, items, ability_rules))
@@ -1232,6 +1260,7 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         detailed += "Likely OHKO assumes Body Press can hit and the opponent does not interrupt setup; the damage range uses its modeled HP. "
     fit = "Strong" if risk < 0.40 and (attack_score >= float(row.get("Best MoveScore") or 0) * 1.5 or post_iws < float(row.get("Incoming Worst Score") or 0) * 0.7) else "Viable"
     return dict(
+        member_id=member.get("MemberID"),
         pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
         lead_move=setup_name, fit=fit, fit_rank=3 if fit == "Strong" else 2,
         summary=f"{setup_name} → {attack_name}",
@@ -1286,11 +1315,11 @@ def _anti_setup_interception(team_data, opponent, matchups, moves_data, items, a
     hp = float(get_stat(opponent, "HP") or 0)
     if hp <= 0:
         return None
-    by_name = {str(row.get("Pokemon") or ""): row for row in matchups}
+    by_name = _matchup_index(matchups)
     candidates = []
     for member in team_data:
         name = str(member.get("Pokemon") or "")
-        row = by_name.get(name)
+        row = by_name.get(member.get("MemberID")) or by_name.get(name)
         if row is None:
             continue
         notes = {str(n.get("text") or "") for n in row.get("Battle Notes", []) if isinstance(n, dict)}
@@ -1315,11 +1344,11 @@ def _anti_setup_interception(team_data, opponent, matchups, moves_data, items, a
             # 95%-accurate KO from a vulnerable attacker must not outrank an
             # 85%-accurate KO from a teammate that safely walls the opponent.
             # Accuracy and offensive score break ties between similarly safe picks.
-            candidates.append((float(row.get("Ratio") or 0), accuracy, score, name, move_name))
+            candidates.append((float(row.get("Ratio") or 0), accuracy, score, member.get("MemberID"), move_name))
     if not candidates:
         return None
-    ratio, accuracy, score, name, attack = max(candidates)
-    return name, attack, threats[0], accuracy
+    ratio, accuracy, score, member_id, attack = max(candidates)
+    return member_id, attack, threats[0], accuracy
 
 
 
@@ -1339,11 +1368,11 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     from engine.mechanics import get_guaranteed_weather, get_item_speed_multiplier
     from engine.calculations import calculate_damage_range
 
-    by_name = {str(r.get('Pokemon') or ''): r for r in matchups}
+    by_name = _matchup_index(matchups)
     weather_options = []
     for setter in team_data:
         name = str(setter.get('Pokemon') or '')
-        result = by_name.get(name)
+        result = by_name.get(setter.get("MemberID")) or by_name.get(name)
         if not result:
             continue
         known = _WEATHER_ABILITIES.get(str(setter.get('Ability') or ''))
@@ -1389,18 +1418,18 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         entry = setup_move is None
         for beneficiary in team_data:
             bname = str(beneficiary.get('Pokemon') or '')
-            b_row = by_name.get(bname)
+            b_row = by_name.get(beneficiary.get("MemberID")) or by_name.get(bname)
             if b_row is None:
                 continue
             # Switching in a different auto-weather setter immediately erases
             # the proposed weather. Never credit a cross-weather payoff.
             beneficiary_entry_weather = _WEATHER_ABILITIES.get(str(beneficiary.get('Ability') or ''))
-            if bname != setter_name and beneficiary_entry_weather and beneficiary_entry_weather != weather:
+            if beneficiary.get("MemberID") != setter.get("MemberID") and beneficiary_entry_weather and beneficiary_entry_weather != weather:
                 continue
             bnotes = {str(n.get('text') or '') for n in b_row.get('Battle Notes', []) if isinstance(n, dict)}
             if {'Likely Incoming OHKO', 'Possible Incoming OHKO'} & bnotes:
                 continue
-            if bname != setter_name and float(b_row.get('Ratio') or 0) < 0.8:
+            if beneficiary.get("MemberID") != setter.get("MemberID") and float(b_row.get('Ratio') or 0) < 0.8:
                 continue
             baseline_weather = get_guaranteed_weather(beneficiary, opponent)
             best_attack = None
@@ -1444,7 +1473,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             benefit = max(projected - normal, 0.0) / max(normal, 1.0)
             if benefit < 0.12 and not flip and not sand_wall and not accurate_weather_move and not instant_solar_move:
                 continue
-            if bname != setter_name and duration - 1 <= 1:
+            if beneficiary.get("MemberID") != setter.get("MemberID") and duration - 1 <= 1:
                 continue
             # Score the actual opponent's moves under the proposed weather.
             # Rock typing only grants sandstorm defense versus SPECIAL attacks;
@@ -1461,7 +1490,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                 for m in opposing_attacks), default=0.0)
             # A switch must be evaluated under the proposed weather, not only
             # the strategy-neutral matchup (which can include Drizzle/Drought).
-            if bname != setter_name and weather_iws > 0 and projected / weather_iws < 0.85:
+            if beneficiary.get("MemberID") != setter.get("MemberID") and weather_iws > 0 and projected / weather_iws < 0.85:
                 continue
             max_incoming_hp_damage = 0.0
             for incoming_move in opposing_attacks:
@@ -1487,7 +1516,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                      + (0.3 if accurate_weather_move else 0.0)
                      + (0.35 if instant_solar_move else 0.0)
                      + (0.18 if entry else -0.12)
-                     - (0.65 if bname != setter_name else 0))
+                     - (0.65 if beneficiary.get("MemberID") != setter.get("MemberID") else 0))
             candidates.append((score, setter, setup_move, beneficiary, attack, weather,
                                projected, normal, before_speed, after_speed, opponent_speed,
                                flip, duration, sand_wall, baseline_weather,
@@ -1500,10 +1529,12 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
      before_speed, after_speed, enemy_speed, flip, duration, sand_wall, baseline_weather,
      accurate_weather_move, instant_solar_move, weather_iws, baseline_iws,
      maximum_incoming_damage) = max(candidates, key=lambda row: row[0])
-    setter_name = str(setter.get('Pokemon') or '')
-    attacker_name = str(beneficiary.get('Pokemon') or '')
+    setter_species = str(setter.get('Pokemon') or '')
+    attacker_species = str(beneficiary.get('Pokemon') or '')
+    setter_name = pokemon_display_name(setter)
+    attacker_name = pokemon_display_name(beneficiary)
     attack_name = str(attack.get('Move') or '')
-    is_switch = setter_name != attacker_name
+    is_switch = setter.get("MemberID") != beneficiary.get("MemberID")
     step = setup_move or f'{setter_name} enters ({setter.get("Ability")})'
     heading = f'{setter_name} → {setup_move or weather} → ' + (f'{attacker_name} ({attack_name})' if is_switch else attack_name)
     # When entry weather is automatic, recommending an already-active setter's
@@ -1513,7 +1544,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     # setter has no commanded action; only self-beneficiaries display an attack.
     lead_move = setup_move or (attack_name if not is_switch else '')
     opening_name = setter_name
-    b_row = by_name[attacker_name]
+    b_row = by_name.get(beneficiary.get("MemberID")) or by_name[attacker_species]
     ratio = float(b_row.get('Ratio') or 0)
     weather_ratio = projected / max(weather_iws, 1.0)
     weather_improvement = baseline_iws > 0 and weather_iws <= baseline_iws * 0.8
@@ -1556,16 +1587,18 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     condition = (f'Assumes {weather} is active and not overridden; Battle Compass cannot verify remaining turns. '
                  'If the weather changes or expires, use the direct matchup or re-establish weather.')
     return dict(
+        member_id=setter.get("MemberID"), setter_member_id=setter.get("MemberID"),
+        payoff_member_id=beneficiary.get("MemberID"),
         pokemon_name=opening_name, recommended_pokemon_name=opening_name, lead_pokemon_name=setter_name,
         lead_move=lead_move, fit=fit, fit_rank=rank, summary=heading, reason=line,
         action=f'Establish {weather} with {setter_name}', action_detail=line,
         plan_kind='weather_setup' if setup_move or is_switch else 'weather_entry_payoff',
         can_override_direct=True,
-        opener_threat_move=str(by_name[setter_name].get('Worst Incoming Move') or '') or None,
-        opener_threat_category=str(by_name[setter_name].get('Worst Incoming Move Category') or '') or None,
-        opener_threat_type=str(by_name[setter_name].get('Worst Incoming Move Type') or '') or None,
-        opener_threat_score=float(by_name[setter_name].get('Incoming Worst Score') or 0),
-        opener_threat_multiplier=float(by_name[setter_name].get('Incoming Multiplier') or 1),
+        opener_threat_move=str((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Worst Incoming Move') or '') or None,
+        opener_threat_category=str((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Worst Incoming Move Category') or '') or None,
+        opener_threat_type=str((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Worst Incoming Move Type') or '') or None,
+        opener_threat_score=float((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Incoming Worst Score') or 0),
+        opener_threat_multiplier=float((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Incoming Multiplier') or 1),
         strategy_branch='weather_control', action_type=('Weather Setup' if setup_move else
             'Weather Payoff' if not is_switch else 'Automatic Weather'),
         plan_role='Weather Setter' if setup_move or is_switch else 'Weather Beneficiary',
@@ -1632,23 +1665,30 @@ def build_battle_compass_view_model(
         moves_data,
     )
     move_lookup = _build_move_lookup(moves_data)
-    pokemon_lookup = {
-        pokemon["Pokemon"]: pokemon for pokemon in team_data if pokemon.get("Pokemon")
-    }
-    all_matchups = [
-        _build_matchup_view_model(
-            result=result,
-            pokemon=pokemon_lookup[result["Pokemon"]],
-            move_lookup=move_lookup,
-        )
-        for result in matchup_results
-        if result.get("Pokemon") in pokemon_lookup
-    ]
-    matchup_lookup = {
-        matchup.pokemon["Pokemon"]: matchup for matchup in all_matchups
-    }
-    direct_name = str(recommended_pokemon.get("Pokemon") or "")
-    recommendation = matchup_lookup.get(direct_name)
+    # Matchup results belong to individual party members, not species names.
+    # The calculation engine preserves team order, including duplicate species.
+    members_by_id = {p.get("MemberID"): p for p in team_data
+                     if isinstance(p, dict) and p.get("MemberID")}
+    usable_members = [p for p in team_data if isinstance(p, dict)
+                      and p.get("Pokemon") and any(str(p.get(f"Move{i}") or "")
+                      for i in range(1, 5))]
+    all_matchups = []
+    for result in matchup_results:
+        original = members_by_id.get(result.get("MemberID"))
+        if original is None:
+            original = next((p for p in usable_members if p.get("Pokemon") == result.get("Pokemon")
+                             and p not in [m.pokemon for m in all_matchups]), None)
+        if original is not None:
+            all_matchups.append(_build_matchup_view_model(
+                result=result, pokemon=original, move_lookup=move_lookup))
+    matchup_lookup = {m.pokemon.get("MemberID"): m for m in all_matchups
+                      if m.pokemon.get("MemberID")}
+    direct_name = pokemon_display_name(recommended_pokemon)
+    recommendation = matchup_lookup.get(recommended_pokemon.get("MemberID"))
+    if recommendation is None:
+        recommendation = next((m for m in all_matchups if m.pokemon is recommended_pokemon
+                               or m.pokemon == recommended_pokemon), None)
+    direct_move_name = recommendation.best_move.get("Move") if recommendation else None
     if recommendation is None:
         return BattleCompassViewModel(
             opponent=opponent,
@@ -1664,6 +1704,19 @@ def build_battle_compass_view_model(
                 "Check that at least one saved team member has a valid damaging move."
             ),
         )
+    def select_strategy_member(name: str, action: str = "") -> MatchupViewModel | None:
+        choices = [m for m in all_matchups if m.pokemon.get("Pokemon") == name]
+        if action:
+            equipped = [m for m in choices if action in {
+                str(m.pokemon.get(f"Move{i}") or "") for i in range(1, 5)}]
+            if equipped:
+                choices = equipped
+        if len(choices) == 1:
+            return choices[0]
+        # Never credit one same-species teammate with another's tactical plan.
+        # Leave the direct recommendation intact if the strategy is ambiguous.
+        return None
+
     why_text = direct_why_text
     strategy_plans: list[StrategyPlanViewModel] = []
     selected_strategy_plan: StrategyPlanViewModel | None = None
@@ -1676,10 +1729,11 @@ def build_battle_compass_view_model(
         else None
     )
     if anti_setup is not None:
-        intercept_name, intercept_move, enemy_setup, accuracy = anti_setup
-        intercept_matchup = matchup_lookup.get(intercept_name)
+        intercept_id, intercept_move, enemy_setup, accuracy = anti_setup
+        intercept_matchup = matchup_lookup.get(intercept_id)
         if intercept_matchup is not None:
             recommendation = intercept_matchup
+            intercept_name = pokemon_display_name(intercept_matchup.pokemon)
             fallback_reason = (
                 f"Anti-setup interception: {opponent.get('Pokemon', 'the opponent')} knows {enemy_setup}, "
                 f"which could sharply increase its offensive threat. "
@@ -1711,6 +1765,9 @@ def build_battle_compass_view_model(
                     state_assumption=plan.state_assumption, fallback_if_assumption_fails=plan.fallback_if_assumption_fails,
                     recommended_pokemon_name=plan.recommended_pokemon_name, conditional_move_name=plan.conditional_move_name,
                     conditional_move_score=plan.conditional_move_score,
+                    member_id=plan.recommended_member_id or plan.member_id,
+                    setter_member_id=plan.lead_member_id,
+                    payoff_member_id=plan.followup_member_id,
                 )
                 for plan in raw_plans
             ]
@@ -1718,7 +1775,7 @@ def build_battle_compass_view_model(
             is_dynamaxed = _opponent_is_dynamaxed(opponent)
             allow_dmax_poison_plan = False
             if is_dynamaxed and selected_raw_plan is not None and team_strategy == "poison_offensive_pressure":
-                direct_result = next((row for row in matchup_results if str(row.get("Pokemon") or "") == direct_name), None)
+                direct_result = next((row for row in matchup_results if row.get("MemberID") == recommended_pokemon.get("MemberID")), None)
                 direct_score = float(direct_result.get("Best MoveScore") or 0.0) if direct_result else 0.0
                 conditional_score = float(selected_raw_plan.conditional_move_score or 0.0)
                 allow_dmax_poison_plan = (
@@ -1733,11 +1790,10 @@ def build_battle_compass_view_model(
                 )
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
             elif selected_raw_plan is not None:
-                selected_strategy_plan = next(
-                    plan for plan in strategy_plans
-                    if plan.pokemon_name == selected_raw_plan.pokemon_name
-                    and plan.plan_kind == selected_raw_plan.plan_kind
-                )
+                # Select the exact engine plan object, never a same-named species.
+                selected_index = next(i for i, raw in enumerate(raw_plans)
+                                      if raw is selected_raw_plan)
+                selected_strategy_plan = strategy_plans[selected_index]
                 poison_kind = selected_strategy_plan.plan_kind
                 move_name = str(selected_strategy_plan.lead_move or "")
                 move_lookup = _build_move_lookup(moves_data)
@@ -1790,14 +1846,19 @@ def build_battle_compass_view_model(
                     attack_score_conditional=payoff,
                 )
                 recommended_name = selected_raw_plan.recommended_pokemon_name or selected_raw_plan.lead_pokemon_name or selected_raw_plan.pokemon_name
-                strategy_matchup = matchup_lookup.get(recommended_name)
+                strategy_matchup = (
+                    matchup_lookup.get(selected_raw_plan.recommended_member_id)
+                    if selected_raw_plan.recommended_member_id else
+                    select_strategy_member(recommended_name, selected_strategy_plan.lead_move)
+                )
                 if strategy_matchup is not None:
                     recommendation = strategy_matchup
                 poisoned_followup = None
                 if opponent.get("Slot") != 1 and not selected_strategy_plan.assumed_poisoned:
                     poisoned_followup = project_poisoned_followup(
                         team_data, opponent, moves_data, matchup_results, items=items, ability_rules=ability_rules,
-                        strategy_branch=team_strategy, current_pokemon_name=recommended_name,
+                        strategy_branch=team_strategy,
+                        current_pokemon_name=(selected_raw_plan.recommended_member_id or recommended_name),
                     )
                 safety_tradeoff = _poison_safety_tradeoff_text(raw_plans, selected_raw_plan)
                 why_text = _strategy_why_text(selected_strategy_plan, opponent, poisoned_followup, safety_tradeoff)
@@ -1821,7 +1882,10 @@ def build_battle_compass_view_model(
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**status_result)
                 strategy_plans = [selected_strategy_plan]
-                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                recommendation = (matchup_lookup.get(selected_strategy_plan.member_id)
+                                  or select_strategy_member(selected_strategy_plan.pokemon_name,
+                                                            selected_strategy_plan.lead_move)
+                                  or recommendation)
                 payoff_detail = ""
                 if payoff is not None:
                     payoff_name, payoff_move, boosted, unboosted, status = payoff
@@ -1835,7 +1899,7 @@ def build_battle_compass_view_model(
                     f"{selected_strategy_plan.action_detail} "
                     f"{payoff_detail}"
                     f"Direct fallback: {direct_name} → "
-                    f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                    f"{(direct_move_name or 'best attack')}. "
                     "Full Analysis retains unconditioned scores."
                 )
     elif team_strategy == "defensive_attrition":
@@ -1856,11 +1920,14 @@ def build_battle_compass_view_model(
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**defensive_result)
                 strategy_plans = [selected_strategy_plan]
-                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                recommendation = (matchup_lookup.get(selected_strategy_plan.member_id)
+                                  or select_strategy_member(selected_strategy_plan.pokemon_name,
+                                                            selected_strategy_plan.lead_move)
+                                  or recommendation)
                 why_text = (f"{selected_strategy_plan.state_assumption} "
                             f"{selected_strategy_plan.action_detail} "
                             f"Direct fallback: {direct_name} → "
-                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            f"{(direct_move_name or 'best attack')}. "
                             "Full Analysis retains unboosted scores.")
     elif team_strategy == "weather_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
@@ -1874,11 +1941,14 @@ def build_battle_compass_view_model(
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**result)
                 strategy_plans = [selected_strategy_plan]
-                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                recommendation = (matchup_lookup.get(selected_strategy_plan.member_id)
+                                  or select_strategy_member(selected_strategy_plan.pokemon_name,
+                                                            selected_strategy_plan.lead_move)
+                                  or recommendation)
                 why_text = (f"{selected_strategy_plan.action_detail} "
                             f"{selected_strategy_plan.condition_detail} "
                             f"Direct fallback: {direct_name} → "
-                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            f"{(direct_move_name or 'best attack')}. "
                             "Full Analysis retains the ordinary matchup scores.")
     elif team_strategy == "setup_offense":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
@@ -1895,11 +1965,14 @@ def build_battle_compass_view_model(
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**setup_result)
                 strategy_plans = [selected_strategy_plan]
-                recommendation = matchup_lookup.get(selected_strategy_plan.pokemon_name, recommendation)
+                recommendation = (matchup_lookup.get(selected_strategy_plan.member_id)
+                                  or select_strategy_member(selected_strategy_plan.pokemon_name,
+                                                            selected_strategy_plan.lead_move)
+                                  or recommendation)
                 why_text = (f"{selected_strategy_plan.state_assumption} "
                             f"{selected_strategy_plan.action_detail} "
                             f"Direct fallback: {direct_name} → "
-                            f"{next((str(r.get('Best Move') or '') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}. "
+                            f"{(direct_move_name or 'best attack')}. "
                             "Full Analysis retains unboosted scores.")
     elif team_strategy == "screen_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
@@ -1918,7 +1991,10 @@ def build_battle_compass_view_model(
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**screen_plan)
                 strategy_plans = [selected_strategy_plan]
-                recommendation = matchup_lookup.get(screen_name, recommendation)
+                recommendation = (matchup_lookup.get(screen_name)
+                                  or select_strategy_member(selected_strategy_plan.pokemon_name,
+                                                            selected_strategy_plan.lead_move)
+                                  or recommendation)
                 screen_move = (selected_strategy_plan.lead_move
                                if selected_strategy_plan.plan_kind == "screen_setup"
                                else "")
@@ -1928,10 +2004,7 @@ def build_battle_compass_view_model(
                     assumption = selected_strategy_plan.state_assumption or ""
                     screen_move = ("Light Screen" if "Light Screen" in assumption
                                    else "Reflect" if "Reflect" in assumption else "")
-                chosen_defender = next(
-                    (member for member in team_data if member.get("Pokemon") == screen_name),
-                    None,
-                )
+                chosen_defender = recommendation.pokemon if recommendation is not None else None
                 screened = (
                     _screened_worst_incoming(
                         opponent, chosen_defender, screen_move,
@@ -1941,7 +2014,7 @@ def build_battle_compass_view_model(
                 )
                 mitigation_text = (
                     f"With {screen_move} active, the Incoming Worst Move against "
-                    f"{screen_name} is {screened[0]}, with an Incoming Worst "
+                    f"{pokemon_display_name(recommendation.pokemon)} is {screened[0]}, with an Incoming Worst "
                     f"Score of {screened[1]:.2f}. "
                     "This assumes a single battle without a critical hit; "
                     "Full Analysis retains the unscreened score."
@@ -1952,7 +2025,7 @@ def build_battle_compass_view_model(
                     mitigation_text,
                     selected_strategy_plan.action_detail,
                     selected_strategy_plan.fallback_if_assumption_fails,
-                    f"Direct fallback if the screen is absent: {direct_name} → {recommendation.best_move.get('Move') if recommendation and recommendation.pokemon.get('Pokemon') == direct_name else next((r.get('Best Move') for r in matchup_results if r.get('Pokemon') == direct_name), 'best attack')}.",
+                    f"Direct fallback if the screen is absent: {direct_name} → {direct_move_name or 'best attack' }.",
                     "Full Analysis remains strategy-neutral for direct comparisons."
                 )))
     elif team_strategy != "strongest_matchup":
@@ -1963,6 +2036,8 @@ def build_battle_compass_view_model(
             "the selected strategy active for readiness and recommendation guidance."
         )
         why_text = f"{fallback_reason} {direct_why_text}".strip()
+    # Identified strategy roles are named at their source using their original
+    # MemberID-bearing records. Do not globally substitute species in prose.
     other_options = [matchup for matchup in all_matchups if matchup is not recommendation]
     return BattleCompassViewModel(
         opponent=opponent,
@@ -1977,7 +2052,8 @@ def build_battle_compass_view_model(
         selected_strategy_plan=selected_strategy_plan,
         strategy_fallback_reason=fallback_reason,
         direct_recommendation_name=direct_name or None,
-        direct_fallback_move_name=next((str(r.get("Best Move") or "") for r in matchup_results if r.get("Pokemon") == direct_name), None),
+        direct_fallback_move_name=next((str(r.get("Best Move") or "") for r in matchup_results
+                                        if r.get("MemberID") == recommended_pokemon.get("MemberID")), None),
     )
 
 
