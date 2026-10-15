@@ -121,6 +121,12 @@ class StrategyPlanViewModel:
     member_id: str | None = None
     setter_member_id: str | None = None
     payoff_member_id: str | None = None
+    setup_followup_move: str | None = None
+    setup_followup_type: str | None = None
+    setup_followup_score: float | None = None
+    setup_followup_base_score: float | None = None
+    setup_followup_effectiveness: float | None = None
+    setup_followup_likely_ohko: bool = False
 @dataclass(frozen=True)
 
 
@@ -440,7 +446,168 @@ def _matchup_index(matchups: list[dict]) -> dict[str, dict]:
     return indexed
 
 
-def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+def _offensive_payoff_key(member, opponent, move, items, ability_rules, *, incoming=None):
+    """Shared OHKO-first ordering for conditional offensive plans.
+
+    Use the same 110%-of-target-HP minimum-damage confidence and first-turn
+    safety that drive Strongest Matchup's OHKO promotion. Move Score is only a
+    secondary metric; it is not damage in HP.
+    """
+    from engine.calculations import calculate_damage_range, OHKO_RECOMMENDATION_CONFIDENCE
+    if not move:
+        return (0, 0.0, 0.0)
+    low, _ = calculate_damage_range(member, opponent, move, items, ability_rules)
+    target_hp = float(get_stat(opponent, "HP") or 0)
+    speed = float(get_stat(member, "SPE"))
+    from engine.mechanics import get_item_speed_multiplier
+    speed *= get_item_speed_multiplier(member, items)
+    opponent_speed = float(get_stat(opponent, "SPE")) * get_item_speed_multiplier(opponent, items)
+    priority = float(move.get("Priority") or 0)
+    can_strike_first = priority > 0 or (priority == 0 and speed >= opponent_speed)
+    no_incoming = incoming is not None and incoming <= 0
+    confidence = float(low or 0) / target_hp if target_hp else 0.0
+    promoted = bool((can_strike_first or no_incoming) and
+                    confidence >= OHKO_RECOMMENDATION_CONFIDENCE)
+    return (int(promoted), confidence if promoted else 0.0,
+            float(calculate_move_score(member, opponent, move, items, ability_rules)))
+
+
+def _screen_damage_max(opponent, setter, move, active_screens, items, ability_rules):
+    """Worst modeled HP damage after specified screens (not an IWS)."""
+    from engine.calculations import calculate_damage_range
+    resolved = resolve_move_for_matchup(opponent, setter, move)
+    low, high = calculate_damage_range(opponent, setter, move, items, ability_rules)
+    if high is None:
+        return None
+    breaker = str(resolved.get("Move") or "") in {"Brick Break", "Psychic Fangs"}
+    infiltrator = str(opponent.get("Ability") or "").casefold() == "infiltrator"
+    if not breaker and not infiltrator and get_deterministic_fixed_damage(opponent, resolved) is None:
+        category = resolved.get("Category")
+        if (category == "Physical" and "Reflect" in active_screens or
+                category == "Special" and "Light Screen" in active_screens):
+            high = float(high) / 2
+    return float(high)
+
+
+def _screen_two_turn_survival(setter, opponent, first_screen, moves_data, items, ability_rules):
+    """A conservative two-turn HP budget: initial hit + screened hit.
+
+    The screen can be cast before the first hit only if the user moves first;
+    priority and the opponent's priority are considered. No assumed healing.
+    """
+    moves = [m for m in get_moves(opponent, moves_data)
+             if m.get("Category") in {"Physical", "Special"}]
+    if not moves:
+        return False
+    from engine.mechanics import get_item_speed_multiplier
+    own_speed = float(get_stat(setter, "SPE")) * get_item_speed_multiplier(setter, items)
+    enemy_speed = float(get_stat(opponent, "SPE")) * get_item_speed_multiplier(opponent, items)
+    screen_priority = 1 if str(setter.get("Ability") or "").casefold() == "prankster" else 0
+    first = []
+    second = []
+    for move in moves:
+        enemy_priority = float(move.get("Priority") or 0)
+        casts_first = screen_priority > enemy_priority or (screen_priority == enemy_priority and own_speed >= enemy_speed)
+        first_hit = _screen_damage_max(opponent, setter, move,
+                                        {first_screen} if casts_first else set(), items, ability_rules)
+        second_hit = _screen_damage_max(opponent, setter, move, {first_screen}, items, ability_rules)
+        if first_hit is None or second_hit is None:
+            return False
+        first.append(first_hit)
+        second.append(second_hit)
+    hp = float(get_stat(setter, "HP"))
+    return bool(hp > 0 and max(first) + max(second) < hp * 0.90)
+
+
+def _remaining_opponents(opponent, roster):
+    """Only known later members of this battle, never subsequent encounters."""
+    if not roster:
+        return []
+    try:
+        current_slot = int(opponent.get("Slot") or 0)
+    except (TypeError, ValueError):
+        return []
+    return [other for other in roster if other is not opponent
+            and str(other.get("Trainer") or "") == str(opponent.get("Trainer") or "")
+            and str(other.get("Battle") or "") == str(opponent.get("Battle") or "")
+            and str(other.get("Slot") or "").isdigit()
+            and int(other["Slot"]) > current_slot and not _opponent_is_dynamaxed(other)]
+
+
+def _other_battle_opponents(opponent, roster):
+    """Other modeled members of this battle, independent of switch order."""
+    if not roster:
+        return []
+    current_slot = str(opponent.get("Slot") or "")
+    return [other for other in roster
+            if other is not opponent
+            and str(other.get("Trainer") or "") == str(opponent.get("Trainer") or "")
+            and str(other.get("Battle") or "") == str(opponent.get("Battle") or "")
+            and str(other.get("Slot") or "") != current_slot
+            and not _opponent_is_dynamaxed(other)]
+
+
+def _screen_damaging_moves(opponent, moves_data):
+    """Moves that can directly damage the defender; status doesn't dilute coverage."""
+    return [move for move in get_moves(opponent, moves_data)
+            if move.get("Category") in {"Physical", "Special"}
+            and (float(move.get("Power") or 0) > 0 or move.get("DamageMethod") == "Fixed")]
+
+
+def _screen_order(setter, opponent, available, moves_data, items, ability_rules):
+    """Prefer coverage among damaging moves, then modeled mitigated threat.
+
+    This is *coverage*, not a probability claim about AI decisions. Compare
+    against the known move categories and retain worst-hit magnitude as tie-break.
+    """
+    damaging = _screen_damaging_moves(opponent, moves_data)
+    from engine.mechanics import get_item_speed_multiplier
+    our_speed = float(get_stat(setter, "SPE")) * get_item_speed_multiplier(setter, items)
+    foe_speed = float(get_stat(opponent, "SPE")) * get_item_speed_multiplier(opponent, items)
+    our_priority = 1 if str(setter.get("Ability") or "").casefold() == "prankster" else 0
+    rankings = []
+    for screen in available:
+        category = "Special" if screen == "Light Screen" else "Physical"
+        coverage = sum(move.get("Category") == category for move in damaging)
+        actual_coverage = 0.0
+        peak = 0.0
+        for move in damaging:
+            enemy_priority = float(move.get("Priority") or 0)
+            acts_first = (our_priority > enemy_priority or
+                          our_priority == enemy_priority and our_speed >= foe_speed)
+            unshielded = _screen_damage_max(opponent, setter, move, set(), items, ability_rules)
+            shielded = _screen_damage_max(opponent, setter, move, {screen} if acts_first else set(), items, ability_rules)
+            if unshielded is None or shielded is None:
+                continue
+            actual_coverage += max(0.0, unshielded - shielded)
+            peak = max(peak, unshielded)
+        # Exposure to a category is dominant; actual prevention breaks ties.
+        rankings.append((coverage, actual_coverage, peak, screen))
+    return max(rankings)[3] if rankings else None
+
+
+def _screen_coverage_names(opponent, battle_roster, screen, moves_data):
+    """Name known current/future opponents whose damaging moves the screen covers."""
+    category = "Special" if screen == "Light Screen" else "Physical"
+    names = []
+    for target in [opponent, *_remaining_opponents(opponent, battle_roster)]:
+        if any(move.get("Category") == category
+               for move in _screen_damaging_moves(target, moves_data)):
+            name = str(target.get("Pokemon") or "").strip()
+            if name and name not in names:
+                names.append(name)
+    return names
+
+
+def _screen_name_list(names):
+    if len(names) <= 1:
+        return names[0] if names else "the opposing lineup"
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return ", ".join(names[:-1]) + f", and {names[-1]}"
+
+
+def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None):
     """Conservative single-opponent screen sequence, using only equipped moves.
 
     Returns a selected tactical plan and its target recommendation, or a reason
@@ -448,10 +615,9 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     """
     lookup = _build_move_lookup(moves_data)
     by_name = _matchup_index(matchups)
-    opponents = [str(opponent.get(f"Move{i}") or "") for i in range(1, 5)]
-    damaging = [lookup.get(name, {}) for name in opponents]
-    physical = any(m.get("Category") == "Physical" and float(m.get("Power") or 0) > 0 for m in damaging)
-    special = any(m.get("Category") == "Special" and float(m.get("Power") or 0) > 0 for m in damaging)
+    damaging = _screen_damaging_moves(opponent, moves_data)
+    physical = any(m.get("Category") == "Physical" for m in damaging)
+    special = any(m.get("Category") == "Special" for m in damaging)
     if not physical and not special:
         return None, None, "The opponent's damaging move category is not modeled; screen selection cannot be justified safely."
 
@@ -471,10 +637,9 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         notes = {str(n.get("text") or "") for n in result.get("Battle Notes", []) if isinstance(n, dict)}
         if {"Likely Incoming OHKO", "Possible Incoming OHKO"} & notes:
             continue
-        worst_move = lookup.get(str(result.get("Worst Incoming Move") or ""), {})
-        worst_category = worst_move.get("Category") or result.get("Worst Incoming Move Category")
-        preferred = "Reflect" if worst_category == "Physical" else "Light Screen" if worst_category == "Special" else ""
-        selected = preferred if preferred in options else options[0]
+        selected = _screen_order(mon, opponent, options, moves_data, items, ability_rules)
+        if selected is None:
+            continue
         ability = str(mon.get("Ability") or "").casefold()
         priority = ability == "prankster"
         speed = float(mon.get("SPE") or 0)
@@ -489,6 +654,20 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     setter_member = next((m for m in team_data if m.get("MemberID") == setter_id), None)
     if setter_member is not None:
         setter = pokemon_display_name(setter_member)
+    # Both screens must be equipped. The current target dictates the first
+    # screen; later known opponents can make the other screen worth the turn.
+    second_screen = None
+    if setter_member is not None and {"Reflect", "Light Screen"}.issubset(set(
+            str(setter_member.get(f"Move{i}") or "") for i in range(1, 5))):
+        other_screen = "Light Screen" if screen == "Reflect" else "Reflect"
+        later = _remaining_opponents(opponent, battle_roster)
+        other_category = "Special" if other_screen == "Light Screen" else "Physical"
+        other_relevant = any(str(m.get("Category") or "") == other_category
+                             for future in [opponent, *later]
+                             for m in _screen_damaging_moves(future, moves_data))
+        if other_relevant and _screen_two_turn_survival(
+                setter_member, opponent, screen, moves_data, items, ability_rules):
+            second_screen = other_screen
     threat = str(result.get("Worst Incoming Move") or "the opponent's strongest modeled move")
     threat_category = str(result.get("Worst Incoming Move Category") or "")
     delivered = "Prankster priority" if priority else "its modeled survivability"
@@ -509,38 +688,64 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     immediate_matchups = evaluate_team_matchups(
         immediate_team, opponent, items, ability_rules, moves_data
     )
+    # Follow-up selection shares Strongest Matchup's OHKO promotion: select
+    # from *other individuals* first, not by defensive Ratio alone.
     attackers = [r for r in immediate_matchups
                  if r.get("MemberID") != result.get("MemberID")
                  and str(r.get("Best Move") or "") not in delayed
                  and float(r.get("Best MoveScore") or 0) > 0]
-    attackers.sort(key=lambda r: (float(r.get("Ratio") or 0),
-                                  float(r.get("Best MoveScore") or 0)), reverse=True)
-    payoff = attackers[0] if attackers else None
-    payoff_member = next((m for m in team_data if m.get("MemberID") == payoff.get("MemberID")), None) if payoff else None
+    attacker_ids = {r.get("MemberID") for r in attackers}
+    direct_pool = [m for m in immediate_team if m.get("MemberID") in attacker_ids]
+    chosen, _, _ = find_best_team_member(direct_pool, opponent, items, ability_rules, moves_data)
+    payoff = next((r for r in attackers if chosen is not None and
+                   r.get("MemberID") == chosen.get("MemberID")), None)
+    payoff_member = next((m for m in team_data if payoff is not None and
+                          m.get("MemberID") == payoff.get("MemberID")), None)
     payoff_name = pokemon_display_name(payoff_member) if payoff_member else (str(payoff.get("Pokemon") or "") if payoff else "")
     payoff_move = str(payoff.get("Best Move") or "") if payoff else ""
+    first_targets = _screen_coverage_names(opponent, battle_roster, screen, moves_data)
+    second_targets = (_screen_coverage_names(opponent, battle_roster, second_screen, moves_data)
+                      if second_screen else [])
+    primary_purpose = (f"{screen} covers {_screen_name_list(first_targets)}'s "
+                       f"{'special' if screen == 'Light Screen' else 'physical'} attacks.")
+    second_purpose = (f" {second_screen} covers {_screen_name_list(second_targets)}'s "
+                      f"{'special' if second_screen == 'Light Screen' else 'physical'} attacks."
+                      if second_screen else "")
     if is_lead or not payoff:
         action_name = setter
         selected_move = screen
         plan_kind = "screen_setup"
         action = f"Establish {screen} with {setter}"
-        detail = (f"Step 1: {setter} establishes {screen} to reduce incoming "
-                  f"{'physical' if screen == 'Reflect' else 'special'} damage. "
-                  f"The setter has {delivered} against {threat}. "
-                  + (f"Step 2: switch to {payoff_name} and attack with {payoff_move} behind the screen. " if payoff else "No safe immediate follow-up is modeled."))
         assumed = False
-        assumption = "Screens have not yet been assumed active for the lead." if is_lead else "Screen setup is still needed; no protected attacker could be established."
+        assumption = "Neither screen is assumed active at entry."
     else:
         action_name = payoff_name
         selected_move = payoff_move
         plan_kind = "screen_followup_assumed"
         action = f"Follow up with {payoff_name} using {payoff_move}"
-        detail = (f"Step 1: {setter} establishes {screen}. "
-                  f"Step 2: {payoff_name} uses {payoff_move} behind that screen. "
-                  "The attacking move is modeled as immediate damage; delayed-hit moves are excluded. "
-                  "The Compass cannot verify whether the screen is still active.")
         assumed = True
-        assumption = f"Conditional: assumes {screen} was established on an earlier turn and remains active."
+        assumption = (f"Conditional protection: {screen} may already be active; "
+                      "the Compass cannot verify screen state. The attacking choice is evaluated without it.")
+    if plan_kind == "screen_followup_assumed" and payoff:
+        # Later opponents are offensive follow-ups, not fresh screen-setting
+        # opportunities. Screen state is unknown; never repeat setter steps.
+        detail = (f"{payoff_name} is the preferred attacker against "
+                  f"{opponent.get('Pokemon', 'this opponent')} with {payoff_move}. "
+                  f"If {screen} remains active, it provides additional protection "
+                  f"against {'physical' if screen == 'Reflect' else 'special'} attacks. "
+                  "If it has expired, consider renewing it when safe.")
+    elif second_screen:
+        detail = (f"{primary_purpose}{second_purpose} "
+                  f"{setter} is projected to survive both setup turns in that order, "
+                  f"provided the first screen takes effect before the attacks it protects against. "
+                  f"Then switch to {payoff_name} and use {payoff_move}." if payoff else
+                  f"{primary_purpose}{second_purpose} {setter} is projected to survive both setup turns "
+                  "in that order; choose an attacker afterward.")
+        action += f" (then {second_screen} if safe)"
+    else:
+        detail = (f"{primary_purpose} {setter} has a supported safe opening against {threat}. "
+                  + (f"Then switch to {payoff_name} and use {payoff_move}." if payoff
+                     else "No reliable immediate attacking follow-up was identified."))
     # These are *tactical* grades, distinct from the direct-matchup meter.
     # A safe screen opener with priority and a useful follow-up earns Strong;
     # uncertain post-setup survival/exit earns Viable or Risky.
@@ -551,7 +756,15 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         attacker_ratio = float(payoff.get("Ratio") or 0)
         attacker_notes = {str(n.get("text") or "") for n in payoff.get("Battle Notes", []) if isinstance(n, dict)}
         threatened = bool({"Likely Incoming OHKO", "Possible Incoming OHKO"} & attacker_notes)
-        if threatened:
+        # An attacker promoted for a guaranteed-range first-strike OHKO does
+        # not need to tank the opponent's hypothetical retaliatory move.
+        best_move = lookup.get(payoff_move)
+        offensive_key = (_offensive_payoff_key(payoff_member, opponent, best_move,
+                         items, ability_rules, incoming=float(payoff.get("Incoming Worst Score") or 0))
+                         if payoff_member is not None else (0, 0, 0))
+        if offensive_key[0]:
+            fit, rank = "Strong", 3
+        elif threatened:
             fit, rank = "Risky", 1
         elif attacker_ratio >= 3:
             fit, rank = "Strong", 3
@@ -572,9 +785,36 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     pivot = next((m for m in ("U-turn", "Volt Switch", "Parting Shot", "Flip Turn", "Baton Pass") if m in chosen_moves), None)
     contingency = f"{pivot} offers a pivot option, subject to surviving until it acts." if pivot else "An ordinary switch to the protected attacker is the modeled exit."
     if plan_kind == "screen_followup_assumed" and payoff:
-        explanation = (f"{payoff_move} has a favorable direct matchup (Ratio "
-                       f"{float(payoff.get('Ratio') or 0):.2f}). "
-                       f"{screen} adds protection; fall back if it expires.")
+        # A screen cannot increase Power Gem or any other attack's damage.
+        # Explain when it changes *survivability*, rather than implying that
+        # the offensive choice requires the screen to be present.
+        from engine.calculations import calculate_damage_range
+        covered_category = "Physical" if screen == "Reflect" else "Special"
+        enemy_moves = _screen_damaging_moves(opponent, moves_data)
+        unscreened_max = []
+        screened_max = []
+        if payoff_member is not None:
+            for enemy_move in enemy_moves:
+                plain = _screen_damage_max(opponent, payoff_member, enemy_move,
+                                           set(), items, ability_rules)
+                screened = _screen_damage_max(opponent, payoff_member, enemy_move,
+                                              {screen}, items, ability_rules)
+                if plain is not None and screened is not None:
+                    unscreened_max.append(plain)
+                    screened_max.append(screened)
+        hp = float(get_stat(payoff_member, "HP")) if payoff_member else 0.0
+        screen_rescues = bool(unscreened_max and hp > 0 and
+                              max(unscreened_max) >= hp and max(screened_max) < hp)
+        if screen_rescues:
+            explanation = (f"{payoff_name} is an offensive choice whose modeled survival "
+                           f"improves enough under {screen} to withstand the strongest "
+                           "known incoming attack. This protection is conditional; "
+                           "the screen does not increase attack damage.")
+        else:
+            explanation = (f"{payoff_name} is selected for its direct offense. "
+                           f"{screen} offers additional protection against "
+                           f"{covered_category.lower()} attacks if active; "
+                           "its offensive damage is unchanged.")
     else:
         explanation = (f"{'Prankster priority' if priority else 'Modeled survival'} supports {screen}. "
                        + (f"{payoff_name} offers a favorable follow-up. " if strong_payoff else "Follow-up is less secure. ")
@@ -582,13 +822,16 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
     return dict(
         member_id=action_id, setter_member_id=setter_id, payoff_member_id=payoff.get("MemberID") if payoff else None,
         action_type="Screen Setup" if plan_kind == "screen_setup" else "Screen Payoff",
-        condition_detail=(f"Assumes {screen} was established earlier and is still active. "
-                          "If it has expired or was removed, use the named direct fallback."
+        condition_detail=(f"{screen} provides conditional protection if still active; "
+                          "the offensive recommendation itself does not assume a screen."
                           if assumed else ""),
         plan_role="Screen Setter" if plan_kind == "screen_setup" else "Protected Attacker",
         fit_explanation=explanation,
         attack_move_score=float(payoff.get("Best MoveScore") or 0) if plan_kind == "screen_followup_assumed" and payoff else None,
-        sequence_heading=f"{screen} → {payoff_name}" if payoff_name else f"{setter} → {screen}",
+        sequence_heading=(f"{payoff_name} → {payoff_move}"
+                          if plan_kind == "screen_followup_assumed" and payoff else
+                          f"{setter} → {screen}" + (f" → {second_screen}" if second_screen else "")
+                          + (f" → {payoff_name}" if payoff_name else "")),
         pokemon_name=action_name, recommended_pokemon_name=action_name,
         lead_pokemon_name=setter, lead_move=selected_move,
         fit=fit, fit_rank=rank, summary=action, reason=detail,
@@ -600,7 +843,7 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         opener_threat_multiplier=float(result.get("Incoming Multiplier") or 1),
         strategy_branch="screen_control", assumed_poisoned=False,
         state_assumption=assumption, fallback_if_assumption_fails=(
-            "If the screen is absent or expired, establish it safely first or use Strongest Matchup."
+            "If the screen has expired, reassess protection; the attacker is still selected on unscreened offense."
             if assumed else "If the setter is already damaged or unsafe, use Strongest Matchup instead."
         ),
     ), action_id or action_name, None
@@ -879,7 +1122,7 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
     ), projected
 
 
-def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None):
     """Model an equipped self-boost followed by that same Pokémon's attack.
 
     Project one setup turn only. No boosts are transferred to teammates or
@@ -972,18 +1215,135 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
                 continue
             if risk_ratio > 0.85:
                 continue
-            score = (min(damage_gain, 4) * 2.0 + (1.3 if speed_flip else 0)
-                     + min(float(row.get("Ratio") or 0), 5) * 0.35
-                     - risk_ratio * 1.4 + (0.25 if acts_first else 0))
+            # Preserve setup eligibility but rank the *resulting attack*, not
+            # the relative multiplier. A safe direct OHKO merits a promotion;
+            # OHKO promotion is evaluated after the projected boost as well.
+            direct_move_name = str(row.get("Best Move") or "")
+            direct_move = setup_lookup.get(direct_move_name)
+            direct_ko = _offensive_payoff_key(member, opponent, direct_move,
+                                               items, ability_rules, incoming=incoming)
+            boosted_ko = _offensive_payoff_key(boosted_member, opponent, attack,
+                                                items, ability_rules, incoming=incoming)
+            sweep_ohkos = 0
+            sweep_coverage = 0
+            for future in _other_battle_opponents(opponent, battle_roster):
+                moves_future = [m for m in get_moves(member, moves_data)
+                                if m.get("Category") in {"Physical", "Special"}]
+                if not moves_future:
+                    continue
+                future_keys = [_offensive_payoff_key(boosted_member, future, m,
+                               items, ability_rules) for m in moves_future]
+                best_future = max(future_keys)
+                sweep_ohkos += best_future[0]
+                sweep_coverage += best_future[2] > 0
+            # Survival is a prerequisite, not merely a late tie-break.
+            # If the foe strikes before our boosted follow-up, we must weather
+            # two hits (the setup turn and the turn we attempt to attack),
+            # unless a priority attack can preempt it.
+            attack_priority = float(attack.get("Priority") or 0)
+            attack_first = (attack_priority > 0 or
+                            (attack_priority == 0 and speed_after >= opponent_speed
+                             and not uncertain_weather))
+            # A speed tie is uncertain, so do not promise an uncontested attack.
+            if attack_priority < 0:
+                attack_first = False
+            opening_exposure = 0.0 if acts_first else 1.0
+            # Even when setup occurs first, an opponent typically responds
+            # after the boost; allow for one hit during the setup turn.
+            first_hit = float(worst_max)
+            if attack_first:
+                total_exposure = first_hit
+            else:
+                total_exposure = first_hit * 2
+            # Risk model deliberately does not assume healing, screens, or
+            # opponent move choice. Don't advertise unsafe setup sequences.
+            if total_exposure >= hp:
+                continue
+            setup_safety = max(0.0, 1.0 - total_exposure / hp)
+            # Banded payoff: a <5% scoring distinction is not a meaningful
+            # reason to prefer a substantially less safe setup opportunity.
+            # Credible OHKO/sweep outcomes remain the primary criteria.
+            score = (max(boosted_ko[0], direct_ko[0]),
+                     boosted_ko[0],
+                     sweep_ohkos,
+                     sweep_coverage,
+                     setup_safety,
+                     float(row.get("Ratio") or 0),
+                     boosted_score)
             candidates.append((score, member, setup_name, attack, row, boosted_score,
                                base_score, speed_flip, own_speed, opponent_speed,
                                speed_after, risk_ratio, uncertain_weather))
     if not candidates:
         return "No safe, worthwhile one-turn offensive setup was modeled. Use the strongest direct matchup."
+    # Compare truly different payoff tiers first. For broadly equivalent
+    # boosted attacks (<5%), setup survival and defensive matchup break ties.
+    # A pairwise comparator avoids arbitrary score-bin boundaries.
+    from functools import cmp_to_key
+    def compare_setup_candidates(left, right):
+        la, rb = left[0], right[0]
+        for index in range(4):  # KO promotion, boosted KO, sweep OHKOs, coverage
+            if la[index] != rb[index]:
+                return 1 if la[index] > rb[index] else -1
+        ls, rs = float(left[5]), float(right[5])
+        if max(ls, rs) > 0 and abs(ls - rs) / max(ls, rs) >= 0.05:
+            return 1 if ls > rs else -1
+        # Re-evaluate the expected number of turns of exposure, not IWS.
+        # Stored score safety is normalized to the member's modeled HP.
+        for index in (4, 5):  # setup safety, direct matchup
+            if abs(la[index] - rb[index]) > (0.03 if index == 4 else 0.05):
+                return 1 if la[index] > rb[index] else -1
+        return (ls > rs) - (ls < rs)
     (score, member, setup_name, attack, row, boosted_score, base_score,
-     flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(candidates, key=lambda x:x[0])
+     flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(
+         candidates, key=cmp_to_key(compare_setup_candidates))
     name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
+    # Explain a meaningful safety-led decision when boosted offense is close.
+    # This is not a claim about which move the AI will select.
+    safety_comparison = ""
+    alternatives = [entry for entry in candidates if entry[1].get("MemberID") != member.get("MemberID")]
+    if alternatives:
+        closest = min(alternatives, key=lambda e: abs(float(e[5]) - float(boosted_score)))
+        alternate_boosted = float(closest[5])
+        if (max(alternate_boosted, boosted_score) > 0 and
+                abs(alternate_boosted - boosted_score) / max(alternate_boosted, boosted_score) < 0.05):
+            alternative_name = pokemon_display_name(closest[1])
+            alternate_risk = float(closest[11])
+            if damage_risk + 0.05 < alternate_risk:
+                safety_comparison = (f" {name} and {alternative_name} have comparable boosted offense; "
+                                     f"{name} is favored for a safer projected setup opportunity.")
+    # Describe named sweep targets, not an assumed opponent order or a count.
+    # Use the same conservative OHKO confidence as offensive promotion; a
+    # second opponent can be fought at any point after the lead.
+    from engine.calculations import calculate_damage_range, OHKO_RECOMMENDATION_CONFIDENCE
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+    sweep_targets = []
+    boosted_member = dict(member)
+    setup_meta = setup_lookup.get(setup_name, {})
+    boosts = {"ATK": float(setup_meta.get("AtkStageChange") or 0),
+              "SPA": float(setup_meta.get("SpAStageChange") or 0),
+              "SPE": float(setup_meta.get("SpeStageChange") or 0)}
+    for stat, stages in boosts.items():
+        if stages > 0:
+            boosted_member[stat] = float(get_stat(member, stat)) * (2 + stages) / 2
+    for future in _other_battle_opponents(opponent, battle_roster):
+        hp_future = float(get_stat(future, "HP") or 0)
+        if hp_future <= 0:
+            continue
+        best = None
+        for future_move in get_moves(member, moves_data):
+            if future_move.get("Category") not in {"Physical", "Special"}:
+                continue
+            low, _ = calculate_damage_range(boosted_member, future, future_move, items, ability_rules)
+            if low is not None and float(low) >= OHKO_RECOMMENDATION_CONFIDENCE * hp_future:
+                power = float(calculate_move_score(boosted_member, future, future_move, items, ability_rules))
+                if best is None or power > best[0]:
+                    best = (power, str(future_move.get("Move") or ""))
+        if best:
+            sweep_targets.append(f"{future.get('Pokemon', 'opponent')} ({best[1]})")
+    sweep_note = (f" Sweep potential: With {setup_name} active, {name} has projected "
+                  f"OHKOs against {_screen_name_list(sweep_targets)}."
+                  if sweep_targets else "")
     strong = damage_risk <= 0.4 and (boosted_score >= base_score * 1.5 or flip)
     fit, rank = ("Strong", 3) if strong else ("Viable", 2)
     speed_text = (f" Setup changes turn order: Speed {own_speed:.0f} → {speed_after:.0f} "
@@ -993,9 +1353,15 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
     detail = (f"Step 1: {name} uses {setup_name} if at sufficient HP to survive setup. "
               f"Step 2: stay in and use {move_name}. Projected Move Score {boosted_score:.2f} "
               f"versus {base_score:.2f} before setup.{speed_text} "
-              "Boosts are not carried over after switching or to another teammate.")
+              "Boosts are not carried over after switching or to another teammate." + sweep_note + safety_comparison)
     return dict(
         member_id=member.get("MemberID"),
+        setup_followup_move=move_name,
+        setup_followup_type=str(attack.get("Type") or ""),
+        setup_followup_score=boosted_score,
+        setup_followup_base_score=base_score,
+        setup_followup_effectiveness=float(get_type_multiplier(str(attack.get("Type") or ""), get_effective_pokemon_types(opponent))),
+        setup_followup_likely_ohko=bool(boosted_ko[0]),
         pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
         lead_move=setup_name, fit=fit, fit_rank=rank,
         summary=f"{setup_name} → {move_name}", reason=detail,
@@ -1009,7 +1375,7 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
         strategy_branch="setup_offense", action_type="Offensive Setup", plan_role="Setup Sweeper",
         fit_explanation=(f"{setup_name} enables {move_name} ({base_score:.2f} → {boosted_score:.2f}). "
                          + ("Speed advantage gained. " if flip else "")
-                         + "Check HP before boosting."),
+                         + "Check HP before boosting." + safety_comparison),
         sequence_heading=f"{name} → {setup_name} → {move_name}",
         state_assumption="No stat boosts are assumed active at entry.",
         fallback_if_assumption_fails="If setup is unsafe or interrupted, use the named direct fallback.",
@@ -1955,7 +2321,7 @@ def build_battle_compass_view_model(
             fallback_reason = "Setup Offense uses Strongest Matchup for modeled doubles and Dynamax opponents."
             why_text = f"{fallback_reason} {direct_why_text}".strip()
         else:
-            setup_result = _setup_offense_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            setup_result = _setup_offense_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules, battle_roster=battle_roster)
             if isinstance(setup_result, str):
                 fallback_reason = setup_result
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
@@ -1983,7 +2349,8 @@ def build_battle_compass_view_model(
             why_text = f"{fallback_reason} {direct_why_text}".strip()
         else:
             screen_plan, screen_name, screen_fallback = _screen_control_battle_plan(
-                team_data, opponent, matchup_results, moves_data, items, ability_rules
+                team_data, opponent, matchup_results, moves_data, items, ability_rules,
+                battle_roster=battle_roster,
             )
             if screen_plan is None:
                 fallback_reason = screen_fallback
@@ -2002,8 +2369,10 @@ def build_battle_compass_view_model(
                 # assumed screen from the explicit battle-state assumption.
                 if not screen_move:
                     assumption = selected_strategy_plan.state_assumption or ""
-                    screen_move = ("Light Screen" if "Light Screen" in assumption
-                                   else "Reflect" if "Reflect" in assumption else "")
+                    screen_move = ("Reflect" if "assumes Reflect was established" in assumption else
+                                   "Light Screen" if "assumes Light Screen was established" in assumption else
+                                   "Reflect" if "Reflect" in assumption else
+                                   "Light Screen" if "Light Screen" in assumption else "")
                 chosen_defender = recommendation.pokemon if recommendation is not None else None
                 screened = (
                     _screened_worst_incoming(
@@ -2020,14 +2389,23 @@ def build_battle_compass_view_model(
                     "Full Analysis retains the unscreened score."
                     if screened is not None else ""
                 )
-                why_text = " ".join(filter(None, (
-                    selected_strategy_plan.state_assumption,
-                    mitigation_text,
-                    selected_strategy_plan.action_detail,
-                    selected_strategy_plan.fallback_if_assumption_fails,
-                    f"Direct fallback if the screen is absent: {direct_name} → {direct_move_name or 'best attack' }.",
-                    "Full Analysis remains strategy-neutral for direct comparisons."
-                )))
+                if selected_strategy_plan.plan_kind == "screen_followup_assumed":
+                    # No new setup claim against a later opponent. The chosen
+                    # attacker is ranked without assuming the earlier screen.
+                    why_text = " ".join(filter(None, (
+                        selected_strategy_plan.action_detail,
+                        "The offensive recommendation does not depend on a screen being active.",
+                        "Full Analysis remains strategy-neutral for direct comparisons."
+                    )))
+                else:
+                    why_text = " ".join(filter(None, (
+                        selected_strategy_plan.state_assumption,
+                        mitigation_text,
+                        selected_strategy_plan.action_detail,
+                        selected_strategy_plan.fallback_if_assumption_fails,
+                        f"Direct fallback if the screen is absent: {direct_name} → {direct_move_name or 'best attack'}.",
+                        "Full Analysis remains strategy-neutral for direct comparisons."
+                    )))
     elif team_strategy != "strongest_matchup":
         fallback_reason = (
             "This strategy is selected for team-building analysis, but its live "

@@ -83,6 +83,12 @@ class RecommendationCard(ft.Container):
         condition_detail: str = "",
         show_move_score: bool = True,
         strategic_effectiveness_label: str | None = None,
+        setup_followup_move: str | None = None,
+        setup_followup_type_badge_src: str | None = None,
+        setup_followup_score: float | None = None,
+        setup_followup_base_score: float | None = None,
+        setup_followup_effectiveness: str | None = None,
+        setup_followup_likely_ohko: bool = False,
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -105,6 +111,12 @@ class RecommendationCard(ft.Container):
         self.condition_detail = condition_detail
         self.show_move_score = show_move_score
         self.strategic_effectiveness_label = strategic_effectiveness_label
+        self.setup_followup_move = setup_followup_move
+        self.setup_followup_type_badge_src = setup_followup_type_badge_src
+        self.setup_followup_score = setup_followup_score
+        self.setup_followup_base_score = setup_followup_base_score
+        self.setup_followup_effectiveness = setup_followup_effectiveness
+        self.setup_followup_likely_ohko = setup_followup_likely_ohko
 
         self.item_boosted = item_boosted
         self.held_item = held_item or "Held item"
@@ -458,6 +470,44 @@ class RecommendationCard(ft.Container):
                 ft.Text(self.score_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
                 ft.Row(controls=score_controls, spacing=8,
                        vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ])
+        if self.setup_followup_move and self.setup_followup_score is not None:
+            # This is the selected setup plan's attack, not a second direct
+            # recommendation. Keep its formatting consistent with move badges.
+            effectiveness = self.setup_followup_effectiveness or ""
+            if "No Effect" in effectiveness:
+                effect_color, effect_background = "#F87171", "#3B2026"
+            elif "Super Effective" in effectiveness or "4× Effective" in effectiveness:
+                effect_color, effect_background = "#7EE2A1", "#182A24"
+            elif "Not Very Effective" in effectiveness:
+                effect_color, effect_background = "#FACC15", "#3B3017"
+            else:
+                effect_color, effect_background = "#D1D5DB", "#303640"
+            controls.extend([
+                ft.Divider(color=BORDER_DEFAULT, height=1),
+                ft.Text("After Setup · Recommended Attack", size=TEXT_SIZE_BODY,
+                        color=TEXT_SECONDARY),
+                ft.Row(controls=[
+                    ft.Text(self.setup_followup_move, size=26,
+                            weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                    *([ft.Image(src=self.setup_followup_type_badge_src, height=24,
+                                fit=ft.BoxFit.CONTAIN)]
+                      if self.setup_followup_type_badge_src else []),
+                ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Text(f"Boosted Move Score: {self.setup_followup_score:.2f}",
+                        size=TEXT_SIZE_BODY_LARGE, weight=ft.FontWeight.BOLD,
+                        color=TEXT_PRIMARY),
+                *([ft.Container(
+                    content=ft.Text(effectiveness, size=TEXT_SIZE_BODY_LARGE,
+                                    weight=ft.FontWeight.BOLD, color=effect_color),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                    bgcolor=effect_background, border_radius=10,
+                )] if effectiveness else []),
+                *([ft.Text("Projected reliable OHKO", size=TEXT_SIZE_BODY,
+                           weight=ft.FontWeight.BOLD, color=SUCCESS)]
+                  if self.setup_followup_likely_ohko else []),
+                ft.Text("Conditional on successfully establishing the boost.",
+                        size=TEXT_SIZE_DETAIL, color=TEXT_MUTED),
             ])
         return ft.Column(controls=controls, spacing=9)
 

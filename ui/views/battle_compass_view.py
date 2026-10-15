@@ -2076,6 +2076,15 @@ class BattleCompassView:
             plan_role=plan_role,
             condition_detail=(selected_plan.condition_detail if selected_plan else ""),
             show_move_score=show_move_score,
+            setup_followup_move=(selected_plan.setup_followup_move if selected_plan else None),
+            setup_followup_type_badge_src=(self._type_badge_asset(selected_plan.setup_followup_type)
+                if selected_plan and selected_plan.setup_followup_type else None),
+            setup_followup_score=(selected_plan.setup_followup_score if selected_plan else None),
+            setup_followup_base_score=(selected_plan.setup_followup_base_score if selected_plan else None),
+            setup_followup_effectiveness=(get_effectiveness_label(
+                selected_plan.setup_followup_effectiveness, mode="offense")
+                if selected_plan and selected_plan.setup_followup_effectiveness is not None else None),
+            setup_followup_likely_ohko=(selected_plan.setup_followup_likely_ohko if selected_plan else False),
         )
 
         threat_score = recommendation.incoming_worst_score
