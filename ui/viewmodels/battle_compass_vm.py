@@ -727,13 +727,35 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
         assumption = (f"Conditional protection: {screen} may already be active; "
                       "the Compass cannot verify screen state. The attacking choice is evaluated without it.")
     if plan_kind == "screen_followup_assumed" and payoff:
+        # Recompute the incoming threat for this *attacker*, not the setter.
+        # This is an illustrative conditional defense calculation: we neither
+        # infer an active screen nor alter the outgoing attack/Full Analysis.
+        screened = (_screened_worst_incoming(
+            opponent, payoff_member, screen, moves_data, items, ability_rules
+        ) if payoff_member is not None else None)
+        unscreened_score = float(payoff.get("Incoming Worst Score") or 0)
+        unscreened_move = str(payoff.get("Worst Incoming Move") or "")
+        if screened is not None:
+            screened_move, screened_score = screened
+            threat_change = (
+                f"If {screen} remains active, projected Incoming Worst Score "
+                f"for {payoff_name}: {unscreened_score:.2f} without it → "
+                f"{screened_score:.2f} with it"
+                + (f"; worst modeled move becomes {screened_move}"
+                   if screened_move and screened_move != unscreened_move else "")
+                + ". "
+            )
+        else:
+            threat_change = ""
         # Later opponents are offensive follow-ups, not fresh screen-setting
         # opportunities. Screen state is unknown; never repeat setter steps.
         detail = (f"{payoff_name} is the preferred attacker against "
                   f"{opponent.get('Pokemon', 'this opponent')} with {payoff_move}. "
-                  f"If {screen} remains active, it provides additional protection "
-                  f"against {'physical' if screen == 'Reflect' else 'special'} attacks. "
-                  "If it has expired, consider renewing it when safe.")
+                  + threat_change
+                  + (f"{screen} can reduce relevant "
+                     f"{'physical' if screen == 'Reflect' else 'special'} attacks, "
+                     "but the Compass cannot verify that it is active. "
+                     "If it has expired, consider renewing it when safe."))
     elif second_screen:
         detail = (f"{primary_purpose}{second_purpose} "
                   f"{setter} is projected to survive both setup turns in that order, "
@@ -797,24 +819,26 @@ def _screen_control_battle_plan(team_data, opponent, matchups, moves_data, items
             for enemy_move in enemy_moves:
                 plain = _screen_damage_max(opponent, payoff_member, enemy_move,
                                            set(), items, ability_rules)
-                screened = _screen_damage_max(opponent, payoff_member, enemy_move,
-                                              {screen}, items, ability_rules)
-                if plain is not None and screened is not None:
+                screened_hit = _screen_damage_max(opponent, payoff_member, enemy_move,
+                                                  {screen}, items, ability_rules)
+                if plain is not None and screened_hit is not None:
                     unscreened_max.append(plain)
-                    screened_max.append(screened)
+                    screened_max.append(screened_hit)
         hp = float(get_stat(payoff_member, "HP")) if payoff_member else 0.0
         screen_rescues = bool(unscreened_max and hp > 0 and
                               max(unscreened_max) >= hp and max(screened_max) < hp)
-        if screen_rescues:
-            explanation = (f"{payoff_name} is an offensive choice whose modeled survival "
-                           f"improves enough under {screen} to withstand the strongest "
-                           "known incoming attack. This protection is conditional; "
-                           "the screen does not increase attack damage.")
+        # Keep Strategic Fit scannable. The full conditional discussion and
+        # screen-specific threat details remain in Why this Pokémon.
+        if screened is not None:
+            _, screened_score = screened
+            threat_brief = (f"{screen} (if active): Incoming Worst Score "
+                            f"{unscreened_score:.2f} → {screened_score:.2f}.")
         else:
-            explanation = (f"{payoff_name} is selected for its direct offense. "
-                           f"{screen} offers additional protection against "
-                           f"{covered_category.lower()} attacks if active; "
-                           "its offensive damage is unchanged.")
+            threat_brief = f"{screen} offers conditional protection."
+        if screen_rescues:
+            explanation = f"Screen may prevent a modeled KO. {threat_brief}"
+        else:
+            explanation = f"Direct attacker. {threat_brief}"
     else:
         explanation = (f"{'Prankster priority' if priority else 'Modeled survival'} supports {screen}. "
                        + (f"{payoff_name} offers a favorable follow-up. " if strong_payoff else "Follow-up is less secure. ")
@@ -1159,6 +1183,13 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
         if incoming_move is None:
             continue
         _, worst_max = calculate_damage_range(opponent, member, incoming_move, items, ability_rules)
+        # When every known incoming damaging attack is ineffective, the matchup
+        # engine correctly reports IWS=0. Its worst-move fallback may be a
+        # status move (e.g. Duosion's Light Screen); Status has no HP damage
+        # range, but that is a *safe* setup opening, not an unknown threat.
+        # Preserve conservative rejection of unknown damage for nonimmune rows.
+        if worst_max is None and incoming <= 0:
+            worst_max = 0.0
         if worst_max is None or float(worst_max) >= hp:
             continue
         own_speed = float(get_stat(member, "SPE")) * float(get_item_speed_multiplier(member, items))
@@ -1260,42 +1291,65 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
             if total_exposure >= hp:
                 continue
             setup_safety = max(0.0, 1.0 - total_exposure / hp)
-            # Banded payoff: a <5% scoring distinction is not a meaningful
-            # reason to prefer a substantially less safe setup opportunity.
-            # Credible OHKO/sweep outcomes remain the primary criteria.
-            score = (max(boosted_ko[0], direct_ko[0]),
-                     boosted_ko[0],
-                     sweep_ohkos,
-                     sweep_coverage,
-                     setup_safety,
-                     float(row.get("Ratio") or 0),
-                     boosted_score)
+            # Safety is the entry requirement; the ranking next compares
+            # current-opponent offense, then the surviving HP margin. Sweep
+            # potential belongs at the end as a tie-break, never ahead of
+            # a better setup opportunity against the current opponent.
+            score = (setup_safety, boosted_ko[0], direct_ko[0],
+                     boosted_score, float(row.get("Ratio") or 0),
+                     sweep_ohkos, sweep_coverage)
             candidates.append((score, member, setup_name, attack, row, boosted_score,
                                base_score, speed_flip, own_speed, opponent_speed,
                                speed_after, risk_ratio, uncertain_weather))
     if not candidates:
         return "No safe, worthwhile one-turn offensive setup was modeled. Use the strongest direct matchup."
-    # Compare truly different payoff tiers first. For broadly equivalent
-    # boosted attacks (<5%), setup survival and defensive matchup break ties.
-    # A pairwise comparator avoids arbitrary score-bin boundaries.
+    # Complete-sequence survival is a hard eligibility gate above. For choosing
+    # among survivors, compare the cost of establishing the boost (one incoming
+    # hit), NOT the total two-turn HP budget. A slower sweeper may need to
+    # withstand a second hit to act; that hit must be survivable, but must not
+    # count as a second setup-turn penalty when comparing opening opportunities.
+    #
+    # Keep contenders whose opening exposure is close to the safest candidate.
+    # When a safer opening is clearly available, do not trade it for a speculative
+    # sweep target or a marginally stronger attack.
+    best_opening_risk = min(float(entry[11]) for entry in candidates)
+    safety_peers = [entry for entry in candidates
+                    if float(entry[11]) <= best_opening_risk + 0.10]
+
+    def setup_payoff_key(entry):
+        score, mon, _, attack, row, boosted, *_ = entry
+        return (score[1],                 # supported boosted OHKO
+                score[2],                 # supported direct OHKO
+                boosted,                  # current opponent offense
+                float(row.get("Ratio") or 0),
+                -float(entry[11]))        # setup-turn safety on close offenses
+
+    # OHKO tiers matter, but a marginal boost in Move Score must not outrank
+    # substantially better direct defenses. Close boosted attacks (within 5%)
+    # are resolved by the direct ratio, then opening exposure.
     from functools import cmp_to_key
-    def compare_setup_candidates(left, right):
-        la, rb = left[0], right[0]
-        for index in range(4):  # KO promotion, boosted KO, sweep OHKOs, coverage
-            if la[index] != rb[index]:
-                return 1 if la[index] > rb[index] else -1
+    def compare_close_payoffs(left, right):
+        lk, rk = setup_payoff_key(left), setup_payoff_key(right)
+        for index in (0, 1):
+            if lk[index] != rk[index]:
+                return (lk[index] > rk[index]) - (lk[index] < rk[index])
         ls, rs = float(left[5]), float(right[5])
         if max(ls, rs) > 0 and abs(ls - rs) / max(ls, rs) >= 0.05:
-            return 1 if ls > rs else -1
-        # Re-evaluate the expected number of turns of exposure, not IWS.
-        # Stored score safety is normalized to the member's modeled HP.
-        for index in (4, 5):  # setup safety, direct matchup
-            if abs(la[index] - rb[index]) > (0.03 if index == 4 else 0.05):
-                return 1 if la[index] > rb[index] else -1
-        return (ls > rs) - (ls < rs)
+            return (ls > rs) - (ls < rs)
+        if abs(lk[3] - rk[3]) > 0.05:
+            return (lk[3] > rk[3]) - (lk[3] < rk[3])
+        if abs(lk[4] - rk[4]) > 0.03:
+            return (lk[4] > rk[4]) - (lk[4] < rk[4])
+        # Future sweep potential is a final tiebreaker, never a first-order goal.
+        for index in (5, 6):
+            a, b = left[0][index], right[0][index]
+            if a != b:
+                return (a > b) - (a < b)
+        return (lk[4] > rk[4]) - (lk[4] < rk[4])
+
     (score, member, setup_name, attack, row, boosted_score, base_score,
      flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(
-         candidates, key=cmp_to_key(compare_setup_candidates))
+         safety_peers, key=cmp_to_key(compare_close_payoffs))
     name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
     # Explain a meaningful safety-led decision when boosted offense is close.

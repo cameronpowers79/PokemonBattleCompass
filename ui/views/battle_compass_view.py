@@ -469,10 +469,14 @@ class BattleCompassView:
                 ),
                 ft.Text("Current Team Readiness: " + viability.viability,
                         size=12, color=TEXT_MUTED),
-                ft.Text(viability.summary, size=13, color=TEXT_PRIMARY),
                 ft.Text("Planned Strategy Readiness: " + planned_viability.viability,
                         size=13, weight=ft.FontWeight.BOLD,
                         color=self._strategy_viability_color(planned_viability.viability)),
+                # The two snapshots often give identical missing-requirement
+                # explanations. Show that text once instead of duplicating it.
+                ft.Text(viability.summary, size=13, color=TEXT_PRIMARY)
+                if viability.summary != planned_viability.summary
+                else ft.Container(),
                 ft.Text(planned_viability.summary, size=12, color=TEXT_SECONDARY),
                 ft.Text("Counted in plan: " + (", ".join(self._strategy_member_display(p) for p in projected_members) or "none")
                         + (f" ({omitted_count} planned selection(s) beyond six; see planning details)" if omitted_count else ""),
