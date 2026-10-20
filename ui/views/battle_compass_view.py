@@ -23,6 +23,7 @@ from ui.components.other_strong_options import (
     StrongOptionNote,
 )
 from ui.components.recommendation_card import RecommendationCard
+from engine.base_stats_registry import base_stat_profiles
 from engine.mechanics import get_effective_pokemon_types
 from engine.learnsets import supported_strategy_move_methods
 from engine.strategy_capabilities import (
@@ -793,8 +794,16 @@ class BattleCompassView:
                                       None, strategy_key, from_dialog=False, page_index=i))),
                 ], spacing=10))
         else:
-            controls.append(ft.Text("Six lineup slots are occupied. Edit the Team Planner "
-                                    "to change the lineup before adding more Pokémon.", color=TEXT_MUTED))
+            controls.append(ft.Container(
+                content=ft.Text(
+                    "Your projected lineup is full (6/6). The Recommender counts active-party "
+                    "Pokémon in My Team first, then available Team Planner choices. To free a "
+                    "slot, move an active Pokémon into the Box using My Team, or remove a "
+                    "planned Pokémon from Team Planner in My Journey. Boxing preserves the "
+                    "Pokémon and its moves; Team Planner changes never affect My Team or Box.",
+                    color=TEXT_SECONDARY, size=13),
+                padding=12, bgcolor=SURFACE_RAISED,
+                border=ft.Border.all(1, BORDER_DEFAULT), border_radius=10))
         self.page.show_dialog(ft.AlertDialog(
             modal=True, title=ft.Text(f"Build toward {definition.label}",
                 weight=ft.FontWeight.BOLD, font_family=FONT_FAMILY_HEADER,
@@ -810,6 +819,34 @@ class BattleCompassView:
         move_type = str(self.move_lookup.get(name, {}).get("Type") or "")
         badge_src = self._type_badge_asset(move_type) if move_type else None
         return strategy_move_card(name, move_type, badge_src, width=174)
+
+    def _strategy_base_stat_display(self, pokemon_name: str) -> ft.Control:
+        match = re.search(r"\((Male|Female)\)$", pokemon_name, re.IGNORECASE)
+        species = re.sub(r"\s*\((Male|Female)\)$", "", pokemon_name, flags=re.IGNORECASE)
+        candidate = self._strategy_candidate_record(
+            self._strategy_catalog_record_for_name(species) or {"pokemon": species})
+        if match:
+            candidate["Gender"] = match.group(1).title()
+        profiles = base_stat_profiles(candidate)
+        if not profiles:
+            return ft.Text("Base stats unavailable for this form.", size=12, color=TEXT_MUTED)
+        form_name, stats = profiles[0]
+        entries = []
+        for key, label in (("HP", "HP"), ("ATK", "Atk"), ("DEF", "Def"),
+                           ("SPA", "SpA"), ("SPD", "SpD"), ("SPE", "Spe")):
+            entries.append(ft.Container(col={"xs": 12, "sm": 6}, content=ft.Row(controls=[
+                ft.Text(label, width=34, size=12, color=TEXT_SECONDARY),
+                ft.ProgressBar(value=stats[key]/255, expand=True, height=7,
+                               color=PRIMARY_BLUE, bgcolor=SURFACE),
+                ft.Text(str(stats[key]), width=30, size=12, color=TEXT_PRIMARY,
+                        text_align=ft.TextAlign.RIGHT)], spacing=8)))
+        heading = f"Base stats · BST {sum(stats.values())}"
+        if len(profiles) > 1:
+            heading += f" · {form_name.replace('-', ' ').title()} (other forms vary)"
+        return ft.Column(controls=[ft.Text(heading, size=12, color=TEXT_SECONDARY,
+                                           weight=ft.FontWeight.BOLD),
+                                   ft.ResponsiveRow(controls=entries, spacing=8, run_spacing=6)],
+                         spacing=7, tight=True)
 
     def _build_strategy_recommendation_row(
         self, summary: str, button_text: str, on_click,
@@ -832,6 +869,7 @@ class BattleCompassView:
         details = ft.Column(controls=[
             heading,
             ft.Text(summary, size=13, color=TEXT_SECONDARY),
+            *([self._strategy_base_stat_display(pokemon_name)] if pokemon_name else []),
             ft.Button(content=button_text, icon=ft.Icons.ADD_ROUNDED,
                       bgcolor=PRIMARY_BLUE, color="#FFFFFF", icon_color="#FFFFFF", on_click=on_click),
         ], spacing=8, tight=True, expand=True)

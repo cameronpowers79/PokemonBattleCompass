@@ -2740,6 +2740,30 @@ class AppState:
 
 
 
+    async def remove_planned_pokemon_completely(self, pokemon_id: str) -> bool:
+        """Atomically remove one *planner* instance. Never modify team or box."""
+        if self.journey is None:
+            return False
+        state = deepcopy(self.my_journey_data)
+        if pokemon_id not in state["planned_pokemon_ids"]:
+            return False
+        state["planned_pokemon_ids"] = [pid for pid in state["planned_pokemon_ids"]
+                                         if pid != pokemon_id]
+        state["planned_moves"].pop(pokemon_id, None)
+        state["planned_pokemon_forms"].pop(pokemon_id, None)
+        state["pokemon_objectives"] = [row for row in state["pokemon_objectives"]
+                                        if not (isinstance(row, dict) and row.get("id") == pokemon_id)]
+        old_state = deepcopy(self.journey.get("my_journey"))
+        self.journey["my_journey"] = state
+        try:
+            saved = await save_journey(self.storage, self.journey)
+        except (ValueError, TypeError):
+            self.journey["my_journey"] = old_state
+            raise
+        if not saved:
+            self.journey["my_journey"] = old_state
+        return saved
+
     async def save_planned_pokemon_ids(
 
         self,

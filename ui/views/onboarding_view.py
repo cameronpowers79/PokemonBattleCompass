@@ -44,6 +44,7 @@ from engine.strategy_capabilities import (
     strategy_move_guidance,
 )
 from engine.learnsets import supported_strategy_move_methods
+from engine.base_stats_registry import base_stat_profiles
 from ui.rendering import get_sprite_path
 from ui.strategy_ui import strategy_color
 
@@ -97,6 +98,7 @@ class OnboardingView:
         self.starter_retention = "keep"
         self.pending_strategy = "strongest_matchup"
         self.planned_team: list[dict] = []
+        self._onboarding_recommendation_page = 0
         self.weather_focus: str | None = None
         self.weather_intent = "auto"
         self._planning_catalog = self._load_planning_catalog()
@@ -825,6 +827,44 @@ class OnboardingView:
                             alignment=ft.Alignment.CENTER,
                             bgcolor=SURFACE, border_radius=12)
 
+    def _recommendation_base_stats(self, pokemon_name: str) -> ft.Control:
+        """Show species/form base stats without affecting recommendation scoring."""
+        match = re.match(r"^(.*?) \((Male|Female)\)$", pokemon_name)
+        species = match.group(1) if match else pokemon_name
+        gender = match.group(2) if match else None
+        candidate = self._candidate(self._planning_record(species) or {"pokemon": species})
+        if gender:
+            candidate["Gender"] = gender
+        profiles = base_stat_profiles(candidate)
+        if not profiles:
+            return ft.Text("Base stats unavailable for this form.", size=12, color=TEXT_SECONDARY)
+
+        # Dynamic form stats must not be combined into a fictitious best-of-six profile.
+        profile_name, stats = profiles[0]
+        labels = (("HP", "HP"), ("ATK", "Atk"), ("DEF", "Def"),
+                  ("SPA", "SpA"), ("SPD", "SpD"), ("SPE", "Spe"))
+        entries: list[ft.Control] = []
+        for key, label in labels:
+            value = stats[key]
+            entries.append(ft.Container(
+                col={"xs": 12, "sm": 6},
+                content=ft.Row(controls=[
+                    ft.Text(label, width=34, size=12, color=TEXT_SECONDARY),
+                    ft.ProgressBar(value=value / 255, expand=True, height=7,
+                                   color=PRIMARY_BLUE, bgcolor=SURFACE),
+                    ft.Text(str(value), width=30, size=12, color=TEXT_PRIMARY,
+                            text_align=ft.TextAlign.RIGHT),
+                ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ))
+        heading = f"Base stats · BST {sum(stats.values())}"
+        if len(profiles) > 1:
+            heading += f" · {profile_name.replace('-', ' ').title()} form (other form stats vary)"
+        return ft.Column(controls=[
+            ft.Text(heading, size=12, color=TEXT_SECONDARY,
+                    weight=ft.FontWeight.BOLD),
+            ft.ResponsiveRow(controls=entries, spacing=8, run_spacing=6),
+        ], spacing=7, tight=True)
+
     def _set_weather_focus(self, focus: str, intent: str = "auto") -> None:
         self.weather_focus = focus
         self.weather_intent = intent
@@ -889,7 +929,7 @@ class OnboardingView:
             if self.pending_strategy == "weather_control":
                 controls.extend(self._weather_planning_controls(capabilities))
             options = recommend_strategy_pokemon_additions(self.pending_strategy, capabilities, self._planning_options(),
-                                                            self.app_state.moves_data, self._planning_learnsets, limit=5,
+                                                            self.app_state.moves_data, self._planning_learnsets, limit=None,
                                                             weather_focus=self.weather_focus if self.pending_strategy == "weather_control" else None,
                                                             weather_intent=self.weather_intent if self.pending_strategy == "weather_control" else None,
                                                             planning_role=("beneficiary" if self.pending_strategy == "screen_control" and any(
@@ -900,10 +940,14 @@ class OnboardingView:
                 controls.append(ft.Text("Choose a weather above to see matched recommendations, or finish planning when you are ready." if self.pending_strategy == "weather_control" else "No further supported strategy contributors were found; remaining slots are yours for coverage and personal preferences.", color=TEXT_SECONDARY))
             else:
                 controls.append(ft.Text("Suggested next teammates (recalculated after each choice):", weight=ft.FontWeight.BOLD))
-                for item in options:
+                page_size = 5
+                max_page = max(0, (len(options) - 1) // page_size)
+                self._onboarding_recommendation_page = min(self._onboarding_recommendation_page, max_page)
+                for item in options[self._onboarding_recommendation_page * page_size:(self._onboarding_recommendation_page + 1) * page_size]:
                     details = ft.Column(controls=[
                         ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
                         ft.Text(item.summary, size=14, color=TEXT_SECONDARY),
+                        self._recommendation_base_stats(item.pokemon_name),
                         ft.Row(controls=[self._primary_button(
                             f"+ Plan {item.pokemon_name}",
                             lambda e, rec=item: self._add_planned(rec))]),
@@ -914,11 +958,86 @@ class OnboardingView:
                         ], spacing=18, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=16, bgcolor=SURFACE_RAISED,
                         border=ft.Border.all(1, "#354052"), border_radius=14))
+                if max_page:
+                    index = self._onboarding_recommendation_page
+                    controls.append(ft.Row(controls=[
+                        ft.Button(content="Previous 5", disabled=index == 0,
+                                  on_click=lambda e, i=index-1: self._show_onboarding_recommendation_page(i)),
+                        ft.Text(f"Page {index + 1} of {max_page + 1}"),
+                        ft.Button(content="Next 5", disabled=index >= max_page,
+                                  on_click=lambda e, i=index+1: self._show_onboarding_recommendation_page(i)),
+                    ], wrap=True, spacing=12))
+        if len(self.planned_team) < max_picks:
+            controls.append(ft.OutlinedButton(content="+ Choose My Own Pokémon",
+                            on_click=lambda e: self._show_manual_pokemon_picker()))
         controls.append(ft.Row(controls=[
             ft.Button(content="Back", on_click=lambda e: self._back_to_strategy()),
             self._primary_button("Review and Confirm", lambda e: self._show_plan_review()),
         ], wrap=True))
         return self._onboarding_panel("Build your future team", controls)
+
+    def _show_onboarding_recommendation_page(self, page_index: int) -> None:
+        self._onboarding_recommendation_page = max(0, page_index)
+        self.content_host.content = self._build_team_planning()
+        self.page.update()
+
+    def _show_manual_pokemon_picker(self) -> None:
+        """Choose a catalog species independently of its strategy ranking."""
+        options = self._planning_options()
+        display_names = []
+        for record in options:
+            label = str(record.get("Pokemon") or "")
+            if record.get("Gender"):
+                label += f" ({record['Gender']})"
+            display_names.append(label)
+        display_names = sorted(set(display_names), key=str.casefold)
+        picker = ft.Dropdown(label="Pokémon to plan", width=420,
+            options=[ft.DropdownOption(key=name, text=name) for name in display_names])
+        ability_picker = ft.Dropdown(label="Ability (optional)", width=420, options=[])
+        def update_abilities(event=None):
+            name = str(picker.value or "")
+            candidate = self._planned_candidate({"name": name})
+            try:
+                from engine.ability_registry import eligible_abilities
+                from engine.pokemon_identity import resolve_pokemon_id
+                pokemon_id = resolve_pokemon_id(candidate.get("Pokemon"), gender=candidate.get("Gender"),
+                                                form=candidate.get("Form"))
+                abilities = eligible_abilities(pokemon_id) if pokemon_id else ()
+                labels = [str(x) for x in abilities]
+            except (TypeError, ValueError, KeyError):
+                labels = []
+            ability_picker.options = [ft.DropdownOption(key=x, text=x) for x in labels]
+            ability_picker.value = None
+            self.page.update()
+        picker.on_select = update_abilities
+        def add(event):
+            name = str(picker.value or "")
+            if name not in display_names:
+                return
+            self.page.pop_dialog()
+            self._append_planned_selection(name, str(ability_picker.value or ""))
+        self.page.show_dialog(ft.AlertDialog(modal=True,
+            title=ft.Text("Choose your own teammate"),
+            content=ft.Column(controls=[
+                ft.Text("Select any eligible Pokémon from the Journey catalog. Strategy suggestions are optional."),
+                picker, ability_picker], spacing=12, tight=True),
+            actions=[ft.Button(content="Cancel", on_click=lambda e: self.page.pop_dialog()),
+                     self._primary_button("Plan Pokémon", add)]))
+
+    def _append_planned_selection(self, name: str, ability: str = "") -> None:
+        if name not in {str(r.get("Pokemon") or "") +
+            (f" ({r['Gender']})" if r.get("Gender") else "") for r in self._planning_options()}:
+            return
+        self.planned_team.append({"name": name, "ability": ability, "moves": None,
+            "weather_role": self.weather_intent if self.pending_strategy == "weather_control" else None,
+            "weather_focus": self.weather_focus if self.pending_strategy == "weather_control" else None,
+            "screen_role": ("beneficiary" if self.pending_strategy == "screen_control" and any(
+                "DUAL_SCREEN" in x.capability_keys for x in self._planning_capabilities()) else "setter")})
+        if self.pending_strategy == "weather_control" and self.weather_focus and self.weather_intent == "setter":
+            self.weather_intent = "beneficiary"
+        self._onboarding_recommendation_page = 0
+        self.content_host.content = self._build_team_planning()
+        self.page.update()
 
     def _back_to_strategy(self):
         self.content_host.content = self._build_strategy_choice()
@@ -926,21 +1045,15 @@ class OnboardingView:
 
     def _remove_planned(self, name: str):
         self.planned_team = [s for s in self.planned_team if s["name"] != name]
+        self._onboarding_recommendation_page = 0
         self.content_host.content = self._build_team_planning()
         self.page.update()
 
     def _add_planned(self, recommendation):
-        name = recommendation.pokemon_name
         ability = re.search(r"Recommended Ability: ([^.]+)", recommendation.summary)
-        self.planned_team.append({"name": name, "ability": ability.group(1).split(" (")[0] if ability else "", "moves": None,
-                                  "weather_role": self.weather_intent if self.pending_strategy == "weather_control" else None,
-                                  "weather_focus": self.weather_focus if self.pending_strategy == "weather_control" else None,
-                                  "screen_role": ("beneficiary" if self.pending_strategy == "screen_control" and any(
-                                      "DUAL_SCREEN" in x.capability_keys for x in self._planning_capabilities()) else "setter")})
-        if self.pending_strategy == "weather_control" and self.weather_focus and self.weather_intent == "setter":
-            self.weather_intent = "beneficiary"
-        self.content_host.content = self._build_team_planning()
-        self.page.update()
+        self._append_planned_selection(
+            recommendation.pokemon_name,
+            ability.group(1).split(" (")[0] if ability else "")
 
     def _planned_move_guidance(self, selection: dict, candidate: dict):
         # Carry the player's weather package intent into shared move guidance.

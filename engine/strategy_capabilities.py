@@ -1218,7 +1218,14 @@ def _role_stat_bonus(strategy_key: str, pokemon: dict, names: set[str], caps: se
         if not (hex_combo or venom_combo):
             return 0.0
         stats = role_base_stats(pokemon, "special")
-        return min(110.0, max(0.0, (stats["SPA"] - 50) * 1.05)) if stats else 0.0
+        if not stats:
+            return 0.0
+        payoff_bonus = min(110.0, max(0.0, (stats["SPA"] - 50) * 1.05))
+        # Fast status delivery is useful, but secondary to actual status/payoff.
+        # Reward Speed only when this Pokemon can establish its own status.
+        # At base 110 Speed this adds 10 points, versus the much larger SpA bonus.
+        speed_bonus = min(15.0, max(0.0, (stats["SPE"] - 70) * 0.25)) if status else 0.0
+        return payoff_bonus + speed_bonus
     if key == "setup_offense":
         phys = role_base_stats(pokemon, "physical") if "PHYSICAL_SETUP" in caps else None
         spec = role_base_stats(pokemon, "special") if "SPECIAL_SETUP" in caps else None

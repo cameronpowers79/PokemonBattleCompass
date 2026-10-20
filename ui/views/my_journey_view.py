@@ -4076,6 +4076,7 @@ class MyJourneyView:
         )
         impact_lines = [
             "This will remove its Current Objective and map marker.",
+            "Strategy projections and related Journey Checklist item requirements may change.",
             (
                 "Your acquired Pokémon data in My Team or My Box "
                 "will not be deleted."
@@ -4086,8 +4087,8 @@ class MyJourneyView:
         if any(slot is not None for slot in planned_move_slots):
             impact_lines.append(
                 (
-                    "Its saved Move Planner row will be hidden, not deleted; "
-                    "adding this Pokémon back later will restore it."
+                    "Its saved Move Planner moves will be deleted. Re-adding "
+                    "this Pokémon will start with an empty move plan."
                 )
             )
 
@@ -4225,37 +4226,21 @@ class MyJourneyView:
         )
 
     async def _remove_planned_pokemon(self, pokemon_id: str) -> None:
-        """Persist removal without deleting acquired Pokémon history."""
-
+        """Clear one planner entry and its moves atomically; never change owned Pokémon."""
         if pokemon_id not in self.planned_pokemon_ids:
             return
-
-        updated_ids = [
-            planned_id
-            for planned_id in self.planned_pokemon_ids
-            if planned_id != pokemon_id
-        ]
-        save_succeeded = await self.app_state.save_planned_pokemon_ids(
-            updated_ids
-        )
-        if not save_succeeded:
-            self._show_save_error(
-                "The Pokémon could not be removed from the Team Planner."
-            )
+        saved = await self.app_state.remove_planned_pokemon_completely(pokemon_id)
+        if not saved:
+            self._show_save_error("The Pokémon could not be removed from Team Planner.")
             return
-
-        self.planned_pokemon_ids = updated_ids
-        if pokemon_id in self.planned_pokemon_forms:
-            updated = deepcopy(self.planned_pokemon_forms)
-            updated.pop(pokemon_id, None)
-            if await self.app_state.save_planned_pokemon_forms(updated):
-                self.planned_pokemon_forms = updated
+        self.planned_pokemon_ids = list(self.app_state.my_journey_data["planned_pokemon_ids"])
+        self.planned_moves = deepcopy(self.app_state.my_journey_data["planned_moves"])
+        self.planned_pokemon_forms = deepcopy(self.app_state.my_journey_data["planned_pokemon_forms"])
         if self._selected_map_objective_id == f"pokemon:{pokemon_id}":
             self._selected_map_objective_id = None
             self._selected_marker_y = None
             self._selected_marker_scroll_key = None
             self._selected_marker_anchor_key = None
-
         self._reload_planner_dependencies()
         self._refresh()
 
@@ -4917,6 +4902,12 @@ class MyJourneyView:
                 italic=True,
             )
         ]
+
+        body_controls.append(ft.Text(
+            "To remove a Pokémon from Move Planner, remove it from Team Planner above. "
+            "This also clears its saved moves and may change strategy projections and "
+            "related Journey Checklist requirements. Your My Team and Box are unaffected.",
+            size=12, color=TEXT_SECONDARY, italic=True))
 
         if rows:
             body_controls.extend([
