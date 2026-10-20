@@ -1146,13 +1146,195 @@ def _status_control_battle_plan(team_data, opponent, matchups, moves_data, items
     ), projected
 
 
-def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None):
+def _enemy_setup_followup_is_lethal(opponent, member, planned_attack, our_setup,
+                                    boosted_member, moves_data, items, ability_rules,
+                                    own_speed, speed_after, enemy_speed,
+                                    uncertain_weather):
+    """Reject setups exposed to a credible enemy boost-then-lethal-hit branch.
+
+    We do not charge a Speed-stage change as danger on its own. Only a damaging
+    follow-up that can move before our attack can veto the setup.
+    """
+    from engine.calculations import calculate_damage_range
+    enemy_moves = get_moves(opponent, moves_data)
+    lookup = _build_move_lookup(moves_data)
+    hp = float(get_stat(member, "HP") or 0)
+    if hp <= 0:
+        return True
+    for move in enemy_moves:
+        status = {**move, **lookup.get(str(move.get("Move") or ""), {})}
+        if status.get("Category") != "Status" or status.get("StageChangeTarget") != "User":
+            continue
+        boosts = {stat: float(status.get(field) or 0) for stat, field in
+                  (("ATK", "AtkStageChange"), ("SPA", "SpAStageChange"),
+                   ("SPE", "SpeStageChange"))}
+        if boosts["ATK"] <= 0 and boosts["SPA"] <= 0:
+            continue
+        boosted_foe = dict(opponent)
+        for stat, stage in boosts.items():
+            if stage > 0:
+                boosted_foe[stat] = float(get_stat(opponent, stat)) * (2 + stage) / 2
+        foe_after = enemy_speed * ((2 + boosts["SPE"]) / 2 if boosts["SPE"] > 0 else 1)
+        priority = float(planned_attack.get("Priority") or 0)
+        enemy_first = priority < 0 or (priority == 0 and
+                       (uncertain_weather or foe_after >= speed_after))
+        if not enemy_first:
+            continue
+        for attack in enemy_moves:
+            if attack.get("Category") not in {"Physical", "Special"}:
+                continue
+            _, high = calculate_damage_range(boosted_foe, member, attack,
+                                             items, ability_rules)
+            if high is not None and float(high) >= hp:
+                return True
+    return False
+
+
+def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
+                               moves_data, items, ability_rules, battle_roster=None):
+    """Conditional, conservative continuation of the lead's single setup turn."""
+    from engine.calculations import calculate_damage_range
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+    member = next((m for m in team_data
+                   if m.get("MemberID") == lead_plan.get("member_id")), None)
+    if member is None:
+        return None
+    setup = _build_move_lookup(moves_data).get(lead_plan.get("lead_move"), {})
+    projected = dict(member)
+    for stat, field in (("ATK", "AtkStageChange"), ("SPA", "SpAStageChange"),
+                        ("SPE", "SpeStageChange")):
+        stage = float(setup.get(field) or 0)
+        if stage > 0:
+            projected[stat] = float(get_stat(member, stat)) * (2 + stage) / 2
+    options = []
+    for attack in get_moves(member, moves_data):
+        if attack.get("Category") not in {"Physical", "Special"}:
+            continue
+        boosted_score = float(calculate_move_score(projected, opponent, attack,
+                                                   items, ability_rules))
+        if boosted_score <= 0:
+            continue
+        low, high = calculate_damage_range(projected, opponent, attack,
+                                           items, ability_rules)
+        options.append((boosted_score, float(low or 0), attack))
+    if not options:
+        return None
+    boosted_score, min_damage, attack = max(options, key=lambda t: t[0])
+    # No invented boost count; the one lead setup turn is the *only* assumption.
+    # Use real HP damage for survivability and never claim an OHKO from MoveScore.
+    hp = float(get_stat(member, "HP") or 0)
+    worst = 0.0
+    for move in get_moves(opponent, moves_data):
+        if move.get("Category") not in {"Physical", "Special"}:
+            continue
+        _, maximum = calculate_damage_range(opponent, member, move, items, ability_rules)
+        if maximum is not None:
+            worst = max(worst, float(maximum))
+    if hp <= 0 or worst >= hp:
+        return None
+    name = pokemon_display_name(member)
+    move_name = str(attack.get("Move") or "")
+    direct = float(calculate_move_score(member, opponent, attack, items, ability_rules))
+    target_hp = float(get_stat(opponent, "HP") or 0)
+    likely_ko = bool(target_hp > 0 and min_damage >= 1.10 * target_hp)
+    # Retain the lead plan's named sweep projection on continuation cards.
+    # Each other roster member is evaluated independently; no order or extra
+    # setup turns are assumed. This is descriptive, not a ranking modifier.
+    from engine.calculations import OHKO_RECOMMENDATION_CONFIDENCE
+    sweep_targets = []
+    for future in [opponent, *_other_battle_opponents(opponent, battle_roster)]:
+        future_hp = float(get_stat(future, "HP") or 0)
+        if future_hp <= 0:
+            continue
+        best = None
+        for future_move in get_moves(member, moves_data):
+            if future_move.get("Category") not in {"Physical", "Special"}:
+                continue
+            low, _ = calculate_damage_range(projected, future, future_move,
+                                            items, ability_rules)
+            if low is not None and float(low) >= OHKO_RECOMMENDATION_CONFIDENCE * future_hp:
+                score = float(calculate_move_score(projected, future, future_move,
+                                                   items, ability_rules))
+                if best is None or score > best[0]:
+                    best = (score, str(future_move.get("Move") or ""))
+        if best:
+            sweep_targets.append(f"{future.get('Pokemon', 'opponent')} ({best[1]})")
+    sweep_note = (f" Sweep potential: With {lead_plan['lead_move']} active, {name} has projected "
+                  f"OHKOs against {_screen_name_list(sweep_targets)}."
+                  if sweep_targets else "")
+    assumption = (f"Conditional continuation: if {name} established {lead_plan['lead_move']} "
+                  "against the lead and has remained in battle, preserve the boost. "
+                  "The Compass cannot verify current HP, stages, or who is active.")
+    return dict(
+        member_id=member.get("MemberID"), pokemon_name=name,
+        recommended_pokemon_name=name, lead_pokemon_name=name,
+        lead_move=move_name, fit="Strong" if likely_ko else "Viable",
+        fit_rank=3 if likely_ko else 2,
+        summary=f"Continue sweep with {move_name}",
+        reason=f"Keep the lead's setup investment; use {move_name} without another setup turn.",
+        action=f"Continue {name}'s sweep", action_detail=(
+            f"Assuming {lead_plan['lead_move']} has been used and its boosts are still active, use {move_name}. "
+            f"Projected boosted Move Score {boosted_score:.2f} (unboosted {direct:.2f}). "
+            "Switching removes stat boosts." + sweep_note),
+        plan_kind="offensive_setup_continuation", can_override_direct=True,
+        strategy_branch="setup_offense", action_type="Offensive Payoff",
+        plan_role="Established Sweeper", sequence_heading=f"{name} → {move_name}",
+        state_assumption=assumption, condition_detail=assumption,
+        fallback_if_assumption_fails=("If this Pokémon did not establish the boost, "
+                                     "was switched out, or is too damaged, use the direct fallback."),
+        setup_followup_move=move_name,
+        setup_followup_type=str(attack.get("Type") or ""),
+        setup_followup_score=boosted_score,
+        setup_followup_base_score=direct,
+        setup_followup_effectiveness=float(get_type_multiplier(
+            str(attack.get("Type") or ""), get_effective_pokemon_types(opponent))),
+        setup_followup_likely_ohko=likely_ko,
+        attack_move_score=boosted_score, attack_score_conditional=True,
+        fit_explanation=(f"Established one-turn {lead_plan['lead_move']} boost; "
+                         "continuation is conditional on actual battle state."),
+        opener_threat_move=None, opener_threat_category=None,
+        opener_threat_type=None, opener_threat_score=0.0,
+        opener_threat_multiplier=1.0,
+    )
+
+
+def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None, *, _lead_only=False):
     """Model an equipped self-boost followed by that same Pokémon's attack.
 
     Project one setup turn only. No boosts are transferred to teammates or
     inferred from earlier opponents. Full Analysis remains unboosted.
     """
     from engine.mechanics import get_item_speed_multiplier, get_guaranteed_weather
+    # Later opponents are primarily a continuation decision, NOT an invitation
+    # to spend another turn setting up with a different Pokémon. Reconstruct the
+    # lead plan from the static roster, with an explicit conditional assumption:
+    # the player followed the plan and the original sweeper retains its boost.
+    if not _lead_only and str(opponent.get("Slot") or "") not in {"1", "1.0"}:
+        lead = next((foe for foe in (battle_roster or [])
+                     if str(foe.get("Trainer") or "") == str(opponent.get("Trainer") or "")
+                     and str(foe.get("Battle") or "") == str(opponent.get("Battle") or "")
+                     and str(foe.get("Slot") or "") in {"1", "1.0"}), None)
+        if lead is not None:
+            lead_matchups = evaluate_team_matchups(team_data, lead, items, ability_rules, moves_data)
+            lead_plan = _setup_offense_battle_plan(
+                team_data, lead, lead_matchups, moves_data, items, ability_rules,
+                battle_roster=battle_roster, _lead_only=True)
+            if isinstance(lead_plan, dict):
+                continuing = _setup_sweep_continuation(
+                    lead_plan, team_data, opponent, matchups, moves_data, items,
+                    ability_rules, battle_roster=battle_roster)
+                if continuing is not None:
+                    return continuing
+                # A genuine inability to continue is an explicit break of the
+                # sweep, not another arbitrary fresh setup recommendation.
+                return ("The planned lead sweeper cannot safely or effectively continue "
+                        "against this opponent. Its earlier boost may need to be abandoned; "
+                        "use Strongest Matchup and reassess the field.")
+            # A lead that required direct fallback never established a modeled
+            # setup plan. Do not fabricate one on subsequent roster members.
+            return ("No safe Setup Offense opener was established for this battle's "
+                    "lead. Use Strongest Matchup rather than assuming a fresh "
+                    "setup on this later opponent.")
     by_name = _matchup_index(matchups)
     opponent_speed = float(get_stat(opponent, "SPE")) * float(get_item_speed_multiplier(opponent, items))
     weather = get_guaranteed_weather({}, opponent)
@@ -1265,7 +1447,17 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
                 future_keys = [_offensive_payoff_key(boosted_member, future, m,
                                items, ability_rules) for m in moves_future]
                 best_future = max(future_keys)
-                sweep_ohkos += best_future[0]
+                # Sweep continuation is not required to outspeed: a slower
+                # boosted attacker may survive and KO. Use actual damage and
+                # the supported conservative 110% threshold.
+                future_hp = float(get_stat(future, "HP") or 0)
+                if future_hp > 0:
+                    for future_move in moves_future:
+                        low, _ = calculate_damage_range(boosted_member, future,
+                                                        future_move, items, ability_rules)
+                        if low is not None and float(low) >= 1.10 * future_hp:
+                            sweep_ohkos += 1
+                            break
                 sweep_coverage += best_future[2] > 0
             # Survival is a prerequisite, not merely a late tie-break.
             # If the foe strikes before our boosted follow-up, we must weather
@@ -1289,6 +1481,15 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
             # Risk model deliberately does not assume healing, screens, or
             # opponent move choice. Don't advertise unsafe setup sequences.
             if total_exposure >= hp:
+                continue
+            # Enemy status setup can create an enhanced second-turn attack.
+            # Evaluate the setup-then-attack branch separately; never combine
+            # two mutually exclusive attacks on turn one. Speed itself is not
+            # penalized: it matters only if the boosted attack can land first.
+            if _enemy_setup_followup_is_lethal(
+                opponent, member, attack, setup, boosted_member, moves_data,
+                items, ability_rules, own_speed, speed_after, opponent_speed,
+                uncertain_weather):
                 continue
             setup_safety = max(0.0, 1.0 - total_exposure / hp)
             # Safety is the entry requirement; the ranking next compares
@@ -1324,12 +1525,27 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
                 float(row.get("Ratio") or 0),
                 -float(entry[11]))        # setup-turn safety on close offenses
 
+    # The lead is an investment across the *battle*. Give future supported
+    # OHKOs real weight once the setup survived its safety gate. For non-leads
+    # we never prefer restarting setup if the established lead can continue.
+    if str(opponent.get("Slot") or "") in {"1", "1.0"}:
+        max_sweep = max(entry[0][5] for entry in safety_peers)
+        if max_sweep >= 2:
+            safety_peers = [entry for entry in safety_peers
+                            if entry[0][5] >= max_sweep - 1]
     # OHKO tiers matter, but a marginal boost in Move Score must not outrank
     # substantially better direct defenses. Close boosted attacks (within 5%)
     # are resolved by the direct ratio, then opening exposure.
     from functools import cmp_to_key
     def compare_close_payoffs(left, right):
         lk, rk = setup_payoff_key(left), setup_payoff_key(right)
+        if str(opponent.get("Slot") or "") in {"1", "1.0"}:
+            # Two or more additional projected KOs justify setting up for the
+            # battle instead of choosing a one-target setup attacker. No boost
+            # count implies an actual battle-state guarantee.
+            future_delta = left[0][5] - right[0][5]
+            if abs(future_delta) >= 2:
+                return (future_delta > 0) - (future_delta < 0)
         for index in (0, 1):
             if lk[index] != rk[index]:
                 return (lk[index] > rk[index]) - (lk[index] < rk[index])
@@ -1602,7 +1818,7 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         incoming_ranges = [(move, calculate_damage_range(opponent, member, move, items, ability_rules)) for move in incoming_moves]
         if any(upper is None for _, (_, upper) in incoming_ranges):
             continue
-        worst_max = max(float(upper) for _, (_, upper) in incoming_ranges)
+        worst_max = max(float(upper) for _, (_, upper) in incoming_ranges if upper is not None)
         if worst_max >= hp or worst_max / max(hp, 1) > 0.75:
             continue
         equipped = {str(member.get(f"Move{i}") or "") for i in range(1, 5)}
@@ -1796,7 +2012,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         if not result:
             continue
         known = _WEATHER_ABILITIES.get(str(setter.get('Ability') or ''))
-        options = [(known, None)] if known else []
+        options: list[tuple[str, str | None]] = [(known, None)] if known else []
         for move in get_moves(setter, moves_data):
             move_name = str(move.get('Move') or '')
             if move_name in _WEATHER_MOVES:
@@ -2437,11 +2653,11 @@ def build_battle_compass_view_model(
                 )
                 mitigation_text = (
                     f"With {screen_move} active, the Incoming Worst Move against "
-                    f"{pokemon_display_name(recommendation.pokemon)} is {screened[0]}, with an Incoming Worst "
+                    f"{pokemon_display_name(chosen_defender)} is {screened[0]}, with an Incoming Worst "
                     f"Score of {screened[1]:.2f}. "
                     "This assumes a single battle without a critical hit; "
                     "Full Analysis retains the unscreened score."
-                    if screened is not None else ""
+                    if screened is not None and chosen_defender is not None else ""
                 )
                 if selected_strategy_plan.plan_kind == "screen_followup_assumed":
                     # No new setup claim against a later opponent. The chosen
