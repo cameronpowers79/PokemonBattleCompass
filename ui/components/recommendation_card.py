@@ -421,15 +421,21 @@ class RecommendationCard(ft.Container):
                         weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
                 ft.Divider(color=BORDER_DEFAULT, height=1),
             ])
-        controls.extend([
-            ft.Text(self.move_panel_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
-            ft.Row(controls=[
-                ft.Text(self.best_move, size=TEXT_SIZE_HERO_MOVE,
-                        weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                *([self._build_tutorial_move_type_badge()]
-                  if self.best_move_type and self.best_move_type_badge_src else []),
-            ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-        ])
+        established_sweeper = (
+            self.plan_role == "Established Sweeper"
+            and bool(self.setup_followup_move)
+            and self.setup_followup_score is not None
+        )
+        if not established_sweeper:
+            controls.extend([
+                ft.Text(self.move_panel_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
+                ft.Row(controls=[
+                    ft.Text(self.best_move, size=TEXT_SIZE_HERO_MOVE,
+                            weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                    *([self._build_tutorial_move_type_badge()]
+                      if self.best_move_type and self.best_move_type_badge_src else []),
+                ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ])
         if self.action_type:
             # Existing colored label is the Action Type; don't repeat its text.
             controls.append(ft.Row(controls=[
@@ -453,7 +459,7 @@ class RecommendationCard(ft.Container):
                     )],
                 )] if self.condition_detail else []),
             ], spacing=8, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER))
-            if self.strategic_effectiveness_label:
+            if self.strategic_effectiveness_label and not established_sweeper:
                 controls.append(ft.Text(
                     self.strategic_effectiveness_label,
                     size=TEXT_SIZE_BODY,
@@ -465,7 +471,7 @@ class RecommendationCard(ft.Container):
                 color=self.effectiveness_color),
                 padding=ft.Padding.symmetric(horizontal=14, vertical=9),
                 bgcolor="#182A24", border_radius=10))
-        if self.show_move_score:
+        if self.show_move_score and not established_sweeper:
             controls.extend([
                 ft.Text(self.score_label, size=TEXT_SIZE_BODY, color=TEXT_SECONDARY),
                 ft.Row(controls=score_controls, spacing=8,
@@ -484,8 +490,9 @@ class RecommendationCard(ft.Container):
             else:
                 effect_color, effect_background = "#D1D5DB", "#303640"
             controls.extend([
-                ft.Divider(color=BORDER_DEFAULT, height=1),
-                ft.Text("After Setup · Recommended Attack", size=TEXT_SIZE_BODY,
+                *([] if established_sweeper else [ft.Divider(color=BORDER_DEFAULT, height=1)]),
+                ft.Text("Recommended Attack" if established_sweeper
+                        else "After Setup · Recommended Attack", size=TEXT_SIZE_BODY,
                         color=TEXT_SECONDARY),
                 ft.Row(controls=[
                     ft.Text(self.setup_followup_move, size=26,
@@ -506,7 +513,8 @@ class RecommendationCard(ft.Container):
                 *([ft.Text("Projected reliable OHKO", size=TEXT_SIZE_BODY,
                            weight=ft.FontWeight.BOLD, color=SUCCESS)]
                   if self.setup_followup_likely_ohko else []),
-                ft.Text("Conditional on successfully establishing the boost.",
+                ft.Text("Conditional on the boost remaining active." if established_sweeper
+                        else "Conditional on successfully establishing the boost.",
                         size=TEXT_SIZE_DETAIL, color=TEXT_MUTED),
             ])
         return ft.Column(controls=controls, spacing=9)

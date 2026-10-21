@@ -1232,6 +1232,21 @@ def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
             worst = max(worst, float(maximum))
     if hp <= 0 or worst >= hp:
         return None
+    # Survival alone does not make a sweep worth preserving. Compare the
+    # established attack's conditional offense and defense with the available
+    # unboosted direct alternatives. Require a meaningful continuation, not a
+    # merely nonlethal incoming hit.
+    current_row = next((r for r in matchups if r.get("MemberID") == member.get("MemberID")), None)
+    direct_ratio = float((current_row or {}).get("Ratio") or 0.0)
+    incoming_score = float((current_row or {}).get("Incoming Worst Score") or 0.0)
+    boosted_ratio = boosted_score / max(incoming_score, 1.0)
+    best_direct_ratio = max((float(r.get("Ratio") or 0.0) for r in matchups), default=0.0)
+    # Preserve a modest concession for an established boost, but do not force
+    # a Challenging, low-output attacker through a clearly better alternative.
+    if (boosted_ratio < 1.25 or
+            (direct_ratio < 1.0 and best_direct_ratio >= 1.5 and
+             boosted_ratio < best_direct_ratio * 0.85)):
+        return None
     name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
     direct = float(calculate_move_score(member, opponent, attack, items, ability_rules))
@@ -1296,6 +1311,96 @@ def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
         opener_threat_type=None, opener_threat_score=0.0,
         opener_threat_multiplier=1.0,
     )
+
+
+def _setup_sweep_quality(entry, opponent, team_data, moves_data, items,
+                         ability_rules, battle_roster):
+    """Estimate the *cost* of a one-boost sweep against the known battle roster.
+
+    Every opposing member is evaluated independently; this does not claim a
+    future send-out order or that the player's boost has actually been used.
+    Prefer a plan that can deliver useful KOs without exhausting its HP budget.
+    """
+    from math import ceil
+    from engine.calculations import calculate_damage_range
+    from engine.mechanics import get_item_speed_multiplier
+
+    _, member, setup_name, _, _, _, _, _, _, _, _, opening_risk, _ = entry
+    setup = _build_move_lookup(moves_data).get(setup_name, {})
+    projected = dict(member)
+    for stat, field in (("ATK", "AtkStageChange"), ("SPA", "SpAStageChange"),
+                        ("SPE", "SpeStageChange"), ("DEF", "DefStageChange"),
+                        ("SPD", "SpDStageChange")):
+        stage = float(setup.get(field) or 0)
+        if stage > 0:
+            projected[stat] = float(get_stat(member, stat)) * (2 + stage) / 2
+    own_hp = float(get_stat(member, "HP") or 0)
+    if own_hp <= 0:
+        return (0, 0, -float("inf"), 0.0)
+    # The known lead must be handled; future members are alternatives, not a
+    # guaranteed sequence. No hypothetical additional setup turn is credited.
+    rivals = [opponent, *_other_battle_opponents(opponent, battle_roster)]
+    attacks = [m for m in get_moves(member, moves_data)
+               if m.get("Category") in {"Physical", "Special"}]
+    successes = 0
+    reliable_ohkos = 0
+    exposure_sum = 0.0
+    offensive_margin = 0.0
+    for foe in rivals:
+        target_hp = float(get_stat(foe, "HP") or 0)
+        if target_hp <= 0:
+            continue
+        choices = []
+        for attack in attacks:
+            low, _ = calculate_damage_range(projected, foe, attack, items, ability_rules)
+            if low is None or float(low) <= 0:
+                continue
+            choices.append((float(low), attack))
+        if not choices:
+            continue
+        low, attack = max(choices, key=lambda choice: choice[0])
+        # Two-turn attacks must not be counted as immediate sweep KOs. The
+        # charge turn can consume another action (or enable counterplay), even
+        # if the attacker is semi-invulnerable for part of it.
+        delayed_attacks = {"Dig", "Fly", "Dive", "Bounce", "Phantom Force",
+                           "Shadow Force", "Solar Beam", "Solar Blade",
+                           "Sky Attack", "Skull Bash", "Razor Wind",
+                           "Freeze Shock", "Ice Burn"}
+        attack_delay = int(str(attack.get("Move") or "") in delayed_attacks)
+        turns = ceil(target_hp / low) + attack_delay
+        if turns > 2:
+            continue
+        our_speed = float(get_stat(projected, "SPE")) * get_item_speed_multiplier(projected, items)
+        foe_speed = float(get_stat(foe, "SPE")) * get_item_speed_multiplier(foe, items)
+        priority = float(attack.get("Priority") or 0)
+        strikes_first = priority > 0 or (priority == 0 and our_speed > foe_speed)
+        # Hits before this member finishes its target, including an attack
+        # before a slower sweeper's first move. The lead's setup-turn hit is
+        # included separately below, not silently ignored.
+        hits = turns - (1 if strikes_first else 0)
+        worst = 0.0
+        for enemy_move in get_moves(foe, moves_data):
+            if enemy_move.get("Category") not in {"Physical", "Special"}:
+                continue
+            _, high = calculate_damage_range(foe, projected, enemy_move,
+                                             items, ability_rules)
+            if high is not None:
+                worst = max(worst, float(high))
+        damage = worst * hits
+        if damage >= own_hp:
+            continue
+        successes += 1
+        reliable_ohkos += int(turns == 1 and low >= 1.10 * target_hp)
+        exposure_sum += damage / own_hp
+        offensive_margin += min(2.0, low / target_hp)
+
+    # The lead setup turn may itself consume HP (even when the next attack
+    # outspeeds), and must count in the total cost of establishing the boost.
+    exposure_sum += float(opening_risk)
+    # Use attacks won and HP cost as the primary battle-wide discriminator.
+    # Strong attacks and conservative OHKOs resolve otherwise close plans.
+    return (successes, reliable_ohkos,
+            -exposure_sum, offensive_margin)
 
 
 def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None, *, _lead_only=False):
@@ -1504,68 +1609,24 @@ def _setup_offense_battle_plan(team_data, opponent, matchups, moves_data, items,
                                speed_after, risk_ratio, uncertain_weather))
     if not candidates:
         return "No safe, worthwhile one-turn offensive setup was modeled. Use the strongest direct matchup."
-    # Complete-sequence survival is a hard eligibility gate above. For choosing
-    # among survivors, compare the cost of establishing the boost (one incoming
-    # hit), NOT the total two-turn HP budget. A slower sweeper may need to
-    # withstand a second hit to act; that hit must be survivable, but must not
-    # count as a second setup-turn penalty when comparing opening opportunities.
-    #
-    # Keep contenders whose opening exposure is close to the safest candidate.
-    # When a safer opening is clearly available, do not trade it for a speculative
-    # sweep target or a marginally stronger attack.
-    best_opening_risk = min(float(entry[11]) for entry in candidates)
-    safety_peers = [entry for entry in candidates
-                    if float(entry[11]) <= best_opening_risk + 0.10]
-
-    def setup_payoff_key(entry):
-        score, mon, _, attack, row, boosted, *_ = entry
-        return (score[1],                 # supported boosted OHKO
-                score[2],                 # supported direct OHKO
-                boosted,                  # current opponent offense
-                float(row.get("Ratio") or 0),
-                -float(entry[11]))        # setup-turn safety on close offenses
-
-    # The lead is an investment across the *battle*. Give future supported
-    # OHKOs real weight once the setup survived its safety gate. For non-leads
-    # we never prefer restarting setup if the established lead can continue.
-    if str(opponent.get("Slot") or "") in {"1", "1.0"}:
-        max_sweep = max(entry[0][5] for entry in safety_peers)
-        if max_sweep >= 2:
-            safety_peers = [entry for entry in safety_peers
-                            if entry[0][5] >= max_sweep - 1]
-    # OHKO tiers matter, but a marginal boost in Move Score must not outrank
-    # substantially better direct defenses. Close boosted attacks (within 5%)
-    # are resolved by the direct ratio, then opening exposure.
-    from functools import cmp_to_key
-    def compare_close_payoffs(left, right):
-        lk, rk = setup_payoff_key(left), setup_payoff_key(right)
-        if str(opponent.get("Slot") or "") in {"1", "1.0"}:
-            # Two or more additional projected KOs justify setting up for the
-            # battle instead of choosing a one-target setup attacker. No boost
-            # count implies an actual battle-state guarantee.
-            future_delta = left[0][5] - right[0][5]
-            if abs(future_delta) >= 2:
-                return (future_delta > 0) - (future_delta < 0)
-        for index in (0, 1):
-            if lk[index] != rk[index]:
-                return (lk[index] > rk[index]) - (lk[index] < rk[index])
-        ls, rs = float(left[5]), float(right[5])
-        if max(ls, rs) > 0 and abs(ls - rs) / max(ls, rs) >= 0.05:
-            return (ls > rs) - (ls < rs)
-        if abs(lk[3] - rk[3]) > 0.05:
-            return (lk[3] > rk[3]) - (lk[3] < rk[3])
-        if abs(lk[4] - rk[4]) > 0.03:
-            return (lk[4] > rk[4]) - (lk[4] < rk[4])
-        # Future sweep potential is a final tiebreaker, never a first-order goal.
-        for index in (5, 6):
-            a, b = left[0][index], right[0][index]
-            if a != b:
-                return (a > b) - (a < b)
-        return (lk[4] > rk[4]) - (lk[4] < rk[4])
+    # Complete-sequence survival was a hard prerequisite above. Do not
+    # exclude a candidate just because its safe setup costs slightly more HP
+    # than a different safe opening. Compare the utility of *one* established
+    # boost across the known opposing roster; the player can still abandon the
+    # sweep when a later matchup no longer supports it.
+    def plan_key(entry):
+        cover, kos, negative_hp_cost, margin = _setup_sweep_quality(
+            entry, opponent, team_data, moves_data, items,
+            ability_rules, battle_roster)
+        score, _, _, _, row, boosted, *_ = entry
+        # Covering the roster is the objective. For similarly productive
+        # plans, conserve HP, then favor the stronger immediate matchup.
+        return (cover, negative_hp_cost, kos,
+                float(row.get("Ratio") or 0.0), boosted, margin)
 
     (score, member, setup_name, attack, row, boosted_score, base_score,
      flip, own_speed, enemy_speed, speed_after, damage_risk, unknown_weather) = max(
-         safety_peers, key=cmp_to_key(compare_close_payoffs))
+         candidates, key=plan_key)
     name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
     # Explain a meaningful safety-led decision when boosted offense is close.
@@ -2359,7 +2420,11 @@ def build_battle_compass_view_model(
     fallback_reason: str | None = None
     anti_setup = (
         _anti_setup_interception(team_data, opponent, matchup_results, moves_data, items, ability_rules)
-        if team_strategy != "strongest_matchup"
+        # Setup Offense must evaluate its complete, survival-gated lead plan
+        # before a generic immediate-KO interception can override it. The
+        # setup evaluator itself models lethal opponent boost follow-ups.
+        # Keep the existing interception behavior for other strategies.
+        if team_strategy not in {"strongest_matchup", "setup_offense"}
         and not _force_strongest_matchup_for_known_doubles(opponent)
         and not _opponent_is_dynamaxed(opponent)
         else None
@@ -2594,6 +2659,25 @@ def build_battle_compass_view_model(
             setup_result = _setup_offense_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules, battle_roster=battle_roster)
             if isinstance(setup_result, str):
                 fallback_reason = setup_result
+                # Report a known immediate interception only when the plan
+                # failed safety/utility. Never let it preempt a safe plan.
+                if str(opponent.get("Slot") or "") in {"1", "1.0"}:
+                    intercept = _anti_setup_interception(
+                        team_data, opponent, matchup_results, moves_data,
+                        items, ability_rules,
+                    )
+                    if intercept is not None:
+                        intercept_id, intercept_move, enemy_setup, accuracy = intercept
+                        intercept_matchup = matchup_lookup.get(intercept_id)
+                        if intercept_matchup is not None:
+                            recommendation = intercept_matchup
+                            intercept_name = pokemon_display_name(intercept_matchup.pokemon)
+                            fallback_reason = (
+                                f"{setup_result} Anti-setup option: "
+                                f"{opponent.get('Pokemon', 'the opponent')} knows {enemy_setup}; "
+                                f"{intercept_name} has a modeled immediate KO with "
+                                f"{intercept_move} ({accuracy:g}% accuracy)."
+                            )
                 why_text = f"{fallback_reason} {direct_why_text}".strip()
             elif setup_result is None:
                 fallback_reason = "No supported offensive setup found; use Strongest Matchup."
