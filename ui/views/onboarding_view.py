@@ -991,7 +991,7 @@ class OnboardingView:
                 label += f" ({record['Gender']})"
             display_names.append(label)
         display_names = sorted(set(display_names), key=str.casefold)
-        picker = ft.Dropdown(label="Pokémon to plan", width=420,
+        picker = ft.Dropdown(label="Pokémon to plan", width=420, menu_height=240,
             options=[ft.DropdownOption(key=name, text=name) for name in display_names])
         ability_picker = ft.Dropdown(label="Ability (optional)", width=420, options=[])
         def update_abilities(event=None):

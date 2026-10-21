@@ -1787,6 +1787,51 @@ def strategy_move_guidance(strategy_key: str, pokemon: dict, moves_data: list[di
                 purposes.append((options[0][1], "Payoff — STAB attack benefits from the chosen setup"))
         # A one- or two-move recommendation is preferable to filler. Coverage
         # and competing boosts are player choices, not mandatory commitments.
+    if key == "defensive_attrition":
+        # Prefer a supported enhanced protection move; otherwise Protect and
+        # Detect are interchangeable baseline options. The final guidance
+        # still checks the current form's supported Sword/Shield learnset.
+        protection_options = (
+            ("Baneful Bunker", "Support — protects and poisons contact attackers"),
+            ("Spiky Shield", "Support — protects and damages contact attackers"),
+            ("Obstruct", "Support — protects and lowers contact attackers' Defense"),
+            ("King's Shield", "Support — protects and lowers contact attackers' Attack"),
+        )
+        move_lookup = {m.get("Move"): m for m in moves_data if isinstance(m, dict)}
+        enhanced = [
+            (move_name, purpose)
+            for move_name, purpose in protection_options
+            if move_name in names
+            and "Protection" in _mechanics_tags(move_lookup.get(move_name, {}))
+        ]
+        if enhanced:
+            chosen_protection = enhanced[0]
+        else:
+            # Detect and Protect offer equivalent basic protection. Prefer an
+            # accessible level/relearner route to a TM/TR, without assuming
+            # either move is available on a particular species/form.
+            basic = []
+            for move_name in ("Detect", "Protect"):
+                if move_name not in names:
+                    continue
+                methods = supported_strategy_move_methods(pokemon, move_name, learnsets_data)
+                method_rank = min((
+                    0 if str(method.get("method") or "").casefold() in {"level", "relearner", "reminder", "evolution"}
+                    else 1 if str(method.get("method") or "").casefold() == "tm"
+                    else 2 if str(method.get("method") or "").casefold() == "tr"
+                    else 3
+                    for method in methods
+                ), default=3)
+                basic.append((method_rank, 0 if move_name == "Protect" else 1, move_name))
+            basic.sort()
+            chosen_protection = (
+                (basic[0][2], "Support — buys a safe turn") if basic else None
+            )
+        if chosen_protection is not None:
+            purposes = [
+                chosen_protection if name == "Protect" else (name, reason)
+                for name, reason in purposes
+            ]
     if key == "weather_control":
         weather = str(pokemon.get("_strategy_weather_focus") or "").upper()
         role = str(pokemon.get("_strategy_weather_role") or "")
