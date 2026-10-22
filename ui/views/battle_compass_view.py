@@ -2181,13 +2181,15 @@ class BattleCompassView:
         threat_score_label = "Incoming Worst Score"
         threat_move_label = "Worst Incoming Move"
         strategy_plan = view_model.selected_strategy_plan
-        # Opener threat belongs to the strategy's setup actor, not necessarily
-        # to the recommended attacker. In screen follow-ups, the opener is the
-        # screen setter (e.g. Wesley) while the card shows the payoff Pokémon
-        # (e.g. Siren). Keep the attacker's ordinary incoming matchup intact.
+        # Show the setup actor's threat only for an actual opening action.
+        # A later payoff (screens/weather already assumed) and a direct
+        # fallback must use the recommended attacker's ordinary raw matchup.
+        # Keep the rule shared across strategies, not one exception per mode.
+        followup_kinds = {"screen_followup_assumed", "weather_followup"}
         if (strategy_plan is not None
                 and strategy_plan.opener_threat_move
-                and strategy_plan.plan_kind != "screen_followup_assumed"):
+                and strategy_plan.plan_kind not in followup_kinds
+                and strategy_plan.plan_kind != "weather_entry_payoff"):
             threat_score = strategy_plan.opener_threat_score
             threat_move_name = strategy_plan.opener_threat_move
             threat_category = strategy_plan.opener_threat_category or "Unknown"

@@ -806,6 +806,7 @@ def get_best_move(
     items,
     ability_rules=None,
     moves_data=None,
+    weather_override=None,
 ):
     best_move = None
     best_score = 0
@@ -819,6 +820,7 @@ def get_best_move(
             move,
             items,
             ability_rules,
+            weather_override=weather_override,
         )
         if score > best_score:
             best_score = score
@@ -826,7 +828,7 @@ def get_best_move(
     return best_move, best_score
 
 
-def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves_data=None):
+def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves_data=None, weather_override=None):
     worst_move = None
     worst_score = -1
     for move in get_moves(opponent, moves_data):
@@ -835,7 +837,8 @@ def get_worst_incoming_move(opponent, defender, items, ability_rules=None, moves
             defender,
             move,
             items,
-            ability_rules
+            ability_rules,
+            weather_override=weather_override,
         )
         if score > worst_score:
             worst_score = score
@@ -849,6 +852,7 @@ def calculate_matchup_ratio(
     items,
     ability_rules=None,
     moves_data=None,
+    weather_override=None,
 ):
     best_move, best_score = get_best_move(
         attacker,
@@ -856,6 +860,7 @@ def calculate_matchup_ratio(
         items,
         ability_rules,
         moves_data,
+        weather_override=weather_override,
     )
     # An empty or status-only moveset has no offensive matchup
     # to evaluate. Return immediately before calculating incoming
@@ -868,6 +873,7 @@ def calculate_matchup_ratio(
         items,
         ability_rules,
         moves_data,
+        weather_override=weather_override,
     )
     if worst_score == 0:
         return (
@@ -1021,6 +1027,7 @@ def find_best_team_member(
     items,
     ability_rules=None,
     moves_data=None,
+    weather_override=None,
 ):
     all_results = []
     opponent_hp = get_stat(opponent, "HP")
@@ -1044,6 +1051,7 @@ def find_best_team_member(
             items,
             ability_rules,
             moves_data,
+            weather_override=weather_override,
         )
         if best_move is None:
             continue
@@ -1053,6 +1061,7 @@ def find_best_team_member(
             best_move,
             items,
             ability_rules,
+            weather_override=weather_override,
         )
         effective_team_speed = (
             pokemon.get("SPE", 0)

@@ -1535,10 +1535,12 @@ def recommend_strategy_pokemon_additions(
                 rec = replace(rec, summary=f"Add {display_name} as a {role_label}: {specific_fit[1]}. "
                               f"Projected team readiness: {after.viability}.")
             elif active_key == "screen_control":
+                available_screens = [move for move in ("Reflect", "Light Screen") if move in names]
+                screens_text = " and ".join(available_screens) if available_screens else "screen support"
+                screen_detail = (f"can establish {screens_text} with Prankster priority"
+                                 if ability.casefold() == "prankster" else f"can establish {screens_text}")
                 rec = replace(rec, summary=f"Add {display_name} as a screen setter: "
-                              + ("Prankster establishes Reflect/Light Screen with priority" if ability.casefold() == "prankster"
-                                 else "can establish Reflect and Light Screen")
-                              + f". Projected team readiness: {after.viability}.")
+                              + screen_detail + f". Projected team readiness: {after.viability}.")
             elif "improves the strategy package" in rec.summary or "expands your established" in rec.summary:
                 relevant = sorted(caps & _EXPANSION_ROLE_KEYS.get(active_key, set()))
                 named = ", ".join(CAPABILITY_LABELS.get(k, k) for k in relevant[:3])

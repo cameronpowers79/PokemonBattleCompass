@@ -50,7 +50,16 @@ def build_recommendation_why(
     if strategy == "strongest_matchup":
         return direct_why
     if fallback_reason or plan is None:
-        return (fallback_reason or "").strip() or direct_why or previous_why
+        reason = (fallback_reason or "").split(" Weather outlook:", 1)[0].strip()
+        if strategy == "weather_control" and reason:
+            if "doubles and Dynamax" in reason:
+                return (f"{selected_name or direct_name} is recommended against {opponent_name} "
+                        "using Strongest Matchup. Double Battles and Dynamax opponents "
+                        "are not supported by Weather Control's tactical sequence.")
+            return (f"{selected_name or direct_name} is the strongest supported direct choice "
+                    f"against {opponent_name}; the proposed weather sequence does not "
+                    "offer a sufficiently safe or effective advantage.")
+        return reason or direct_why or previous_why
 
     name = selected_name or str(_field(plan, "recommended_pokemon_name") or _field(plan, "pokemon_name"))
     lead = str(_field(plan, "lead_move"))
@@ -180,6 +189,9 @@ def build_recommendation_why(
         return f"{name} can use {lead} defensively while increasing pressure on {opponent_name}."
 
     if strategy == "weather_control":
+        evidence = str(_field(plan, "fit_explanation") or "")
+        if evidence.startswith("Weather rationale: "):
+            return evidence.removeprefix("Weather rationale: ")
         entry = re.search(r"establishes? (sun|rain|sandstorm|hail).*?via ([\w ]+)", detail, re.I)
         change = re.search(r"Projected (.*?) Move Score ([\d.]+) → ([\d.]+) in (sun|rain|sandstorm|hail)", detail)
         if change:
@@ -188,6 +200,11 @@ def build_recommendation_why(
                      if entry else f"{name} can establish {weather} with {lead}.")
             if float(after) > float(before) + 0.01:
                 start += f" That strengthens {attack_name} and gives the team an offensive weather advantage."
+            elif ((weather.casefold() == "hail" and attack_name == "Blizzard")
+                    or (weather.casefold() == "rain" and attack_name in {"Hurricane", "Thunder"})):
+                start += f" {weather.title()} makes {attack_name} bypass normal accuracy checks, making it more reliable."
+            elif weather.casefold() == "sandstorm" and "Special Defense" in detail:
+                start += f" Sandstorm boosts {name}'s Special Defense, improving its protection against special attacks."
             elif "Incoming Worst Score" in detail:
                 start += " Its value here is improved protection against incoming attacks."
             else:
