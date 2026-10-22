@@ -28,6 +28,7 @@ from engine.strategy_capabilities import (
     project_poisoned_followup,
 )
 from ui.constants import NOTE_ICONS
+from ui.viewmodels.recommendation_explanations import build_recommendation_why
 
 
 class ReferenceData(TypedDict):
@@ -127,6 +128,10 @@ class StrategyPlanViewModel:
     setup_followup_base_score: float | None = None
     setup_followup_effectiveness: float | None = None
     setup_followup_likely_ohko: bool = False
+    # Explanation evidence only; never changes strategy selection.
+    continuation_same_direct: bool = False
+    continuation_below_threshold: bool = False
+    continuation_dig_shelter: bool = False
 @dataclass(frozen=True)
 
 
@@ -349,62 +354,6 @@ def _poison_safety_tradeoff_text(raw_plans: list, selected_plan) -> str | None:
         f"but {selected_plan.pokemon_name} is the safer modeled follow-up: Incoming Worst Score {selected_iws:.2f} versus {strongest_iws:.2f}. "
         f"The Compass is accepting some offensive loss and recommends {selected_plan.pokemon_name} with {selected_move} to reduce incoming danger."
     )
-
-
-def _strategy_why_text(plan: StrategyPlanViewModel, opponent: dict, poisoned_followup: tuple[str, str | None, float | None] | None = None, safety_tradeoff: str | None = None) -> str:
-    opponent_name = str(opponent.get("Pokemon") or "this opponent")
-    branch_label = _strategy_label(plan.strategy_branch)
-    paragraphs: list[str] = []
-
-    primary_bits: list[str] = []
-    if plan.state_assumption:
-        primary_bits.append(plan.state_assumption)
-    lead_plan_kinds = {"lead_toxic_then_spikes", "lead_team_setup"}
-    if plan.plan_kind == "followup_assumed_poison":
-        primary_bits.append(f"Under {branch_label}, {opponent_name} is being evaluated as a poisoned follow-up.")
-    elif plan.plan_kind in lead_plan_kinds and plan.lead_pokemon_name:
-        primary_bits.append(f"{plan.lead_pokemon_name} is the recommended lead for {branch_label}.")
-    elif plan.lead_pokemon_name:
-        primary_bits.append(f"{plan.lead_pokemon_name} is the recommendation for this matchup under {branch_label}.")
-    if plan.action_detail:
-        primary_bits.append(plan.action_detail)
-    if primary_bits:
-        paragraphs.append(" ".join(primary_bits))
-
-    if opponent.get("Slot") != 1 and not plan.assumed_poisoned and poisoned_followup is not None:
-        alt_name, alt_move, alt_score = poisoned_followup
-        displayed_name = plan.recommended_pokemon_name or plan.lead_pokemon_name or plan.pokemon_name
-        shown_name = f"**{alt_name}**" if alt_name and alt_name != displayed_name else alt_name
-        if alt_name:
-            if alt_move:
-                alt_text = f"If poison is already active from an earlier setup opportunity: {shown_name} → {alt_move}."
-            else:
-                alt_text = f"If poison is already active from an earlier setup opportunity: {shown_name} is the best modeled follow-up."
-            if alt_score is not None:
-                alt_text += f" Conditional Move Score: {alt_score:.2f}."
-            paragraphs.append(alt_text)
-
-    rationale_bits: list[str] = []
-    if plan.reason:
-        rationale_bits.append(plan.reason)
-    if plan.conditional_move_name and plan.conditional_move_score is not None:
-        rationale_bits.append(f"With poison active, {plan.conditional_move_name}'s conditional Move Score is {plan.conditional_move_score:.2f}.")
-    if rationale_bits:
-        paragraphs.append(" ".join(rationale_bits))
-    if safety_tradeoff:
-        paragraphs.append(safety_tradeoff)
-
-    footer_bits: list[str] = []
-    if plan.fallback_if_assumption_fails:
-        footer_bits.append(plan.fallback_if_assumption_fails)
-    if plan.assumed_poisoned:
-        footer_bits.append("Full Analysis shows strategy-neutral direct options if the assumed poison state is no longer valid.")
-    elif plan.state_assumption:
-        footer_bits.append("Full Analysis shows strategy-neutral direct options while the Compass re-evaluates from the modeled post-lead state.")
-    else:
-        footer_bits.append("Full Analysis remains strategy-neutral for direct comparison.")
-    paragraphs.append(" ".join(footer_bits))
-    return "\n\n".join(paragraph for paragraph in paragraphs if paragraph)
 
 
 def _screened_worst_incoming(opponent, defender, screen, moves_data, items, ability_rules):
@@ -1241,11 +1190,22 @@ def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
     incoming_score = float((current_row or {}).get("Incoming Worst Score") or 0.0)
     boosted_ratio = boosted_score / max(incoming_score, 1.0)
     best_direct_ratio = max((float(r.get("Ratio") or 0.0) for r in matchups), default=0.0)
-    # Preserve a modest concession for an established boost, but do not force
-    # a Challenging, low-output attacker through a clearly better alternative.
-    if (boosted_ratio < 1.25 or
-            (direct_ratio < 1.0 and best_direct_ratio >= 1.5 and
-             boosted_ratio < best_direct_ratio * 0.85)):
+    # If Strongest Matchup would choose the very same member, a low ratio is
+    # not a reason to abandon an established boost: the fallback cannot offer
+    # a better teammate, and switching tactics would not undo Swords Dance.
+    direct_best, _, _ = find_best_team_member(
+        team_data, opponent, items, ability_rules, moves_data
+    )
+    same_direct_member = bool(
+        isinstance(direct_best, dict)
+        and (direct_best.get("MemberID") == member.get("MemberID")
+             if member.get("MemberID") else direct_best is member)
+    )
+    if not same_direct_member and (
+        boosted_ratio < 1.25 or
+        (direct_ratio < 1.0 and best_direct_ratio >= 1.5 and
+         boosted_ratio < best_direct_ratio * 0.85)
+    ):
         return None
     name = pokemon_display_name(member)
     move_name = str(attack.get("Move") or "")
@@ -1277,6 +1237,17 @@ def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
     sweep_note = (f" Sweep potential: With {lead_plan['lead_move']} active, {name} has projected "
                   f"OHKOs against {_screen_name_list(sweep_targets)}."
                   if sweep_targets else "")
+    # Dig protects the user while underground from ordinary attacks, although
+    # Earthquake/Magnitude and certain other effects can still reach it.
+    # Describe that advantage only when the opponent's known move list does
+    # not contain a relevant underground-hitting attack.
+    dig_shelter = move_name == "Dig" and not any(
+        str(m.get("Move") or "") in {"Earthquake", "Magnitude", "Fissure"}
+        for m in get_moves(opponent, moves_data)
+    )
+    if dig_shelter:
+        sweep_note += (" Dig's underground turn protects against this "
+                       "opponent's listed attacks before the strike lands.")
     assumption = (f"Conditional continuation: if {name} established {lead_plan['lead_move']} "
                   "against the lead and has remained in battle, preserve the boost. "
                   "The Compass cannot verify current HP, stages, or who is active.")
@@ -1292,6 +1263,9 @@ def _setup_sweep_continuation(lead_plan, team_data, opponent, matchups,
             f"Projected boosted Move Score {boosted_score:.2f} (unboosted {direct:.2f}). "
             "Switching removes stat boosts." + sweep_note),
         plan_kind="offensive_setup_continuation", can_override_direct=True,
+        continuation_same_direct=same_direct_member,
+        continuation_below_threshold=boosted_ratio < 1.25,
+        continuation_dig_shelter=dig_shelter,
         strategy_branch="setup_offense", action_type="Offensive Payoff",
         plan_role="Established Sweeper", sequence_heading=f"{name} → {move_name}",
         state_assumption=assumption, condition_detail=assumption,
@@ -2425,6 +2399,12 @@ def build_battle_compass_view_model(
         # setup evaluator itself models lethal opponent boost follow-ups.
         # Keep the existing interception behavior for other strategies.
         if team_strategy not in {"strongest_matchup", "setup_offense"}
+        # Screen Control's later opponents are *attacker follow-ups*, not
+        # opportunities to start a fresh screen-setting sequence. An enemy
+        # setup move alone must not discard a planned protected attacker.
+        # Lead interception remains available before screens are established.
+        and (team_strategy != "screen_control"
+             or str(opponent.get("Slot") or "") in {"1", "1.0"})
         and not _force_strongest_matchup_for_known_doubles(opponent)
         and not _opponent_is_dynamaxed(opponent)
         else None
@@ -2442,13 +2422,13 @@ def build_battle_compass_view_model(
                 f"(modeled minimum damage reaches its HP; move accuracy {accuracy:g}%). "
                 "Attack now rather than spend a turn setting up. The selected strategy remains active."
             )
-            why_text = fallback_reason + " Full Analysis shows the ordinary direct matchup scores."
+            # Why? is composed once by the shared explanation builder.
     elif team_strategy in {"poison_attrition", "poison_offensive_pressure"}:
         if _force_strongest_matchup_for_known_doubles(opponent):
             fallback_reason = (
                 "This is a Double Battle. Battle Compass currently models single-opponent tactical states, so strategy-specific recommendations are disabled here and Strongest Matchup is being used instead."
             )
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             raw_plans = evaluate_poison_attrition_plans(
                 team_data, opponent, moves_data, matchup_results, battle_roster=battle_roster,
@@ -2489,7 +2469,7 @@ def build_battle_compass_view_model(
                 fallback_reason = (
                     "This opponent is Dynamaxed or Gigantamaxed. Because Max moves add secondary effects and other battle-state variables, Battle Compass is conservatively falling back to Strongest Matchup unless an already-active Poison line is materially stronger."
                 )
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             elif selected_raw_plan is not None:
                 # Select the exact engine plan object, never a same-named species.
                 selected_index = next(i for i, raw in enumerate(raw_plans)
@@ -2561,25 +2541,24 @@ def build_battle_compass_view_model(
                         strategy_branch=team_strategy,
                         current_pokemon_name=(selected_raw_plan.recommended_member_id or recommended_name),
                     )
-                safety_tradeoff = _poison_safety_tradeoff_text(raw_plans, selected_raw_plan)
-                why_text = _strategy_why_text(selected_strategy_plan, opponent, poisoned_followup, safety_tradeoff)
+                # Why? is composed once by the shared explanation builder.
             else:
                 fallback_reason = describe_poison_attrition_fallback(
                     team_data, opponent, moves_data, matchup_results, items=items, ability_rules=ability_rules,
                     strategy_branch=team_strategy,
                 )
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
     elif team_strategy == "status_control_punish":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = "Status Control & Punish falls back to direct offense for modeled doubles and Dynamax encounters."
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             status_result, payoff = _status_control_battle_plan(
                 team_data, opponent, matchup_results, moves_data, items, ability_rules
             )
             if status_result is None:
                 fallback_reason = payoff
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**status_result)
                 strategy_plans = [selected_strategy_plan]
@@ -2587,26 +2566,11 @@ def build_battle_compass_view_model(
                                   or select_strategy_member(selected_strategy_plan.pokemon_name,
                                                             selected_strategy_plan.lead_move)
                                   or recommendation)
-                payoff_detail = ""
-                if payoff is not None:
-                    payoff_name, payoff_move, boosted, unboosted, status = payoff
-                    payoff_detail = (
-                        f"With {status} active on THIS opponent, {payoff_name}'s {payoff_move} "
-                        f"has a projected conditional Move Score of {boosted:.2f} "
-                        f"versus {unboosted:.2f} without status. "
-                    )
-                why_text = (
-                    f"{selected_strategy_plan.state_assumption} "
-                    f"{selected_strategy_plan.action_detail} "
-                    f"{payoff_detail}"
-                    f"Direct fallback: {direct_name} → "
-                    f"{(direct_move_name or 'best attack')}. "
-                    "Full Analysis retains unconditioned scores."
-                )
+                # Why? is composed once by the shared explanation builder.
     elif team_strategy == "defensive_attrition":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = "Defensive Attrition uses Strongest Matchup for modeled doubles and Dynamax opponents."
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             contact_candidate = _contact_punishment_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
             defensive_result = _defensive_attrition_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
@@ -2617,7 +2581,7 @@ def build_battle_compass_view_model(
                 defensive_result = contact_candidate[1]
             if isinstance(defensive_result, str):
                 fallback_reason = defensive_result
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**defensive_result)
                 strategy_plans = [selected_strategy_plan]
@@ -2625,20 +2589,16 @@ def build_battle_compass_view_model(
                                   or select_strategy_member(selected_strategy_plan.pokemon_name,
                                                             selected_strategy_plan.lead_move)
                                   or recommendation)
-                why_text = (f"{selected_strategy_plan.state_assumption} "
-                            f"{selected_strategy_plan.action_detail} "
-                            f"Direct fallback: {direct_name} → "
-                            f"{(direct_move_name or 'best attack')}. "
-                            "Full Analysis retains unboosted scores.")
+                # Why? is composed once by the shared explanation builder.
     elif team_strategy == "weather_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = "Weather Control uses Strongest Matchup for modeled doubles and Dynamax opponents."
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             result = _weather_control_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
             if isinstance(result, str):
                 fallback_reason = result
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**result)
                 strategy_plans = [selected_strategy_plan]
@@ -2646,15 +2606,11 @@ def build_battle_compass_view_model(
                                   or select_strategy_member(selected_strategy_plan.pokemon_name,
                                                             selected_strategy_plan.lead_move)
                                   or recommendation)
-                why_text = (f"{selected_strategy_plan.action_detail} "
-                            f"{selected_strategy_plan.condition_detail} "
-                            f"Direct fallback: {direct_name} → "
-                            f"{(direct_move_name or 'best attack')}. "
-                            "Full Analysis retains the ordinary matchup scores.")
+                # Why? is composed once by the shared explanation builder.
     elif team_strategy == "setup_offense":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = "Setup Offense uses Strongest Matchup for modeled doubles and Dynamax opponents."
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             setup_result = _setup_offense_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules, battle_roster=battle_roster)
             if isinstance(setup_result, str):
@@ -2678,10 +2634,10 @@ def build_battle_compass_view_model(
                                 f"{intercept_name} has a modeled immediate KO with "
                                 f"{intercept_move} ({accuracy:g}% accuracy)."
                             )
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             elif setup_result is None:
                 fallback_reason = "No supported offensive setup found; use Strongest Matchup."
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**setup_result)
                 strategy_plans = [selected_strategy_plan]
@@ -2689,18 +2645,14 @@ def build_battle_compass_view_model(
                                   or select_strategy_member(selected_strategy_plan.pokemon_name,
                                                             selected_strategy_plan.lead_move)
                                   or recommendation)
-                why_text = (f"{selected_strategy_plan.state_assumption} "
-                            f"{selected_strategy_plan.action_detail} "
-                            f"Direct fallback: {direct_name} → "
-                            f"{(direct_move_name or 'best attack')}. "
-                            "Full Analysis retains unboosted scores.")
+                # Why? is composed once by the shared explanation builder.
     elif team_strategy == "screen_control":
         if _force_strongest_matchup_for_known_doubles(opponent) or _opponent_is_dynamaxed(opponent):
             fallback_reason = (
                 "Screen Control's single-opponent sequence is not modeled safely for "
                 "this Double Battle or Dynamax opponent; Strongest Matchup is used."
             )
-            why_text = f"{fallback_reason} {direct_why_text}".strip()
+            # Why? is composed once by the shared explanation builder.
         else:
             screen_plan, screen_name, screen_fallback = _screen_control_battle_plan(
                 team_data, opponent, matchup_results, moves_data, items, ability_rules,
@@ -2708,7 +2660,7 @@ def build_battle_compass_view_model(
             )
             if screen_plan is None:
                 fallback_reason = screen_fallback
-                why_text = f"{fallback_reason} {direct_why_text}".strip()
+                # Why? is composed once by the shared explanation builder.
             else:
                 selected_strategy_plan = StrategyPlanViewModel(**screen_plan)
                 strategy_plans = [selected_strategy_plan]
@@ -2716,50 +2668,6 @@ def build_battle_compass_view_model(
                                   or select_strategy_member(selected_strategy_plan.pokemon_name,
                                                             selected_strategy_plan.lead_move)
                                   or recommendation)
-                screen_move = (selected_strategy_plan.lead_move
-                               if selected_strategy_plan.plan_kind == "screen_setup"
-                               else "")
-                # Follow-up plans store the attack in lead_move. Recover the
-                # assumed screen from the explicit battle-state assumption.
-                if not screen_move:
-                    assumption = selected_strategy_plan.state_assumption or ""
-                    screen_move = ("Reflect" if "assumes Reflect was established" in assumption else
-                                   "Light Screen" if "assumes Light Screen was established" in assumption else
-                                   "Reflect" if "Reflect" in assumption else
-                                   "Light Screen" if "Light Screen" in assumption else "")
-                chosen_defender = recommendation.pokemon if recommendation is not None else None
-                screened = (
-                    _screened_worst_incoming(
-                        opponent, chosen_defender, screen_move,
-                        moves_data, items, ability_rules,
-                    )
-                    if chosen_defender is not None else None
-                )
-                mitigation_text = (
-                    f"With {screen_move} active, the Incoming Worst Move against "
-                    f"{pokemon_display_name(chosen_defender)} is {screened[0]}, with an Incoming Worst "
-                    f"Score of {screened[1]:.2f}. "
-                    "This assumes a single battle without a critical hit; "
-                    "Full Analysis retains the unscreened score."
-                    if screened is not None and chosen_defender is not None else ""
-                )
-                if selected_strategy_plan.plan_kind == "screen_followup_assumed":
-                    # No new setup claim against a later opponent. The chosen
-                    # attacker is ranked without assuming the earlier screen.
-                    why_text = " ".join(filter(None, (
-                        selected_strategy_plan.action_detail,
-                        "The offensive recommendation does not depend on a screen being active.",
-                        "Full Analysis remains strategy-neutral for direct comparisons."
-                    )))
-                else:
-                    why_text = " ".join(filter(None, (
-                        selected_strategy_plan.state_assumption,
-                        mitigation_text,
-                        selected_strategy_plan.action_detail,
-                        selected_strategy_plan.fallback_if_assumption_fails,
-                        f"Direct fallback if the screen is absent: {direct_name} → {direct_move_name or 'best attack'}.",
-                        "Full Analysis remains strategy-neutral for direct comparisons."
-                    )))
     elif team_strategy != "strongest_matchup":
         fallback_reason = (
             "This strategy is selected for team-building analysis, but its live "
@@ -2767,7 +2675,20 @@ def build_battle_compass_view_model(
             "is using the strongest direct matchup for this battle while keeping "
             "the selected strategy active for readiness and recommendation guidance."
         )
-        why_text = f"{fallback_reason} {direct_why_text}".strip()
+        # Why? is composed once by the shared explanation builder.
+    # One shared, presentation-only explanation path for every strategy.
+    # Selection, Move Scores, tactical sequencing and fallbacks above remain
+    # unchanged. Strongest Matchup retains its already-polished engine prose.
+    why_text = build_recommendation_why(
+        strategy=team_strategy, plan=selected_strategy_plan,
+        selected_name=(pokemon_display_name(recommendation.pokemon)
+                       if recommendation is not None else ""),
+        direct_name=direct_name, direct_move=direct_move_name or "",
+        direct_why=direct_why_text, fallback_reason=fallback_reason,
+        previous_why=why_text,
+        opponent_name=str(opponent.get("Pokemon") or "this opponent"),
+        selected_matchup=recommendation,
+    )
     # Identified strategy roles are named at their source using their original
     # MemberID-bearing records. Do not globally substitute species in prose.
     other_options = [matchup for matchup in all_matchups if matchup is not recommendation]

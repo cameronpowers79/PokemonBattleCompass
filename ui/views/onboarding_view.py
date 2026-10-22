@@ -18,6 +18,7 @@ import flet as ft
 
 from ui.components.journey_ready import JourneyReady
 from ui.components.strategy_move_card import strategy_move_card
+from ui.components.reference_dialogs import show_type_matchup_dialog
 from ui.components.starter_details import StarterDetails
 from ui.components.starter_selection import StarterSelection
 from ui.storage.journey_storage import parse_journey_export
@@ -827,6 +828,43 @@ class OnboardingView:
                             alignment=ft.Alignment.CENTER,
                             bgcolor=SURFACE, border_radius=12)
 
+    def _recommendation_type_badges(self, pokemon_name: str) -> ft.Control | None:
+        """Show clickable defensive typing for any recommended final-form Pokémon."""
+        species = re.sub(r"\s*\((?:Male|Female)\)$", "", pokemon_name, flags=re.I).strip()
+        record = self._planning_record(species)
+        if not record:
+            return None
+        forms = record.get("types")
+        known_types = forms.get(species) if isinstance(forms, dict) else None
+        if not isinstance(known_types, list):
+            return None
+        types = [value for value in known_types if isinstance(value, str) and value.strip()]
+        if not types:
+            return None
+        assets = Path(__file__).resolve().parents[2] / "assets" / "type_badges"
+        badges = [
+            ft.Image(
+                src=f"type_badges/{pokemon_type}.png", width=105, height=22,
+                fit=ft.BoxFit.CONTAIN, semantics_label=f"{pokemon_type} type",
+            )
+            for pokemon_type in types
+            if (assets / f"{pokemon_type}.png").exists()
+        ]
+        if not badges:
+            return None
+        return ft.GestureDetector(
+            content=ft.Column(
+                controls=badges, spacing=3, tight=True,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=lambda event, selected=tuple(types): show_type_matchup_dialog(
+                page=self.page,
+                pokemon_types=list(selected),
+                type_chart=self.app_state.reference_data["type_chart"],
+            ),
+        )
+
     def _recommendation_base_stats(self, pokemon_name: str) -> ft.Control:
         """Show species/form base stats without affecting recommendation scoring."""
         match = re.match(r"^(.*?) \((Male|Female)\)$", pokemon_name)
@@ -952,9 +990,16 @@ class OnboardingView:
                             f"+ Plan {item.pokemon_name}",
                             lambda e, rec=item: self._add_planned(rec))]),
                     ], spacing=12, expand=True)
+                    artwork = self._recommendation_artwork(item.pokemon_name)
+                    type_badges = self._recommendation_type_badges(item.pokemon_name)
+                    visual = ft.Column(
+                        controls=[artwork, *([type_badges] if type_badges else [])],
+                        spacing=4, tight=True,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    )
                     controls.append(ft.Container(
                         content=ft.Row(controls=[
-                            self._recommendation_artwork(item.pokemon_name), details,
+                            visual, details,
                         ], spacing=18, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=16, bgcolor=SURFACE_RAISED,
                         border=ft.Border.all(1, "#354052"), border_radius=14))

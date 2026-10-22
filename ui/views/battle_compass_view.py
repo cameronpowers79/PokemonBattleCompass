@@ -848,6 +848,38 @@ class BattleCompassView:
                                    ft.ResponsiveRow(controls=entries, spacing=8, run_spacing=6)],
                          spacing=7, tight=True)
 
+    def _strategy_recommender_type_badges(self, pokemon_name: str) -> ft.Control | None:
+        """Use the Journey catalog's final-form typing in every strategy's candidate row."""
+        species = re.sub(r"\s*\((?:Male|Female)\)$", "", pokemon_name,
+                         flags=re.IGNORECASE).strip()
+        record = self._strategy_catalog_record_for_name(species)
+        if not record:
+            return None
+        forms = record.get("types")
+        species_types = forms.get(species) if isinstance(forms, dict) else None
+        if species_types is None and isinstance(forms, dict):
+            # Sword's native regional species may have an unprefixed display
+            # name while the Journey catalog keys the typing by full form.
+            matches = [v for k, v in forms.items()
+                       if str(k).casefold().endswith(" " + species.casefold())]
+            if len(matches) == 1:
+                species_types = matches[0]
+        if not isinstance(species_types, list):
+            return None
+        types = [t for t in species_types if isinstance(t, str) and t.strip()]
+        if not types:
+            return None
+        badges = [ft.Image(src=self._type_badge_asset(t), width=105, height=22,
+                           fit=ft.BoxFit.CONTAIN, semantics_label=f"{t} type")
+                  for t in types]
+        return ft.GestureDetector(
+            content=ft.Column(controls=badges, spacing=3,
+                              horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                              tight=True),
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_tap=lambda e, selected=tuple(types): self._show_type_matchups(list(selected)),
+        )
+
     def _build_strategy_recommendation_row(
         self, summary: str, button_text: str, on_click,
         *, pokemon_name: str | None = None, move_name: str | None = None,
@@ -859,7 +891,15 @@ class BattleCompassView:
             src = self._pokemon_asset(species, gender=gender, use_texture=True)
             art = (ft.Image(src=src, width=110, height=118, fit=ft.BoxFit.CONTAIN)
                    if src else ft.Icon(ft.Icons.CATCHING_POKEMON, size=54, color=PRIMARY_BLUE))
-            visual = ft.Container(content=art, width=124, height=130, alignment=ft.Alignment.CENTER, bgcolor=SURFACE)
+            type_badges = self._strategy_recommender_type_badges(pokemon_name)
+            visual = ft.Container(
+                content=ft.Column(
+                    controls=[art, *([type_badges] if type_badges else [])],
+                    spacing=4, tight=True,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                ),
+                width=124, alignment=ft.Alignment.CENTER, bgcolor=SURFACE,
+            )
             heading = ft.Text(pokemon_name, weight=ft.FontWeight.BOLD, size=17, color=TEXT_PRIMARY)
         else:
             visual = ft.Container(content=self._strategy_move_badge(move_name), width=188,
@@ -2384,9 +2424,8 @@ class BattleCompassView:
             details.append(
                 ft.Text(
                     (view_model.strategy_fallback_reason
-                     or ("Live Screen Control tactics are active. The Recommendation Card "
-                         "shows the screen setup or conditional follow-up; actual screen "
-                         "duration and field state must be confirmed during play."
+                     or ("Live strategy guidance is conditional; confirm screen duration "
+                         "and the actual field state during play."
                          if view_model.team_strategy in {"screen_control", "status_control_punish"}
                          else "This strategy's live tactical branch is not yet specialized.")),
                     size=12,
@@ -2410,13 +2449,11 @@ class BattleCompassView:
                 footer = " ".join(part for part in (
                     plan.state_assumption if plan.plan_kind == "screen_followup_assumed" else None,
                     plan.fallback_if_assumption_fails,
-                    "The Recommendation Card shows the recommended action for this opponent. "
                     "Full Analysis remains strategy-neutral for direct comparisons.",
                 ) if part)
             else:
                 footer = (
-                    "The Recommendation Card shows step one of this plan. Full Analysis "
-                    "remains strategy-neutral so you can still compare direct options."
+                    "Full Analysis remains strategy-neutral so you can still compare direct options."
                 )
         else:
             action = "Direct fallback recommended"
