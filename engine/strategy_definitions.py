@@ -219,7 +219,12 @@ STRATEGY_DEFINITIONS = {
             "to justify spending turns creating that weather. Reward Pokémon whose "
             "moves, abilities, accuracy, Speed, recovery, defense, or setup economy "
             "materially improve in sun, rain, sandstorm, or hail. A lone weather "
-            "move without meaningful beneficiaries is not a weather strategy."
+            "move without meaningful beneficiaries is not a weather strategy. "
+            "During battle, use Current Weather in the Weather Control Plan to reflect "
+            "the actual field. The Compass models recommended weather without "
+            "changing the selector. After the lead sets weather, select the active "
+            "condition; correct it if weather expires or you take a different action. "
+            "It persists within a trainer battle and resets for a new one."
         ),
         required_roles=(
             "weather_setter",

@@ -169,6 +169,10 @@ class BattleCompassView:
         )
         self.filtered_opponents: list[dict] = []
         self.battle_opponents: list[dict] = []
+        # Battle-scoped, player-correctable weather; no speculative roster simulation.
+        self.current_weather: str | None = None
+        self._weather_state_battle = (self.selected_trainer, self.selected_battle)
+
         self.starter_dropdown = ft.Dropdown(
             label="Your Starter",
             value=self.selected_starter,
@@ -1300,6 +1304,8 @@ class BattleCompassView:
     ) -> None:
         """Save the strategy, then refresh all visible strategy surfaces."""
         previous_strategy = self.app_state.team_strategy
+        if previous_strategy == "weather_control" and strategy != "weather_control":
+            self._reset_current_weather()
         try:
             save_succeeded = await self.app_state.save_team_strategy(
                 strategy
@@ -1887,6 +1893,7 @@ class BattleCompassView:
         self._select_first_trainer()
         self._select_first_battle()
         self._select_first_opponent()
+        self._reset_current_weather()
         self._sync_dropdowns()
         self._refresh_results()
         self.page.update()
@@ -1912,6 +1919,7 @@ class BattleCompassView:
             )
         self._select_first_battle()
         self._select_first_opponent()
+        self._reset_current_weather()
         self._sync_dropdowns()
         self._refresh_results()
         await self._save_selection()
@@ -1925,6 +1933,7 @@ class BattleCompassView:
                 event.control.value
             )
         self._select_first_opponent()
+        self._reset_current_weather()
         self._sync_dropdowns()
         self._refresh_results()
         await self._save_selection()
@@ -1941,15 +1950,23 @@ class BattleCompassView:
         await self._save_selection()
         self.page.update()
     def _refresh_results(self) -> None:
-        view_model = build_battle_compass_view_model(
-            team_data=self.team_data,
-            opponent=self._selected_opponent(),
-            items=self.items,
-            ability_rules=self.ability_rules,
-            moves_data=self.moves_data,
-            team_strategy=self.app_state.team_strategy,
-            battle_roster=self.battle_opponents,
-        )
+        battle_key = (self.selected_trainer, self.selected_battle)
+        if battle_key != self._weather_state_battle:
+            self._reset_current_weather()
+        if self.current_weather not in (None, "None") and self.current_weather not in self._available_team_weather():
+            self.current_weather = None
+        def calculate():
+            return build_battle_compass_view_model(
+                team_data=self.team_data, opponent=self._selected_opponent(),
+                items=self.items, ability_rules=self.ability_rules,
+                moves_data=self.moves_data, team_strategy=self.app_state.team_strategy,
+                battle_roster=self.battle_opponents,
+                current_weather=self.current_weather,
+            )
+        # Rendering a recommendation must never mutate player-reported weather.
+        # Browsing opponents or returning to Not specified is deterministic.
+        view_model = calculate()
+
         if view_model.recommendation is None:
             self.results_host.content = self._build_no_recommendation_state(
                 view_model.empty_state_message
@@ -2072,7 +2089,7 @@ class BattleCompassView:
                 if selected_plan.attack_score_conditional:
                     if view_model.team_strategy == "weather_control":
                         weather_name = next((name for name in ("Rain", "Sun", "Sandstorm", "Hail")
-                                             if f"→ {name} →" in selected_plan.sequence_heading), "weather")
+                                             if name in selected_plan.sequence_heading), "weather")
                         score_label = f"Conditional Move Score ({weather_name.lower()} active)"
                     elif view_model.team_strategy == "status_control_punish":
                         score_label = "Conditional Move Score (status active)"
@@ -2093,8 +2110,8 @@ class BattleCompassView:
                     and str(card_move.get("Move") or "") == "Weather Ball"):
                 weather_type = {"Rain": "Water", "Sun": "Fire",
                                 "Sandstorm": "Rock", "Hail": "Ice"}
-                attacking_type = next((weather_type[weather] for weather in weather_type
-                                       if f"→ {weather} →" in selected_plan.sequence_heading), attacking_type)
+                attacking_type = next((kind for weather, kind in weather_type.items()
+                                       if weather in selected_plan.sequence_heading), attacking_type)
             if attacking_type:
                 multiplier = get_type_multiplier(attacking_type, get_effective_pokemon_types(opponent))
                 strategic_effectiveness_label = get_effectiveness_label(multiplier, mode="offense")
@@ -2379,6 +2396,44 @@ class BattleCompassView:
             spacing=28,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
+    def _available_team_weather(self) -> list[str]:
+        """Offer only weather the active team can establish, plus clear/unknown."""
+        abilities = {"Drizzle": "Rain", "Drought": "Sun",
+                     "Snow Warning": "Hail", "Sand Stream": "Sandstorm"}
+        moves = {"Rain Dance": "Rain", "Sunny Day": "Sun",
+                 "Hail": "Hail", "Sandstorm": "Sandstorm"}
+        found = set()
+        for member in self.team_data:
+            weather = abilities.get(str(member.get("Ability") or ""))
+            if weather:
+                found.add(weather)
+            for slot in range(1, 5):
+                name = member.get(f"Move{slot}")
+                if name in moves:
+                    found.add(moves[name])
+        return [weather for weather in ("Rain", "Sun", "Hail", "Sandstorm") if weather in found]
+
+    def _build_current_weather_dropdown(self) -> ft.Control:
+        options = [ft.DropdownOption(key="", text="Not specified"),
+                   ft.DropdownOption(key="None", text="No weather")]
+        options.extend(ft.DropdownOption(key=w, text=w)
+                       for w in self._available_team_weather())
+        return ft.Dropdown(
+            label="Current Weather", width=185, dense=True,
+            value=self.current_weather or "", options=options,
+            on_select=self._handle_current_weather_change,
+        )
+
+    def _handle_current_weather_change(self, event: ft.Event[ft.Dropdown]) -> None:
+        chosen = str(event.control.value or "")
+        self.current_weather = chosen or None
+        self._refresh_results()
+        self.page.update()
+
+    def _reset_current_weather(self) -> None:
+        self.current_weather = None
+        self._weather_state_battle = (self.selected_trainer, self.selected_battle)
+
     def _build_strategy_action_panel(
         self,
         view_model: BattleCompassViewModel,
@@ -2474,24 +2529,34 @@ class BattleCompassView:
         return ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Text(
-                        TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
-                        size=TEXT_SIZE_CARD_TITLE,
-                        weight=ft.FontWeight.BOLD,
-                        font_family=FONT_FAMILY_HEADER,
-                        color=TEXT_PRIMARY,
-                    ),
+                    ft.Row(controls=[
+                        ft.Text(
+                            TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
+                            size=TEXT_SIZE_CARD_TITLE, weight=ft.FontWeight.BOLD,
+                            font_family=FONT_FAMILY_HEADER, color=TEXT_PRIMARY,
+                        ),
+                        *([self._build_current_weather_dropdown()]
+                          if view_model.team_strategy == "weather_control" else []),
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER),
                     ft.Text(
                         action,
                         size=19,
                         weight=ft.FontWeight.BOLD,
                         color=strategy_color(view_model.team_strategy),
                     ),
-                    ft.Text(
-                        detail,
+                    (ft.Text(
+                        spans=[
+                            ft.TextSpan(detail.split("**", 2)[1],
+                                        style=ft.TextStyle(weight=ft.FontWeight.BOLD)),
+                            ft.TextSpan(detail.split("**", 2)[2]),
+                        ],
                         size=14,
                         color=TEXT_SECONDARY,
-                    ),
+                    ) if (view_model.team_strategy == "weather_control"
+                          and detail.startswith("**Weather opportunity:")
+                          and detail.count("**") >= 2)
+                     else ft.Text(detail, size=14, color=TEXT_SECONDARY)),
                     ft.Text(
                         footer,
                         size=12,

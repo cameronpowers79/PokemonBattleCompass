@@ -2127,8 +2127,16 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                     continue
             weather_options.append((setter, result, weather, setup_move))
 
+    if assumed_weather is not None and not weather_options:
+        # The weather is a battlefield property; its original setter need not
+        # still be eligible or even participate in this particular matchup.
+        first = next((member for member in team_data if
+                      (by_name.get(member.get('MemberID')) or by_name.get(str(member.get('Pokemon') or '')))), None)
+        if first is not None:
+            row = by_name.get(first.get('MemberID')) or by_name.get(str(first.get('Pokemon') or ''))
+            weather_options.append((first, row, assumed_weather, None))
     if not weather_options:
-        return 'No safe, supported weather setter can establish a useful weather condition here.'
+        return 'No safe, supported weather setter can establish a useful weather condition here.' 
 
     # Compare any proposed two-step sequence with the team's strongest direct
     # score; a spectacular percentage gain from a weak base is not enough.
@@ -2440,7 +2448,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                            f'{baseline_iws:.2f} versus {weather_iws:.2f} with {weather}. '
                            f'Modeled maximum incoming hit: {maximum_incoming_damage:.0f} '
                            f'of {get_stat(beneficiary, "HP"):.0f} HP.')
-    line = (f'{weather} is assumed active from the lead plan; use {attack_name} with {attacker_name}. '
+    line = (f'{weather} is assumed active for this matchup; use {attack_name} with {attacker_name}. '
             if assumed_weather is not None else
             (f'Step 1: {step}. ' if setup_move else f'Step 1: {setter_name} establishes {weather} on entry via {setter.get("Ability")}. '))
     other_weather = _WEATHER_ABILITIES.get(str(opponent.get('Ability') or ''))
@@ -2527,8 +2535,8 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         plan_role=('Weather Beneficiary' if assumed_weather is not None else
                    'Weather Setter' if setup_move or is_switch else 'Weather Beneficiary'),
         fit_explanation='Weather rationale: ' + ' '.join(rationales),
-        attack_move_score=(projected if not setup_move and not is_switch else None),
-        attack_score_conditional=not setup_move and not is_switch,
+        attack_move_score=(projected if lead_move == attack_name else None),
+        attack_score_conditional=(lead_move == attack_name),
         sequence_heading=heading, state_assumption=('Assumes the lead weather remains active; verify the field.'
             if assumed_weather is not None else 'No manual weather is assumed active before setup.'),
         fallback_if_assumption_fails='If weather setup is unsafe or weather expires, use the direct fallback.',
@@ -2545,6 +2553,7 @@ def build_battle_compass_view_model(
     moves_data: list[dict],
     team_strategy: str = "strongest_matchup",
     battle_roster: list[dict] | None = None,
+    current_weather: str | None = None,
 ) -> BattleCompassViewModel:
     """Run the battle engine and return display-ready matchup results."""
     strategy_capabilities: list[StrategyCapabilityViewModel] = []
@@ -2849,23 +2858,39 @@ def build_battle_compass_view_model(
             fallback_reason += " Weather outlook: " + weather_advice
             # Why? is composed once by the shared explanation builder.
         else:
-            assumed_weather = None
-            slot = str(opponent.get('Slot') or '').strip()
-            if slot not in {'', '1', '1.0'} and battle_roster:
-                lead = next((foe for foe in battle_roster if str(foe.get('Slot') or '').strip() in {'1', '1.0'}), None)
-                if lead is not None:
-                    # Only carry a weather plan which the actual lead evaluation chose.
-                    # Do not assume the weather is currently present in the game.
-                    lead_matchups = evaluate_team_matchups(team_data, lead, items, ability_rules, moves_data)
-                    lead_plan = _weather_control_battle_plan(
-                        team_data, lead, lead_matchups, moves_data, items, ability_rules,
-                        battle_roster=battle_roster)
-                    if isinstance(lead_plan, dict):
-                        lead_action = str(lead_plan.get('action') or '')
-                        for candidate_weather in _WEATHER_EXTENSION_ITEMS:
-                            if lead_action.startswith(f'Establish {candidate_weather} with '):
-                                assumed_weather = candidate_weather
-                                break
+            # Never infer weather from a hypothetical prior opponent order.
+            # Current Weather is explicit battle state supplied by the view.
+            # The known lead is the strategic opening anchor. Its setter and
+            # attacker must be selected from the same opening conditions even
+            # after the player reports the weather created by that recommendation.
+            # Current Weather informs later opponents, not a retroactive rewrite
+            # of the lead plan. The selected setter's own weather is still
+            # evaluated by _weather_control_battle_plan below.
+            is_known_lead = str(opponent.get("Slot") or "") in {"1", "1.0"}
+            assumed_weather = (
+                None if is_known_lead else
+                current_weather if current_weather in _WEATHER_EXTENSION_ITEMS else None
+            )
+            # Unspecified weather may conditionally inherit only the KNOWN
+            # lead's recommendation, never hypothetical intermediate opponents.
+            # This is computed afresh from the same inputs on every navigation;
+            # selecting "No weather" explicitly disables the assumption.
+            if current_weather is None and str(opponent.get("Slot") or "") not in {"1", "1.0"}:
+                leader = next((row for row in (battle_roster or [])
+                               if isinstance(row, dict)
+                               and str(row.get("Slot") or "") in {"1", "1.0"}), None)
+                if leader is not None:
+                    lead_model = build_battle_compass_view_model(
+                        team_data=team_data, opponent=leader, items=items,
+                        ability_rules=ability_rules, moves_data=moves_data,
+                        team_strategy="weather_control", battle_roster=battle_roster,
+                        current_weather="None",
+                    )
+                    picked = lead_model.recommendation.pokemon if lead_model.recommendation else {}
+                    assumed_weather = _WEATHER_ABILITIES.get(str(picked.get("Ability") or ""))
+                    if assumed_weather is None and lead_model.selected_strategy_plan:
+                        lead_move = str(lead_model.selected_strategy_plan.lead_move or "")
+                        assumed_weather = _WEATHER_MOVES.get(lead_move)
             result = _weather_control_battle_plan(
                 team_data, opponent, matchup_results, moves_data, items, ability_rules,
                 battle_roster=battle_roster, assumed_weather=assumed_weather)
@@ -2873,6 +2898,60 @@ def build_battle_compass_view_model(
                 fallback_reason = result + " Weather outlook: " + weather_advice
                 # Why? is composed once by the shared explanation builder.
             else:
+                # The player-selected weather is the calculation context, not a
+                # command to stop giving weather advice. Compare independent
+                # alternative plans using this same planner and shared matchup
+                # selector; don't alter the reported battlefield condition.
+                if assumed_weather is not None:
+                    present_score = float(result.get("attack_move_score") or 0.0)
+                    present_actor = str(result.get("lead_pokemon_name") or "")
+                    present_move = str(result.get("lead_move") or "")
+                    options = []
+                    for alternative in ("Rain", "Sun", "Hail", "Sandstorm"):
+                        if alternative == assumed_weather:
+                            continue
+                        # Only compare weather the current team can establish.
+                        if not any(
+                            _WEATHER_ABILITIES.get(str(member.get("Ability") or "")) == alternative
+                            or any(_WEATHER_MOVES.get(str(move.get("Move") or "")) == alternative
+                                   for move in get_moves(member, moves_data))
+                            for member in team_data
+                        ):
+                            continue
+                        alternate = _weather_control_battle_plan(
+                            team_data, opponent, matchup_results, moves_data,
+                            items, ability_rules, battle_roster=battle_roster,
+                            assumed_weather=alternative,
+                        )
+                        if not isinstance(alternate, dict):
+                            continue
+                        other_score = float(alternate.get("attack_move_score") or 0.0)
+                        other_move = str(alternate.get("lead_move") or "")
+                        other_actor = str(alternate.get("lead_pokemon_name") or "")
+                        # A meaningful damage improvement, or a real accuracy
+                        # improvement on the exact same attacker/move.
+                        better_damage = (present_score > 0 and other_score > present_score * 1.20)
+                        accuracy_gain = (
+                            alternative == "Rain" and other_move in {"Thunder", "Hurricane"}
+                            or alternative == "Hail" and other_move == "Blizzard"
+                        ) and other_actor == present_actor and other_move == present_move and (
+                            (assumed_weather != "Rain" and other_move in {"Thunder", "Hurricane"})
+                            or (assumed_weather != "Hail" and other_move == "Blizzard")
+                        )
+                        if better_damage or accuracy_gain:
+                            options.append((int(accuracy_gain), other_score / max(present_score, 1.0),
+                                            alternative, other_actor, other_move, better_damage, accuracy_gain))
+                    if options:
+                        _, _, alt_weather, alt_actor, alt_move, increased_damage, accuracy_bonus = max(options)
+                        benefit = (f"makes {alt_move} bypass its normal accuracy check"
+                                   if accuracy_bonus else
+                                   f"improves the projected {alt_actor} {alt_move} attack")
+                        result["action_detail"] = (
+                            f"**Weather opportunity: {alt_weather} may be stronger in this matchup.** "
+                            f"If you can safely establish it, {alt_weather} {benefit}. "
+                            f"Changing weather costs a setup or switch-in action; the plan below still uses "
+                            f"your selected {assumed_weather}. " + result["action_detail"]
+                        )
                 result["action_detail"] += " Weather outlook: " + weather_advice
                 selected_strategy_plan = StrategyPlanViewModel(**result)
                 strategy_plans = [selected_strategy_plan]
