@@ -141,7 +141,7 @@
   },
   {
     "Ability": "Dauntless Shield",
-    "Description": "Boosts Defense in battle."
+    "Description": "Raises Defense by one stage on entry in Sword/Shield."
   },
   {
     "Ability": "Defeatist",
@@ -165,11 +165,11 @@
   },
   {
     "Ability": "Drizzle",
-    "Description": "Summons rain that lasts indefinitely upon entering battle."
+    "Description": "Summons rain for 5 turns when entering battle (8 turns with Damp Rock)."
   },
   {
     "Ability": "Drought",
-    "Description": "Summons strong sunlight that lasts indefinitely upon entering battle."
+    "Description": "Summons harsh sunlight for 5 turns when entering battle (8 turns with Heat Rock)."
   },
   {
     "Ability": "Dry Skin",
@@ -181,7 +181,7 @@
   },
   {
     "Ability": "Effect Spore",
-    "Description": "Has a 30% chance of inflcting either paralysis, poison, or sleep on attacking Pokémon on contact."
+    "Description": "Contact moves have a 30% chance to inflict poison, paralysis, or sleep on the attacker."
   },
   {
     "Ability": "Electric Surge",
@@ -245,7 +245,7 @@
   },
   {
     "Ability": "Gale Wings",
-    "Description": "Raises Flying moves' priority by one stage."
+    "Description": "Gives Flying-type moves +1 priority while the Pokémon has full HP."
   },
   {
     "Ability": "Gluttony",
@@ -257,7 +257,7 @@
   },
   {
     "Ability": "Gorilla Tactics",
-    "Description": "Boosts the Pokémon's Attack stat but only allows the use of the first selected move."
+    "Description": "Raises Attack by 50%, but locks the Pokémon into its first selected move until it switches out."
   },
   {
     "Ability": "Grassy Surge",
@@ -277,7 +277,7 @@
   },
   {
     "Ability": "Harvest",
-    "Description": "Has a 50% chance of restoring a used Berry after each turn if the Pokémon has held no items in the meantime."
+    "Description": "At the end of a turn, has a 50% chance to restore a consumed Berry while the Pokémon holds no item; the chance becomes 100% in harsh sunlight."
   },
   {
     "Ability": "Healer",
@@ -301,7 +301,7 @@
   },
   {
     "Ability": "Hunger Switch",
-    "Description": "Causes Morpeko to change its form each turn, alternating between Full Belly Mode and Hangry Mode"
+    "Description": "Alternates Morpeko between Full Belly and Hangry forms at the end of each turn."
   },
   {
     "Ability": "Hustle",
@@ -317,11 +317,11 @@
   },
   {
     "Ability": "Ice Body",
-    "Description": "Heals for 1/16 max HP after each turn during hail.  Protects against hail damage."
+    "Description": "Restores 1/16 maximum HP at the end of each turn in hail and prevents hail damage."
   },
   {
     "Ability": "Ice Face",
-    "Description": "The Pokémon’s ice head can take a physical attack as a substitute, but the attack also changes the Pokémon’s appearance. The ice will be restored when it snows."
+    "Description": "Blocks damage from one physical attack while its ice face is intact. The face can regenerate in hail in Sword/Shield."
   },
   {
     "Ability": "Ice Scales",
@@ -353,7 +353,7 @@
   },
   {
     "Ability": "Inner Focus",
-    "Description": "Prevents flinching."
+    "Description": "Prevents flinching and blocks the Attack drop from Intimidate."
   },
   {
     "Ability": "Insomnia",
@@ -365,7 +365,7 @@
   },
   {
     "Ability": "Intrepid Sword",
-    "Description": "Boosts Attack in battle."
+    "Description": "Raises Attack by one stage on entry in Sword/Shield."
   },
   {
     "Ability": "Iron Barbs",
@@ -397,7 +397,7 @@
   },
   {
     "Ability": "Libero",
-    "Description": "Libero changes the Pokémon's type to that of its previously used attack."
+    "Description": "Changes the Pokémon’s type to the type of the move it is about to use, before the move is executed."
   },
   {
     "Ability": "Light Metal",
@@ -505,7 +505,7 @@
   },
   {
     "Ability": "Oblivious",
-    "Description": "Prevents infatuation and protects against Captivate."
+    "Description": "Prevents infatuation and Taunt, and blocks Intimidate’s Attack drop."
   },
   {
     "Ability": "Overcoat",
@@ -537,7 +537,7 @@
   },
   {
     "Ability": "Pixilate",
-    "Description": "Turns the bearer's Normal moves into Fairy moves and strengthens them to 1.3× their power."
+    "Description": "Changes Normal-type moves to Fairy-type and increases their power by 20%."
   },
   {
     "Ability": "Plus",
@@ -565,7 +565,7 @@
   },
   {
     "Ability": "Pressure",
-    "Description": "Increases the PP cost of moves targetting the Pokémon by one."
+    "Description": "Moves targeting this Pokémon consume one additional PP."
   },
   {
     "Ability": "Prism Armor",
@@ -601,7 +601,7 @@
   },
   {
     "Ability": "Rattled",
-    "Description": "Raises Speed one stage upon being hit by a Dark, Ghost, or Bug move."
+    "Description": "Raises Speed one stage when hit by a Bug-, Ghost-, or Dark-type move, or affected by Intimidate."
   },
   {
     "Ability": "Receiver",
@@ -613,7 +613,7 @@
   },
   {
     "Ability": "Refrigerate",
-    "Description": "Turns the bearer's Normal moves into Ice moves and strengthens them to 1.3× their power."
+    "Description": "Changes Normal-type moves to Ice-type and increases their power by 20%."
   },
   {
     "Ability": "Regenerator",
@@ -657,7 +657,7 @@
   },
   {
     "Ability": "Sand Stream",
-    "Description": "Summons a sandstorm that lasts indefinitely upon entering battle."
+    "Description": "Summons a sandstorm for 5 turns when entering battle (8 turns with Smooth Rock)."
   },
   {
     "Ability": "Sand Veil",
@@ -669,7 +669,7 @@
   },
   {
     "Ability": "Schooling",
-    "Description": "Wishiwashi becomes Schooling Form when its HP is 25% or higher."
+    "Description": "At level 20 or higher, Wishiwashi enters School Form while above 25% HP, and returns to Solo Form at 25% HP or less."
   },
   {
     "Ability": "Scrappy",
@@ -721,11 +721,11 @@
   },
   {
     "Ability": "Slush Rush",
-    "Description": "During Hail, this Pokémon has double Speed."
+    "Description": "Doubles Speed in hail."
   },
   {
     "Ability": "Sniper",
-    "Description": "Strengthens critical hits to inflict 3× damage rather than 2×."
+    "Description": "Boosts critical-hit damage by 50%; in Sword/Shield, a critical hit deals 2.25× normal damage overall instead of 1.5×."
   },
   {
     "Ability": "Snow Cloak",
@@ -733,7 +733,7 @@
   },
   {
     "Ability": "Snow Warning",
-    "Description": "Summons hail that lasts indefinitely upon entering battle."
+    "Description": "Summons hail for 5 turns when entering battle (8 turns with Icy Rock)."
   },
   {
     "Ability": "Solar Power",
@@ -881,7 +881,7 @@
   },
   {
     "Ability": "Tough Claws",
-    "Description": "Strengthens moves that make contact to 1.33× their power."
+    "Description": "Increases the power of contact moves by 30%, including any special moves that make contact."
   },
   {
     "Ability": "Trace",

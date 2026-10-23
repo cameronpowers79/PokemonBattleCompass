@@ -821,15 +821,69 @@ def get_attack_reduction_multiplier(
     return 1
 
 
+# Direct, deterministic Ability power modifiers shared by scoring and OHKO ranges.
+# Move names are only needed for families not tagged in moves.json.
+_BITE_MOVES = {
+    "bite", "crunch", "fire fang", "ice fang", "thunder fang",
+    "poison fang", "psychic fangs", "fishious rend", "jaw lock",
+}
+_PUNCH_MOVES = {
+    "comet punch", "dizzy punch", "drain punch", "dynamic punch",
+    "fire punch", "focus punch", "hammer arm", "ice punch", "mach punch",
+    "mega punch", "meteor mash", "power-up punch", "shadow punch",
+    "sky uppercut", "thunder punch", "bullet punch", "plasma fists",
+    "double iron bash",
+}
+_PULSE_MOVES = {
+    "aura sphere", "dark pulse", "dragon pulse", "heal pulse",
+    "origin pulse", "terrain pulse", "water pulse",
+}
+
+
+def get_direct_ability_power_multiplier(attacker, move):
+    """Deterministic Gen VIII power modifiers when the relevant move is used.
+
+    These are conditional on an equipped Ability, not species eligibility. Effects
+    needing prior triggers (Flash Fire), doubles allies, or uncertain battle state
+    are intentionally excluded.
+    """
+    ability = str(attacker.get("Ability") or "").strip().casefold()
+    name = str(move.get("Move") or "").strip().casefold()
+    category = str(move.get("Category") or "")
+    mtype = str(move.get("Type") or "")
+    if category not in {"Physical", "Special"}:
+        return 1.0
+    if ability == "tough claws" and move_makes_contact(move):
+        return 1.3
+    if ability == "strong jaw" and name in _BITE_MOVES:
+        return 1.5
+    if ability == "iron fist" and name in _PUNCH_MOVES:
+        return 1.2
+    if ability == "mega launcher" and name in _PULSE_MOVES and name != "heal pulse":
+        return 1.5
+    if ability == "steelworker" and mtype == "Steel":
+        return 1.5
+    if ability == "punk rock" and move_is_sound_based(move):
+        return 1.3
+    if ability == "dragon's maw" and mtype == "Dragon":
+        return 1.5
+    if ability == "transistor" and mtype == "Electric":
+        return 1.5
+    if ability == "water bubble" and mtype == "Water":
+        return 2.0
+    return 1.0
+
+
 def get_move_power_multiplier(
     attacker,
     move,
     ability_rules,
 ):
+    direct_multiplier = get_direct_ability_power_multiplier(attacker, move)
     ability_name = attacker.get("Ability")
 
     if not ability_name:
-        return 1
+        return direct_multiplier
 
     for rule in ability_rules:
         if rule.get("Ability") != ability_name:
@@ -842,9 +896,9 @@ def get_move_power_multiplier(
             rule.get("TargetType") == "LowPower"
             and move.get("Power", 0) <= 60
         ):
-            return rule.get(
+            return direct_multiplier * rule.get(
                 "Modifier",
                 1,
             )
 
-    return 1
+    return direct_multiplier

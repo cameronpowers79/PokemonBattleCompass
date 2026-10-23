@@ -189,27 +189,33 @@ def build_recommendation_why(
         return f"{name} can use {lead} defensively while increasing pressure on {opponent_name}."
 
     if strategy == "weather_control":
-        evidence = str(_field(plan, "fit_explanation") or "")
-        if evidence.startswith("Weather rationale: "):
-            return evidence.removeprefix("Weather rationale: ")
-        entry = re.search(r"establishes? (sun|rain|sandstorm|hail).*?via ([\w ]+)", detail, re.I)
-        change = re.search(r"Projected (.*?) Move Score ([\d.]+) → ([\d.]+) in (sun|rain|sandstorm|hail)", detail)
-        if change:
-            attack_name, before, after, weather = change.groups()
-            start = (f"{name}'s {entry.group(2).strip()} establishes {weather} on entry."
-                     if entry else f"{name} can establish {weather} with {lead}.")
-            if float(after) > float(before) + 0.01:
-                start += f" That strengthens {attack_name} and gives the team an offensive weather advantage."
-            elif ((weather.casefold() == "hail" and attack_name == "Blizzard")
-                    or (weather.casefold() == "rain" and attack_name in {"Hurricane", "Thunder"})):
-                start += f" {weather.title()} makes {attack_name} bypass normal accuracy checks, making it more reliable."
-            elif weather.casefold() == "sandstorm" and "Special Defense" in detail:
-                start += f" Sandstorm boosts {name}'s Special Defense, improving its protection against special attacks."
-            elif "Incoming Worst Score" in detail:
-                start += " Its value here is improved protection against incoming attacks."
-            else:
-                start += f" That supports the team's matchup against {opponent_name}."
-            return start
-        return f"{name} can establish favorable weather and support the team's matchup against {opponent_name}."
+        # Use the plan's actual evidence, not its Strategic Fit caption.
+        evidence = str(_field(plan, "weather_why_evidence") or "").strip()
+        weather_match = re.search(r"(?:^|→\s*)(Sun|Rain|Hail|Sandstorm)(?: assumed active|\s*→)",
+                                  str(_field(plan, "sequence_heading")), re.I)
+        weather = weather_match.group(1) if weather_match else "weather"
+        is_followup = kind == "weather_followup"
+        attack_name = (str(_field(plan, "lead_move")) if is_followup
+                       else str(_field(plan, "sequence_heading")).split("→")[-1].strip())
+        if attack_name.startswith("(") and attack_name.endswith(")"):
+            attack_name = attack_name[1:-1]
+
+        # The benefit is tied to the chosen plan. Don't state that all weather
+        # boosts damage, or incorrectly attribute a beneficiary's attack to a setter.
+        if evidence:
+            text = evidence
+        elif is_followup:
+            text = (f"If {weather} remains active, {name} can attack "
+                    f"{opponent_name} with {attack_name or lead}.")
+        else:
+            text = (f"{name} establishes {weather} as the selected weather plan "
+                    f"against {opponent_name}.")
+        # When the strategy selects a different Pokémon than the direct
+        # baseline, acknowledge the comparison without asserting an unmodeled
+        # numerical advantage or immunity.
+        if alternate and not is_followup:
+            text += (f" {direct_name} is the strongest unboosted direct option; "
+                     f"this plan instead establishes {weather} for its conditional payoff.")
+        return text
 
     return direct_why or previous_why

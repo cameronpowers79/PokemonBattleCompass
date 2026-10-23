@@ -1,0 +1,1350 @@
+{
+  "schema_version": 1,
+  "purpose": "Conservative implementation audit; not a complete claim about all strategy-level effects.",
+  "abilities": [
+    {
+      "ability": "Adaptability",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Aftermath",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Air Lock",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Analytic",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Anger Point",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Anticipation",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Arena Trap",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Aroma Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "As One (Ice Rider)",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "As One (Shadow Rider)",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Aura Break",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Bad Dreams",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Ball Fetch",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Battery",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Battle Armor",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Beast Boost",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Berserk",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Big Pecks",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Blaze",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Bulletproof",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Cheek Pouch",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Chilling Neigh",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Chlorophyll",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Clear Body",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Cloud Nine",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Competitive",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Compound Eyes",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Contrary",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Corrosion",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Cotton Down",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Curious Medicine",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Cursed Body",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Cute Charm",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Damp",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Dark Aura",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Dauntless Shield",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Defeatist",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Defiant",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Disguise",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Download",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Dragon's Maw",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Drizzle",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Drought",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Dry Skin",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Early Bird",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Effect Spore",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Electric Surge",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Emergency Exit",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Fairy Aura",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Filter",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Flame Body",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Flare Boost",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Flash Fire",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Flower Gift",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Flower Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Fluffy",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Forewarn",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Friend Guard",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Frisk",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Full Metal Body",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Fur Coat",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Gale Wings",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Gluttony",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Gooey",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Gorilla Tactics",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Grassy Surge",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Grim Neigh",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Gulp Missile",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Guts",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Harvest",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Healer",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Heatproof",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Heavy Metal",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Honey Gather",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Huge Power",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Hunger Switch",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Hustle",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Hydration",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Hyper Cutter",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Ice Body",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Ice Face",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Ice Scales",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Illuminate",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Illusion",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Immunity",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Imposter",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Infiltrator",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Innards Out",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Inner Focus",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Insomnia",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Intimidate",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Intrepid Sword",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Iron Barbs",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Iron Fist",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Justified",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Keen Eye",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Klutz",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Leaf Guard",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Levitate",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Libero",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Light Metal",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Lightning Rod",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Limber",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Liquid Ooze",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Liquid Voice",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Long Reach",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Magic Bounce",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Magic Guard",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Magician",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Magnet Pull",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Marvel Scale",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Mega Launcher",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Merciless",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Mimicry",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Minus",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Mirror Armor",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Misty Surge",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Mold Breaker",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Moody",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Motor Drive",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Moxie",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Multiscale",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Mummy",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Natural Cure",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Neutralizing Gas",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "No Guard",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Oblivious",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Overcoat",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Overgrow",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Own Tempo",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Pastel Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Perish Body",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Pickpocket",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Pickup",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Pixilate",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Plus",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Poison Point",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Poison Touch",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Power Construct",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Power Spot",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Prankster",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Pressure",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Prism Armor",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Propeller Tail",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Psychic Surge",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Punk Rock",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Queenly Majesty",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Quick Draw",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Quick Feet",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Rain Dish",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Rattled",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Receiver",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Reckless",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Refrigerate",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Regenerator",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Ripen",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Rivalry",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "RKS System",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Rock Head",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Rough Skin",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Run Away",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sand Force",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Sand Rush",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Sand Spit",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sand Stream",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Sand Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sap Sipper",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Schooling",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Scrappy",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Screen Cleaner",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Serene Grace",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Shadow Shield",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Shadow Tag",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Shed Skin",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sheer Force",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Shell Armor",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Shield Dust",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Simple",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Skill Link",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Slow Start",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Slush Rush",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Sniper",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Snow Cloak",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Snow Warning",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Solar Power",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Solid Rock",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Soul-Heart",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Soundproof",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Speed Boost",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stakeout",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stall",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stalwart",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stamina",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stance Change",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Static",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Steadfast",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Steam Engine",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Steelworker",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Steely Spirit",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Stench",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sticky Hold",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Storm Drain",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Strong Jaw",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Sturdy",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Suction Cups",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Super Luck",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Surge Surfer",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Swarm",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Sweet Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Swift Swim",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Symbiosis",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Synchronize",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Tangled Feet",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Tangling Hair",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Technician",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Telepathy",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Teravolt",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Thick Fat",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Tinted Lens",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Torrent",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Tough Claws",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Trace",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Transistor",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Triage",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Truant",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Turboblaze",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Unaware",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Unburden",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Unnerve",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Unseen Fist",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Victory Star",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Vital Spirit",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Volt Absorb",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Wandering Spirit",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Water Absorb",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Water Bubble",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "verified direct code"
+      ]
+    },
+    {
+      "ability": "Water Compaction",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Water Veil",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Weak Armor",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "White Smoke",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Wimp Out",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Wonder Guard",
+      "coverage": "partial or conditional modeled effects",
+      "evidence": [
+        "ability_rules.json"
+      ]
+    },
+    {
+      "ability": "Wonder Skin",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    },
+    {
+      "ability": "Zen Mode",
+      "coverage": "not established by audited direct/rule paths",
+      "evidence": []
+    }
+  ]
+}

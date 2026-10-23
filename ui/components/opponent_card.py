@@ -55,6 +55,8 @@ class OpponentCard(ft.Container):
         on_move_type_badge_click: Callable[[str], None],
         threat_score_label: str = "Incoming Worst Score",
         threat_move_label: str = "Worst Incoming Move",
+        weather_overlay_src: str | None = None,
+        weather_overlay_opacity: float = 0.0,
     ) -> None:
         self.app_page = page
         self.trainer_name = trainer_name
@@ -101,6 +103,9 @@ class OpponentCard(ft.Container):
             expand=True,
             padding=24,
             bgcolor=SURFACE,
+            image=(ft.DecorationImage(src=weather_overlay_src, fit=ft.BoxFit.COVER,
+                                      opacity=weather_overlay_opacity)
+                   if weather_overlay_src else None),
             border=ft.Border.all(
                 1,
                 BORDER_DEFAULT,

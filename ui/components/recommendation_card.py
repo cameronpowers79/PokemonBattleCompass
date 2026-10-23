@@ -82,6 +82,7 @@ class RecommendationCard(ft.Container):
         plan_role: str = "",
         condition_detail: str = "",
         show_move_score: bool = True,
+        ability_weather_bonus: tuple[str, str, float, float] | None = None,
         strategic_effectiveness_label: str | None = None,
         setup_followup_move: str | None = None,
         setup_followup_type_badge_src: str | None = None,
@@ -89,6 +90,8 @@ class RecommendationCard(ft.Container):
         setup_followup_base_score: float | None = None,
         setup_followup_effectiveness: str | None = None,
         setup_followup_likely_ohko: bool = False,
+        weather_overlay_src: str | None = None,
+        weather_overlay_opacity: float = 0.0,
     ) -> None:
         self.pokemon_name = pokemon_name
         self.gender_symbol = gender_symbol
@@ -118,6 +121,7 @@ class RecommendationCard(ft.Container):
         self.setup_followup_effectiveness = setup_followup_effectiveness
         self.setup_followup_likely_ohko = setup_followup_likely_ohko
 
+        self.ability_weather_bonus = ability_weather_bonus
         self.item_boosted = item_boosted
         self.held_item = held_item or "Held item"
         self.item_multiplier = item_multiplier
@@ -155,6 +159,9 @@ class RecommendationCard(ft.Container):
             expand=True,
             padding=CARD_PADDING,
             bgcolor=SURFACE,
+            image=(ft.DecorationImage(src=weather_overlay_src, fit=ft.BoxFit.COVER,
+                                      opacity=weather_overlay_opacity)
+                   if weather_overlay_src else None),
             border=ft.Border.all(
                 1,
                 BORDER_ACCENT,
@@ -411,8 +418,25 @@ class RecommendationCard(ft.Container):
         score_controls: list[ft.Control] = [ft.Text(
             score_value, size=TEXT_SIZE_METRIC, weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY,
         )]
-        if self.item_boosted:
+        if self.item_boosted and self.ability_weather_bonus is not None:
+            score_controls.append(self._build_combined_boost_popup())
+        elif self.item_boosted:
             score_controls.append(self._build_item_boost_popup())
+        elif self.ability_weather_bonus is not None:
+            ability, weather, base, final = self.ability_weather_bonus
+            context = f" in {weather}" if weather else ""
+            score_controls.append(ft.PopupMenuButton(
+                icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+                icon_color=PRIMARY_BLUE,
+                tooltip=f"{ability} damage bonus{context}",
+                bgcolor=SURFACE_RAISED,
+                items=[ft.PopupMenuItem(content=ft.Column(controls=[
+                    ft.Text(f"{ability} damage bonus{context}", weight=ft.FontWeight.BOLD),
+                    ft.Text(f"Before Ability: {base:.2f}"),
+                    ft.Text(f"Ability boost: +{final - base:.2f}"),
+                    ft.Text(f"Final Move Score: {final:.2f}"),
+                ], spacing=5))],
+            ))
         controls: list[ft.Control] = []
         if self.plan_role:
             controls.extend([
@@ -460,10 +484,24 @@ class RecommendationCard(ft.Container):
                 )] if self.condition_detail else []),
             ], spacing=8, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER))
             if self.strategic_effectiveness_label and not established_sweeper:
-                controls.append(ft.Text(
-                    self.strategic_effectiveness_label,
-                    size=TEXT_SIZE_BODY,
-                    color=TEXT_SECONDARY,
+                effectiveness = self.strategic_effectiveness_label
+                # Reuse the direct-matchup color/badge conventions for weather
+                # payoff moves. The tactical action label remains separate.
+                if "Super Effective" in effectiveness or "4× Effective" in effectiveness:
+                    eff_color, eff_background = "#7EE2A1", "#182A24"
+                elif "Not Very Effective" in effectiveness:
+                    eff_color, eff_background = "#FACC15", "#4A3A17"
+                elif "No Effect" in effectiveness:
+                    eff_color, eff_background = "#F87171", "#4B2025"
+                else:
+                    eff_color, eff_background = "#D1D5DB", "#303640"
+                controls.append(ft.Container(
+                    content=ft.Text(effectiveness,
+                                    size=TEXT_SIZE_BODY_LARGE,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=eff_color),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=9),
+                    bgcolor=eff_background, border_radius=10,
                 ))
         else:
             controls.append(ft.Container(content=ft.Text(self.effectiveness_label,
@@ -599,6 +637,52 @@ class RecommendationCard(ft.Container):
                 if active
                 else None
             )
+
+    def _build_combined_boost_popup(self) -> ft.Control:
+        """One explanation of the multiplicatively stacked item and Ability boosts."""
+        assert self.ability_weather_bonus is not None
+        ability, weather, _, _ = self.ability_weather_bonus
+        ability_context = f" in {weather}" if weather else ""
+        item_multiplier = float(self.item_multiplier)
+        # The weather Ability multiplier is measured against the same move
+        # with the equipped item still applied (so it isn't an additive %).
+        _, _, before_ability, after_ability = self.ability_weather_bonus
+        ability_multiplier = after_ability / before_ability if before_ability > 0 else 1.0
+        final = float(self.move_score)
+        before_ability = final / ability_multiplier
+        raw_base = before_ability / item_multiplier if item_multiplier > 0 else before_ability
+        item_gain = before_ability - raw_base
+        ability_gain = final - before_ability
+        popup_controls: list[ft.Control] = [
+            ft.Text("Stacked Move Bonuses Active!", weight=ft.FontWeight.BOLD,
+                    size=TEXT_SIZE_BODY_LARGE, color=TEXT_PRIMARY),
+            ft.Text(f"Held item: {self.held_item} (+{(item_multiplier - 1) * 100:.0f}%)",
+                    color=TEXT_SECONDARY, size=TEXT_SIZE_BODY),
+            ft.Text(f"Ability: {ability}{ability_context} (+{(ability_multiplier - 1) * 100:.0f}%)",
+                    color=TEXT_SECONDARY, size=TEXT_SIZE_BODY),
+            ft.Divider(color=BORDER_DEFAULT, height=1),
+            ft.Text(f"Unboosted score: {raw_base:.2f}", size=TEXT_SIZE_DETAIL),
+            ft.Text(f"{self.held_item}: +{item_gain:.2f} → {before_ability:.2f}",
+                    size=TEXT_SIZE_DETAIL),
+            ft.Text(f"{ability}: +{ability_gain:.2f} → {final:.2f}",
+                    size=TEXT_SIZE_DETAIL),
+            ft.Text(f"Final Move Score: {final:.2f}", weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY, size=TEXT_SIZE_DETAIL),
+        ]
+        return ft.PopupMenuButton(
+            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+            icon_color="#E5B85C",  # Gold denotes multiple independent active boosts.
+            tooltip="View stacked item and Ability bonuses",
+            bgcolor=SURFACE_RAISED,
+            menu_padding=6,
+            items=[ft.PopupMenuItem(
+                padding=0,
+                content=ft.Container(
+                    content=ft.Column(controls=popup_controls, spacing=7),
+                    width=305, padding=12, bgcolor=SURFACE_RAISED,
+                    border_radius=10),
+            )],
+        )
 
     def _build_item_boost_popup(self) -> ft.Control:
         boost_percent = round(

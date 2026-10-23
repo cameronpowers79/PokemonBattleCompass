@@ -132,6 +132,7 @@ class StrategyPlanViewModel:
     continuation_same_direct: bool = False
     continuation_below_threshold: bool = False
     continuation_dig_shelter: bool = False
+    weather_why_evidence: str = ""
 @dataclass(frozen=True)
 
 
@@ -2030,6 +2031,76 @@ _WEATHER_SPEED_ABILITIES = {"Swift Swim": "Rain", "Chlorophyll": "Sun", "Sand Ru
 _WEATHER_EXTENSION_ITEMS = {"Rain": "Damp Rock", "Sun": "Heat Rock", "Sandstorm": "Smooth Rock", "Hail": "Icy Rock"}
 
 
+
+def _unmodeled_weather_notes(member: dict, weather: str | None) -> list[BattleNoteViewModel]:
+    """Informational Gen VIII singles notes; no speculative HP or hit-rate modeling.
+
+    These effects are NOT applied to Move Score, incoming damage, or OHKO odds.
+    Weather is the projected condition *after* the recommended member enters.
+    """
+    if weather not in {"Rain", "Sun", "Sandstorm", "Hail"}:
+        return []
+    ability = str(member.get("Ability") or "").strip()
+    name = pokemon_display_name(member)
+    types = {str(member.get(key) or "").title() for key in ("Type1", "Type2")}
+    notes: list[BattleNoteViewModel] = []
+
+    def add(category: str, message: str) -> None:
+        notes.append(BattleNoteViewModel(
+            icon=NOTE_ICONS.get(category, "•"), category=category, text=message))
+
+    if weather == "Sandstorm":
+        exempt = bool(types & {"Rock", "Ground", "Steel"}) or ability in {
+            "Overcoat", "Magic Guard", "Sand Rush", "Sand Force", "Sand Veil"
+        }
+        if not exempt:
+            add("caution", f"Sandstorm chip: {name} loses 1/16 maximum HP at the end of each turn while Sandstorm is active (not included in matchup calculations).")
+        if ability == "Sand Veil":
+            add("info", f"Sand Veil: Sandstorm reduces the accuracy of moves targeting {name} to 80% of normal; this evasion benefit is not modeled.")
+    elif weather == "Hail":
+        exempt = "Ice" in types or ability in {
+            "Overcoat", "Magic Guard", "Snow Cloak", "Ice Body", "Slush Rush"
+        }
+        if not exempt:
+            add("caution", f"Hail chip: {name} loses 1/16 maximum HP at the end of each turn while Hail is active (not included in matchup calculations).")
+        if ability == "Snow Cloak":
+            add("info", f"Snow Cloak: Hail reduces the accuracy of moves targeting {name} to 80% of normal; this evasion benefit is not modeled.")
+        if ability == "Ice Body":
+            add("info", f"Ice Body: Hail restores 1/16 of {name}'s maximum HP at the end of each turn; recovery is not modeled.")
+    elif weather == "Rain":
+        if ability == "Rain Dish":
+            add("info", f"Rain Dish: Rain restores 1/16 of {name}'s maximum HP at the end of each turn; recovery is not modeled.")
+        elif ability == "Dry Skin":
+            add("info", f"Dry Skin: Rain restores 1/8 of {name}'s maximum HP at the end of each turn; recovery is not modeled.")
+        elif ability == "Hydration":
+            add("info", f"Hydration: Rain cures {name}'s major status conditions at the end of each turn; status recovery is not modeled.")
+    elif weather == "Sun":
+        if ability == "Dry Skin":
+            add("caution", f"Dry Skin: Harsh sunlight damages {name} for 1/8 maximum HP at the end of each turn; residual damage is not modeled.")
+        elif ability == "Solar Power":
+            add("caution", f"Solar Power: Harsh sunlight costs {name} 1/8 maximum HP at the end of each turn; residual damage is not modeled.")
+        elif ability == "Leaf Guard":
+            add("info", f"Leaf Guard: Harsh sunlight prevents major status conditions on {name}; status protection is not modeled.")
+        elif ability == "Flower Gift":
+            add("info", f"Flower Gift: Harsh sunlight boosts {name}'s Attack and Special Defense; its conditional stat effects are not fully modeled.")
+    return notes
+
+
+def _weather_for_recommended_member(member: dict, plan: StrategyPlanViewModel | None,
+                                    reported_weather: str | None) -> str | None:
+    """Use planned weather, not just dropdown; entry Abilities override it."""
+    entry = _WEATHER_ABILITIES.get(str(member.get("Ability") or ""))
+    if entry:
+        return entry
+    if plan is not None and plan.strategy_branch == "weather_control":
+        # The plan is the authoritative projection when its setter differs
+        # from the beneficiary or the dropdown is unspecified.
+        for candidate in ("Sandstorm", "Hail", "Rain", "Sun"):
+            if candidate in str(plan.action or "") or candidate in str(plan.sequence_heading or ""):
+                return candidate
+    return reported_weather if reported_weather in _WEATHER_EXTENSION_ITEMS else None
+
+
 def _weather_entry_order(ours, opponent, items):
     """Compare simultaneous entry-weather Abilities; slower activates last.
 
@@ -2127,14 +2198,16 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                     continue
             weather_options.append((setter, result, weather, setup_move))
 
-    if assumed_weather is not None and not weather_options:
-        # The weather is a battlefield property; its original setter need not
-        # still be eligible or even participate in this particular matchup.
-        first = next((member for member in team_data if
-                      (by_name.get(member.get('MemberID')) or by_name.get(str(member.get('Pokemon') or '')))), None)
-        if first is not None:
-            row = by_name.get(first.get('MemberID')) or by_name.get(str(first.get('Pokemon') or ''))
-            weather_options.append((first, row, assumed_weather, None))
+    if assumed_weather is not None:
+        # Every member is eligible under the battlefield's reported weather.
+        # An automatic setter changes that weather on entry; evaluate the
+        # setter under its *resulting* weather rather than excluding it.
+        weather_options = []
+        for member in team_data:
+            row = by_name.get(member.get('MemberID')) or by_name.get(str(member.get('Pokemon') or ''))
+            if row is not None:
+                effective_weather = _WEATHER_ABILITIES.get(str(member.get('Ability') or '')) or assumed_weather
+                weather_options.append((member, row, effective_weather, None))
     if not weather_options:
         return 'No safe, supported weather setter can establish a useful weather condition here.' 
 
@@ -2180,9 +2253,10 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             # Switching in a different auto-weather setter immediately erases
             # the proposed weather. Never credit a cross-weather payoff.
             beneficiary_entry_weather = _WEATHER_ABILITIES.get(str(beneficiary.get('Ability') or ''))
-            if assumed_weather is not None and beneficiary_entry_weather and beneficiary_entry_weather != weather:
+            if assumed_weather is not None and beneficiary.get('MemberID') != setter.get('MemberID'):
+                # This candidate is evaluated under its own entry weather.
                 continue
-            if beneficiary.get("MemberID") != setter.get("MemberID") and beneficiary_entry_weather and beneficiary_entry_weather != weather:
+            if assumed_weather is None and beneficiary.get("MemberID") != setter.get("MemberID") and beneficiary_entry_weather and beneficiary_entry_weather != weather:
                 continue
             bnotes = {str(n.get('text') or '') for n in b_row.get('Battle Notes', []) if isinstance(n, dict)}
             if assumed_weather is None and {'Likely Incoming OHKO', 'Possible Incoming OHKO'} & bnotes:
@@ -2210,11 +2284,11 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             accurate_weather_move = (weather == 'Rain' and bmove in {'Thunder', 'Hurricane'}) or (weather == 'Hail' and bmove == 'Blizzard')
             instant_solar_move = weather == 'Sun' and bmove in {'Solar Beam', 'Solar Blade'}
             bability = str(beneficiary.get('Ability') or '')
-            # Extend the generic weather calculator for the specific attacker's
-            # supported weather-triggered abilities without changing its real
-            # Ability in the damage model.
-            if weather == 'Sandstorm' and bability == 'Sand Force' and attack.get('Type') in {'Rock', 'Ground', 'Steel'}:
-                projected *= 1.3
+            # The shared calculate_move_score() already applies Sand Force.
+            # Applying it again here inflated conditional scores by another
+            # 30%, changing weather-plan ranking and explanations.
+            # Preserve the pre-existing Solar Power projection separately:
+            # it is not yet implemented by the shared damage calculator.
             if weather == 'Sun' and bability == 'Solar Power' and attack.get('Category') == 'Special':
                 projected *= 1.5
             speed_ability = _WEATHER_SPEED_ABILITIES.get(str(beneficiary.get('Ability') or ''))
@@ -2273,7 +2347,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                 continue
             # A switch must be evaluated under the proposed weather, not only
             # the strategy-neutral matchup (which can include Drizzle/Drought).
-            if beneficiary.get("MemberID") != setter.get("MemberID") and weather_iws > 0 and projected / weather_iws < 0.85:
+            if assumed_weather is None and beneficiary.get("MemberID") != setter.get("MemberID") and weather_iws > 0 and projected / weather_iws < 0.85:
                 continue
             max_incoming_hp_damage = 0.0
             for incoming_move in opposing_attacks:
@@ -2282,8 +2356,11 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                 if high is not None:
                     max_incoming_hp_damage = max(max_incoming_hp_damage, float(high))
             beneficiary_hp = float(get_stat(beneficiary, 'HP') or 1)
-            # A plan that risks being KO'd before attacking is not a sensible
-            # weather payoff; First Impression and other priority remain threats.
+            # The same survival gate applies whether weather must be set or is
+            # already reported active. A favorable damage boost cannot make a
+            # candidate with a lethal modeled incoming hit a safe weather plan.
+            # Keep this eligibility check consistent across both paths; the
+            # shared OHKO/ratio selector then ranks the surviving candidates.
             if max_incoming_hp_damage >= beneficiary_hp:
                 continue
             # Spending a turn to establish weather and another to switch must
@@ -2304,7 +2381,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             # alone must not justify a much weaker attack when another member
             # has a stronger, safer offensive solution (e.g. Ice versus Goodra).
             # Keep some tolerance for useful weather accuracy/Speed benefits.
-            if (not switching and attack_gain < 0.95
+            if (assumed_weather is None and not switching and attack_gain < 0.95
                     and weather_ratio_now < best_direct_ratio * 0.95
                     and not counter_weather):
                 continue
@@ -2355,6 +2432,62 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     if not candidates:
         return 'No useful, safe weather beneficiary or projected weather payoff is modeled; use the direct matchup.'
 
+    # Compare COMPLETE actions. A setter attacking immediately and a setter
+    # handing off to a beneficiary do not consume the same number of turns.
+    # Reuse the canonical conditional OHKO note builder (not Move Score alone)
+    # when deciding whether a handoff has earned its exposure.
+    ohko_order = {"Likely Survival OHKO": 4, "Likely OHKO": 3,
+                  "Possible Survival OHKO": 2, "Possible OHKO": 1}
+    ohko_cache = {}
+
+    def conditional_ohko(candidate):
+        member, move, condition = candidate[3], candidate[4], candidate[5]
+        cache_key = (member.get("MemberID") or id(member),
+                     str(move.get("Move") or ""), condition)
+        if cache_key not in ohko_cache:
+            found = _weather_conditional_ohko_notes(
+                member, opponent, move, condition, items, ability_rules, moves_data)
+            labels = [getattr(note, "text", "") for note in found]
+            ohko_cache[cache_key] = max((ohko_order.get(t, 0) for t in labels), default=0)
+        return ohko_cache[cache_key]
+
+    # When weather must be established, evaluate handoffs against the
+    # setter's actual attack under that SAME resulting weather. An additional
+    # exposed switch cannot be justified by a modest score/ratio advantage
+    # if the setter already has an equal-or-better knockout opportunity.
+    setup_self = {}
+    for candidate in candidates:
+        if candidate[1].get("MemberID") == candidate[3].get("MemberID"):
+            key = (candidate[1].get("MemberID") or id(candidate[1]),
+                   candidate[2], candidate[5])
+            prior = setup_self.get(key)
+            if prior is None or candidate[0] > prior[0]:
+                setup_self[key] = candidate
+    if assumed_weather is None:
+        retained = []
+        for candidate in candidates:
+            setter, beneficiary = candidate[1], candidate[3]
+            if setter.get("MemberID") == beneficiary.get("MemberID"):
+                retained.append(candidate)
+                continue
+            key = (setter.get("MemberID") or id(setter), candidate[2], candidate[5])
+            stays = setup_self.get(key)
+            if stays is None:
+                retained.append(candidate)
+                continue
+            stays_tier = conditional_ohko(stays)
+            switch_tier = conditional_ohko(candidate)
+            # A better KO classification or a materially safer matchup can
+            # justify the turn; a small offensive improvement alone cannot.
+            stays_ratio = stays[6] / max(stays[17], 1.0)
+            switch_ratio = candidate[6] / max(candidate[17], 1.0)
+            clearly_better = (switch_tier > stays_tier or
+                              (stays_tier == 0 and switch_ratio >= stays_ratio * 1.5
+                               and candidate[19] < stays[19] * 0.75))
+            if clearly_better:
+                retained.append(candidate)
+        candidates = retained
+
     # For each attainable setup, rank the surviving candidate beneficiaries
     # through the *same* OHKO-promotion / ratio chooser used by Strongest
     # Matchup. Only its optional weather context differs. The ordinary/raw
@@ -2365,32 +2498,78 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         group_key = (setter.get('MemberID') or id(setter), setup_move, weather)
         setup_groups.setdefault(group_key, []).append(candidate)
     shared_ranked_plans = []
-    for group_key, group in setup_groups.items():
-        weather = group[0][5]
-        attacker_pool = []
+    if assumed_weather is not None:
+        # One comparison across the WHOLE team, using the same OHKO/ratio
+        # promotion as Strongest Matchup. Weather may differ per candidate
+        # because Snow Warning, Drizzle, etc. trigger on switch-in.
+        pool = []
+        per_member_weather = {}
         seen = set()
-        for candidate in group:
-            attacker = candidate[3]
-            key = attacker.get('MemberID') or id(attacker)
-            if key not in seen:
-                seen.add(key)
-                attacker_pool.append(attacker)
+        for candidate in candidates:
+            member = candidate[3]
+            mid = member.get('MemberID')
+            if mid in seen:
+                continue
+            seen.add(mid)
+            pool.append(member)
+            per_member_weather[mid] = candidate[5]
         best_member, shared_matchup, _ = find_best_team_member(
-            attacker_pool, opponent, items, ability_rules, moves_data,
-            weather_override=weather,
+            pool, opponent, items, ability_rules, moves_data,
+            weather_by_member=per_member_weather,
         )
-        if best_member is None:
-            continue
-        selected_id = best_member.get('MemberID') or id(best_member)
-        eligible = [candidate for candidate in group
-                    if (candidate[3].get('MemberID') or id(candidate[3])) == selected_id]
-        if not eligible:
-            continue
-        # The planner scores how valuable it is to establish each weather;
-        # selection *within* that weather belongs to the shared engine.
-        shared_ranked_plans.append(max(eligible, key=lambda row: row[0]))
+        if best_member is not None:
+            # In the selected weather, do not let a Ratio-only selection
+            # displace a stronger conditional OHKO classification. This is
+            # the same conditional evidence displayed in Battle Notes.
+            highest_tier = max((conditional_ohko(c) for c in candidates), default=0)
+            if highest_tier >= 2:
+                finalists = [c for c in candidates if conditional_ohko(c) == highest_tier]
+                best_conditional = max(finalists, key=lambda c: c[6] / max(c[17], 1.0))
+                best_member = best_conditional[3]
+            chosen_id = best_member.get('MemberID')
+            eligible = [candidate for candidate in candidates
+                        if candidate[3].get('MemberID') == chosen_id]
+            if eligible:
+                shared_ranked_plans.append(max(eligible, key=lambda row: row[0]))
+    else:
+        for group_key, group in setup_groups.items():
+            weather = group[0][5]
+            attacker_pool = []
+            seen = set()
+            for candidate in group:
+                attacker = candidate[3]
+                key = attacker.get('MemberID') or id(attacker)
+                if key not in seen:
+                    seen.add(key)
+                    attacker_pool.append(attacker)
+            best_member, shared_matchup, _ = find_best_team_member(
+                attacker_pool, opponent, items, ability_rules, moves_data,
+                weather_override=weather,
+            )
+            if best_member is None:
+                continue
+            # Preserve the shared selector's result unless a complete
+            # one-Pokémon plan has a superior conditional knockout tier.
+            highest_tier = max((conditional_ohko(c) for c in group), default=0)
+            if highest_tier >= 2:
+                finalists = [c for c in group if conditional_ohko(c) == highest_tier]
+                best_member = max(finalists, key=lambda c: c[6] / max(c[17], 1.0))[3]
+            selected_id = best_member.get('MemberID') or id(best_member)
+            eligible = [candidate for candidate in group
+                        if (candidate[3].get('MemberID') or id(candidate[3])) == selected_id]
+            if eligible:
+                shared_ranked_plans.append(max(eligible, key=lambda row: row[0]))
     if not shared_ranked_plans:
         return 'No supported weather-adjusted attacker survived the setup checks; use the direct matchup.'
+    # Cross-weather plan selection must respect the SAME knockout/survival
+    # priorities already used within each individual weather proposal.
+    # Otherwise a field-utility bonus can override a clearly safer OHKO plan
+    # (e.g. Torkoal/Sun over Gigalith/Sandstorm against Pelipper).
+    if assumed_weather is None:
+        best_ohko_tier = max(conditional_ohko(row) for row in shared_ranked_plans)
+        if best_ohko_tier >= 2:
+            shared_ranked_plans = [row for row in shared_ranked_plans
+                                   if conditional_ohko(row) == best_ohko_tier]
     (score, setter, setup_move, beneficiary, attack, weather, projected, normal,
      before_speed, after_speed, enemy_speed, flip, duration, sand_wall, baseline_weather,
      accurate_weather_move, instant_solar_move, weather_iws, baseline_iws,
@@ -2408,7 +2587,9 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     if assumed_weather is not None:
         # A later-roster recommendation describes the attack to make NOW,
         # not the opening setup sequence that created the assumed weather.
-        heading = f'{weather} assumed active → {attacker_name} ({attack_name})'
+        heading = (f'{attacker_name} → {weather} on entry → {attack_name}'
+                   if weather != assumed_weather else
+                   f'{weather} assumed active → {attacker_name} ({attack_name})')
         lead_move = attack_name
         opening_name = attacker_name
     else:
@@ -2448,7 +2629,10 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                            f'{baseline_iws:.2f} versus {weather_iws:.2f} with {weather}. '
                            f'Modeled maximum incoming hit: {maximum_incoming_damage:.0f} '
                            f'of {get_stat(beneficiary, "HP"):.0f} HP.')
-    line = (f'{weather} is assumed active for this matchup; use {attack_name} with {attacker_name}. '
+    line = ((f'{attacker_name} establishes {weather} on entry, replacing the reported {assumed_weather}; '
+              f'use {attack_name} under {weather}. ')
+            if assumed_weather is not None and weather != assumed_weather else
+            f'{weather} is assumed active for this matchup; use {attack_name} with {attacker_name}. '
             if assumed_weather is not None else
             (f'Step 1: {step}. ' if setup_move else f'Step 1: {setter_name} establishes {weather} on entry via {setter.get("Ability")}. '))
     other_weather = _WEATHER_ABILITIES.get(str(opponent.get('Ability') or ''))
@@ -2496,25 +2680,64 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
              f'Weather lasts up to {duration} turns; switching uses one turn.')
     condition = (f'Assumes {weather} is active and not overridden; Battle Compass cannot verify remaining turns. '
                  'If the weather changes or expires, use the direct matchup or re-establish weather.')
-    # The selection rationale is evidence, not a repetition of the step-by-step
-    # plan. Use the beneficiary and chosen weather, not generic "favorable" text.
+    # The fit meter gets a short role/viability explanation. Matchup-specific
+    # evidence is passed separately to the shared Why? builder.
+    fit_summary = (
+        f'{weather} beneficiary; projected matchup is {fit.lower()}.'
+        if assumed_weather is not None else
+        f'{weather} setter; projected follow-up is {fit.lower()}.'
+    )
     rationales = []
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+    effective_attack_type = str(attack.get('Type') or '')
+    if attack_name == 'Weather Ball':
+        effective_attack_type = {'Rain': 'Water', 'Sun': 'Fire',
+                                 'Hail': 'Ice', 'Sandstorm': 'Rock'}.get(weather, effective_attack_type)
+    attack_effectiveness = get_type_multiplier(effective_attack_type, get_effective_pokemon_types(opponent))
+    # Explain the winning tradeoff, not merely that the attack is available.
+    chosen_tier = conditional_ohko(max(shared_ranked_plans, key=lambda row: row[0]))
+    tier_names = {4: 'Likely Survival OHKO', 3: 'Likely OHKO',
+                  2: 'Possible Survival OHKO', 1: 'Possible OHKO'}
+    if is_switch:
+        rationales.append(f'{setter_name} establishes {weather}, then a switch to {attacker_name} costs an exposed turn.')
+    elif assumed_weather is not None and weather != assumed_weather:
+        rationales.append(f'{attacker_name} replaces {assumed_weather} with {weather} on entry and attacks immediately.')
+    elif assumed_weather is not None:
+        rationales.append(f'With {weather} already active, {attacker_name} can attack immediately; no extra weather setup is needed.')
+    else:
+        rationales.append(f'{setter_name} establishes {weather} on entry and attacks immediately without a handoff.')
+    if chosen_tier:
+        rationales.append(f'{attack_name} has a {tier_names[chosen_tier]} projection.')
+    # Compare the closest viable alternative under the same resulting weather.
+    # This gives Why? a decisive reason without guessing which member is active.
+    alternatives = [c for c in candidates
+                    if c[3].get('MemberID') != beneficiary.get('MemberID')
+                    and c[5] == weather]
+    if alternatives:
+        runner = max(alternatives, key=lambda c: (conditional_ohko(c), c[6] / max(c[17], 1.0)))
+        other = pokemon_display_name(runner[3])
+        other_tier = conditional_ohko(runner)
+        if chosen_tier > other_tier:
+            rationales.append(f'{other} has a weaker projected knockout opportunity ({tier_names.get(other_tier, "no modeled OHKO")}).')
+        elif not is_switch and runner[1].get('MemberID') != runner[3].get('MemberID'):
+            rationales.append(f'{other} requires an additional exposed switch turn without a stronger projected OHKO.')
+        else:
+            chosen_ratio = projected / max(weather_iws, 1.0)
+            other_ratio = runner[6] / max(runner[17], 1.0)
+            if chosen_ratio >= other_ratio:
+                rationales.append(f'{attacker_name} has the better weather-adjusted attack-to-threat ratio than {other} ({chosen_ratio:.2f} versus {other_ratio:.2f}).')
+    if attack_effectiveness > 1:
+        rationales.append(f'{attack_name} is super effective against {str(opponent.get("Pokemon") or "the opponent")}.')
     if field_value >= 1.0 and weather == 'Rain':
         rationales.append('Rain weakens the opposing team’s Fire attacks and strengthens Water attacks.')
     elif field_value >= 1.0 and weather == 'Sun':
         rationales.append('Sun weakens the opposing team’s Water attacks and strengthens Fire attacks.')
     if projected > normal * 1.05:
-        rationales.append(f'{weather} improves {attacker_name}’s {attack_name} payoff.')
+        rationales.append(f'{weather} improves the projected score of {attack_name}.')
     elif accurate_weather_move:
-        rationales.append(f'{weather} makes {attack_name} bypass its normal accuracy check.')
+        rationales.append(f'{weather} makes {attack_name} bypass its normal accuracy checks.')
     elif sand_wall and weather_iws < baseline_iws * 0.95:
-        rationales.append(f'Sandstorm increases {attacker_name}’s Special Defense against special attacks.')
-    if assumed_weather is not None:
-        rationales.insert(0, f'With {weather} assumed active, {attacker_name} can use {attack_name}.')
-    elif attacker_name != setter_name:
-        rationales.insert(0, f'{setter_name} establishes {weather} for {attacker_name}’s {attack_name}.')
-    else:
-        rationales.insert(0, f'{setter_name} establishes {weather} and attacks with {attack_name}.')
+        rationales.append(f'Sandstorm reduces incoming special-attack pressure on {attacker_name}.')
     return dict(
         member_id=(beneficiary.get("MemberID") if assumed_weather is not None else setter.get("MemberID")),
         setter_member_id=setter.get("MemberID"), payoff_member_id=beneficiary.get("MemberID"),
@@ -2534,7 +2757,8 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             'Weather Setup' if setup_move else 'Weather Payoff' if not is_switch else 'Automatic Weather'),
         plan_role=('Weather Beneficiary' if assumed_weather is not None else
                    'Weather Setter' if setup_move or is_switch else 'Weather Beneficiary'),
-        fit_explanation='Weather rationale: ' + ' '.join(rationales),
+        fit_explanation=fit_summary,
+        weather_why_evidence=' '.join(rationales),
         attack_move_score=(projected if lead_move == attack_name else None),
         attack_score_conditional=(lead_move == attack_name),
         sequence_heading=heading, state_assumption=('Assumes the lead weather remains active; verify the field.'
@@ -2542,6 +2766,53 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         fallback_if_assumption_fails='If weather setup is unsafe or weather expires, use the direct fallback.',
         condition_detail=condition if assumed_weather is not None or (not setup_move and not is_switch) else '',
     )
+
+
+def _weather_conditional_ohko_notes(member, opponent, move, weather, items, ability_rules, moves_data):
+    """Use the canonical OHKO note builder with the projected move and weather.
+
+    Does not change the neutral Full Analysis or recommendation thresholds.
+    """
+    from engine.calculations import (calculate_damage_range, calculate_move_score,
+                                     AVERAGE_OPPONENT_IV, get_weather_speed_multiplier)
+    from engine.mechanics import get_item_speed_multiplier
+    from engine.notes import build_offensive_ohko_note, build_incoming_ohko_note
+
+    low, high = calculate_damage_range(member, opponent, move, items, ability_rules,
+                                       weather_override=weather)
+    possible_low, possible_high = calculate_damage_range(
+        member, opponent, move, items, ability_rules,
+        defender_opponent_iv_override=AVERAGE_OPPONENT_IV,
+        weather_override=weather)
+    attacks = [m for m in get_moves(opponent, moves_data)
+               if m.get('Category') in {'Physical', 'Special'}]
+    scored = [(float(calculate_move_score(opponent, member, m, items, ability_rules,
+                                          weather_override=weather)), m) for m in attacks]
+    worst_score, worst_move = max(scored, key=lambda pair: pair[0], default=(0.0, None))
+    incoming_low = incoming_high = None
+    if worst_move is not None:
+        incoming_low, incoming_high = calculate_damage_range(
+            opponent, member, worst_move, items, ability_rules, weather_override=weather)
+    our_speed = float(get_stat(member, 'SPE')) * get_item_speed_multiplier(member, items) * get_weather_speed_multiplier(member, weather)
+    their_speed = float(get_stat(opponent, 'SPE')) * get_item_speed_multiplier(opponent, items) * get_weather_speed_multiplier(opponent, weather)
+    # Use the same Speed tie handling as the existing shared OHKO evaluator.
+    moves_second = our_speed < their_speed
+    hp = float(get_stat(member, 'HP') or 0)
+    target_hp = float(get_stat(opponent, 'HP') or 0)
+    from engine.calculations import get_opponent_dmax_note
+    if get_opponent_dmax_note(opponent):
+        target_hp *= 2
+    possible_hp = float(get_stat(opponent, 'HP', AVERAGE_OPPONENT_IV) or 0)
+    if get_opponent_dmax_note(opponent):
+        possible_hp *= 2
+    off = build_offensive_ohko_note(
+        low, high, target_hp, possible_low, possible_high, possible_hp,
+        moves_second, incoming_low is None or incoming_low < hp, worst_score > 0)
+    inc = build_incoming_ohko_note(worst_score == 0, incoming_low, incoming_high, hp)
+    return [BattleNoteViewModel(icon=NOTE_ICONS.get(n.get('category', 'info'), '•'),
+                                category=n.get('category', 'info'), text=n.get('text', ''))
+            for n in (off, inc) if n is not None]
+
 
 
 def build_battle_compass_view_model(
@@ -2903,55 +3174,97 @@ def build_battle_compass_view_model(
                 # alternative plans using this same planner and shared matchup
                 # selector; don't alter the reported battlefield condition.
                 if assumed_weather is not None:
-                    present_score = float(result.get("attack_move_score") or 0.0)
-                    present_actor = str(result.get("lead_pokemon_name") or "")
-                    present_move = str(result.get("lead_move") or "")
-                    options = []
-                    for alternative in ("Rain", "Sun", "Hail", "Sandstorm"):
-                        if alternative == assumed_weather:
-                            continue
-                        # Only compare weather the current team can establish.
-                        if not any(
-                            _WEATHER_ABILITIES.get(str(member.get("Ability") or "")) == alternative
-                            or any(_WEATHER_MOVES.get(str(move.get("Move") or "")) == alternative
-                                   for move in get_moves(member, moves_data))
-                            for member in team_data
-                        ):
-                            continue
-                        alternate = _weather_control_battle_plan(
-                            team_data, opponent, matchup_results, moves_data,
-                            items, ability_rules, battle_roster=battle_roster,
-                            assumed_weather=alternative,
-                        )
-                        if not isinstance(alternate, dict):
-                            continue
-                        other_score = float(alternate.get("attack_move_score") or 0.0)
-                        other_move = str(alternate.get("lead_move") or "")
-                        other_actor = str(alternate.get("lead_pokemon_name") or "")
-                        # A meaningful damage improvement, or a real accuracy
-                        # improvement on the exact same attacker/move.
-                        better_damage = (present_score > 0 and other_score > present_score * 1.20)
-                        accuracy_gain = (
-                            alternative == "Rain" and other_move in {"Thunder", "Hurricane"}
-                            or alternative == "Hail" and other_move == "Blizzard"
-                        ) and other_actor == present_actor and other_move == present_move and (
-                            (assumed_weather != "Rain" and other_move in {"Thunder", "Hurricane"})
-                            or (assumed_weather != "Hail" and other_move == "Blizzard")
-                        )
-                        if better_damage or accuracy_gain:
-                            options.append((int(accuracy_gain), other_score / max(present_score, 1.0),
-                                            alternative, other_actor, other_move, better_damage, accuracy_gain))
-                    if options:
-                        _, _, alt_weather, alt_actor, alt_move, increased_damage, accuracy_bonus = max(options)
-                        benefit = (f"makes {alt_move} bypass its normal accuracy check"
-                                   if accuracy_bonus else
-                                   f"improves the projected {alt_actor} {alt_move} attack")
-                        result["action_detail"] = (
-                            f"**Weather opportunity: {alt_weather} may be stronger in this matchup.** "
-                            f"If you can safely establish it, {alt_weather} {benefit}. "
-                            f"Changing weather costs a setup or switch-in action; the plan below still uses "
-                            f"your selected {assumed_weather}. " + result["action_detail"]
-                        )
+                    # Compare the SAME attacker's SAME move in both weather
+                    # states. Comparing two independent plans' top scores can
+                    # falsely credit weather with differences caused by a
+                    # different candidate, attack, or setup choice.
+                    actor_id = result.get("payoff_member_id")
+                    attack_name = str(result.get("lead_move") or "")
+                    actor = next((member for member in team_data
+                                  if member.get("MemberID") == actor_id), None)
+                    attack = next((move for move in get_moves(actor, moves_data)
+                                   if str(move.get("Move") or "") == attack_name), None) if actor else None
+                    if actor is not None and attack is not None:
+                        current_score = float(calculate_move_score(
+                            actor, opponent, attack, items, ability_rules,
+                            weather_override=assumed_weather))
+                        options = []
+                        for alternative in ("Rain", "Sun", "Hail", "Sandstorm"):
+                            if alternative == assumed_weather:
+                                continue
+                            if not any(
+                                _WEATHER_ABILITIES.get(str(member.get("Ability") or "")) == alternative
+                                or any(_WEATHER_MOVES.get(str(move.get("Move") or "")) == alternative
+                                       for move in get_moves(member, moves_data))
+                                for member in team_data
+                            ):
+                                continue
+                            new_score = float(calculate_move_score(
+                                actor, opponent, attack, items, ability_rules,
+                                weather_override=alternative))
+                            # The calculator's Move Score is a damage-based
+                            # projection; guaranteed-hit benefits are evaluated
+                            # separately, rather than inventing a damage boost.
+                            accuracy_gain = (
+                                (alternative == "Rain" and attack_name in {"Thunder", "Hurricane"})
+                                or (alternative == "Hail" and attack_name == "Blizzard")
+                            ) and not (
+                                (assumed_weather == "Rain" and attack_name in {"Thunder", "Hurricane"})
+                                or (assumed_weather == "Hail" and attack_name == "Blizzard")
+                            )
+                            damage_gain = (current_score > 0 and new_score > current_score * 1.20)
+                            # Only advertise a Speed Ability when its weather
+                            # changes which Pokémon actually attacks first.
+                            # Reuse the same weather Speed multipliers as the
+                            # shared OHKO/turn-order calculator.
+                            from engine.calculations import get_weather_speed_multiplier
+                            from engine.mechanics import get_item_speed_multiplier
+                            actor_speed = float(get_stat(actor, "SPE")) * float(get_item_speed_multiplier(actor, items))
+                            foe_speed = float(get_stat(opponent, "SPE")) * float(get_item_speed_multiplier(opponent, items))
+                            current_ours = actor_speed * get_weather_speed_multiplier(actor, assumed_weather)
+                            current_foe = foe_speed * get_weather_speed_multiplier(opponent, assumed_weather)
+                            projected_ours = actor_speed * get_weather_speed_multiplier(actor, alternative)
+                            projected_foe = foe_speed * get_weather_speed_multiplier(opponent, alternative)
+                            speed_gain = bool(
+                                _WEATHER_SPEED_ABILITIES.get(str(actor.get("Ability") or "")) == alternative
+                                and current_ours <= current_foe
+                                and projected_ours > projected_foe
+                            )
+                            if damage_gain or accuracy_gain or speed_gain:
+                                # Preserve existing damage/accuracy priority;
+                                # speed-only advisories fill the previous gap.
+                                options.append((int(accuracy_gain), int(damage_gain),
+                                                new_score / max(current_score, 1.0),
+                                                alternative, damage_gain, accuracy_gain,
+                                                speed_gain, current_ours, current_foe,
+                                                projected_ours, projected_foe))
+                        if options:
+                            (_, _, _, alt_weather, damage_gain, accuracy_gain,
+                             speed_gain, speed_before, foe_before,
+                             speed_after, foe_after) = max(options)
+                            if accuracy_gain:
+                                benefit = f"makes {attack_name} bypass its normal accuracy check"
+                            elif damage_gain:
+                                benefit = (
+                                    f"raises {attack_name}'s projected Move Score from "
+                                    f"{current_score:.2f} to "
+                                    f"{float(calculate_move_score(actor, opponent, attack, items, ability_rules, weather_override=alt_weather)):.2f}"
+                                )
+                            else:
+                                benefit = (
+                                    f"activates {actor.get('Ability')}, increasing "
+                                    f"{actor.get('Pokemon') or actor.get('Species') or 'the attacker'}'s effective Speed "
+                                    f"from {speed_before:g} to {speed_after:g} "
+                                    f"and allowing it to outspeed {opponent.get('Pokemon', 'the opponent')} "
+                                    f"(effective Speed {foe_after:g})"
+                                )
+                            result["action_detail"] = (
+                                f"**Weather opportunity: {alt_weather} may help {attack_name}.** "
+                                f"For the same attacker, {alt_weather} {benefit}. "
+                                f"Changing weather requires a setup move or switch-in; "
+                                f"the plan below still uses your selected {assumed_weather}. "
+                                + result["action_detail"]
+                            )
                 result["action_detail"] += " Weather outlook: " + weather_advice
                 selected_strategy_plan = StrategyPlanViewModel(**result)
                 strategy_plans = [selected_strategy_plan]
@@ -3029,6 +3342,48 @@ def build_battle_compass_view_model(
             "the selected strategy active for readiness and recommendation guidance."
         )
         # Why? is composed once by the shared explanation builder.
+    if team_strategy == "weather_control" and recommendation is not None and selected_strategy_plan is not None:
+        # The visible conditional attack and the OHKO notes MUST share the same
+        # effective weather. Preserve all non-OHKO tactical notes (including
+        # weather disruption and residual notes) and the raw Full Analysis.
+        attack_name = (selected_strategy_plan.conditional_move_name
+                       or selected_strategy_plan.lead_move)
+        weather = _weather_for_recommended_member(
+            recommendation.pokemon, selected_strategy_plan, current_weather)
+        attack = next((m for m in get_moves(recommendation.pokemon, moves_data)
+                       if str(m.get('Move') or '') == str(attack_name or '')), None)
+        if attack is not None and weather is not None and attack.get('Category') in {'Physical', 'Special'}:
+            computed = _weather_conditional_ohko_notes(
+                recommendation.pokemon, opponent, attack, weather,
+                items, ability_rules, moves_data)
+            ohko_texts = {'Likely OHKO', 'Possible OHKO', 'Likely Survival OHKO',
+                          'Possible Survival OHKO', 'Likely Incoming OHKO',
+                          'Possible Incoming OHKO'}
+            retained = [n for n in recommendation.battle_notes if n.text not in ohko_texts]
+            recommendation = replace(recommendation, battle_notes=[*computed, *retained])
+    if team_strategy == "weather_control" and recommendation is not None:
+        # Opposing weather moves can invalidate current projections. Use the
+        # shared Battle Notes presentation, rather than a special callout UI.
+        opponent_weather_moves = [str(m.get('Move') or '')
+                                  for m in get_moves(opponent, moves_data)
+                                  if str(m.get('Move') or '') in _WEATHER_MOVES]
+        if opponent_weather_moves:
+            label = ', '.join(dict.fromkeys(opponent_weather_moves))
+            note = BattleNoteViewModel(
+                icon=NOTE_ICONS.get('warning', '⚠'), category='warning',
+                text=f"Weather disruption: {opponent.get('Pokemon', 'The opponent')} knows {label} and can replace the current weather. Reassess the plan if it does.",
+            )
+            if not any('Weather disruption:' in n.text for n in recommendation.battle_notes):
+                recommendation = replace(recommendation, battle_notes=[*recommendation.battle_notes, note])
+    if team_strategy == "weather_control" and recommendation is not None:
+        weather_after_entry = _weather_for_recommended_member(
+            recommendation.pokemon, selected_strategy_plan, current_weather)
+        extra_notes = _unmodeled_weather_notes(recommendation.pokemon, weather_after_entry)
+        if extra_notes:
+            existing_text = {n.text for n in recommendation.battle_notes}
+            recommendation = replace(
+                recommendation, battle_notes=[*recommendation.battle_notes,
+                                              *(n for n in extra_notes if n.text not in existing_text)])
     # One shared, presentation-only explanation path for every strategy.
     # Selection, Move Scores, tactical sequencing and fallbacks above remain
     # unchanged. Strongest Matchup retains its already-polished engine prose.
@@ -3044,7 +3399,21 @@ def build_battle_compass_view_model(
     )
     # Identified strategy roles are named at their source using their original
     # MemberID-bearing records. Do not globally substitute species in prose.
-    other_options = [matchup for matchup in all_matchups if matchup is not recommendation]
+    # Strategy recommendations are sometimes dataclass copies of their direct
+    # matchups (conditional move, notes, item/Ability scoring). Exclude the same
+    # party member, not merely the same Python object or species name.
+    selected_id = recommendation.pokemon.get("MemberID") if recommendation else None
+    other_options = [
+        matchup for matchup in all_matchups
+        if not (
+            (selected_id is not None and matchup.pokemon.get("MemberID") == selected_id)
+            or (
+                selected_id is None
+                and recommendation is not None
+                and matchup.pokemon is recommendation.pokemon
+            )
+        )
+    ]
     return BattleCompassViewModel(
         opponent=opponent,
         recommendation=recommendation,

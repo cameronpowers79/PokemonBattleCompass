@@ -824,6 +824,31 @@ def show_type_matchup_dialog(
 
 
 
+# Verified code-backed effects without corresponding ability_rules.json entries.
+# This supplements (rather than replaces) the declarative rule list.
+# Wording deliberately identifies partial/conditional coverage where applicable.
+_CODE_MODELED_ABILITY_NOTES = {
+    "Drizzle": "Entry rain is modeled in weather-aware recommendations.",
+    "Drought": "Entry sunlight is modeled in weather-aware recommendations.",
+    "Sand Stream": "Entry sandstorm is modeled in weather-aware recommendations.",
+    "Snow Warning": "Entry hail is modeled in weather-aware recommendations.",
+    "Sand Force": "Rock, Ground, and Steel damage receives its sandstorm boost in weather-aware scoring and OHKO estimates.",
+    "Sand Rush": "Doubled sandstorm Speed is considered in weather-aware move-order/OHKO evaluation.",
+    "Swift Swim": "Doubled rain Speed is considered in weather-aware move-order/OHKO evaluation.",
+    "Chlorophyll": "Doubled sunlight Speed is considered in weather-aware move-order/OHKO evaluation.",
+    "Slush Rush": "Doubled hail Speed is considered in weather-aware move-order/OHKO evaluation.",
+    "Tough Claws": "Contact damage receives its 1.3× boost, including special contact moves.",
+    "Strong Jaw": "Supported biting attacks receive their 1.5× boost.",
+    "Iron Fist": "Supported punching attacks receive their 1.2× boost.",
+    "Mega Launcher": "Supported damaging pulse/aura moves receive their 1.5× boost.",
+    "Steelworker": "Steel attacks receive their 1.5× boost.",
+    "Punk Rock": "Sound-based attacks receive their 1.3× boost; sound resistance is not yet fully modeled.",
+    "Dragon's Maw": "Dragon attacks receive their 1.5× boost.",
+    "Transistor": "Electric attacks receive their 1.5× boost.",
+    "Water Bubble": "Water-type attacks receive their 2× boost; its other effects require separate verification.",
+}
+
+
 def show_ability_dialog(
 
     *,
@@ -912,7 +937,9 @@ def show_ability_dialog(
 
 
 
-    if matching_rules:
+    code_modeled_note = _CODE_MODELED_ABILITY_NOTES.get(ability_name)
+
+    if matching_rules or code_modeled_note:
 
         unique_notes: list[str] = []
 
@@ -943,6 +970,9 @@ def show_ability_dialog(
                 )
 
 
+
+        if code_modeled_note and code_modeled_note not in unique_notes:
+            unique_notes.append(code_modeled_note)
 
         controls.append(
 

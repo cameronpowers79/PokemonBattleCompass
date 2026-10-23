@@ -24,7 +24,12 @@ from ui.components.other_strong_options import (
 )
 from ui.components.recommendation_card import RecommendationCard
 from engine.base_stats_registry import base_stat_profiles
-from engine.mechanics import get_effective_pokemon_types
+from engine.mechanics import (
+    get_effective_pokemon_types, get_direct_ability_power_multiplier,
+    get_item_damage_multiplier, get_item_attack_stat_multiplier,
+    get_type_multiplier,
+)
+from engine.calculations import calculate_move_score, get_effective_move_power, get_weather_ability_power_multiplier
 from engine.learnsets import supported_strategy_move_methods
 from engine.strategy_capabilities import (
     evaluate_strategy_recommendations,
@@ -222,6 +227,7 @@ class BattleCompassView:
             strategy_compact_description(self.app_state.team_strategy),
             size=13,
             color=TEXT_SECONDARY,
+            tooltip="",  # Already visible in full; avoid a duplicate hover overlay.
         )
         self.strategy_recommender_button = ft.IconButton(
             icon=ft.Icons.HELP_OUTLINE_ROUNDED,
@@ -2025,6 +2031,42 @@ class BattleCompassView:
             border_radius=16,
             alignment=ft.Alignment.CENTER,
         )
+    def _weather_card_overlay(self, view_model: BattleCompassViewModel) -> tuple[str | None, float]:
+        """Decorative only: never change weather calculations or another strategy's cards.
+
+        Current Weather wins when explicitly selected; a recommended automatic
+        setter overrides that with the weather it activates on entry. When the
+        selector is unspecified, use the weather in the selected plan heading.
+        """
+        if view_model.team_strategy != "weather_control":
+            return None, 0.0
+
+        weather = self.current_weather if self.current_weather in {
+            "Rain", "Sun", "Hail", "Sandstorm"} else None
+        if self.current_weather is None:
+            plan = view_model.selected_strategy_plan
+            heading = str(plan.sequence_heading or "") if plan else ""
+            weather = next((name for name in ("Sandstorm", "Rain", "Hail", "Sun")
+                            if name in heading), None)
+
+        recommended = view_model.recommendation
+        if recommended is not None:
+            weather = {"Drizzle": "Rain", "Drought": "Sun",
+                       "Snow Warning": "Hail", "Sand Stream": "Sandstorm"}.get(
+                           str(recommended.pokemon.get("Ability") or ""), weather)
+
+        files = {"Rain": ("rain.png", 0.22),
+                 "Sun": ("harsh_sunlight.png", 0.19),
+                 "Hail": ("hail.png", 0.18),
+                 "Sandstorm": ("sandstorm.png", 0.12)}
+        if weather not in files:
+            return None, 0.0
+        filename, opacity = files[weather]
+        asset = ASSETS_DIR / "Weather Overlays" / filename
+        if not asset.is_file():
+            return None, 0.0
+        return f"Weather Overlays/{filename}", opacity
+
     def _build_results(
         self,
         view_model: BattleCompassViewModel,
@@ -2042,6 +2084,9 @@ class BattleCompassView:
         card_move = recommendation.best_move
         card_move_score = recommendation.best_move_score
         card_item_boosted = recommendation.item_boosted
+        # A direct Weather Control fallback still uses the player-reported weather.
+        # The strategy-neutral recommendation and Full Analysis remain unchanged.
+        ability_weather_bonus: tuple[str, str, float, float] | None = None
         card_effectiveness_label = get_effectiveness_label(
             recommendation.best_move_type_multiplier,
             mode="offense",
@@ -2100,11 +2145,79 @@ class BattleCompassView:
             card_effectiveness_label = action_type or "Strategic Action"
             card_effectiveness_color = strategy_color(view_model.team_strategy)
 
+        # Show the actual weather-adjusted Move Score even on a direct fallback.
+        # This is a display projection: do not alter the shared selection, ratios,
+        # OHKO classifications, or raw Full Analysis with this presentation step.
+        if view_model.team_strategy == "weather_control" and show_move_score:
+            active_weather = self.current_weather if self.current_weather in {
+                "Rain", "Sun", "Sandstorm", "Hail"
+            } else None
+            if selected_plan is not None:
+                for candidate_weather in ("Rain", "Sun", "Sandstorm", "Hail"):
+                    if candidate_weather in selected_plan.sequence_heading:
+                        active_weather = candidate_weather
+                        break
+            # The candidate may override reported weather with its entry Ability.
+            entry_weather = {"Sand Stream": "Sandstorm", "Snow Warning": "Hail",
+                             "Drizzle": "Rain", "Drought": "Sun"}.get(
+                                 str(recommendation.pokemon.get("Ability") or ""))
+            if entry_weather and active_weather:
+                active_weather = entry_weather
+            if active_weather and isinstance(card_move, dict):
+                move_data = dict(self.move_lookup.get(str(card_move.get("Move") or ""), card_move))
+                if move_data.get("Category") in {"Physical", "Special"}:
+                    score = float(calculate_move_score(
+                        recommendation.pokemon, opponent, move_data, self.items,
+                        self.ability_rules, weather_override=active_weather))
+                    # For direct fallbacks, raw scores cannot represent reported weather.
+                    card_move_score = score
+                    score_label = f"Conditional Move Score ({active_weather.lower()} active)"
+                    multiplier = get_weather_ability_power_multiplier(
+                        recommendation.pokemon, move_data, active_weather)
+                    if multiplier > 1.0 and card_move_score > 0:
+                        ability_weather_bonus = (
+                            str(recommendation.pokemon.get("Ability")), active_weather,
+                            card_move_score / multiplier, card_move_score)
+
+        # An Ability's damage modifier is part of the shared calculation in every
+        # strategy, not just Weather Control. Surface the *same* modifier beside
+        # the Move Score regardless of which strategy selected the attacker.
+        # Speed-only and conditional battle-state Abilities do not earn damage badges.
+        if show_move_score and isinstance(card_move, dict) and card_move.get("Category") in {"Physical", "Special"}:
+            resolved_move = dict(self.move_lookup.get(str(card_move.get("Move") or ""), card_move))
+            direct_modifier = get_direct_ability_power_multiplier(recommendation.pokemon, resolved_move)
+            weather_modifier = 1.0
+            ability_weather_name = ""
+            if view_model.team_strategy == "weather_control":
+                if ability_weather_bonus is not None:
+                    ability_weather_name = ability_weather_bonus[1]
+                else:
+                    ability_weather_name = next(
+                        (name for name in ("Rain", "Sun", "Sandstorm", "Hail")
+                         if selected_plan is not None and name in selected_plan.sequence_heading),
+                        self.current_weather if self.current_weather in {"Rain", "Sun", "Sandstorm", "Hail"} else "",
+                    )
+                    entry_weather = {"Sand Stream": "Sandstorm", "Snow Warning": "Hail",
+                                     "Drizzle": "Rain", "Drought": "Sun"}.get(
+                                         str(recommendation.pokemon.get("Ability") or ""))
+                    if entry_weather and ability_weather_name:
+                        ability_weather_name = entry_weather
+                if ability_weather_name:
+                    weather_modifier = get_weather_ability_power_multiplier(
+                        recommendation.pokemon, resolved_move, ability_weather_name)
+            combined_ability_modifier = direct_modifier * weather_modifier
+            if combined_ability_modifier > 1.000001 and card_move_score > 0:
+                ability_weather_bonus = (
+                    str(recommendation.pokemon.get("Ability") or "Ability"),
+                    ability_weather_name if weather_modifier > 1.000001 else "",
+                    card_move_score / combined_ability_modifier,
+                    card_move_score,
+                )
+
         # A strategy action badge describes the tactic, not type effectiveness.
         # Keep the attacking move's matchup indicator alongside it.
         strategic_effectiveness_label = None
         if selected_plan is not None and show_move_score:
-            from engine.mechanics import get_type_multiplier
             attacking_type = str(card_move.get("Type") or "")
             if (view_model.team_strategy == "weather_control"
                     and str(card_move.get("Move") or "") == "Weather Ball"):
@@ -2119,7 +2232,45 @@ class BattleCompassView:
                 if attacking_type != card_move.get("Type"):
                     card_move = dict(card_move, Type=attacking_type)
 
+        # The shared direct recommendation may have chosen a *different* best
+        # move from the weather/strategy attack shown above. Its cached item
+        # multiplier and baseline therefore cannot describe this card reliably.
+        # Rebuild the multiplier using the currently displayed Pokémon, move,
+        # and weather-resolved type, so boxing/unboxing and held-item edits do
+        # not leave a stale or mismatched item tooltip behind.
+        card_item_multiplier = 1.0
+        card_item_base = card_move_score
+        card_item_bonus = 0.0
+        if show_move_score and isinstance(card_move, dict):
+            selected_attack = dict(self.move_lookup.get(
+                str(card_move.get("Move") or ""), card_move))
+            if selected_attack.get("Category") in {"Physical", "Special"}:
+                if str(selected_attack.get("Move") or "") == "Weather Ball":
+                    selected_attack["Type"] = card_move.get("Type", selected_attack.get("Type"))
+                    if selected_attack["Type"] != "Normal":
+                        selected_attack["Power"] = 100
+                selected_types = get_effective_pokemon_types(opponent)
+                selected_effectiveness = get_type_multiplier(
+                    str(selected_attack.get("Type") or ""), selected_types)
+                item_damage = get_item_damage_multiplier(
+                    recommendation.pokemon, opponent, selected_attack, self.items,
+                    selected_effectiveness,
+                    effective_power=get_effective_move_power(
+                        recommendation.pokemon, opponent, selected_attack, self.items))
+                item_attack = get_item_attack_stat_multiplier(
+                    recommendation.pokemon, selected_attack, self.items)
+                card_item_multiplier = float(item_damage) * float(item_attack)
+                card_item_boosted = card_item_multiplier > 1.000001
+                if card_item_boosted and card_move_score is not None:
+                    card_item_base = card_move_score / card_item_multiplier
+                    card_item_bonus = card_move_score - card_item_base
+        else:
+            card_item_boosted = False
+
+        weather_overlay_src, weather_overlay_opacity = self._weather_card_overlay(view_model)
         recommendation_card = RecommendationCard(
+            weather_overlay_src=weather_overlay_src,
+            weather_overlay_opacity=weather_overlay_opacity,
             pokemon_name=pokemon_display_name(recommendation.pokemon),
             gender_symbol=self._gender_symbol(
                 recommendation.pokemon.get("Gender")
@@ -2147,10 +2298,11 @@ class BattleCompassView:
             strategic_effectiveness_label=strategic_effectiveness_label,
             move_score=card_move_score,
             item_boosted=card_item_boosted,
-            held_item=recommendation.held_item,
-            item_multiplier=recommendation.item_multiplier,
-            base_move_score=recommendation.base_move_score,
-            item_bonus_amount=recommendation.item_bonus_amount,
+            held_item=recommendation.pokemon.get("Held Item"),
+            item_multiplier=card_item_multiplier,
+            base_move_score=card_item_base,
+            item_bonus_amount=card_item_bonus,
+            ability_weather_bonus=ability_weather_bonus,
             matchup_label=display_matchup_label,
             matchup_ratio=recommendation.ratio,
             matchup_level=display_matchup_level,
@@ -2260,6 +2412,8 @@ class BattleCompassView:
                 move
             )
         opponent_card = OpponentCard(
+            weather_overlay_src=weather_overlay_src,
+            weather_overlay_opacity=weather_overlay_opacity,
             page=self.page,
             trainer_name=(
                 self._display_trainer_name(

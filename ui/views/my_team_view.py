@@ -47,7 +47,6 @@ from ui.strategy_ui import (
     strategy_color,
     strategy_full_description,
     strategy_label,
-    strategy_tooltip,
 )
 from ui.rendering import (
     asset_exists,
@@ -774,17 +773,6 @@ class MyTeamView:
                 BORDER_DEFAULT,
             ),
             border_radius=12,
-            tooltip=ft.Tooltip(
-                message=strategy_tooltip(
-                    self.app_state.team_strategy,
-                    location="my_team",
-                ),
-                size_constraints=ft.BoxConstraints(max_width=430),
-                padding=ft.Padding.symmetric(
-                    horizontal=12,
-                    vertical=10,
-                ),
-            ),
         )
 
         self.add_pokemon_button = ft.Button(
@@ -1685,17 +1673,6 @@ class MyTeamView:
         self.team_strategy_value.color = strategy_color(active_strategy)
         self.team_strategy_description.value = strategy_full_description(
             active_strategy
-        )
-        self.team_strategy_indicator.tooltip = ft.Tooltip(
-            message=strategy_tooltip(
-                active_strategy,
-                location="my_team",
-            ),
-            size_constraints=ft.BoxConstraints(max_width=430),
-            padding=ft.Padding.symmetric(
-                horizontal=12,
-                vertical=10,
-            ),
         )
         try:
             self.team_strategy_indicator.update()

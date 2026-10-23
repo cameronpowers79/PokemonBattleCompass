@@ -369,6 +369,22 @@ def _weather_resolved_move(attacker, defender, move, weather_override):
     return result
 
 
+def get_weather_ability_power_multiplier(attacker, move, weather):
+    """Gen VIII Sand Force boosts the damage of Rock/Ground/Steel attacks by 30%."""
+    if (weather == "Sandstorm"
+            and str(attacker.get("Ability") or "").strip().casefold() == "sand force"
+            and str(move.get("Type") or "").strip().casefold() in {"rock", "ground", "steel"}):
+        return 1.3
+    return 1.0
+
+
+def get_weather_speed_multiplier(pokemon, weather):
+    """Weather-dependent Speed abilities, using the actual equipped Ability."""
+    required = {"swift swim": "Rain", "chlorophyll": "Sun",
+                "sand rush": "Sandstorm", "slush rush": "Hail"}
+    return 2.0 if required.get(str(pokemon.get("Ability") or "").strip().casefold()) == weather else 1.0
+
+
 def calculate_move_score(
     attacker,
     defender,
@@ -462,6 +478,7 @@ def calculate_move_score(
         move,
         weather,
     )
+    weather_damage_multiplier *= get_weather_ability_power_multiplier(attacker, move, weather)
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -619,6 +636,7 @@ def calculate_damage_range(
         move,
         weather,
     )
+    weather_damage_multiplier *= get_weather_ability_power_multiplier(attacker, move, weather)
     attack_stat = get_relevant_attack_stat(
         attacker,
         move,
@@ -1028,6 +1046,7 @@ def find_best_team_member(
     ability_rules=None,
     moves_data=None,
     weather_override=None,
+    weather_by_member=None,
 ):
     all_results = []
     opponent_hp = get_stat(opponent, "HP")
@@ -1039,6 +1058,8 @@ def find_best_team_member(
         else opponent_hp
     )
     for pokemon in team:
+        member_weather = (weather_by_member.get(pokemon.get("MemberID"), weather_override)
+                          if weather_by_member is not None else weather_override)
         (
             best_move,
             best_score,
@@ -1051,7 +1072,7 @@ def find_best_team_member(
             items,
             ability_rules,
             moves_data,
-            weather_override=weather_override,
+            weather_override=member_weather,
         )
         if best_move is None:
             continue
@@ -1061,16 +1082,15 @@ def find_best_team_member(
             best_move,
             items,
             ability_rules,
-            weather_override=weather_override,
+            weather_override=member_weather,
         )
         effective_team_speed = (
             pokemon.get("SPE", 0)
-            * get_item_speed_multiplier(
-                pokemon,
-                items,
-            )
+            * get_item_speed_multiplier(pokemon, items)
+            * get_weather_speed_multiplier(pokemon, member_weather)
         )
-        team_moves_second = effective_team_speed < opponent_spe
+        effective_opponent_speed = opponent_spe * get_weather_speed_multiplier(opponent, member_weather)
+        team_moves_second = effective_team_speed < effective_opponent_speed
         has_incoming_damage = worst_score > 0
         likely_ohko = (
             minimum_damage is not None
