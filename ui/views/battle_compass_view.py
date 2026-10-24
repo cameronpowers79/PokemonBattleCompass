@@ -2055,10 +2055,10 @@ class BattleCompassView:
                        "Snow Warning": "Hail", "Sand Stream": "Sandstorm"}.get(
                            str(recommended.pokemon.get("Ability") or ""), weather)
 
-        files = {"Rain": ("rain.png", 0.22),
-                 "Sun": ("harsh_sunlight.png", 0.19),
-                 "Hail": ("hail.png", 0.18),
-                 "Sandstorm": ("sandstorm.png", 0.12)}
+        files = {"Rain": ("rain.png", 0.34),
+                 "Sun": ("harsh_sunlight.png", 0.29),
+                 "Hail": ("hail.png", 0.38),
+                 "Sandstorm": ("sandstorm.png", 0.21)}
         if weather not in files:
             return None, 0.0
         filename, opacity = files[weather]
@@ -2683,16 +2683,37 @@ class BattleCompassView:
         return ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Row(controls=[
-                        ft.Text(
-                            TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
-                            size=TEXT_SIZE_CARD_TITLE, weight=ft.FontWeight.BOLD,
-                            font_family=FONT_FAMILY_HEADER, color=TEXT_PRIMARY,
-                        ),
-                        *([self._build_current_weather_dropdown()]
-                          if view_model.team_strategy == "weather_control" else []),
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                    # ResponsiveRow uses the space available to this panel rather
+                    # than page.width captured at view-model construction time.
+                    # On narrow windows the dropdown occupies its own line.
+                    (ft.ResponsiveRow(
+                        controls=[
+                            ft.Container(
+                                content=ft.Text(
+                                    TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
+                                    size=TEXT_SIZE_CARD_TITLE,
+                                    weight=ft.FontWeight.BOLD,
+                                    font_family=FONT_FAMILY_HEADER,
+                                    color=TEXT_PRIMARY,
+                                ),
+                                col={"xs": 12, "lg": 8},
+                            ),
+                            ft.Container(
+                                content=self._build_current_weather_dropdown(),
+                                col={"xs": 12, "lg": 4},
+                                alignment=ft.Alignment(1, 0),
+                            ),
+                        ],
+                        spacing=10,
+                        run_spacing=10,
+                    ) if view_model.team_strategy == "weather_control"
+                    else ft.Text(
+                        TEAM_STRATEGY_LABELS.get(view_model.team_strategy, "Team Strategy") + " Plan",
+                        size=TEXT_SIZE_CARD_TITLE,
+                        weight=ft.FontWeight.BOLD,
+                        font_family=FONT_FAMILY_HEADER,
+                        color=TEXT_PRIMARY,
+                    )),
                     ft.Text(
                         action,
                         size=19,

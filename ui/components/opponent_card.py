@@ -103,7 +103,7 @@ class OpponentCard(ft.Container):
             expand=True,
             padding=24,
             bgcolor=SURFACE,
-            image=(ft.DecorationImage(src=weather_overlay_src, fit=ft.BoxFit.COVER,
+            image=(ft.DecorationImage(src=weather_overlay_src, fit=ft.BoxFit.FILL,
                                       opacity=weather_overlay_opacity)
                    if weather_overlay_src else None),
             border=ft.Border.all(
