@@ -18,6 +18,8 @@ import flet as ft
 
 from ui.components.journey_ready import JourneyReady
 from ui.components.strategy_move_card import strategy_move_card
+from ui.components.strategy_fit_meter import strategy_fit_meter
+from engine.strategy_fit import evaluate_pokemon_fit
 from ui.components.reference_dialogs import show_type_matchup_dialog
 from ui.components.starter_details import StarterDetails
 from ui.components.starter_selection import StarterSelection
@@ -990,6 +992,7 @@ class OnboardingView:
                 for item in options[self._onboarding_recommendation_page * page_size:(self._onboarding_recommendation_page + 1) * page_size]:
                     details = ft.Column(controls=[
                         ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
+                        self._strategy_fit_controls(item.pokemon_name, item.summary),
                         ft.Text(item.summary, size=14, color=TEXT_SECONDARY),
                         self._recommendation_base_stats(item.pokemon_name),
                         ft.Row(controls=[self._primary_button(
@@ -1032,6 +1035,68 @@ class OnboardingView:
         self.content_host.content = self._build_team_planning()
         self.page.update()
 
+    def _fit_preview_role(self) -> str:
+        if self.pending_strategy == "weather_control":
+            return "beneficiary" if self.weather_intent == "beneficiary" else "setter"
+        if self.pending_strategy == "screen_control":
+            return "beneficiary" if any(
+                "DUAL_SCREEN" in result.capability_keys
+                for result in self._planning_capabilities()
+            ) else "setter"
+        return ""
+
+    def _strategy_fit_controls(self, pokemon_name: str, summary: str = "") -> ft.Control:
+        candidate = self._planned_candidate({"name": pokemon_name})
+        match = re.search(r"Recommended Ability: ([^.]+)", summary)
+        recommended_ability = match.group(1).split(" (")[0].strip() if match else ""
+        fit = evaluate_pokemon_fit(
+            self.pending_strategy, candidate,
+            self.app_state.moves_data, self._planning_learnsets,
+            ability=recommended_ability, role=self._fit_preview_role(),
+            weather_focus=self.weather_focus or "",
+        )
+        return ft.Column(controls=[
+            strategy_fit_meter(fit),
+            ft.Text(fit.evidence, size=14, color=TEXT_SECONDARY),
+        ], spacing=7, tight=True)
+
+    def _preview_manual_strategy_fit(self, name: str, ability: str = "") -> None:
+        self.page.pop_dialog()
+        candidate = self._planned_candidate({"name": name, "ability": ability})
+        fit = evaluate_pokemon_fit(
+            self.pending_strategy, candidate,
+            self.app_state.moves_data, self._planning_learnsets,
+            ability=ability, role=self._fit_preview_role(),
+            weather_focus=self.weather_focus or "",
+        )
+
+        def back(event):
+            self.page.pop_dialog()
+            self._show_manual_pokemon_picker()
+
+        def confirm(event):
+            self.page.pop_dialog()
+            self._append_planned_selection(name, ability or fit.ability)
+
+        self.page.show_dialog(ft.AlertDialog(
+            modal=True,
+            title=ft.Text(f"{name} — {get_strategy_definition(self.pending_strategy).label}"),
+            content=ft.Container(width=520, content=ft.Column(controls=[
+                self._recommendation_artwork(name),
+                strategy_fit_meter(fit, width=290),
+                ft.Text(fit.evidence, size=14, color=TEXT_SECONDARY),
+                self._recommendation_base_stats(name),
+                ft.Text(
+                    "Potential fit assumes obtainable moves; it is not a ready-to-use moveset.",
+                    size=12, color=TEXT_SECONDARY,
+                ),
+            ], spacing=12, tight=True, scroll=ft.ScrollMode.AUTO)),
+            actions=[
+                ft.Button(content="Cancel — Return to Picker", on_click=back),
+                self._primary_button("Confirm — Add Pokémon", confirm),
+            ],
+        ))
+
     def _show_manual_pokemon_picker(self) -> None:
         """Choose a catalog species independently of its strategy ranking."""
         options = self._planning_options()
@@ -1065,15 +1130,14 @@ class OnboardingView:
             name = str(picker.value or "")
             if name not in display_names:
                 return
-            self.page.pop_dialog()
-            self._append_planned_selection(name, str(ability_picker.value or ""))
+            self._preview_manual_strategy_fit(name, str(ability_picker.value or ""))
         self.page.show_dialog(ft.AlertDialog(modal=True,
             title=ft.Text("Choose your own teammate"),
             content=ft.Column(controls=[
-                ft.Text("Select any eligible Pokémon from the Journey catalog. Strategy suggestions are optional."),
+                ft.Text("Select any eligible Pokémon from the Journey catalog. Preview its strategy fit before planning it."),
                 picker, ability_picker], spacing=12, tight=True),
             actions=[ft.Button(content="Cancel", on_click=lambda e: self.page.pop_dialog()),
-                     self._primary_button("Plan Pokémon", add)]))
+                     self._primary_button("Preview Fit", add)]))
 
     def _append_planned_selection(self, name: str, ability: str = "") -> None:
         if name not in {str(r.get("Pokemon") or "") +
