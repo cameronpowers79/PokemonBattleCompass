@@ -7253,7 +7253,7 @@
         "id": "damp_rock_hammerlocke",
         "method": "npc_gift",
         "location": "Hammerlocke",
-        "location_detail": "Received from the weather-item NPC in Hammerlocke.",
+        "location_detail": "Received from the weather-item NPC after hearing the Rain explanation.",
         "required_badge": 3,
         "map_locations": [
           "hammerlocke"
@@ -7604,13 +7604,13 @@
     "required_by": [],
     "sources": [
       {
-        "id": "hard_stone_turffield",
+        "id": "hard_stone_galar_mine",
         "method": "fixed_pickup",
-        "location": "Turffield",
-        "location_detail": "Fixed overworld pickup near the town's stone monuments.",
+        "location": "Galar Mine",
+        "location_detail": "Against the eastern wall of the area at the south end of the bridge.",
         "required_badge": 0,
         "map_locations": [
-          "turffield"
+          "galar_mine"
         ]
       },
       {
@@ -7639,7 +7639,7 @@
         "id": "heat_rock_hammerlocke",
         "method": "npc_gift",
         "location": "Hammerlocke",
-        "location_detail": "Received from the weather-item NPC in Hammerlocke.",
+        "location_detail": "Received from the weather-item NPC after hearing the Harsh Sun explanation.",
         "required_badge": 3,
         "map_locations": [
           "hammerlocke"
@@ -7693,7 +7693,7 @@
         "id": "icy_rock_hammerlocke",
         "method": "npc_gift",
         "location": "Hammerlocke",
-        "location_detail": "Received from the weather-item NPC in Hammerlocke.",
+        "location_detail": "Received from the weather-item NPC after hearing the Hail explanation.",
         "required_badge": 3,
         "map_locations": [
           "hammerlocke"
