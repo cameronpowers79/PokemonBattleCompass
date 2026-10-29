@@ -1295,7 +1295,7 @@ def calculate_incoming_multiplier(
     )
 
 
-def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None):
+def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data=None, *, weather_override=None):
     results = []
     team_status_effects = get_team_status_effects(team, moves_data)
     opponent_moves = get_moves(opponent, moves_data)
@@ -1314,7 +1314,8 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             opponent,
             items,
             ability_rules,
-            moves_data
+            moves_data,
+            weather_override=weather_override,
         )
         if best_move is None:
             continue
@@ -1390,6 +1391,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             best_move,
             items,
             ability_rules,
+            weather_override=weather_override,
         )
         offensive_possible_target_hp = get_stat(
             opponent,
@@ -1406,6 +1408,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             items,
             ability_rules,
             defender_opponent_iv_override=AVERAGE_OPPONENT_IV,
+            weather_override=weather_override,
         )
         (
             incoming_min_damage,
@@ -1416,6 +1419,7 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             worst_move,
             items,
             ability_rules,
+            weather_override=weather_override,
         )
         team_member_hp = get_stat(pokemon, "HP")
         incoming_hp_ratio = (

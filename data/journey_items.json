@@ -232,7 +232,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽10,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -253,7 +253,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽40,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -1198,7 +1198,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽30,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -1597,7 +1597,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽30,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -1618,7 +1618,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽30,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -1639,7 +1639,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽30,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -2017,7 +2017,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽20,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -2038,7 +2038,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽20,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -2059,7 +2059,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽20,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]
@@ -2080,7 +2080,7 @@
         "method": "shop_purchase",
         "location": "Hammerlocke",
         "location_detail": "Purchase at the eastern Pokémon Center for ₽20,000.",
-        "required_badge": 3,
+        "required_badge": 5,
         "map_locations": [
           "hammerlocke"
         ]

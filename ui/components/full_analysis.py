@@ -70,8 +70,10 @@ class FullAnalysis(ft.Container):
                     ),
                     ft.Text(
                         (
-                            "Compare every member of your team "
-                            "against the selected opponent."
+                            "Compare every member of your team against the selected opponent "
+                            "using baseline matchup calculations, without assumed weather, "
+                            "screens, or setup boosts. Rankings may differ from Other Strong "
+                            "Options, which accounts for modeled strategic advantages."
                         ),
                         size=TEXT_SIZE_DETAIL,
                         color=TEXT_SECONDARY,

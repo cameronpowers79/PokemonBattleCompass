@@ -2436,8 +2436,10 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     # handing off to a beneficiary do not consume the same number of turns.
     # Reuse the canonical conditional OHKO note builder (not Move Score alone)
     # when deciding whether a handoff has earned its exposure.
-    ohko_order = {"Likely Survival OHKO": 4, "Likely OHKO": 3,
-                  "Possible Survival OHKO": 2, "Possible OHKO": 1}
+    # First-strike OHKOs prevent retaliation; survival OHKOs accept a hit.
+    # This must agree with shared Strongest Matchup's first-strike promotion.
+    ohko_order = {"Likely OHKO": 4, "Likely Survival OHKO": 3,
+                  "Possible OHKO": 2, "Possible Survival OHKO": 1}
     ohko_cache = {}
 
     def conditional_ohko(candidate):
@@ -2696,14 +2698,27 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     attack_effectiveness = get_type_multiplier(effective_attack_type, get_effective_pokemon_types(opponent))
     # Explain the winning tradeoff, not merely that the attack is available.
     chosen_tier = conditional_ohko(max(shared_ranked_plans, key=lambda row: row[0]))
-    tier_names = {4: 'Likely Survival OHKO', 3: 'Likely OHKO',
-                  2: 'Possible Survival OHKO', 1: 'Possible OHKO'}
+    tier_names = {4: 'Likely OHKO', 3: 'Likely Survival OHKO',
+                  2: 'Possible OHKO', 1: 'Possible Survival OHKO'}
     if is_switch:
         rationales.append(f'{setter_name} establishes {weather}, then a switch to {attacker_name} costs an exposed turn.')
     elif assumed_weather is not None and weather != assumed_weather:
         rationales.append(f'{attacker_name} replaces {assumed_weather} with {weather} on entry and attacks immediately.')
     elif assumed_weather is not None:
-        rationales.append(f'With {weather} already active, {attacker_name} can attack immediately; no extra weather setup is needed.')
+        # Distinguish a weather-neutral direct choice from a true beneficiary.
+        # Current Weather describes the field; it does not imply the attacker
+        # receives an offensive boost or is already in battle.
+        if (projected <= normal * 1.05 and not accurate_weather_move
+                and not sand_wall):
+            rationales.append(
+                f'{attacker_name} does not need a weather boost to use {attack_name}; '
+                f'{weather} can remain active while it attacks.'
+            )
+        else:
+            rationales.append(
+                f'With {weather} active, {attacker_name} can use {attack_name} '
+                'without establishing weather again.'
+            )
     else:
         rationales.append(f'{setter_name} establishes {weather} on entry and attacks immediately without a handoff.')
     if chosen_tier:
@@ -3189,8 +3204,9 @@ def build_battle_compass_view_model(
                             actor, opponent, attack, items, ability_rules,
                             weather_override=assumed_weather))
                         options = []
+                        actor_entry_weather = _WEATHER_ABILITIES.get(str(actor.get("Ability") or ""))
                         for alternative in ("Rain", "Sun", "Hail", "Sandstorm"):
-                            if alternative == assumed_weather:
+                            if alternative == assumed_weather or alternative == actor_entry_weather:
                                 continue
                             if not any(
                                 _WEATHER_ABILITIES.get(str(member.get("Ability") or "")) == alternative
@@ -3238,7 +3254,7 @@ def build_battle_compass_view_model(
                                                 alternative, damage_gain, accuracy_gain,
                                                 speed_gain, current_ours, current_foe,
                                                 projected_ours, projected_foe))
-                        if options:
+                        if options and actor_entry_weather is None:
                             (_, _, _, alt_weather, damage_gain, accuracy_gain,
                              speed_gain, speed_before, foe_before,
                              speed_after, foe_after) = max(options)
@@ -3262,7 +3278,7 @@ def build_battle_compass_view_model(
                                 f"**Weather opportunity: {alt_weather} may help {attack_name}.** "
                                 f"For the same attacker, {alt_weather} {benefit}. "
                                 f"Changing weather requires a setup move or switch-in; "
-                                f"the plan below still uses your selected {assumed_weather}. "
+                                f"the recommendation below evaluates the weather after the suggested Pokémon enters. "
                                 + result["action_detail"]
                             )
                 result["action_detail"] += " Weather outlook: " + weather_advice
@@ -3414,12 +3430,64 @@ def build_battle_compass_view_model(
             )
         )
     ]
+    # Full Analysis is a clear-weather reference, not a second tactical
+    # selector. Build it separately *after* the recommendation/Why?/alternates
+    # have been decided from the original ability-aware matchup results.
+    # This keeps entry-triggered weather available to actual battle plans.
+    full_analysis_matchups = all_matchups
+    if team_strategy == "weather_control":
+        neutral_results = evaluate_team_matchups(
+            team_data, opponent, items, ability_rules, moves_data,
+            weather_override="",
+        )
+        full_analysis_matchups = []
+        for neutral in neutral_results:
+            member = members_by_id.get(neutral.get("MemberID"))
+            if member is None:
+                member = next((m.pokemon for m in all_matchups
+                               if m.pokemon.get("Pokemon") == neutral.get("Pokemon")
+                               and m.pokemon not in [x.pokemon for x in full_analysis_matchups]), None)
+            if member is not None:
+                full_analysis_matchups.append(_build_matchup_view_model(
+                    result=neutral, pokemon=member, move_lookup=move_lookup))
+        # The alternative cards are tactical options, so they correctly retain
+        # automatic entry weather. Explain the different baselines explicitly:
+        # Full Analysis is the clear-weather reference, not their ranking pool.
+        reference_by_id = {m.pokemon.get("MemberID"): m for m in full_analysis_matchups
+                           if m.pokemon.get("MemberID")}
+        annotated_alternatives = []
+        weather_comparisons = []
+        for alternate in other_options:
+            entry_weather = _WEATHER_ABILITIES.get(str(alternate.pokemon.get("Ability") or ""))
+            reference = reference_by_id.get(alternate.pokemon.get("MemberID"))
+            if reference is None:
+                reference = next((m for m in full_analysis_matchups
+                                  if m.pokemon is alternate.pokemon), None)
+            if (entry_weather and reference is not None
+                    and alternate.best_move.get("Move") == reference.best_move.get("Move")
+                    and abs(alternate.best_move_score - reference.best_move_score) > 0.01):
+                name = pokemon_display_name(alternate.pokemon)
+                move_name = str(alternate.best_move.get("Move") or "the attack")
+                detail = (f"{alternate.pokemon.get('Ability')} sets {entry_weather} on entry: "
+                          f"{move_name} {reference.best_move_score:.2f} (clear weather) → "
+                          f"{alternate.best_move_score:.2f} (on entry). "
+                          "Full Analysis shows the clear-weather reference.")
+                alternate = replace(alternate, battle_notes=[
+                    *alternate.battle_notes,
+                    BattleNoteViewModel(icon=NOTE_ICONS.get("info", "ℹ"),
+                                        text=detail, category="info"),
+                ])
+                weather_comparisons.append(name)
+            annotated_alternatives.append(alternate)
+        other_options = annotated_alternatives
+        # Alternative-card notes already explain entry-weather versus clear-weather
+        # reference scores. Do not pollute the matchup-specific Why? with UI help.
     return BattleCompassViewModel(
         opponent=opponent,
         recommendation=recommendation,
         why_text=why_text,
         other_options=other_options[:2],
-        all_matchups=all_matchups,
+        all_matchups=full_analysis_matchups,
         empty_state_message=None,
         team_strategy=team_strategy,
         strategy_capabilities=strategy_capabilities,
