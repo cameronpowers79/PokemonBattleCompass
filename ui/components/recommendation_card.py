@@ -424,16 +424,18 @@ class RecommendationCard(ft.Container):
             score_controls.append(self._build_item_boost_popup())
         elif self.ability_weather_bonus is not None:
             ability, weather, base, final = self.ability_weather_bonus
-            context = f" in {weather}" if weather else ""
+            is_weather = ability in {"Rain", "Sun"}
+            context = "" if is_weather else (f" in {weather}" if weather else "")
+            source_label = f"Weather: {ability}" if is_weather else f"{ability} damage bonus{context}"
             score_controls.append(ft.PopupMenuButton(
                 icon=ft.Icons.ADD_CIRCLE_OUTLINE,
                 icon_color=PRIMARY_BLUE,
-                tooltip=f"{ability} damage bonus{context}",
+                tooltip=source_label,
                 bgcolor=SURFACE_RAISED,
                 items=[ft.PopupMenuItem(content=ft.Column(controls=[
-                    ft.Text(f"{ability} damage bonus{context}", weight=ft.FontWeight.BOLD),
-                    ft.Text(f"Before Ability: {base:.2f}"),
-                    ft.Text(f"Ability boost: +{final - base:.2f}"),
+                    ft.Text(source_label, weight=ft.FontWeight.BOLD),
+                    ft.Text(f"Before bonus: {base:.2f}"),
+                    ft.Text(f"Damage boost: +{final - base:.2f}"),
                     ft.Text(f"Final Move Score: {final:.2f}"),
                 ], spacing=5))],
             ))
@@ -642,7 +644,9 @@ class RecommendationCard(ft.Container):
         """One explanation of the multiplicatively stacked item and Ability boosts."""
         assert self.ability_weather_bonus is not None
         ability, weather, _, _ = self.ability_weather_bonus
-        ability_context = f" in {weather}" if weather else ""
+        is_weather = ability in {"Rain", "Sun"}
+        ability_context = "" if is_weather else (f" in {weather}" if weather else "")
+        source_label = f"Weather: {ability}" if is_weather else f"Ability: {ability}{ability_context}"
         item_multiplier = float(self.item_multiplier)
         # The weather Ability multiplier is measured against the same move
         # with the equipped item still applied (so it isn't an additive %).
@@ -658,13 +662,13 @@ class RecommendationCard(ft.Container):
                     size=TEXT_SIZE_BODY_LARGE, color=TEXT_PRIMARY),
             ft.Text(f"Held item: {self.held_item} (+{(item_multiplier - 1) * 100:.0f}%)",
                     color=TEXT_SECONDARY, size=TEXT_SIZE_BODY),
-            ft.Text(f"Ability: {ability}{ability_context} (+{(ability_multiplier - 1) * 100:.0f}%)",
+            ft.Text(f"{source_label} (+{(ability_multiplier - 1) * 100:.0f}%)",
                     color=TEXT_SECONDARY, size=TEXT_SIZE_BODY),
             ft.Divider(color=BORDER_DEFAULT, height=1),
             ft.Text(f"Unboosted score: {raw_base:.2f}", size=TEXT_SIZE_DETAIL),
             ft.Text(f"{self.held_item}: +{item_gain:.2f} → {before_ability:.2f}",
                     size=TEXT_SIZE_DETAIL),
-            ft.Text(f"{ability}: +{ability_gain:.2f} → {final:.2f}",
+            ft.Text(f"{source_label}: +{ability_gain:.2f} → {final:.2f}",
                     size=TEXT_SIZE_DETAIL),
             ft.Text(f"Final Move Score: {final:.2f}", weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY, size=TEXT_SIZE_DETAIL),

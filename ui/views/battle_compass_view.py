@@ -2267,6 +2267,25 @@ class BattleCompassView:
         else:
             card_item_boosted = False
 
+        # Ordinary weather damage and a held-item multiplier are independent
+        # modifiers. Attribute the existing score; never multiply it again.
+        # Reuse the existing combined bonus icon/popup path for Rain + Mystic
+        # Water (and the equivalent Sun + Fire-boosting item combinations).
+        if (view_model.team_strategy == "weather_control"
+                and show_move_score and card_move_score > 0
+                and ability_weather_bonus is None):
+            displayed_weather = (score_label.split("(", 1)[1].split(" active", 1)[0].title()
+                                 if score_label.startswith("Conditional Move Score (")
+                                 and " active" in score_label else "")
+            displayed_type = str(card_move.get("Type") or "")
+            if ((displayed_weather == "Rain" and displayed_type == "Water")
+                    or (displayed_weather == "Sun" and displayed_type == "Fire")):
+                weather_factor = 1.5
+                ability_weather_bonus = (
+                    displayed_weather, displayed_weather,
+                    card_move_score / weather_factor, card_move_score,
+                )
+
         weather_overlay_src, weather_overlay_opacity = self._weather_card_overlay(view_model)
         recommendation_card = RecommendationCard(
             weather_overlay_src=weather_overlay_src,

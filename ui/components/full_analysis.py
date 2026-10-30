@@ -70,10 +70,13 @@ class FullAnalysis(ft.Container):
                     ),
                     ft.Text(
                         (
-                            "Compare every member of your team against the selected opponent "
-                            "using baseline matchup calculations, without assumed weather, "
-                            "screens, or setup boosts. Rankings may differ from Other Strong "
-                            "Options, which accounts for modeled strategic advantages."
+                            "Compare every team member against the selected opponent using "
+                            "the same standard matchup calculations as Strongest Matchup. "
+                            "These include type effectiveness, applicable held items, and "
+                            "automatic Ability effects (including entry-triggered weather), "
+                            "but not extra screens, stat boosts, or weather setup assumed "
+                            "by a selected strategy. Rankings may differ from Other Strong "
+                            "Options, which can reflect additional strategic conditions."
                         ),
                         size=TEXT_SIZE_DETAIL,
                         color=TEXT_SECONDARY,
