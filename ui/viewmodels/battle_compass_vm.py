@@ -2175,6 +2175,96 @@ def _weather_battle_advice(team_data, opponent, items, battle_roster=None, moves
     return f"Automatic setters available: {names}. Switching one in replaces existing ordinary weather; check remaining turns."
 
 
+def _weather_roster_advantage(team, roster, weather, moves_data, items, ability_rules):
+    """Battle-wide offensive evidence, not an inferred opponent turn order.
+
+    Require both repeated opponent coverage and multiple distinct beneficiaries;
+    comparisons use each member's actual attacks against the same opponent in
+    neutral versus proposed weather. This ONLY gates the safe survival-OHKO
+    exception; it does not override tactical selection or mutate weather state.
+    """
+    opponents = [foe for foe in (roster or []) if isinstance(foe, dict)]
+    if not opponents:
+        return False, ""
+    helped_opponents = []
+    helped_members = set()
+    for foe in opponents:
+        improved = False
+        for member in team:
+            attacks = [m for m in get_moves(member, moves_data)
+                       if m.get('Category') in {'Physical', 'Special'}]
+            if not attacks:
+                continue
+            baseline = max((float(calculate_move_score(
+                member, foe, move, items, ability_rules, weather_override=''))
+                for move in attacks), default=0.0)
+            projected = max((float(calculate_move_score(
+                member, foe, move, items, ability_rules, weather_override=weather))
+                for move in attacks), default=0.0)
+            if baseline > 0 and projected >= baseline * 1.15:
+                improved = True
+                helped_members.add(member.get('MemberID') or member.get('Pokemon'))
+        if improved:
+            helped_opponents.append(str(foe.get('Pokemon') or 'opponent'))
+    qualifies = len(helped_opponents) >= 2 and len(helped_members) >= 2
+    names = ', '.join(dict.fromkeys(helped_opponents))
+    return qualifies, (f'{weather} improves team attack options against '
+                       f'{len(helped_opponents)} of {len(opponents)} opponents ({names}), '
+                       f'across {len(helped_members)} team members.')
+
+
+def _weather_dmax_counter(team, roster, moves_data, items, ability_rules, reported_weather):
+    """Return the recommended member for the known opposing Max Pokémon.
+
+    Deliberately never guesses battle order or whether an opponent was defeated.
+    """
+    target = next((foe for foe in (roster or []) if isinstance(foe, dict)
+                   and _opponent_is_dynamaxed(foe)), None)
+    if target is None:
+        return None, None
+    by_member = {member.get('MemberID'): (
+        _WEATHER_ABILITIES.get(str(member.get('Ability') or '')) or reported_weather or '')
+        for member in team}
+    recommended, _, _ = find_best_team_member(
+        team, target, items, ability_rules, moves_data, weather_by_member=by_member)
+    return (recommended.get('MemberID') if recommended else None), target
+
+
+def _opponent_max_weather_warning(opponent, recommendation, current_weather, moves_data):
+    """Warn about actual known weather-changing Max Moves; never predict use."""
+    changes = {'Max Flare': 'Sun', 'Max Geyser': 'Rain',
+               'Max Rockfall': 'Sandstorm', 'Max Hailstorm': 'Hail'}
+    available = [(name, changes[name]) for name in
+                 (str(move.get('Move') or '') for move in get_moves(opponent, moves_data))
+                 if name in changes]
+    if not available:
+        return ''
+    effective = (_WEATHER_ABILITIES.get(str(recommendation.pokemon.get('Ability') or ''))
+                 if recommendation else None) or current_weather
+    disruptive = list(dict.fromkeys((name, weather) for name, weather in available
+                                    if effective is None or weather != effective))
+    if not disruptive:
+        return ''
+    move_names = ', '.join(name for name, _ in disruptive)
+    message = (f"Weather caution: {opponent.get('Pokemon', 'The opponent')} can use "
+               f"{move_names} to change the weather after the Max Move hits.")
+    if recommendation is not None and effective == 'Sun':
+        move_name = str(recommendation.best_move.get('Move') or '')
+        if move_name in {'Solar Beam', 'Solar Blade'}:
+            # An opponent that moves first can erase Sun before our attack.
+            from engine.calculations import get_weather_speed_multiplier
+            our_speed = float(get_stat(recommendation.pokemon, 'SPE')) * get_weather_speed_multiplier(recommendation.pokemon, effective)
+            foe_speed = float(get_stat(opponent, 'SPE')) * get_weather_speed_multiplier(opponent, effective)
+            if foe_speed >= our_speed:
+                message += (f' {move_name} relies on Sun for a single-turn attack; '
+                            'if the opposing Max Move removes Sun first, it requires a '
+                            'charging turn and its power is halved. Consider another '
+                            f'attack or Dynamaxing {pokemon_display_name(recommendation.pokemon)} '
+                            'to use Max Overgrowth, which avoids the charging turn '
+                            'even if the weather changes. Player Dynamax damage is not modeled.')
+    return message
+
+
 def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules, battle_roster=None, *, assumed_weather=None):
     """Rank actionable weather setter -> beneficiary sequences, not isolated moves.
 
@@ -2457,6 +2547,17 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
     if not candidates:
         return 'No useful, safe weather beneficiary or projected weather payoff is modeled; use the direct matchup.'
 
+    # Battle-wide weather evidence is only used to relax the first-strike
+    # OHKO priority for unusually safe, team-supporting survival knockouts.
+    roster_weather_evidence = {}
+    for candidate in candidates:
+        weather = candidate[5]
+        if weather not in roster_weather_evidence:
+            roster_weather_evidence[weather] = _weather_roster_advantage(
+                team_data, battle_roster, weather, moves_data, items, ability_rules)
+    dmax_protected_id, dmax_target = _weather_dmax_counter(
+        team_data, battle_roster, moves_data, items, ability_rules, assumed_weather)
+
     # Compare COMPLETE actions. A setter attacking immediately and a setter
     # handing off to a beneficiary do not consume the same number of turns.
     # Reuse the canonical conditional OHKO note builder (not Move Score alone)
@@ -2483,7 +2584,16 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             if tier == 3:
                 hp = float(get_stat(member, 'HP') or 0)
                 modeled_max_hit = float(candidate[19] or 0)
-                if hp > 0 and modeled_max_hit <= hp * 0.05:
+                # Never promote solely for a tiny hit: require demonstrable
+                # roster-wide weather utility and a real weather setter.
+                sets_weather = (bool(_WEATHER_ABILITIES.get(str(member.get('Ability') or '')))
+                                or any(str(m.get('Move') or '') in _WEATHER_MOVES
+                                       for m in get_moves(member, moves_data)))
+                strategic_weather, _ = roster_weather_evidence.get(condition, (False, ''))
+                ceiling = 0.12 if (dmax_protected_id is not None
+                                   and member.get('MemberID') == dmax_protected_id) else 0.20
+                if (hp > 0 and modeled_max_hit <= hp * ceiling
+                        and sets_weather and strategic_weather):
                     tier = 4
             ohko_cache[cache_key] = tier
         return ohko_cache[cache_key]
@@ -2611,6 +2721,24 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
      before_speed, after_speed, enemy_speed, flip, duration, sand_wall, baseline_weather,
      accurate_weather_move, instant_solar_move, weather_iws, baseline_iws,
      maximum_incoming_damage, field_value) = max(shared_ranked_plans, key=lambda row: row[0])
+    # Explain when a weather-supporting survival KO was deliberately NOT
+    # promoted because that attacker is the designated opposing Max counter.
+    protected_alternative = None
+    if dmax_protected_id is not None and dmax_target is not None:
+        for alternative in candidates:
+            alternative_member = alternative[3]
+            hp = float(get_stat(alternative_member, 'HP') or 0)
+            damage = float(alternative[19] or 0)
+            if (alternative_member.get('MemberID') == dmax_protected_id
+                    and alternative_member.get('MemberID') != beneficiary.get('MemberID')
+                    and hp > 0 and hp * 0.12 < damage <= hp * 0.20
+                    and roster_weather_evidence.get(alternative[5], (False, ''))[0]
+                    and any(note.text == 'Likely Survival OHKO' for note in
+                            _weather_conditional_ohko_notes(
+                                alternative_member, opponent, alternative[4],
+                                alternative[5], items, ability_rules, moves_data))):
+                protected_alternative = (alternative_member, damage / hp)
+                break
     setter_species = str(setter.get('Pokemon') or '')
     attacker_species = str(beneficiary.get('Pokemon') or '')
     setter_name = pokemon_display_name(setter)
@@ -2715,6 +2843,13 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
              f'Maximum modeled hit {maximum_incoming_damage:.0f}/{get_stat(beneficiary, "HP"):.0f} HP.'
              f'{accuracy_note}{charge_note} '
              f'Weather lasts up to {duration} turns; switching uses one turn.')
+    if protected_alternative is not None:
+        protected_member, hit_fraction = protected_alternative
+        line += (f' Counter preservation: {pokemon_display_name(protected_member)} '
+                 f'is also recommended against the opposing '
+                 f'{dmax_target.get("Pokemon", "Dynamax/Gigantamax Pokémon")}. '
+                 f'Its projected {hit_fraction:.0%} HP loss exceeds the 12% '
+                 f'protection ceiling; consider {attacker_name} to preserve that counter.')
     condition = (f'Assumes {weather} is active and not overridden; Battle Compass cannot verify remaining turns. '
                  'If the weather changes or expires, use the direct matchup or re-establish weather.')
     # The fit meter gets a short role/viability explanation. Matchup-specific
@@ -2787,6 +2922,12 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
             )
     if chosen_tier:
         rationales.append(f'{attack_name} has a {tier_names[chosen_tier]} projection.')
+    weather_valuable, weather_summary = roster_weather_evidence.get(weather, (False, ''))
+    if (weather_valuable and conditional_ohko(max(shared_ranked_plans, key=lambda row: row[0])) == 4
+            and maximum_incoming_damage > 0
+            and maximum_incoming_damage <= float(get_stat(beneficiary, 'HP') or 0) * 0.20):
+        rationales.append(weather_summary)
+        line += ' Battle-wide weather outlook: ' + weather_summary
     # Compare the closest viable alternative under the same resulting weather.
     # This gives Why? a decisive reason without guessing which member is active.
     alternatives = [c for c in candidates
@@ -2916,12 +3057,23 @@ def build_battle_compass_view_model(
             )
             for result in recognize_team_capabilities(team_data, moves_data)
         ]
+    # Dmax/Gmax overrides the chosen strategy, not the battlefield weather.
+    # Preserve every ordinary-opponent path exactly as it was.
+    dmax_weather_context = (
+        {member.get('MemberID'): (
+            _WEATHER_ABILITIES.get(str(member.get('Ability') or ''))
+            or (current_weather if current_weather in _WEATHER_EXTENSION_ITEMS else ''))
+         for member in team_data}
+        if team_strategy == 'weather_control' and _opponent_is_dynamaxed(opponent)
+        else None
+    )
     recommended_pokemon, _, direct_why_text = find_best_team_member(
         team_data,
         opponent,
         items,
         ability_rules,
         moves_data,
+        weather_by_member=dmax_weather_context,
     )
     if recommended_pokemon is None:
         return BattleCompassViewModel(
@@ -3426,6 +3578,86 @@ def build_battle_compass_view_model(
             "the selected strategy active for readiness and recommendation guidance."
         )
         # Why? is composed once by the shared explanation builder.
+    # For the Dmax/Gmax fallback, explain a meaningful offense-versus-safety
+    # tradeoff using the same per-member weather context as Strongest Matchup.
+    # This is display-only: no ranking or battlefield state is changed.
+    dmax_weather_tradeoff = ""
+    dmax_weather_why = ""
+    if (team_strategy == 'weather_control' and _opponent_is_dynamaxed(opponent)
+            and recommendation is not None and dmax_weather_context is not None):
+        selected_member = recommendation.pokemon
+        selected_id = selected_member.get('MemberID')
+        selected_weather = dmax_weather_context.get(selected_id)
+        selected_rows = evaluate_team_matchups(
+            [selected_member], opponent, items, ability_rules, moves_data,
+            weather_override=selected_weather)
+        if selected_rows:
+            chosen = selected_rows[0]
+            chosen_score = float(chosen.get('Best MoveScore') or 0)
+            chosen_incoming = float(chosen.get('Incoming Worst Score') or 0)
+            chosen_ratio = float(chosen.get('Ratio') or 0)
+            alternatives = []
+            for other in team_data:
+                if other.get('MemberID') == selected_id:
+                    continue
+                other_weather = dmax_weather_context.get(other.get('MemberID'))
+                rows = evaluate_team_matchups(
+                    [other], opponent, items, ability_rules, moves_data,
+                    weather_override=other_weather)
+                if not rows:
+                    continue
+                row = rows[0]
+                score = float(row.get('Best MoveScore') or 0)
+                incoming = float(row.get('Incoming Worst Score') or 0)
+                ratio = float(row.get('Ratio') or 0)
+                if (score > chosen_score * 1.05 and ratio < chosen_ratio
+                        and incoming > chosen_incoming):
+                    alternatives.append((score, other, row, other_weather))
+            if alternatives:
+                _, other, row, other_weather = max(alternatives, key=lambda x: x[0])
+                chosen_name = pokemon_display_name(selected_member)
+                other_name = pokemon_display_name(other)
+                chosen_move = str(chosen.get('Best Move') or 'its attack')
+                other_move = str(row.get('Best Move') or 'its attack')
+                context = f" under {other_weather}" if other_weather else ""
+                dmax_weather_tradeoff = (
+                    f"{other_name}'s {other_move}{context} has greater projected offense "
+                    f"(Move Score {float(row['Best MoveScore']):.2f} vs. "
+                    f"{chosen_score:.2f}), but {chosen_name} faces less incoming danger "
+                    f"({chosen_incoming:.2f} vs. {float(row['Incoming Worst Score']):.2f}) "
+                    f"and has the stronger overall matchup ratio "
+                    f"({chosen_ratio:.2f} vs. {float(row['Ratio']):.2f})."
+                )
+                dmax_weather_why = (
+                    f"Although {other_name}'s {other_move}{context} has greater "
+                    f"offensive potential, {chosen_name}'s lower incoming damage "
+                    f"gives it a better matchup ratio ({chosen_ratio:.2f} vs. "
+                    f"{float(row['Ratio']):.2f})."
+                )
+                fallback_reason = (fallback_reason + ' ' if fallback_reason else '') + dmax_weather_tradeoff
+
+    if team_strategy == 'weather_control' and _opponent_is_dynamaxed(opponent):
+        warning = _opponent_max_weather_warning(
+            opponent, recommendation, current_weather, moves_data)
+        if warning:
+            fallback_reason = (fallback_reason + ' ' if fallback_reason else '') + warning
+        if recommendation is not None and dmax_weather_context is not None:
+            # Display the actual weather-adjusted recommendation, while leaving
+            # the original clear-weather Full Analysis behavior intact.
+            effective = dmax_weather_context.get(recommendation.pokemon.get('MemberID'))
+            effective_matchups = evaluate_team_matchups(
+                [recommendation.pokemon], opponent, items, ability_rules,
+                moves_data, weather_override=effective)
+            if effective_matchups:
+                recommendation = _build_matchup_view_model(
+                    result=effective_matchups[0], pokemon=recommendation.pokemon,
+                    move_lookup=move_lookup)
+                if warning:
+                    recommendation = replace(recommendation, battle_notes=[
+                        *recommendation.battle_notes,
+                        BattleNoteViewModel(icon=NOTE_ICONS.get('warning', '⚠'),
+                                            text=warning, category='warning')])
+
     if team_strategy == "weather_control" and recommendation is not None and selected_strategy_plan is not None:
         # The visible conditional attack and the OHKO notes MUST share the same
         # effective weather. Preserve all non-OHKO tactical notes (including
@@ -3481,6 +3713,8 @@ def build_battle_compass_view_model(
         opponent_name=str(opponent.get("Pokemon") or "this opponent"),
         selected_matchup=recommendation,
     )
+    if dmax_weather_why:
+        why_text += " " + dmax_weather_why
     # Identified strategy roles are named at their source using their original
     # MemberID-bearing records. Do not globally substitute species in prose.
     # Strategy recommendations are sometimes dataclass copies of their direct
@@ -3563,8 +3797,11 @@ def build_battle_compass_view_model(
         selected_strategy_plan=selected_strategy_plan,
         strategy_fallback_reason=fallback_reason,
         direct_recommendation_name=direct_name or None,
-        direct_fallback_move_name=next((str(r.get("Best Move") or "") for r in matchup_results
-                                        if r.get("MemberID") == recommended_pokemon.get("MemberID")), None),
+        direct_fallback_move_name=(
+            str(recommendation.best_move.get('Move') or '')
+            if dmax_weather_context is not None and recommendation is not None
+            else next((str(r.get("Best Move") or "") for r in matchup_results
+                       if r.get("MemberID") == recommended_pokemon.get("MemberID")), None)),
     )
 
 
