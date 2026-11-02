@@ -2028,6 +2028,31 @@ def _anti_setup_interception(team_data, opponent, matchups, moves_data, items, a
 _WEATHER_MOVES = {"Rain Dance": "Rain", "Sunny Day": "Sun", "Sandstorm": "Sandstorm", "Hail": "Hail"}
 _WEATHER_ABILITIES = {"Drizzle": "Rain", "Drought": "Sun", "Sand Stream": "Sandstorm", "Snow Warning": "Hail"}
 _WEATHER_SPEED_ABILITIES = {"Swift Swim": "Rain", "Chlorophyll": "Sun", "Sand Rush": "Sandstorm", "Slush Rush": "Hail"}
+
+
+def _weather_can_improve_move_damage(member: dict, move: dict, weather: str) -> bool:
+    """Only attribute a damage gain to weather if a supported mechanic explains it.
+
+    Keep the numeric score comparison as a second requirement. This prevents
+    calling an unrelated move (for example Flash Cannon in Sun) weather-boosted
+    when a comparison involves different implicit field conditions.
+    """
+    move_name = str(move.get("Move") or "")
+    move_type = str(move.get("Type") or "")
+    ability = str(member.get("Ability") or "")
+    category = str(move.get("Category") or "").lower()
+    if move_name == "Weather Ball":
+        return weather in {"Rain", "Sun", "Hail", "Sandstorm"}
+    if weather == "Rain" and move_type == "Water":
+        return True
+    if weather == "Sun":
+        if move_type == "Fire":
+            return True
+        if ability == "Solar Power" and category == "special":
+            return True
+    if weather == "Sandstorm" and ability == "Sand Force" and move_type in {"Rock", "Ground", "Steel"}:
+        return True
+    return False
 _WEATHER_EXTENSION_ITEMS = {"Rain": "Damp Rock", "Sun": "Heat Rock", "Sandstorm": "Smooth Rock", "Hail": "Icy Rock"}
 
 
@@ -2694,8 +2719,19 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
                  'If the weather changes or expires, use the direct matchup or re-establish weather.')
     # The fit meter gets a short role/viability explanation. Matchup-specific
     # evidence is passed separately to the shared Why? builder.
+    # A strong matchup *during* weather is not necessarily a benefit *from* it.
+    # For example Vanilluxe does not benefit from Sandstorm simply because
+    # Flash Cannon hits the opponent hard; it actually takes sandstorm chip.
+    has_weather_payoff = (
+        (projected > normal * 1.05
+         and _weather_can_improve_move_damage(beneficiary, attack, weather))
+        or accurate_weather_move or instant_solar_move or flip
+        or (sand_wall and weather_iws < baseline_iws * 0.95)
+    )
     fit_summary = (
         f'{weather} beneficiary; projected matchup is {fit.lower()}.'
+        if assumed_weather is not None and has_weather_payoff else
+        f'Strong direct option under {weather}; projected matchup is {fit.lower()}.'
         if assumed_weather is not None else
         f'{weather} setter; projected follow-up is {fit.lower()}.'
     )
@@ -2775,7 +2811,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         rationales.append('Rain weakens the opposing team’s Fire attacks and strengthens Water attacks.')
     elif field_value >= 1.0 and weather == 'Sun':
         rationales.append('Sun weakens the opposing team’s Water attacks and strengthens Fire attacks.')
-    if projected > normal * 1.05:
+    if projected > normal * 1.05 and _weather_can_improve_move_damage(beneficiary, attack, weather):
         rationales.append(f'{weather} improves the projected score of {attack_name}.')
     elif accurate_weather_move:
         rationales.append(f'{weather} makes {attack_name} bypass its normal accuracy checks.')
@@ -2798,7 +2834,8 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
         opener_threat_multiplier=float((by_name.get(setter.get("MemberID")) or by_name[setter_species]).get('Incoming Multiplier') or 1),
         strategy_branch='weather_control', action_type=('Weather Payoff' if assumed_weather is not None else
             'Weather Setup' if setup_move else 'Weather Payoff' if not is_switch else 'Automatic Weather'),
-        plan_role=('Weather Beneficiary' if assumed_weather is not None else
+        plan_role=('Weather Beneficiary' if assumed_weather is not None and has_weather_payoff else
+                   'Direct Attacker' if assumed_weather is not None else
                    'Weather Setter' if setup_move or is_switch else 'Weather Beneficiary'),
         fit_explanation=fit_summary,
         weather_why_evidence=' '.join(rationales),
@@ -3256,7 +3293,10 @@ def build_battle_compass_view_model(
                                 (assumed_weather == "Rain" and attack_name in {"Thunder", "Hurricane"})
                                 or (assumed_weather == "Hail" and attack_name == "Blizzard")
                             )
-                            damage_gain = (current_score > 0 and new_score > current_score * 1.20)
+                            damage_gain = (
+                                current_score > 0 and new_score > current_score * 1.20
+                                and _weather_can_improve_move_damage(actor, attack, alternative)
+                            )
                             # Only advertise a Speed Ability when its weather
                             # changes which Pokémon actually attacks first.
                             # Reuse the same weather Speed multipliers as the
@@ -3458,11 +3498,58 @@ def build_battle_compass_view_model(
             )
         )
     ]
-    # Full Analysis uses the same standard, Ability-aware matchup results as
-    # Strongest Matchup, regardless of the selected team strategy. Tactical
-    # weather/setup/screen projections remain confined to recommendation cards
-    # and the Strategy Plan, never the baseline comparison table.
+    # Full Analysis is a clear-weather reference, not a second tactical
+    # selector. Build it separately *after* the recommendation/Why?/alternates
+    # have been decided from the original ability-aware matchup results.
+    # This keeps entry-triggered weather available to actual battle plans.
     full_analysis_matchups = all_matchups
+    if team_strategy == "weather_control":
+        neutral_results = evaluate_team_matchups(
+            team_data, opponent, items, ability_rules, moves_data,
+            weather_override="",
+        )
+        full_analysis_matchups = []
+        for neutral in neutral_results:
+            member = members_by_id.get(neutral.get("MemberID"))
+            if member is None:
+                member = next((m.pokemon for m in all_matchups
+                               if m.pokemon.get("Pokemon") == neutral.get("Pokemon")
+                               and m.pokemon not in [x.pokemon for x in full_analysis_matchups]), None)
+            if member is not None:
+                full_analysis_matchups.append(_build_matchup_view_model(
+                    result=neutral, pokemon=member, move_lookup=move_lookup))
+        # The alternative cards are tactical options, so they correctly retain
+        # automatic entry weather. Explain the different baselines explicitly:
+        # Full Analysis is the clear-weather reference, not their ranking pool.
+        reference_by_id = {m.pokemon.get("MemberID"): m for m in full_analysis_matchups
+                           if m.pokemon.get("MemberID")}
+        annotated_alternatives = []
+        weather_comparisons = []
+        for alternate in other_options:
+            entry_weather = _WEATHER_ABILITIES.get(str(alternate.pokemon.get("Ability") or ""))
+            reference = reference_by_id.get(alternate.pokemon.get("MemberID"))
+            if reference is None:
+                reference = next((m for m in full_analysis_matchups
+                                  if m.pokemon is alternate.pokemon), None)
+            if (entry_weather and reference is not None
+                    and alternate.best_move.get("Move") == reference.best_move.get("Move")
+                    and abs(alternate.best_move_score - reference.best_move_score) > 0.01):
+                name = pokemon_display_name(alternate.pokemon)
+                move_name = str(alternate.best_move.get("Move") or "the attack")
+                detail = (f"{alternate.pokemon.get('Ability')} sets {entry_weather} on entry: "
+                          f"{move_name} {reference.best_move_score:.2f} (clear weather) → "
+                          f"{alternate.best_move_score:.2f} (on entry). "
+                          "Full Analysis shows the clear-weather reference.")
+                alternate = replace(alternate, battle_notes=[
+                    *alternate.battle_notes,
+                    BattleNoteViewModel(icon=NOTE_ICONS.get("info", "ℹ"),
+                                        text=detail, category="info"),
+                ])
+                weather_comparisons.append(name)
+            annotated_alternatives.append(alternate)
+        other_options = annotated_alternatives
+        # Alternative-card notes already explain entry-weather versus clear-weather
+        # reference scores. Do not pollute the matchup-specific Why? with UI help.
     return BattleCompassViewModel(
         opponent=opponent,
         recommendation=recommendation,
