@@ -1334,6 +1334,15 @@ def evaluate_team_matchups(team, opponent, items, ability_rules=None, moves_data
             pokemon,
             worst_move,
         )
+        # The scoring path resolves Weather Ball under the projected weather.
+        # Use that same effective type for the displayed recommendation and
+        # effectiveness badges. With no override, Full Analysis remains neutral.
+        best_move = _weather_resolved_move(
+            pokemon, opponent, best_move, weather_override,
+        )
+        worst_move = _weather_resolved_move(
+            opponent, pokemon, worst_move, weather_override,
+        )
         type_effectiveness = get_move_type_multiplier(
             best_move,
             get_effective_pokemon_types(
