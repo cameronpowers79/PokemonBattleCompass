@@ -50,7 +50,8 @@
     "category": "evolution_item",
     "quantity_required": 1,
     "required_by": [
-      "froslass"
+      "froslass",
+      "gallade"
     ],
     "sources": [
       {
@@ -6240,7 +6241,11 @@
     "name": "Fire Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "arcanine",
+      "flareon",
+      "ninetales"
+    ],
     "sources": [
       {
         "id": "fire_stone_motostoke_riverbank",
@@ -6282,7 +6287,11 @@
     "name": "Water Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "cloyster",
+      "ludicolo",
+      "vaporeon"
+    ],
     "sources": [
       {
         "id": "water_stone_bridge_field",
@@ -6324,7 +6333,11 @@
     "name": "Thunder Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "jolteon",
+      "raichu",
+      "vikavolt"
+    ],
     "sources": [
       {
         "id": "thunder_stone_north_lake_miloch",
@@ -6366,7 +6379,11 @@
     "name": "Leaf Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "leafeon",
+      "shiftry",
+      "vileplume"
+    ],
     "sources": [
       {
         "id": "leaf_stone_turffield",
@@ -6408,7 +6425,10 @@
     "name": "Moon Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "clefable",
+      "musharna"
+    ],
     "sources": [
       {
         "id": "moon_stone_dusty_bowl",
@@ -6440,7 +6460,11 @@
     "name": "Sun Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "bellossom",
+      "heliolisk",
+      "whimsicott"
+    ],
     "sources": [
       {
         "id": "sun_stone_dusty_bowl",
@@ -6472,7 +6496,11 @@
     "name": "Shiny Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "cinccino",
+      "roserade",
+      "togekiss"
+    ],
     "sources": [
       {
         "id": "shiny_stone_route_8",
@@ -6514,7 +6542,10 @@
     "name": "Ice Stone",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "darmanitan",
+      "glaceon"
+    ],
     "sources": [
       {
         "id": "ice_stone_route_9",
@@ -6556,7 +6587,9 @@
     "name": "Tart Apple",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "flapple"
+    ],
     "sources": [
       {
         "id": "tart_apple_hammerlocke",
@@ -6832,7 +6865,9 @@
     "name": "Sachet",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "aromatisse"
+    ],
     "sources": [
       {
         "id": "sachet_hammerlocke_bp",
@@ -9780,7 +9815,9 @@
     "name": "Sweet Apple",
     "category": "evolution_item",
     "quantity_required": 1,
-    "required_by": [],
+    "required_by": [
+      "appletun"
+    ],
     "sources": [
       {
         "id": "sweet_apple_hammerlocke",
@@ -9829,5 +9866,205 @@
     "source_url": "https://www.serebii.net/itemdex/rustedshield.shtml",
     "data_status": "verified_batch_13",
     "Game": "Shield"
+  },
+  {
+    "id": "fossilized_bird",
+    "name": "Fossilized Bird",
+    "category": "fossil",
+    "quantity_required": 1,
+    "required_by": [
+      "arctozolt",
+      "dracozolt"
+    ],
+    "sources": [],
+    "sources_by_game": {
+      "Sword": [
+        {
+          "id": "fossilized_bird_sword_gift",
+          "method": "npc_gift",
+          "location": "Stow-on-Side",
+          "location_detail": "Pokémon Center NPC gives two pieces.",
+          "required_badge": 3,
+          "map_locations": [
+            "stow_on_side"
+          ]
+        },
+        {
+          "id": "fossilized_bird_sword_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): common in Sword, approximately 5% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ],
+      "Shield": [
+        {
+          "id": "fossilized_bird_shield_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): rare in Shield, approximately 1% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ]
+    },
+    "source_url": "https://www.serebii.net/swordshield/diggingduo.shtml",
+    "data_status": "version_difference_2026_11_03",
+    "Game": "Sword and Shield"
+  },
+  {
+    "id": "fossilized_dino",
+    "name": "Fossilized Dino",
+    "category": "fossil",
+    "quantity_required": 1,
+    "required_by": [
+      "arctovish",
+      "arctozolt"
+    ],
+    "sources": [],
+    "sources_by_game": {
+      "Sword": [
+        {
+          "id": "fossilized_dino_sword_gift",
+          "method": "overworld_pickup",
+          "location": "Route 6",
+          "location_detail": "Two fixed fossil pieces on Route 6.",
+          "required_badge": 3,
+          "map_locations": [
+            "route_6"
+          ]
+        },
+        {
+          "id": "fossilized_dino_sword_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): common in Sword, approximately 5% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ],
+      "Shield": [
+        {
+          "id": "fossilized_dino_shield_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): rare in Shield, approximately 1% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ]
+    },
+    "source_url": "https://www.serebii.net/swordshield/diggingduo.shtml",
+    "data_status": "version_difference_2026_11_03",
+    "Game": "Sword and Shield"
+  },
+  {
+    "id": "fossilized_drake",
+    "name": "Fossilized Drake",
+    "category": "fossil",
+    "quantity_required": 1,
+    "required_by": [
+      "dracovish",
+      "dracozolt"
+    ],
+    "sources": [],
+    "sources_by_game": {
+      "Sword": [
+        {
+          "id": "fossilized_drake_sword_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): rare in Sword, approximately 1% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ],
+      "Shield": [
+        {
+          "id": "fossilized_drake_shield_gift",
+          "method": "npc_gift",
+          "location": "Stow-on-Side",
+          "location_detail": "Pokémon Center NPC gives two pieces.",
+          "required_badge": 3,
+          "map_locations": [
+            "stow_on_side"
+          ]
+        },
+        {
+          "id": "fossilized_drake_shield_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): common in Shield, approximately 5% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ]
+    },
+    "source_url": "https://www.serebii.net/swordshield/diggingduo.shtml",
+    "data_status": "version_difference_2026_11_03",
+    "Game": "Sword and Shield"
+  },
+  {
+    "id": "fossilized_fish",
+    "name": "Fossilized Fish",
+    "category": "fossil",
+    "quantity_required": 1,
+    "required_by": [
+      "arctovish",
+      "dracovish"
+    ],
+    "sources": [],
+    "sources_by_game": {
+      "Sword": [
+        {
+          "id": "fossilized_fish_sword_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): rare in Sword, approximately 1% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ],
+      "Shield": [
+        {
+          "id": "fossilized_fish_shield_gift",
+          "method": "overworld_pickup",
+          "location": "Route 6",
+          "location_detail": "Two fixed fossil pieces on Route 6.",
+          "required_badge": 3,
+          "map_locations": [
+            "route_6"
+          ]
+        },
+        {
+          "id": "fossilized_fish_shield_digging_duo",
+          "method": "digging_duo",
+          "location": "Bridge Field — Digging Duo",
+          "location_detail": "Skill Brother (left): common in Shield, approximately 5% per item reward. Fossil pieces are not version-exclusive.",
+          "required_badge": 0,
+          "map_locations": [
+            "bridge_field"
+          ]
+        }
+      ]
+    },
+    "source_url": "https://www.serebii.net/swordshield/diggingduo.shtml",
+    "data_status": "version_difference_2026_11_03",
+    "Game": "Sword and Shield"
   }
 ]

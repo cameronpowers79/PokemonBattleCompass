@@ -832,7 +832,7 @@
         "Dark"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "drednaw",
@@ -4010,7 +4010,65 @@
         "Water"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword and Shield",
+    "acquisition_by_game": {
+      "Sword": {
+        "method": "wild_encounter",
+        "location": "Hulbury",
+        "map_locations": [
+          "hulbury",
+          "motostoke_riverbank"
+        ],
+        "encounters": [
+          {
+            "location": "Hulbury",
+            "method": "Fishing — Red-Striped Basculin",
+            "weather": "All Weather",
+            "rarity_percent": 10,
+            "level_min": 20,
+            "level_max": 24
+          },
+          {
+            "location": "Motostoke Riverbank",
+            "method": "Surf — Red-Striped Basculin",
+            "weather": "Snowstorm",
+            "rarity_percent": 10,
+            "level_min": 40,
+            "level_max": 43
+          }
+        ],
+        "availability_note": "Native Sword Basculin is Red-Striped; this is a form difference, not a species-exclusive restriction.",
+        "required_badge": 1
+      },
+      "Shield": {
+        "method": "wild_encounter",
+        "location": "Hulbury",
+        "map_locations": [
+          "hulbury",
+          "motostoke_riverbank"
+        ],
+        "encounters": [
+          {
+            "location": "Hulbury",
+            "method": "Fishing — Blue-Striped Basculin",
+            "weather": "All Weather",
+            "rarity_percent": 10,
+            "level_min": 20,
+            "level_max": 24
+          },
+          {
+            "location": "Motostoke Riverbank",
+            "method": "Surf — Blue-Striped Basculin",
+            "weather": "Snowstorm",
+            "rarity_percent": 10,
+            "level_min": 40,
+            "level_max": 43
+          }
+        ],
+        "availability_note": "Native Shield Basculin is Blue-Striped; this is a form difference, not a species-exclusive restriction.",
+        "required_badge": 1
+      }
+    }
   },
   {
     "id": "wishiwashi",
@@ -5577,7 +5635,7 @@
         "Dragon"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "meowstic",
@@ -5685,7 +5743,7 @@
         "Fairy"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "araquanid",
@@ -5989,7 +6047,7 @@
         "Fighting"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "stunfisk",
@@ -6582,7 +6640,56 @@
         "Fighting"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword and Shield",
+    "acquisition_by_game": {
+      "Sword": {
+        "method": "in_game_trade",
+        "location": "Circhester — in-game trade",
+        "map_locations": [
+          "circhester"
+        ],
+        "encounters": [
+          {
+            "location": "Circhester",
+            "method": "In-game trade — give Vanillish",
+            "weather": "Not applicable",
+            "rarity_percent": 100,
+            "level_min": 37,
+            "level_max": 37
+          }
+        ],
+        "availability_note": "Exchange a Vanillish with the ice-cream vendor at Circhester for the opposite-version Fighting-type Pokémon.",
+        "required_badge": 5
+      },
+      "Shield": {
+        "method": "wild_encounter",
+        "location": "Motostoke Outskirts",
+        "map_locations": [
+          "motostoke_outskirts",
+          "motostoke_riverbank"
+        ],
+        "encounters": [
+          {
+            "location": "Motostoke Outskirts",
+            "method": "Overworld",
+            "weather": "All Weather",
+            "rarity_percent": 5,
+            "level_min": 22,
+            "level_max": 26
+          },
+          {
+            "location": "Motostoke Riverbank",
+            "method": "Overworld",
+            "weather": "Overcast",
+            "rarity_percent": 5,
+            "level_min": 26,
+            "level_max": 28
+          }
+        ],
+        "availability_note": "Throh is natively available in the wild in Pokémon Shield.",
+        "required_badge": 2
+      }
+    }
   },
   {
     "id": "sawk",
@@ -6626,7 +6733,56 @@
         "Fighting"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword and Shield",
+    "acquisition_by_game": {
+      "Sword": {
+        "method": "wild_encounter",
+        "location": "Motostoke Outskirts",
+        "map_locations": [
+          "motostoke_outskirts",
+          "motostoke_riverbank"
+        ],
+        "encounters": [
+          {
+            "location": "Motostoke Outskirts",
+            "method": "Overworld",
+            "weather": "All Weather",
+            "rarity_percent": 5,
+            "level_min": 22,
+            "level_max": 26
+          },
+          {
+            "location": "Motostoke Riverbank",
+            "method": "Overworld",
+            "weather": "Overcast",
+            "rarity_percent": 5,
+            "level_min": 26,
+            "level_max": 28
+          }
+        ],
+        "availability_note": "Sawk is natively available in the wild in Pokémon Sword.",
+        "required_badge": 2
+      },
+      "Shield": {
+        "method": "in_game_trade",
+        "location": "Circhester — in-game trade",
+        "map_locations": [
+          "circhester"
+        ],
+        "encounters": [
+          {
+            "location": "Circhester",
+            "method": "In-game trade — give Vanillish",
+            "weather": "Not applicable",
+            "rarity_percent": 100,
+            "level_min": 37,
+            "level_max": 37
+          }
+        ],
+        "availability_note": "Exchange a Vanillish with the ice-cream vendor at Circhester for the opposite-version Fighting-type Pokémon.",
+        "required_badge": 5
+      }
+    }
   },
   {
     "id": "weezing",
@@ -7096,7 +7252,7 @@
         "required_badge": 8
       }
     ],
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "escavalier",
@@ -7374,7 +7530,7 @@
         "Flying"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "drapion",
@@ -7655,7 +7811,7 @@
         "Fairy"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "maractus",
@@ -8878,24 +9034,23 @@
           "level_max": 36
         }
       ],
-      "availability_note": "The 10% and 1% rows represent the two Sinistea authenticity forms. Evolve with the matching Cracked Pot or Chipped Pot."
+      "availability_note": "The 10% and 1% encounter rows represent the two Sinistea authenticity forms. Phony Form requires one Cracked Pot; Antique Form requires one Chipped Pot. The Planner does not yet automatically add alternative item requirements; choose the matching pot manually."
     },
-    "evolution_summary": "Evolve once · Cracked Pot Or Chipped Pot required",
+    "evolution_summary": "Evolve Sinistea with a Cracked Pot (Phony) or Chipped Pot (Antique)",
     "evolution_steps": [
       {
         "from": "Sinistea",
         "to": "Polteageist",
         "method": "use_item",
-        "item_id": "cracked_pot_or_chipped_pot",
-        "quantity": 1
+        "item_options": [
+          "cracked_pot",
+          "chipped_pot"
+        ],
+        "quantity": 1,
+        "condition": "Phony Form: Cracked Pot; Antique Form: Chipped Pot. Only one pot is needed."
       }
     ],
-    "required_items": [
-      {
-        "item_id": "cracked_pot_or_chipped_pot",
-        "quantity": 1
-      }
-    ],
+    "required_items": [],
     "source_url": "https://www.serebii.net/pokedex-swsh/sinistea/locations.shtml",
     "encounter_data_status": "verified_batch_7",
     "types": {
@@ -8906,7 +9061,17 @@
         "Ghost"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword and Shield",
+    "alternative_required_items": [
+      {
+        "item_options": [
+          "cracked_pot",
+          "chipped_pot"
+        ],
+        "quantity": 1,
+        "condition": "Choose the pot matching Sinistea’s authenticity form."
+      }
+    ]
   },
   {
     "id": "indeedee",
@@ -8943,7 +9108,47 @@
         "Normal"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword and Shield",
+    "acquisition_by_game": {
+      "Sword": {
+        "method": "wild_encounter",
+        "location": "Glimwood Tangle",
+        "map_locations": [
+          "glimwood_tangle"
+        ],
+        "encounters": [
+          {
+            "location": "Glimwood Tangle",
+            "method": "Random — male Indeedee",
+            "weather": "All Weather",
+            "rarity_percent": 5,
+            "level_min": 34,
+            "level_max": 36
+          }
+        ],
+        "availability_note": "Wild Indeedee is male in Sword. Female Indeedee requires an alternative such as breeding/trading.",
+        "required_badge": 4
+      },
+      "Shield": {
+        "method": "wild_encounter",
+        "location": "Glimwood Tangle",
+        "map_locations": [
+          "glimwood_tangle"
+        ],
+        "encounters": [
+          {
+            "location": "Glimwood Tangle",
+            "method": "Random — female Indeedee",
+            "weather": "All Weather",
+            "rarity_percent": 5,
+            "level_min": 34,
+            "level_max": 36
+          }
+        ],
+        "availability_note": "Wild Indeedee is female in Shield. Male Indeedee requires an alternative such as breeding/trading.",
+        "required_badge": 4
+      }
+    }
   },
   {
     "id": "trevenant",
@@ -9069,7 +9274,7 @@
         "Fighting"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "morpeko",
@@ -9794,7 +9999,7 @@
         "Psychic"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "mr_rime",
@@ -9887,16 +10092,22 @@
       ],
       "availability_note": "Catch Galarian Darumaka and evolve it with an Ice Stone."
     },
-    "evolution_summary": "Evolve once",
+    "evolution_summary": "Evolve Galarian Darumaka with an Ice Stone",
     "evolution_steps": [
       {
-        "from": "Darumaka",
-        "to": "Darmanitan",
-        "method": "level",
-        "level": 35
+        "from": "Galarian Darumaka",
+        "to": "Galarian Darmanitan",
+        "method": "use_item",
+        "item_id": "ice_stone",
+        "quantity": 1
       }
     ],
-    "required_items": [],
+    "required_items": [
+      {
+        "item_id": "ice_stone",
+        "quantity": 1
+      }
+    ],
     "source_url": "https://www.serebii.net/pokedex-swsh/darumaka/locations.shtml",
     "encounter_data_status": "verified_batch_8",
     "types": {
@@ -10111,13 +10322,23 @@
           "level_min": 10,
           "level_max": 10
         }
-      ]
+      ],
+      "availability_note": "Restore with Cara Liss using one of each required fossil. Sword more commonly yields Bird and Dino; Shield more commonly yields Fish and Drake. All four fossils remain obtainable in both games through the Digging Duo."
     },
     "evolution_summary": "No evolution required",
     "evolution_steps": [],
-    "required_items": [],
+    "required_items": [
+      {
+        "item_id": "fossilized_bird",
+        "quantity": 1
+      },
+      {
+        "item_id": "fossilized_drake",
+        "quantity": 1
+      }
+    ],
     "source_url": "https://www.serebii.net/pokedex-swsh/dracozolt/locations.shtml",
-    "encounter_data_status": "verified_batch_8",
+    "encounter_data_status": "version_difference_2026_11_03",
     "types": {
       "Dracozolt": [
         "Electric",
@@ -10148,13 +10369,23 @@
           "level_min": 10,
           "level_max": 10
         }
-      ]
+      ],
+      "availability_note": "Restore with Cara Liss using one of each required fossil. Sword more commonly yields Bird and Dino; Shield more commonly yields Fish and Drake. All four fossils remain obtainable in both games through the Digging Duo."
     },
     "evolution_summary": "No evolution required",
     "evolution_steps": [],
-    "required_items": [],
+    "required_items": [
+      {
+        "item_id": "fossilized_bird",
+        "quantity": 1
+      },
+      {
+        "item_id": "fossilized_dino",
+        "quantity": 1
+      }
+    ],
     "source_url": "https://www.serebii.net/pokedex-swsh/arctozolt/locations.shtml",
-    "encounter_data_status": "verified_batch_8",
+    "encounter_data_status": "version_difference_2026_11_03",
     "types": {
       "Arctozolt": [
         "Electric",
@@ -10185,13 +10416,23 @@
           "level_min": 10,
           "level_max": 10
         }
-      ]
+      ],
+      "availability_note": "Restore with Cara Liss using one of each required fossil. Sword more commonly yields Bird and Dino; Shield more commonly yields Fish and Drake. All four fossils remain obtainable in both games through the Digging Duo."
     },
     "evolution_summary": "No evolution required",
     "evolution_steps": [],
-    "required_items": [],
+    "required_items": [
+      {
+        "item_id": "fossilized_fish",
+        "quantity": 1
+      },
+      {
+        "item_id": "fossilized_drake",
+        "quantity": 1
+      }
+    ],
     "source_url": "https://www.serebii.net/pokedex-swsh/dracovish/locations.shtml",
-    "encounter_data_status": "verified_batch_8",
+    "encounter_data_status": "version_difference_2026_11_03",
     "types": {
       "Dracovish": [
         "Water",
@@ -10222,13 +10463,23 @@
           "level_min": 10,
           "level_max": 10
         }
-      ]
+      ],
+      "availability_note": "Restore with Cara Liss using one of each required fossil. Sword more commonly yields Bird and Dino; Shield more commonly yields Fish and Drake. All four fossils remain obtainable in both games through the Digging Duo."
     },
     "evolution_summary": "No evolution required",
     "evolution_steps": [],
-    "required_items": [],
+    "required_items": [
+      {
+        "item_id": "fossilized_fish",
+        "quantity": 1
+      },
+      {
+        "item_id": "fossilized_dino",
+        "quantity": 1
+      }
+    ],
     "source_url": "https://www.serebii.net/pokedex-swsh/arctovish/locations.shtml",
-    "encounter_data_status": "verified_batch_8",
+    "encounter_data_status": "version_difference_2026_11_03",
     "types": {
       "Arctovish": [
         "Water",
@@ -10398,7 +10649,7 @@
         "Dragon"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "kommo_o",
@@ -10464,7 +10715,7 @@
         "Fighting"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "dragapult",
@@ -10584,7 +10835,7 @@
         "Fairy"
       ]
     },
-    "Game": "Sword and Shield"
+    "Game": "Sword"
   },
   {
     "id": "eternatus",
@@ -10806,5 +11057,667 @@
         "Dragon"
       ]
     }
+  },
+  {
+    "id": "tyranitar",
+    "pokemon": "Tyranitar",
+    "acquire_as": "Larvitar",
+    "marker_pokemon": "Larvitar",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/larvitar.png",
+    "required_badge": 6,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Lake of Outrage",
+      "map_locations": [
+        "lake_of_outrage"
+      ],
+      "encounters": [
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Overcast",
+          "rarity_percent": 5,
+          "level_min": 50,
+          "level_max": 52
+        },
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Intense Sun",
+          "rarity_percent": 5,
+          "level_min": 50,
+          "level_max": 52
+        }
+      ]
+    },
+    "evolution_summary": "Evolve 2 times",
+    "evolution_steps": [
+      {
+        "from": "Larvitar",
+        "to": "Pupitar",
+        "method": "level",
+        "level": 30
+      },
+      {
+        "from": "Pupitar",
+        "to": "Tyranitar",
+        "method": "level",
+        "level": 55
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/larvitar/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Larvitar": [
+        "Rock",
+        "Ground"
+      ],
+      "Pupitar": [
+        "Rock",
+        "Ground"
+      ],
+      "Tyranitar": [
+        "Rock",
+        "Dark"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "ludicolo",
+    "pokemon": "Ludicolo",
+    "acquire_as": "Lotad",
+    "marker_pokemon": "Lotad",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/lotad.png",
+    "required_badge": 0,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 2",
+      "map_locations": [
+        "route_2",
+        "dappled_grove"
+      ],
+      "encounters": [
+        {
+          "location": "Route 2",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 20,
+          "level_min": 4,
+          "level_max": 6
+        },
+        {
+          "location": "Dappled Grove",
+          "method": "Random",
+          "weather": "Normal Weather",
+          "rarity_percent": 40,
+          "level_min": 11,
+          "level_max": 15
+        }
+      ]
+    },
+    "evolution_summary": "Evolve 2 times · Water Stone required",
+    "evolution_steps": [
+      {
+        "from": "Lotad",
+        "to": "Lombre",
+        "method": "level",
+        "level": 14
+      },
+      {
+        "from": "Lombre",
+        "to": "Ludicolo",
+        "method": "use_item",
+        "item_id": "water_stone",
+        "quantity": 1
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "water_stone",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/lotad/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Lotad": [
+        "Water",
+        "Grass"
+      ],
+      "Lombre": [
+        "Water",
+        "Grass"
+      ],
+      "Ludicolo": [
+        "Water",
+        "Grass"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "sableye",
+    "pokemon": "Sableye",
+    "acquire_as": "Sableye",
+    "marker_pokemon": "Sableye",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/sableye.png",
+    "required_badge": 8,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Dusty Bowl",
+      "map_locations": [
+        "dusty_bowl",
+        "giants_mirror"
+      ],
+      "encounters": [
+        {
+          "location": "Dusty Bowl",
+          "method": "Overworld",
+          "weather": "Fog",
+          "rarity_percent": 35,
+          "level_min": 42,
+          "level_max": 47
+        },
+        {
+          "location": "Giant's Mirror - Area 2",
+          "method": "Overworld",
+          "weather": "Fog",
+          "rarity_percent": 35,
+          "level_min": 42,
+          "level_max": 47
+        }
+      ],
+      "availability_note": "Postgame Fog required: Wild Area Fog unlocks after becoming Champion, not after earning the eighth badge. The available indicator is badge-based only."
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/sableye/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Sableye": [
+        "Dark",
+        "Ghost"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "lunatone",
+    "pokemon": "Lunatone",
+    "acquire_as": "Lunatone",
+    "marker_pokemon": "Lunatone",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/lunatone.png",
+    "required_badge": 5,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 8",
+      "map_locations": [
+        "route_8",
+        "giants_cap"
+      ],
+      "encounters": [
+        {
+          "location": "Route 8",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 5,
+          "level_min": 39,
+          "level_max": 41
+        },
+        {
+          "location": "Giant's Cap - Area 2",
+          "method": "Underground",
+          "weather": "All Weather",
+          "rarity_percent": 100,
+          "level_min": 41,
+          "level_max": 44
+        }
+      ]
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/lunatone/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Lunatone": [
+        "Rock",
+        "Psychic"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "toxicroak",
+    "pokemon": "Toxicroak",
+    "acquire_as": "Croagunk",
+    "marker_pokemon": "Croagunk",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/croagunk.png",
+    "required_badge": 2,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Galar Mine No. 2",
+      "map_locations": [
+        "galar_mine_no_2",
+        "motostoke_outskirts"
+      ],
+      "encounters": [
+        {
+          "location": "Galar Mine No. 2",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 15,
+          "level_min": 20,
+          "level_max": 24
+        },
+        {
+          "location": "Motostoke Outskirts",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 35,
+          "level_min": 21,
+          "level_max": 24
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once",
+    "evolution_steps": [
+      {
+        "from": "Croagunk",
+        "to": "Toxicroak",
+        "method": "level",
+        "level": 37
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/croagunk/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Croagunk": [
+        "Poison",
+        "Fighting"
+      ],
+      "Toxicroak": [
+        "Poison",
+        "Fighting"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "reuniclus",
+    "pokemon": "Reuniclus",
+    "acquire_as": "Solosis",
+    "marker_pokemon": "Solosis",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/solosis.png",
+    "required_badge": 8,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Giant's Cap",
+      "map_locations": [
+        "giants_cap"
+      ],
+      "encounters": [
+        {
+          "location": "Giant's Cap - Area 2",
+          "method": "Overworld",
+          "weather": "Fog",
+          "rarity_percent": 50,
+          "level_min": 28,
+          "level_max": 30
+        },
+        {
+          "location": "Giant's Cap - Area 3",
+          "method": "Overworld",
+          "weather": "Fog",
+          "rarity_percent": 50,
+          "level_min": 28,
+          "level_max": 32
+        }
+      ],
+      "availability_note": "Postgame Fog required: Wild Area Fog unlocks after becoming Champion, not after earning the eighth badge. The available indicator is badge-based only."
+    },
+    "evolution_summary": "Evolve 2 times",
+    "evolution_steps": [
+      {
+        "from": "Solosis",
+        "to": "Duosion",
+        "method": "level",
+        "level": 32
+      },
+      {
+        "from": "Duosion",
+        "to": "Reuniclus",
+        "method": "level",
+        "level": 41
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/solosis/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Solosis": [
+        "Psychic"
+      ],
+      "Duosion": [
+        "Psychic"
+      ],
+      "Reuniclus": [
+        "Psychic"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "mandibuzz",
+    "pokemon": "Mandibuzz",
+    "acquire_as": "Vullaby",
+    "marker_pokemon": "Vullaby",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/vullaby.png",
+    "required_badge": 2,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Bridge Field",
+      "map_locations": [
+        "bridge_field",
+        "stony_wilderness"
+      ],
+      "encounters": [
+        {
+          "location": "Bridge Field",
+          "method": "Random",
+          "weather": "Sandstorm",
+          "rarity_percent": 25,
+          "level_min": 26,
+          "level_max": 28
+        },
+        {
+          "location": "Stony Wilderness - Area 2",
+          "method": "Overworld",
+          "weather": "Normal Weather",
+          "rarity_percent": 5,
+          "level_min": 28,
+          "level_max": 30
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once",
+    "evolution_steps": [
+      {
+        "from": "Vullaby",
+        "to": "Mandibuzz",
+        "method": "level",
+        "level": 54
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/vullaby/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Vullaby": [
+        "Dark",
+        "Flying"
+      ],
+      "Mandibuzz": [
+        "Dark",
+        "Flying"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "aromatisse",
+    "pokemon": "Aromatisse",
+    "acquire_as": "Spritzee",
+    "marker_pokemon": "Spritzee",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/spritzee.png",
+    "required_badge": 1,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 5",
+      "map_locations": [
+        "route_5",
+        "glimwood_tangle"
+      ],
+      "encounters": [
+        {
+          "location": "Route 5",
+          "method": "Overworld",
+          "weather": "All Weather",
+          "rarity_percent": 30,
+          "level_min": 19,
+          "level_max": 21
+        },
+        {
+          "location": "Route 5",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 14,
+          "level_min": 16,
+          "level_max": 18
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once · Sachet required · trade required",
+    "evolution_steps": [
+      {
+        "from": "Spritzee",
+        "to": "Aromatisse",
+        "method": "trade",
+        "condition": "Trade while holding a Sachet"
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "sachet",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/spritzee/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Spritzee": [
+        "Fairy"
+      ],
+      "Aromatisse": [
+        "Fairy"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "goodra",
+    "pokemon": "Goodra",
+    "acquire_as": "Goomy",
+    "marker_pokemon": "Goomy",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/goomy.png",
+    "required_badge": 6,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Lake of Outrage",
+      "map_locations": [
+        "lake_of_outrage"
+      ],
+      "encounters": [
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Raining",
+          "rarity_percent": 2,
+          "level_min": 50,
+          "level_max": 52
+        }
+      ]
+    },
+    "evolution_summary": "Evolve 2 times · special condition",
+    "evolution_steps": [
+      {
+        "from": "Goomy",
+        "to": "Sliggoo",
+        "method": "level",
+        "level": 40
+      },
+      {
+        "from": "Sliggoo",
+        "to": "Goodra",
+        "method": "special",
+        "condition": "Level up at level 50 or higher while it is raining in the overworld"
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/goomy/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Goomy": [
+        "Dragon"
+      ],
+      "Sliggoo": [
+        "Dragon"
+      ],
+      "Goodra": [
+        "Dragon"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "oranguru",
+    "pokemon": "Oranguru",
+    "acquire_as": "Oranguru",
+    "marker_pokemon": "Oranguru",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/oranguru.png",
+    "required_badge": 4,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Glimwood Tangle",
+      "map_locations": [
+        "glimwood_tangle"
+      ],
+      "encounters": [
+        {
+          "location": "Glimwood Tangle",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 9,
+          "level_min": 34,
+          "level_max": 36
+        }
+      ]
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/oranguru/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Oranguru": [
+        "Normal",
+        "Psychic"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "appletun",
+    "pokemon": "Appletun",
+    "acquire_as": "Applin",
+    "marker_pokemon": "Applin",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/applin.png",
+    "required_badge": 1,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 5",
+      "map_locations": [
+        "route_5",
+        "giants_mirror"
+      ],
+      "encounters": [
+        {
+          "location": "Route 5",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 10,
+          "level_min": 16,
+          "level_max": 18
+        },
+        {
+          "location": "Giant's Mirror",
+          "method": "Random",
+          "weather": "Thunderstorm",
+          "rarity_percent": 30,
+          "level_min": 26,
+          "level_max": 28
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once · Sweet Apple required",
+    "evolution_steps": [
+      {
+        "from": "Applin",
+        "to": "Appletun",
+        "method": "use_item",
+        "item_id": "sweet_apple",
+        "quantity": 1
+      }
+    ],
+    "required_items": [
+      {
+        "item_id": "sweet_apple",
+        "quantity": 1
+      }
+    ],
+    "source_url": "https://www.serebii.net/pokedex-swsh/applin/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Applin": [
+        "Grass",
+        "Dragon"
+      ],
+      "Appletun": [
+        "Grass",
+        "Dragon"
+      ]
+    },
+    "Game": "Shield"
+  },
+  {
+    "id": "zamazenta",
+    "pokemon": "Zamazenta",
+    "acquire_as": "Zamazenta",
+    "marker_pokemon": "Zamazenta",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/zamazenta.png",
+    "required_badge": 8,
+    "primary_acquisition": {
+      "method": "story_encounter",
+      "location": "Energy Plant — Tower Summit",
+      "map_locations": [
+        "hammerlocke"
+      ],
+      "encounters": [
+        {
+          "location": "Energy Plant — Tower Summit",
+          "method": "Interact",
+          "weather": "Not applicable",
+          "rarity_percent": 100,
+          "level_min": 70,
+          "level_max": 70
+        }
+      ],
+      "availability_note": "Catch Zamazenta during the postgame legendary story in Pokémon Shield."
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/zamazenta/locations.shtml",
+    "encounter_data_status": "shield_version_audit_2026_11_03",
+    "types": {
+      "Zamazenta": [
+        "Fighting"
+      ]
+    },
+    "Game": "Shield"
   }
 ]

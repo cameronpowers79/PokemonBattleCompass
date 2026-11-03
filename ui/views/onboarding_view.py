@@ -108,10 +108,10 @@ class OnboardingView:
         self._onboarding_recommendation_page = 0
         self.weather_focus: str | None = None
         self.weather_intent = "auto"
-        from engine.game_support import matches_game
-        self._planning_catalog = [record for record in self._load_planning_catalog()
+        from engine.game_support import matches_game, resolve_game_record
+        self._planning_catalog = [resolve_game_record(record, self.pending_game) for record in self._load_planning_catalog()
                                   if matches_game(record, self.pending_game)]
-        self._planning_item_catalog = [record for record in self._load_planning_json("journey_items.json")
+        self._planning_item_catalog = [resolve_game_record(record, self.pending_game) for record in self._load_planning_json("journey_items.json")
                                        if matches_game(record, self.pending_game)]
         self._planning_learnsets = self.app_state.reference_data.get("learnsets_swsh", {})
 
@@ -558,10 +558,10 @@ class OnboardingView:
             )
             def choose(event, selected=game):
                 self.pending_game = selected
-                from engine.game_support import matches_game
-                self._planning_catalog = [record for record in self._load_planning_catalog()
+                from engine.game_support import matches_game, resolve_game_record
+                self._planning_catalog = [resolve_game_record(record, selected) for record in self._load_planning_catalog()
                                           if matches_game(record, selected)]
-                self._planning_item_catalog = [record for record in self._load_planning_json("journey_items.json")
+                self._planning_item_catalog = [resolve_game_record(record, selected) for record in self._load_planning_json("journey_items.json")
                                                if matches_game(record, selected)]
                 self.content_host.content = self._build_starter_selection()
                 self.page.update()

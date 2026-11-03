@@ -220,14 +220,14 @@ class MyJourneyView:
         self.on_export_journey = on_export_journey
         self.on_load_journey = on_load_journey
         self.on_start_new_journey = on_start_new_journey
-        from engine.game_support import matches_game
-        self.items = [row for row in self._load_json(DATA_DIR / "journey_items.json")
+        from engine.game_support import matches_game, resolve_game_record
+        self.items = [resolve_game_record(row, app_state.game) for row in self._load_json(DATA_DIR / "journey_items.json")
                       if matches_game(row, app_state.game)]
         self.pokemon_catalog = self._load_json(
             DATA_DIR / "journey_pokemon.json"
         )
-        from engine.game_support import matches_game
-        self.pokemon_catalog = [row for row in self.pokemon_catalog
+        from engine.game_support import matches_game, resolve_game_record
+        self.pokemon_catalog = [resolve_game_record(row, app_state.game) for row in self.pokemon_catalog
                                 if matches_game(row, app_state.game)]
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
         self.planned_pokemon_forms = self._load_planned_pokemon_forms()
@@ -5385,20 +5385,34 @@ class MyJourneyView:
         )
 
         if encounters:
+            encounter_controls: list[ft.Control] = [
+                ft.Text(
+                    cls._pokemon_encounter_option_line(pokemon, encounter),
+                    color=TEXT_SECONDARY,
+                    size=13,
+                    width=380,
+                )
+                for encounter in encounters
+            ]
+            # Badge progression is the only tracked unlock state. Display
+            # additional prerequisites (such as post-Champion Wild Area Fog)
+            # without suggesting that the eighth badge unlocks them.
+            availability_note = str(
+                acquisition.get("availability_note") or ""
+            ).strip()
+            if availability_note:
+                encounter_controls.append(
+                    ft.Text(
+                        availability_note,
+                        color=TEXT_MUTED,
+                        size=12,
+                        italic=True,
+                        width=380,
+                    )
+                )
             return ft.Container(
                 content=ft.Column(
-                    controls=[
-                        ft.Text(
-                            cls._pokemon_encounter_option_line(
-                                pokemon,
-                                encounter,
-                            ),
-                            color=TEXT_SECONDARY,
-                            size=13,
-                            width=380,
-                        )
-                        for encounter in encounters
-                    ],
+                    controls=encounter_controls,
                     spacing=5,
                     tight=True,
                 ),

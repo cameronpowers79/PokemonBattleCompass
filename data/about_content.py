@@ -32,8 +32,8 @@ class VersionEntry:
 
 
 HERO_TITLE = "Pokémon Battle Compass"
-HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword"
-HERO_VERSION = "v0.3.0 Beta"
+HERO_SUBTITLE = "Tactical battle guidance for Pokémon Sword and Shield."
+HERO_VERSION = "v0.3.1 Beta"
 HERO_TAGLINE = "Built because one Excel workbook escaped containment."
 
 
@@ -469,6 +469,18 @@ NERD_STUFF_GROUPS = (
 
 
 VERSION_HISTORY = (
+    VersionEntry(
+        name="v0.3.1",
+        status="Current Beta",
+        summary="Pokémon Shield support and expanded Generation VIII tactical guidance.",
+        bullets=(
+            "Added Pokémon Shield support with game-aware onboarding, opponents, and Journey persistence",
+            "Added Shield-exclusive Pokémon, acquisition routes, evolution items, and fossil sources",
+            "Added Shield-specific Gym Badges and improved Journey navigation",
+            "Refined Weather Control, Dynamax/Gigantamax matchup guidance, and status strategy recommendations",
+            "Expanded version-aware data handling while preserving existing Sword Journeys",
+        ),
+    ),
     VersionEntry(
         name="v0.3.0",
         status="Current Beta",

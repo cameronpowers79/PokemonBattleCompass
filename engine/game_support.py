@@ -25,3 +25,25 @@ def mechanics_for(game: str) -> str:
     if game not in GAME_MECHANICS:
         raise ValueError(f"Unknown game: {game}")
     return GAME_MECHANICS[game]
+
+
+def resolve_game_record(record: dict, game: str) -> dict:
+    """Return a game's acquisition/item-source presentation without mutating catalog data.
+
+    Caller should first apply matches_game(). Species IDs, evolution and
+    strategy metadata stay shared; only version-specific source fields vary.
+    """
+    from copy import deepcopy
+
+    resolved = deepcopy(record)
+    acquisition_options = resolved.pop("acquisition_by_game", None)
+    if isinstance(acquisition_options, dict):
+        acquisition = acquisition_options.get(game)
+        if isinstance(acquisition, dict):
+            resolved["primary_acquisition"] = deepcopy(acquisition)
+    source_options = resolved.pop("sources_by_game", None)
+    if isinstance(source_options, dict):
+        sources = source_options.get(game)
+        if isinstance(sources, list):
+            resolved["sources"] = deepcopy(sources)
+    return resolved

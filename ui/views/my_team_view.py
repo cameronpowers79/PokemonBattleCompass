@@ -345,7 +345,7 @@ def _app_version() -> str:
     try:
         return version("pokemon-battle-compass")
     except PackageNotFoundError:
-        return "0.3.0"
+        return "0.3.1"
 
 
 class MyTeamView:
@@ -539,8 +539,8 @@ class MyTeamView:
         except (OSError, UnicodeError, json.JSONDecodeError):
             raw_journey_items = []
 
-        from engine.game_support import matches_game
-        raw_journey_items = [row for row in raw_journey_items
+        from engine.game_support import matches_game, resolve_game_record
+        raw_journey_items = [resolve_game_record(row, app_state.game) for row in raw_journey_items
                              if isinstance(row, dict) and matches_game(row, app_state.game)]
 
         self.journey_item_by_name = {
@@ -562,8 +562,8 @@ class MyTeamView:
         except (OSError, UnicodeError, json.JSONDecodeError):
             raw_journey_pokemon = []
 
-        from engine.game_support import matches_game
-        raw_journey_pokemon = [row for row in raw_journey_pokemon
+        from engine.game_support import matches_game, resolve_game_record
+        raw_journey_pokemon = [resolve_game_record(row, app_state.game) for row in raw_journey_pokemon
                                if isinstance(row, dict) and matches_game(row, app_state.game)]
 
         self.pokemon_type_lookup: dict[str, tuple[str, str]] = {}
