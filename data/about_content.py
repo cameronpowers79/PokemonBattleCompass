@@ -483,7 +483,7 @@ VERSION_HISTORY = (
     ),
     VersionEntry(
         name="v0.3.0",
-        status="Current Beta",
+        status="Previous Beta",
         summary="Team Strategies: guided planning and opponent-aware tactical battle recommendations.",
         bullets=(
             "Added eight selectable strategies, from Strongest Matchup to weather, screens, setup, status, poison, and defensive attrition",
