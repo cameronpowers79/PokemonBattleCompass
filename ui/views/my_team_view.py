@@ -539,6 +539,10 @@ class MyTeamView:
         except (OSError, UnicodeError, json.JSONDecodeError):
             raw_journey_items = []
 
+        from engine.game_support import matches_game
+        raw_journey_items = [row for row in raw_journey_items
+                             if isinstance(row, dict) and matches_game(row, app_state.game)]
+
         self.journey_item_by_name = {
             self._normalize_item_name(
                 str(item.get("name", ""))
@@ -557,6 +561,10 @@ class MyTeamView:
             )
         except (OSError, UnicodeError, json.JSONDecodeError):
             raw_journey_pokemon = []
+
+        from engine.game_support import matches_game
+        raw_journey_pokemon = [row for row in raw_journey_pokemon
+                               if isinstance(row, dict) and matches_game(row, app_state.game)]
 
         self.pokemon_type_lookup: dict[str, tuple[str, str]] = {}
         self.evolution_step_lookup: dict[str, list[dict]] = {}
@@ -875,56 +883,6 @@ class MyTeamView:
             ),
         )
 
-        self.export_button = ft.Button(
-            content="Export Journey",
-            icon=ft.Icons.DOWNLOAD_OUTLINED,
-            disabled=False,
-            on_click=self._export_journey,
-            style=ft.ButtonStyle(
-                bgcolor={
-                    ft.ControlState.DEFAULT: EXPORT_BUTTON_ACTIVE,
-                    ft.ControlState.DISABLED: EXPORT_BUTTON_DISABLED,
-                },
-                color={
-                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
-                },
-                icon_color={
-                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
-                },
-                elevation={
-                    ft.ControlState.DEFAULT: 1,
-                    ft.ControlState.DISABLED: 0,
-                },
-            ),
-        )
-
-        self.load_button = ft.Button(
-            content="Load Journey",
-            icon=ft.Icons.UPLOAD_FILE_OUTLINED,
-            disabled=False,
-            on_click=self._select_journey_file,
-            style=ft.ButtonStyle(
-                bgcolor={
-                    ft.ControlState.DEFAULT: LOAD_BUTTON_ACTIVE,
-                    ft.ControlState.DISABLED: LOAD_BUTTON_DISABLED,
-                },
-                color={
-                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
-                },
-                icon_color={
-                    ft.ControlState.DEFAULT: TEXT_PRIMARY,
-                    ft.ControlState.DISABLED: BUTTON_DISABLED_TEXT,
-                },
-                elevation={
-                    ft.ControlState.DEFAULT: 1,
-                    ft.ControlState.DISABLED: 0,
-                },
-            ),
-        )
-
         self.nickname_toggle_button = ft.TextButton(
             content="Hide Nicknames" if self.show_nicknames else "Want to give your Pokémon nicknames? Click here",
             icon=ft.Icons.EDIT_OUTLINED,
@@ -974,7 +932,6 @@ class MyTeamView:
         self.save_status.color = SUCCESS
         self.save_button.disabled = True
         self.discard_button.disabled = True
-        self.export_button.disabled = False
         self.detail_notice.visible = False
 
         self._refresh_selector()
@@ -1725,7 +1682,6 @@ class MyTeamView:
         is_dirty = self.has_unsaved_changes or bool(invalid_stats)
         self.save_button.disabled = not is_dirty
         self.discard_button.disabled = not is_dirty
-        self.export_button.disabled = is_dirty
         self.detail_notice.visible = is_dirty
         self._sync_box_buttons()
         if invalid_stats:
@@ -1797,8 +1753,6 @@ class MyTeamView:
                                     self.manage_party_button,
                                     self.save_button,
                                     self.discard_button,
-                                    self.export_button,
-                                    self.load_button,
                                     self.save_status,
                                 ],
                             ),
@@ -3429,7 +3383,6 @@ class MyTeamView:
 
         self.save_button.update()
         self.discard_button.update()
-        self.export_button.update()
         self.detail_notice.update()
         self.aegislash_entry_notice.update()
         self.save_status.update()
@@ -4529,7 +4482,6 @@ class MyTeamView:
         self._update_dirty_state()
         self.save_button.update()
         self.discard_button.update()
-        self.export_button.update()
         self.detail_notice.update()
         self.aegislash_entry_notice.update()
         self.save_status.update()
@@ -8224,7 +8176,6 @@ class MyTeamView:
         self.box_table_host.content = self._build_box_table()
         self.save_button.disabled = True
         self.discard_button.disabled = True
-        self.export_button.disabled = False
         self.detail_notice.visible = False
 
         if self.on_team_updated:

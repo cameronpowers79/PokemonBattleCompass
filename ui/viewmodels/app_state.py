@@ -119,6 +119,21 @@ class AppState:
 
     @property
 
+    def game(self) -> str:
+
+        """Return the Journey game; default legacy or empty saves to Sword."""
+
+        from engine.game_support import SUPPORTED_GAMES
+
+        if not isinstance(self.journey, dict):
+            return "Sword"
+        game = self.journey.get("game", "Sword")
+        return game if game in SUPPORTED_GAMES else "Sword"
+
+
+
+    @property
+
     def starter(self) -> str | None:
 
         """Return the active Journey's selected starter."""
@@ -1002,6 +1017,7 @@ class AppState:
         starter: str,
 
         team_data: list[dict],
+        game: str = "Sword",
 
     ) -> bool:
 
@@ -1024,6 +1040,7 @@ class AppState:
             starter=starter,
 
             team=deepcopy(team_data),
+            game=game,
 
         )
 

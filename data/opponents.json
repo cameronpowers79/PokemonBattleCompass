@@ -36,7 +36,8 @@
     "Move4Power": 40,
     "Move4Accuracy": 100,
     "Ability": "Intimidate",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -75,7 +76,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Iron Fist",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -114,7 +116,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Scrappy",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -153,7 +156,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Guts",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Gordie",
@@ -192,7 +196,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Tough Claws",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Gordie",
@@ -231,7 +236,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Contrary",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Gordie",
@@ -270,7 +276,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Power Spot",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword"
   },
   {
     "Trainer": "Gordie",
@@ -309,7 +316,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steam Engine",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Kabu",
@@ -348,7 +356,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Flash Fire",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Kabu",
@@ -387,7 +396,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Flash Fire",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Kabu",
@@ -426,7 +436,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Flash Fire",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -465,7 +476,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 100,
     "Ability": "Dry Skin",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -504,7 +516,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Moxie",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -543,7 +556,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Hunger Switch",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Milo",
@@ -582,7 +596,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Cotton Down",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Milo",
@@ -621,7 +636,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Cotton Down",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -660,7 +676,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -699,7 +716,8 @@
     "Move4Power": 15,
     "Move4Accuracy": 85,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -738,7 +756,8 @@
     "Move4Power": 120,
     "Move4Accuracy": 100,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Oleana",
@@ -777,7 +796,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Snow Cloak",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Oleana",
@@ -816,7 +836,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Queenly Majesty",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Oleana",
@@ -855,7 +876,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 90,
     "Ability": "Corrosion",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Oleana",
@@ -894,7 +916,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Competitive",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Oleana",
@@ -933,7 +956,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Stench",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Opal",
@@ -972,7 +996,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Levitate",
-    "AbilityNotes": "Verified - Galarian Weezing"
+    "AbilityNotes": "Verified - Galarian Weezing",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Opal",
@@ -1011,7 +1036,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Intimidate",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Opal",
@@ -1050,7 +1076,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Serene Grace",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Opal",
@@ -1089,7 +1116,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sweet Veil",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Piers",
@@ -1128,7 +1156,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Intimidate",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Piers",
@@ -1167,7 +1196,8 @@
     "Move4Power": 50,
     "Move4Accuracy": 100,
     "Ability": "Contrary",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Piers",
@@ -1206,7 +1236,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Reckless",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Piers",
@@ -1245,7 +1276,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Aftermath",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -1284,7 +1316,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sand Stream",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -1323,7 +1356,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 90,
     "Ability": "Levitate",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -1362,7 +1396,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sand Spit",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -1401,7 +1436,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Light Metal",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Rose",
@@ -1440,7 +1476,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Swarm",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Rose",
@@ -1479,7 +1516,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Iron Barbs",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Rose",
@@ -1518,7 +1556,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Battle Armor",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Rose",
@@ -1557,7 +1596,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Plus",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Rose",
@@ -1596,7 +1636,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Sheer Force",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bea",
@@ -1635,7 +1676,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Unburden",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -1674,7 +1716,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Limber",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -1713,7 +1756,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Scrappy",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -1752,7 +1796,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Battle Armor",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bea",
@@ -1791,7 +1836,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Guts",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword"
   },
   {
     "Trainer": "Marnie",
@@ -1830,7 +1876,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Limber",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -1869,7 +1916,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Dry Skin",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -1908,7 +1956,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Moxie",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -1947,7 +1996,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Hunger Switch",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -1986,7 +2036,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 100,
     "Ability": "Emergency Exit",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -2025,7 +2076,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -2064,7 +2116,8 @@
     "Move4Power": 75,
     "Move4Accuracy": 95,
     "Ability": "Drizzle",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -2103,7 +2156,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 95,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Nessa",
@@ -2142,7 +2196,8 @@
     "Move4Power": 150,
     "Move4Accuracy": 100,
     "Ability": "Swift Swim",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -2181,7 +2236,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Drought",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -2220,7 +2276,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sap Sipper",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -2259,7 +2316,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Shell Armor",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -2298,7 +2356,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Levitate",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Raihan",
@@ -2337,7 +2396,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Light Metal",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2376,7 +2436,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Limber",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2415,7 +2476,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Dry Skin",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2454,7 +2516,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Moxie",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2493,7 +2556,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Hunger Switch",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2532,7 +2596,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Prankster",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2571,7 +2636,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Limber",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2610,7 +2676,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Dry Skin",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2649,7 +2716,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Moxie",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2688,7 +2756,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Hunger Switch",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Marnie",
@@ -2727,7 +2796,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Prankster",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Sordward",
@@ -2766,7 +2836,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -2805,7 +2876,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 100,
     "Ability": "Emergency Exit",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -2844,7 +2916,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "No Guard",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -2883,7 +2956,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Defiant",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -2922,7 +2996,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -2961,7 +3036,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 100,
     "Ability": "Emergency Exit",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -3000,7 +3076,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "No Guard",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Sordward",
@@ -3039,7 +3116,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Defiant",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword"
   },
   {
     "Trainer": "Bede",
@@ -3078,7 +3156,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Magic Guard",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3117,7 +3196,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Frisk",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3156,7 +3236,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Healer",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3195,7 +3276,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Magic Guard",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3234,7 +3316,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Frisk",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3273,7 +3356,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Pastel Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3312,7 +3396,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Healer",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3351,7 +3436,8 @@
     "Move4Power": 65,
     "Move4Accuracy": 100,
     "Ability": "Magic Guard",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3390,7 +3476,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Frisk",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3429,7 +3516,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Pastel Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3468,7 +3556,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Healer",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3507,7 +3596,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Intimidate",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3546,7 +3636,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Synchronize",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3585,7 +3676,8 @@
     "Move4Power": 40,
     "Move4Accuracy": 100,
     "Ability": "Pastel Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -3624,7 +3716,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Magic Bounce",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Sebastian",
@@ -3663,7 +3756,8 @@
     "Move4Power": 75,
     "Move4Accuracy": 95,
     "Ability": "Drizzle",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Sebastian",
@@ -3702,7 +3796,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Sap Sipper",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Camilla",
@@ -3741,7 +3836,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Drought",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Camilla",
@@ -3780,7 +3876,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 95,
     "Ability": "Shell Armor",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Aria",
@@ -3819,7 +3916,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Snow Warning",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "HT Aria",
@@ -3858,7 +3956,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Bulletproof",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Annette",
@@ -3897,7 +3996,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 75,
     "Ability": "Healer",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Annette",
@@ -3936,7 +4036,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sweet Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Teresa",
@@ -3975,7 +4076,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sweet Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Teresa",
@@ -4014,7 +4116,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 75,
     "Ability": "Healer",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Theodora",
@@ -4053,7 +4156,8 @@
     "Move4Power": 50,
     "Move4Accuracy": 100,
     "Ability": "Prankster",
-    "AbilityNotes": "Verified"
+    "AbilityNotes": "Verified",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "BT Theodora",
@@ -4092,7 +4196,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Synchronize",
-    "AbilityNotes": "Verified"
+    "AbilityNotes": "Verified",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Eternatus",
@@ -4131,7 +4236,8 @@
     "Move4Power": 90,
     "Move4Accuracy": 100,
     "Ability": "Pressure",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Zacian",
@@ -4170,7 +4276,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Intrepid Sword",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Zamazenta",
@@ -4209,7 +4316,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Dauntless Shield",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -4248,7 +4356,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Intimidate",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -4287,7 +4396,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Synchronize",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -4326,7 +4436,8 @@
     "Move4Power": 65,
     "Move4Accuracy": 100,
     "Ability": "Pastel Veil",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Bede",
@@ -4365,7 +4476,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Anticipation",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4404,7 +4516,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Run Away",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4444,7 +4557,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4484,7 +4598,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4524,7 +4639,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4563,7 +4679,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Run Away",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4602,7 +4719,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Keen Eye",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4642,7 +4760,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4682,7 +4801,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4722,7 +4842,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4761,7 +4882,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Run Away",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4800,7 +4922,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Keen Eye",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4840,7 +4963,8 @@
     "Move4Power": 15,
     "Move4Accuracy": 85,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4880,7 +5004,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4920,7 +5045,8 @@
     "Move4Power": 40,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4959,7 +5085,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Run Away",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -4998,7 +5125,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Keen Eye",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5038,7 +5166,8 @@
     "Move4Power": 15,
     "Move4Accuracy": 85,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5078,7 +5207,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5118,7 +5248,8 @@
     "Move4Power": 50,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5157,7 +5288,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Gulp Missile",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5196,7 +5328,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Sand Spit",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5235,7 +5368,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Rattled",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5275,7 +5409,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5315,7 +5450,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5355,7 +5491,8 @@
     "Move4Power": 30,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5394,7 +5531,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5433,7 +5571,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Unnerve",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5472,7 +5611,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Lightning Rod",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5511,7 +5651,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Thick Fat",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5551,7 +5692,8 @@
     "Move4Power": 85,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5591,7 +5733,8 @@
     "Move4Power": 75,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5631,7 +5774,8 @@
     "Move4Power": 120,
     "Move4Accuracy": 75,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5670,7 +5814,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Natural Cure",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5709,7 +5854,8 @@
     "Move4Power": 30,
     "Move4Accuracy": 100,
     "Ability": "Flash Fire",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5748,7 +5894,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Thick Fat",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5787,7 +5934,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Strong Jaw",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5827,7 +5975,8 @@
     "Move4Power": 35,
     "Move4Accuracy": 85,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5867,7 +6016,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5907,7 +6057,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5946,7 +6097,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -5985,7 +6137,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Unnerve",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6024,7 +6177,8 @@
     "Move4Power": 15,
     "Move4Accuracy": 85,
     "Ability": "Lightning Rod",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6063,7 +6217,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Thick Fat",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6102,7 +6257,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 90,
     "Ability": "Gulp Missile",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6142,7 +6298,8 @@
     "Move4Power": 70,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6182,7 +6339,8 @@
     "Move4Power": 90,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6222,7 +6380,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6261,7 +6420,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6300,7 +6460,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 85,
     "Ability": "Unnerve",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6339,7 +6500,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Lightning Rod",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6378,7 +6540,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Thick Fat",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6418,7 +6581,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6458,7 +6622,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6498,7 +6663,8 @@
     "Move4Power": 130,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6537,7 +6703,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Steadfast",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6576,7 +6743,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Thick Fat",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6615,7 +6783,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Lightning Rod",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6654,7 +6823,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Unnerve",
-    "AbilityNotes": "Species default"
+    "AbilityNotes": "Species default",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6694,7 +6864,8 @@
     "Move4Power": 80,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6734,7 +6905,8 @@
     "Move4Power": 95,
     "Move4Accuracy": 95,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6774,7 +6946,8 @@
     "Move4Power": 65,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Hop",
@@ -6813,7 +6986,8 @@
     "Move4Power": 90,
     "Move4Accuracy": 90,
     "Ability": "Dauntless Shield",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword"
   },
   {
     "Trainer": "Leon",
@@ -6853,7 +7027,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Stance Change",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -6893,7 +7068,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Clear Body",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -6933,7 +7109,8 @@
     "Move4Power": 100,
     "Move4Accuracy": 100,
     "Ability": "Mold Breaker",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -6973,7 +7150,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Tangled Feet",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7013,7 +7191,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Torrent",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7053,7 +7232,8 @@
     "Move4Power": 110,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7093,7 +7273,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Stance Change",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7133,7 +7314,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Clear Body",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7173,7 +7355,8 @@
     "Move4Power": 100,
     "Move4Accuracy": 100,
     "Ability": "Mold Breaker",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7213,7 +7396,8 @@
     "Move4Power": 100,
     "Move4Accuracy": 100,
     "Ability": "Poison Touch",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7253,7 +7437,8 @@
     "Move4Power": 40,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7293,7 +7478,8 @@
     "Move4Power": 110,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7333,7 +7519,8 @@
     "Move4Power": 0,
     "Move4Accuracy": 100,
     "Ability": "Stance Change",
-    "AbilityNotes": "Species only ability"
+    "AbilityNotes": "Species only ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7373,7 +7560,8 @@
     "Move4Power": 60,
     "Move4Accuracy": 100,
     "Ability": "Clear Body",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7413,7 +7601,8 @@
     "Move4Power": 100,
     "Move4Accuracy": 100,
     "Ability": "Mold Breaker",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7453,7 +7642,8 @@
     "Move4Power": 1,
     "Move4Accuracy": 100,
     "Ability": "Solid Rock",
-    "AbilityNotes": "Verified - Trainer specific"
+    "AbilityNotes": "Verified - Trainer specific",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7493,7 +7683,8 @@
     "Move4Power": 1,
     "Move4Accuracy": 100,
     "Ability": "Overgrow",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
   },
   {
     "Trainer": "Leon",
@@ -7533,6 +7724,887 @@
     "Move4Power": 110,
     "Move4Accuracy": 100,
     "Ability": "Blaze",
-    "AbilityNotes": "Starter ability"
+    "AbilityNotes": "Starter ability",
+    "Game": "Sword and Shield"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Gym 4",
+    "BattleOrder": 1,
+    "Slot": 1,
+    "Pokemon": "Yamask",
+    "Type1": "Ground",
+    "Type2": "Ghost",
+    "HP": 38,
+    "ATK": 55,
+    "DEF": 85,
+    "SPA": 30,
+    "SPD": 65,
+    "SPE": 30,
+    "Level": 34,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Brutal Swing",
+    "Move1Type": "Dark",
+    "Move1Category": "Physical",
+    "Move1Power": 60,
+    "Move1Accuracy": 100,
+    "Move2": "Hex",
+    "Move2Type": "Ghost",
+    "Move2Category": "Special",
+    "Move2Power": 65,
+    "Move2Accuracy": 100,
+    "Move3": "Disable",
+    "Move3Type": "Normal",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": null,
+    "Move4Type": null,
+    "Move4Category": null,
+    "Move4Power": null,
+    "Move4Accuracy": null,
+    "Ability": "Wandering Spirit",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Gym 4",
+    "BattleOrder": 1,
+    "Slot": 2,
+    "Pokemon": "Mimikyu",
+    "Type1": "Ghost",
+    "Type2": "Fairy",
+    "HP": 55,
+    "ATK": 90,
+    "DEF": 80,
+    "SPA": 50,
+    "SPD": 105,
+    "SPE": 96,
+    "Level": 34,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Shadow Sneak",
+    "Move1Type": "Ghost",
+    "Move1Category": "Physical",
+    "Move1Power": 40,
+    "Move1Accuracy": 100,
+    "Move2": "Baby-Doll Eyes",
+    "Move2Type": "Fairy",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Hone Claws",
+    "Move3Type": "Dark",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Slash",
+    "Move4Type": "Normal",
+    "Move4Category": "Physical",
+    "Move4Power": 70,
+    "Move4Accuracy": 100,
+    "Ability": "Disguise",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Gym 4",
+    "BattleOrder": 1,
+    "Slot": 3,
+    "Pokemon": "Cursola",
+    "Type1": "Ghost",
+    "Type2": null,
+    "HP": 60,
+    "ATK": 95,
+    "DEF": 50,
+    "SPA": 145,
+    "SPD": 130,
+    "SPE": 30,
+    "Level": 35,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Ancient Power",
+    "Move1Type": "Rock",
+    "Move1Category": "Special",
+    "Move1Power": 60,
+    "Move1Accuracy": 100,
+    "Move2": "Curse",
+    "Move2Type": "Ghost",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Hex",
+    "Move3Type": "Ghost",
+    "Move3Category": "Special",
+    "Move3Power": 65,
+    "Move3Accuracy": 100,
+    "Move4": null,
+    "Move4Type": null,
+    "Move4Category": null,
+    "Move4Power": null,
+    "Move4Accuracy": null,
+    "Ability": "Weak Armor",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Gym 4",
+    "BattleOrder": 1,
+    "Slot": 4,
+    "Pokemon": "Gengar",
+    "Type1": "Ghost",
+    "Type2": "Poison",
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 130,
+    "SPD": 75,
+    "SPE": 110,
+    "Level": 36,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Max Ooze",
+    "Move1Type": "Poison",
+    "Move1Category": "Special",
+    "Move1Power": 85,
+    "Move1Accuracy": 100,
+    "Move2": "G-Max Terror",
+    "Move2Type": "Ghost",
+    "Move2Category": "Special",
+    "Move2Power": 120,
+    "Move2Accuracy": 100,
+    "Move3": "Max Guard",
+    "Move3Type": "Normal",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Max Darkness",
+    "Move4Type": "Dark",
+    "Move4Category": "Physical",
+    "Move4Power": 100,
+    "Move4Accuracy": 100,
+    "Ability": "Cursed Body",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Melony",
+    "Battle": "Gym 6",
+    "BattleOrder": 1,
+    "Slot": 1,
+    "Pokemon": "Frosmoth",
+    "Type1": "Ice",
+    "Type2": "Bug",
+    "HP": 70,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 125,
+    "SPD": 90,
+    "SPE": 65,
+    "Level": 40,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Icy Wind",
+    "Move1Type": "Ice",
+    "Move1Category": "Special",
+    "Move1Power": 55,
+    "Move1Accuracy": 95,
+    "Move2": "Feather Dance",
+    "Move2Type": "Flying",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Bug Buzz",
+    "Move3Type": "Bug",
+    "Move3Category": "Special",
+    "Move3Power": 90,
+    "Move3Accuracy": 100,
+    "Move4": "Hail",
+    "Move4Type": "Ice",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Shield Dust",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Melony",
+    "Battle": "Gym 6",
+    "BattleOrder": 1,
+    "Slot": 2,
+    "Pokemon": "Darmanitan",
+    "Type1": "Ice",
+    "Type2": null,
+    "HP": 105,
+    "ATK": 140,
+    "DEF": 55,
+    "SPA": 30,
+    "SPD": 55,
+    "SPE": 95,
+    "Level": 40,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Icicle Crash",
+    "Move1Type": "Ice",
+    "Move1Category": "Physical",
+    "Move1Power": 85,
+    "Move1Accuracy": 90,
+    "Move2": "Headbutt",
+    "Move2Type": "Normal",
+    "Move2Category": "Physical",
+    "Move2Power": 70,
+    "Move2Accuracy": 100,
+    "Move3": "Taunt",
+    "Move3Type": "Dark",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Fire Fang",
+    "Move4Type": "Fire",
+    "Move4Category": "Physical",
+    "Move4Power": 65,
+    "Move4Accuracy": 95,
+    "Ability": "Zen Mode",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Melony",
+    "Battle": "Gym 6",
+    "BattleOrder": 1,
+    "Slot": 3,
+    "Pokemon": "Eiscue",
+    "Type1": "Ice",
+    "Type2": null,
+    "HP": 75,
+    "ATK": 80,
+    "DEF": 110,
+    "SPA": 65,
+    "SPD": 90,
+    "SPE": 50,
+    "Level": 41,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Amnesia",
+    "Move1Type": "Psychic",
+    "Move1Category": "Status",
+    "Move1Power": 0,
+    "Move1Accuracy": 100,
+    "Move2": "Freeze-Dry",
+    "Move2Type": "Ice",
+    "Move2Category": "Special",
+    "Move2Power": 70,
+    "Move2Accuracy": 100,
+    "Move3": "Hail",
+    "Move3Type": "Ice",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Icy Wind",
+    "Move4Type": "Ice",
+    "Move4Category": "Special",
+    "Move4Power": 55,
+    "Move4Accuracy": 95,
+    "Ability": "Ice Face",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Melony",
+    "Battle": "Gym 6",
+    "BattleOrder": 1,
+    "Slot": 4,
+    "Pokemon": "Lapras",
+    "Type1": "Water",
+    "Type2": "Ice",
+    "HP": 130,
+    "ATK": 85,
+    "DEF": 80,
+    "SPA": 85,
+    "SPD": 95,
+    "SPE": 60,
+    "Level": 42,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "G-Max Resonance",
+    "Move1Type": "Ice",
+    "Move1Category": "Special",
+    "Move1Power": 110,
+    "Move1Accuracy": 100,
+    "Move2": "G-Max Resonance",
+    "Move2Type": "Ice",
+    "Move2Category": "Special",
+    "Move2Power": 130,
+    "Move2Accuracy": 100,
+    "Move3": "Max Geyser",
+    "Move3Type": "Water",
+    "Move3Category": "Special",
+    "Move3Power": 130,
+    "Move3Accuracy": 100,
+    "Move4": "Max Guard",
+    "Move4Type": "Normal",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Shell Armor",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Wyndon Stadium",
+    "BattleOrder": 1,
+    "Slot": 1,
+    "Pokemon": "Dusknoir",
+    "Type1": "Ghost",
+    "Type2": null,
+    "HP": 45,
+    "ATK": 100,
+    "DEF": 135,
+    "SPA": 65,
+    "SPD": 135,
+    "SPE": 45,
+    "Level": 52,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Shadow Punch",
+    "Move1Type": "Ghost",
+    "Move1Category": "Physical",
+    "Move1Power": 60,
+    "Move1Accuracy": 100,
+    "Move2": "Thunder Punch",
+    "Move2Type": "Electric",
+    "Move2Category": "Physical",
+    "Move2Power": 75,
+    "Move2Accuracy": 100,
+    "Move3": "Rock Tomb",
+    "Move3Type": "Rock",
+    "Move3Category": "Physical",
+    "Move3Power": 60,
+    "Move3Accuracy": 95,
+    "Move4": "Disable",
+    "Move4Type": "Normal",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Pressure",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Wyndon Stadium",
+    "BattleOrder": 1,
+    "Slot": 2,
+    "Pokemon": "Chandelure",
+    "Type1": "Ghost",
+    "Type2": "Fire",
+    "HP": 60,
+    "ATK": 55,
+    "DEF": 90,
+    "SPA": 145,
+    "SPD": 90,
+    "SPE": 80,
+    "Level": 52,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Shadow Ball",
+    "Move1Type": "Ghost",
+    "Move1Category": "Special",
+    "Move1Power": 80,
+    "Move1Accuracy": 100,
+    "Move2": "Mystical Fire",
+    "Move2Type": "Fire",
+    "Move2Category": "Special",
+    "Move2Power": 75,
+    "Move2Accuracy": 100,
+    "Move3": "Will-O-Wisp",
+    "Move3Type": "Fire",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 85,
+    "Move4": null,
+    "Move4Type": null,
+    "Move4Category": null,
+    "Move4Power": null,
+    "Move4Accuracy": null,
+    "Ability": "Flash Fire",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Wyndon Stadium",
+    "BattleOrder": 1,
+    "Slot": 3,
+    "Pokemon": "Cursola",
+    "Type1": "Ghost",
+    "Type2": null,
+    "HP": 60,
+    "ATK": 95,
+    "DEF": 50,
+    "SPA": 145,
+    "SPD": 130,
+    "SPE": 30,
+    "Level": 53,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Hex",
+    "Move1Type": "Ghost",
+    "Move1Category": "Special",
+    "Move1Power": 65,
+    "Move1Accuracy": 100,
+    "Move2": "Strength Sap",
+    "Move2Type": "Grass",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Ancient Power",
+    "Move3Type": "Rock",
+    "Move3Category": "Special",
+    "Move3Power": 60,
+    "Move3Accuracy": 100,
+    "Move4": "Amnesia",
+    "Move4Type": "Psychic",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Weak Armor",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Wyndon Stadium",
+    "BattleOrder": 1,
+    "Slot": 4,
+    "Pokemon": "Polteageist",
+    "Type1": "Ghost",
+    "Type2": null,
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 65,
+    "SPA": 134,
+    "SPD": 114,
+    "SPE": 70,
+    "Level": 53,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "Shadow Ball",
+    "Move1Type": "Ghost",
+    "Move1Category": "Special",
+    "Move1Power": 80,
+    "Move1Accuracy": 100,
+    "Move2": "Protect",
+    "Move2Type": "Normal",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Nasty Plot",
+    "Move3Type": "Dark",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Giga Drain",
+    "Move4Type": "Grass",
+    "Move4Category": "Special",
+    "Move4Power": 75,
+    "Move4Accuracy": 100,
+    "Ability": "Weak Armor",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Allister",
+    "Battle": "Wyndon Stadium",
+    "BattleOrder": 1,
+    "Slot": 5,
+    "Pokemon": "Gengar",
+    "Type1": "Ghost",
+    "Type2": "Poison",
+    "HP": 60,
+    "ATK": 65,
+    "DEF": 60,
+    "SPA": 130,
+    "SPD": 75,
+    "SPE": 110,
+    "Level": 54,
+    "Notes": "Shield encounter; battle moves cross-checked",
+    "Game": "Shield",
+    "Move1": "G-Max Terror",
+    "Move1Type": "Ghost",
+    "Move1Category": "Special",
+    "Move1Power": 130,
+    "Move1Accuracy": 100,
+    "Move2": "Max Ooze",
+    "Move2Type": "Poison",
+    "Move2Category": "Special",
+    "Move2Power": 90,
+    "Move2Accuracy": 100,
+    "Move3": "Max Darkness",
+    "Move3Type": "Dark",
+    "Move3Category": "Special",
+    "Move3Power": 130,
+    "Move3Accuracy": 100,
+    "Move4": "Max Guard",
+    "Move4Type": "Normal",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Cursed Body",
+    "AbilityNotes": "Trainer ability; review during Shield UAT"
+  },
+  {
+    "Trainer": "Hop",
+    "Battle": "Slumbering Weald (PG2)",
+    "BattleOrder": 10,
+    "Slot": 6,
+    "Pokemon": "Zacian",
+    "Type1": "Fairy",
+    "Type2": "Steel",
+    "HP": 92,
+    "ATK": 170,
+    "DEF": 115,
+    "SPA": 80,
+    "SPD": 115,
+    "SPE": 148,
+    "Level": 70,
+    "Notes": "Shield postgame Hop carries Zacian",
+    "Move1": "Behemoth Blade",
+    "Move1Type": "Steel",
+    "Move1Category": "Physical",
+    "Move1Power": 100,
+    "Move1Accuracy": 100,
+    "Move2": "Play Rough",
+    "Move2Type": "Fairy",
+    "Move2Category": "Physical",
+    "Move2Power": 90,
+    "Move2Accuracy": 90,
+    "Move3": "Sacred Sword",
+    "Move3Type": "Fighting",
+    "Move3Category": "Physical",
+    "Move3Power": 90,
+    "Move3Accuracy": 100,
+    "Move4": "Swords Dance",
+    "Move4Type": "Normal",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100,
+    "Ability": "Intrepid Sword",
+    "AbilityNotes": "Species only ability",
+    "Game": "Shield"
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Slumbering Weald (PG)",
+    "BattleOrder": 1,
+    "Slot": 1,
+    "Pokemon": "Sirfetch'd",
+    "Type1": "Fighting",
+    "Type2": null,
+    "HP": 62,
+    "ATK": 135,
+    "DEF": 95,
+    "SPA": 68,
+    "SPD": 82,
+    "SPE": 65,
+    "Level": 60,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Steadfast",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Leaf Blade",
+    "Move1Type": "Grass",
+    "Move1Category": "Physical",
+    "Move1Power": 90,
+    "Move1Accuracy": 100,
+    "Move2": "Slam",
+    "Move2Type": "Normal",
+    "Move2Category": "Physical",
+    "Move2Power": 80,
+    "Move2Accuracy": 75,
+    "Move3": "Meteor Assault",
+    "Move3Type": "Fighting",
+    "Move3Category": "Physical",
+    "Move3Power": 150,
+    "Move3Accuracy": 100,
+    "Move4": "Iron Defense",
+    "Move4Type": "Steel",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Slumbering Weald (PG)",
+    "BattleOrder": 1,
+    "Slot": 2,
+    "Pokemon": "Bronzong",
+    "Type1": "Steel",
+    "Type2": "Psychic",
+    "HP": 67,
+    "ATK": 89,
+    "DEF": 116,
+    "SPA": 79,
+    "SPD": 116,
+    "SPE": 33,
+    "Level": 60,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Levitate",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Light Screen",
+    "Move1Type": "Psychic",
+    "Move1Category": "Status",
+    "Move1Power": 0,
+    "Move1Accuracy": 100,
+    "Move2": "Extrasensory",
+    "Move2Type": "Psychic",
+    "Move2Category": "Special",
+    "Move2Power": 80,
+    "Move2Accuracy": 100,
+    "Move3": "Gyro Ball",
+    "Move3Type": "Steel",
+    "Move3Category": "Physical",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Hypnosis",
+    "Move4Type": "Psychic",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 60
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Slumbering Weald (PG)",
+    "BattleOrder": 1,
+    "Slot": 3,
+    "Pokemon": "Falinks",
+    "Type1": "Fighting",
+    "Type2": null,
+    "HP": 65,
+    "ATK": 100,
+    "DEF": 100,
+    "SPA": 70,
+    "SPD": 60,
+    "SPE": 75,
+    "Level": 60,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Battle Armor",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "No Retreat",
+    "Move1Type": "Fighting",
+    "Move1Category": "Status",
+    "Move1Power": 0,
+    "Move1Accuracy": 100,
+    "Move2": "First Impression",
+    "Move2Type": "Bug",
+    "Move2Category": "Physical",
+    "Move2Power": 90,
+    "Move2Accuracy": 100,
+    "Move3": "Close Combat",
+    "Move3Type": "Fighting",
+    "Move3Category": "Physical",
+    "Move3Power": 120,
+    "Move3Accuracy": 100,
+    "Move4": "Megahorn",
+    "Move4Type": "Bug",
+    "Move4Category": "Physical",
+    "Move4Power": 120,
+    "Move4Accuracy": 85
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Slumbering Weald (PG)",
+    "BattleOrder": 1,
+    "Slot": 4,
+    "Pokemon": "Klinklang",
+    "Type1": "Steel",
+    "Type2": null,
+    "HP": 60,
+    "ATK": 100,
+    "DEF": 115,
+    "SPA": 70,
+    "SPD": 85,
+    "SPE": 90,
+    "Level": 60,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Plus",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Gear Grind",
+    "Move1Type": "Steel",
+    "Move1Category": "Physical",
+    "Move1Power": 50,
+    "Move1Accuracy": 85,
+    "Move2": "Shift Gear",
+    "Move2Type": "Steel",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Protect",
+    "Move3Type": "Normal",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Wild Charge",
+    "Move4Type": "Electric",
+    "Move4Category": "Physical",
+    "Move4Power": 90,
+    "Move4Accuracy": 100
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Energy Plant (PG)",
+    "BattleOrder": 1,
+    "Slot": 1,
+    "Pokemon": "Sirfetch'd",
+    "Type1": "Fighting",
+    "Type2": null,
+    "HP": 62,
+    "ATK": 135,
+    "DEF": 95,
+    "SPA": 68,
+    "SPD": 82,
+    "SPE": 65,
+    "Level": 64,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Steadfast",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Leaf Blade",
+    "Move1Type": "Grass",
+    "Move1Category": "Physical",
+    "Move1Power": 90,
+    "Move1Accuracy": 100,
+    "Move2": "Slam",
+    "Move2Type": "Normal",
+    "Move2Category": "Physical",
+    "Move2Power": 80,
+    "Move2Accuracy": 75,
+    "Move3": "Meteor Assault",
+    "Move3Type": "Fighting",
+    "Move3Category": "Physical",
+    "Move3Power": 150,
+    "Move3Accuracy": 100,
+    "Move4": "Iron Defense",
+    "Move4Type": "Steel",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 100
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Energy Plant (PG)",
+    "BattleOrder": 1,
+    "Slot": 2,
+    "Pokemon": "Bronzong",
+    "Type1": "Steel",
+    "Type2": "Psychic",
+    "HP": 67,
+    "ATK": 89,
+    "DEF": 116,
+    "SPA": 79,
+    "SPD": 116,
+    "SPE": 33,
+    "Level": 64,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Levitate",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Light Screen",
+    "Move1Type": "Psychic",
+    "Move1Category": "Status",
+    "Move1Power": 0,
+    "Move1Accuracy": 100,
+    "Move2": "Extrasensory",
+    "Move2Type": "Psychic",
+    "Move2Category": "Special",
+    "Move2Power": 80,
+    "Move2Accuracy": 100,
+    "Move3": "Gyro Ball",
+    "Move3Type": "Steel",
+    "Move3Category": "Physical",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Hypnosis",
+    "Move4Type": "Psychic",
+    "Move4Category": "Status",
+    "Move4Power": 0,
+    "Move4Accuracy": 60
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Energy Plant (PG)",
+    "BattleOrder": 1,
+    "Slot": 3,
+    "Pokemon": "Falinks",
+    "Type1": "Fighting",
+    "Type2": null,
+    "HP": 65,
+    "ATK": 100,
+    "DEF": 100,
+    "SPA": 70,
+    "SPD": 60,
+    "SPE": 75,
+    "Level": 64,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Battle Armor",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "No Retreat",
+    "Move1Type": "Fighting",
+    "Move1Category": "Status",
+    "Move1Power": 0,
+    "Move1Accuracy": 100,
+    "Move2": "First Impression",
+    "Move2Type": "Bug",
+    "Move2Category": "Physical",
+    "Move2Power": 90,
+    "Move2Accuracy": 100,
+    "Move3": "Close Combat",
+    "Move3Type": "Fighting",
+    "Move3Category": "Physical",
+    "Move3Power": 120,
+    "Move3Accuracy": 100,
+    "Move4": "Megahorn",
+    "Move4Type": "Bug",
+    "Move4Category": "Physical",
+    "Move4Power": 120,
+    "Move4Accuracy": 85
+  },
+  {
+    "Trainer": "Shielbert",
+    "Battle": "Energy Plant (PG)",
+    "BattleOrder": 1,
+    "Slot": 4,
+    "Pokemon": "Klinklang",
+    "Type1": "Steel",
+    "Type2": null,
+    "HP": 60,
+    "ATK": 100,
+    "DEF": 115,
+    "SPA": 70,
+    "SPD": 85,
+    "SPE": 90,
+    "Level": 64,
+    "Notes": "Shield postgame single battle",
+    "Ability": "Plus",
+    "AbilityNotes": "Verified - trainer specific",
+    "Game": "Shield",
+    "Move1": "Gear Grind",
+    "Move1Type": "Steel",
+    "Move1Category": "Physical",
+    "Move1Power": 50,
+    "Move1Accuracy": 85,
+    "Move2": "Shift Gear",
+    "Move2Type": "Steel",
+    "Move2Category": "Status",
+    "Move2Power": 0,
+    "Move2Accuracy": 100,
+    "Move3": "Protect",
+    "Move3Type": "Normal",
+    "Move3Category": "Status",
+    "Move3Power": 0,
+    "Move3Accuracy": 100,
+    "Move4": "Wild Charge",
+    "Move4Type": "Electric",
+    "Move4Category": "Physical",
+    "Move4Power": 90,
+    "Move4Accuracy": 100
   }
 ]

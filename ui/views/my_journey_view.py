@@ -55,6 +55,11 @@ BADGE_LAYERS = [
     ("Dragon Badge", "badges/dragon_badge.png"),
 ]
 
+SHIELD_BADGE_REPLACEMENTS = {
+    "Fighting Badge": ("Ghost Badge", "badges/ghost_badge_shield.png"),
+    "Rock Badge": ("Ice Badge", "badges/ice_badge_shield.png"),
+}
+
 BADGE_IMAGE_SIZE = (781, 779)
 
 BADGE_CROP_BOUNDS = {
@@ -62,8 +67,10 @@ BADGE_CROP_BOUNDS = {
     "Water Badge": (502, 65, 744, 327),
     "Fire Badge": (257, 191, 523, 618),
     "Fighting Badge": (57, 399, 346, 748),
+    "Ghost Badge": (57, 399, 346, 748),
     "Fairy Badge": (514, 271, 761, 629),
     "Rock Badge": (286, 15, 581, 225),
+    "Ice Badge": (286, 15, 581, 225),
     "Dark Badge": (184, 111, 397, 446),
     "Dragon Badge": (18, 37, 301, 559),
 }
@@ -197,15 +204,31 @@ class MyJourneyView:
         on_scroll_to: (
             Callable[..., Awaitable[None]] | None
         ) = None,
+        on_export_journey: Callable[..., Awaitable[None]] | None = None,
+        on_load_journey: Callable[..., Awaitable[None]] | None = None,
+        on_start_new_journey: Callable[[], None] | None = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
+        self.badge_layers = [
+            SHIELD_BADGE_REPLACEMENTS.get(name, (name, asset))
+            if app_state.game == "Shield" else (name, asset)
+            for name, asset in BADGE_LAYERS
+        ]
         self.on_go_to_my_team = on_go_to_my_team
         self.on_scroll_to = on_scroll_to
-        self.items = self._load_json(DATA_DIR / "journey_items.json")
+        self.on_export_journey = on_export_journey
+        self.on_load_journey = on_load_journey
+        self.on_start_new_journey = on_start_new_journey
+        from engine.game_support import matches_game
+        self.items = [row for row in self._load_json(DATA_DIR / "journey_items.json")
+                      if matches_game(row, app_state.game)]
         self.pokemon_catalog = self._load_json(
             DATA_DIR / "journey_pokemon.json"
         )
+        from engine.game_support import matches_game
+        self.pokemon_catalog = [row for row in self.pokemon_catalog
+                                if matches_game(row, app_state.game)]
         self.planned_pokemon_ids = self._load_planned_pokemon_ids()
         self.planned_pokemon_forms = self._load_planned_pokemon_forms()
         self.planned_moves = self._load_planned_moves()
@@ -895,6 +918,7 @@ class MyJourneyView:
 
         return [
             self._build_page_intro(),
+            self._build_journey_actions(),
             self._top_journey_row,
             ft.ResponsiveRow(
                 controls=[
@@ -975,7 +999,7 @@ class MyJourneyView:
     async def _earn_next_badge(self) -> None:
         """Persist the next badge and show its celebration dialog."""
 
-        if self.earned_badges >= len(BADGE_LAYERS):
+        if self.earned_badges >= len(self.badge_layers):
             return
 
         earned_badge_index = self.earned_badges
@@ -1066,10 +1090,10 @@ class MyJourneyView:
     ) -> None:
         """Celebrate a newly earned isolated badge."""
 
-        if badge_index < 0 or badge_index >= len(BADGE_LAYERS):
+        if badge_index < 0 or badge_index >= len(self.badge_layers):
             return
 
-        badge_name, badge_asset = BADGE_LAYERS[badge_index]
+        badge_name, badge_asset = self.badge_layers[badge_index]
         celebration_size = 260
 
         centered_badge = self._build_centered_badge_image(
@@ -1697,6 +1721,33 @@ class MyJourneyView:
             ],
             spacing=6,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def _build_journey_actions(self) -> ft.Control:
+        """Distinctly colored operational actions, separate from navigation."""
+        def action(label: str, icon: str, callback, color: str):
+            return ft.Button(
+                content=label, icon=icon, on_click=callback,
+                disabled=callback is None,
+                bgcolor=color, color="#FFFFFF", icon_color="#FFFFFF",
+                style=ft.ButtonStyle(
+                    padding=ft.Padding.symmetric(horizontal=22, vertical=15),
+                ),
+            )
+
+        return ft.Row(
+            controls=[
+                action("Export Journey", ft.Icons.DOWNLOAD_OUTLINED,
+                       self.on_export_journey, "#73508A"),
+                action("Load Journey", ft.Icons.UPLOAD_FILE_OUTLINED,
+                       self.on_load_journey, PRIMARY_BLUE),
+                action("Start New Journey", ft.Icons.EXPLORE_OUTLINED,
+                       (lambda event: self.on_start_new_journey())
+                       if self.on_start_new_journey is not None else None,
+                       "#4DA56A"),
+            ],
+            wrap=True, spacing=12, run_spacing=12,
+            alignment=ft.MainAxisAlignment.CENTER,
         )
 
     def _item_status(self, item: dict[str, Any]) -> str:
@@ -2811,11 +2862,11 @@ class MyJourneyView:
         coin_layers: list[ft.Control] = [frame_image]
         badge_images: list[ft.Image] = []
 
-        for index, (badge_name, badge_asset) in enumerate(BADGE_LAYERS):
+        for index, (badge_name, badge_asset) in enumerate(self.badge_layers):
             earned = index < self.earned_badges
             next_badge = (
                 index == self.earned_badges
-                and self.earned_badges < len(BADGE_LAYERS)
+                and self.earned_badges < len(self.badge_layers)
             )
 
             if earned:
@@ -2846,7 +2897,7 @@ class MyJourneyView:
         center_x = 0.5
         center_y = 0.5
 
-        if self.earned_badges < len(BADGE_LAYERS):
+        if self.earned_badges < len(self.badge_layers):
             center_x, center_y = badge_button_centers[self.earned_badges]
             button_icon = ft.Icon(
                 ft.Icons.MILITARY_TECH_ROUNDED,
@@ -2940,8 +2991,8 @@ class MyJourneyView:
 
         controls: list[ft.Control] = [coin_host]
 
-        if self.earned_badges < len(BADGE_LAYERS):
-            next_badge_name = BADGE_LAYERS[self.earned_badges][0]
+        if self.earned_badges < len(self.badge_layers):
+            next_badge_name = self.badge_layers[self.earned_badges][0]
             controls.append(
                 ft.Text(
                     f"Next: {next_badge_name}",

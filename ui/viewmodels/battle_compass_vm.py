@@ -3805,11 +3805,17 @@ def build_battle_compass_view_model(
     )
 
 
-def load_reference_data() -> ReferenceData:
-    """Load the bundled reference and default team data."""
+def load_reference_data(game: str | None = None) -> ReferenceData:
+    """Load references for the selected game; Sword and Shield share Gen VIII mechanics."""
+    from engine.game_support import matches_game, mechanics_for
+    if game is not None and mechanics_for(game) != "swsh":
+        raise NotImplementedError("Gen IX reference data and mechanics are not yet available")
+    opponents = load_json("opponents")
+    if game is not None:
+        opponents = [row for row in opponents if matches_game(row, game)]
     return {
         "team_data": load_json("team_data"),
-        "opponents": load_json("opponents"),
+        "opponents": opponents,
         "items": load_json("items"),
         "item_validation": load_json("item_validation_swsh"),
         "ability_rules": load_json("ability_rules"),

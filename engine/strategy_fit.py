@@ -139,6 +139,22 @@ def evaluate_pokemon_fit(strategy: str, pokemon: dict, moves_data: list[dict], l
             picked = ["Speed-boosting tools support an offensive setup role"]
         elif "SETUP_FACILITATION" in caps:
             picked = ["Its supporting moves help teammates establish boosts"]
+    if not picked and key == "status_control_punish" and "STATUS_ANY_RELIABLE" in caps:
+        reliable_moves = []
+        for name in sorted(names):
+            move = lookup.get(name, {})
+            try:
+                accuracy = float(move.get("Accuracy") or 0)
+            except (TypeError, ValueError):
+                accuracy = 0.0
+            if ("DirectStatus" in (move.get("MechanicsTags") or []) and accuracy >= 85
+                    and str(move.get("StatusEffect") or "").casefold() in
+                    {"burn", "paralysis", "paralyze", "paralyzed", "sleep", "poison"}):
+                reliable_moves.append(name)
+        if reliable_moves:
+            picked = [f"{reliable_moves[0]} provides reliable status application"]
+        elif "Yawn" in names:
+            picked = ["Yawn provides delayed sleep pressure"]
     if not picked:
         picked = ["No strong role-specific combination was identified" if raw == 0 else "This candidate offers a supporting contribution to the selected strategy"]
     else:

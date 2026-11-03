@@ -85,6 +85,8 @@ class OnboardingView:
         on_complete: Callable[[], None],
         on_new_journey_complete: Callable[[], None] | None = None,
         show_welcome: bool = False,
+        force_game_selection: bool = False,
+        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         self.page = page
         self.app_state = app_state
@@ -93,6 +95,8 @@ class OnboardingView:
             on_new_journey_complete
         )
         self.show_welcome = show_welcome
+        self.on_cancel = on_cancel
+        self.pending_game: str = app_state.game if app_state.has_journey else "Sword"
 
         self.pending_starter: str | None = None
         self.starter_details: StarterDetails | None = None
@@ -104,8 +108,11 @@ class OnboardingView:
         self._onboarding_recommendation_page = 0
         self.weather_focus: str | None = None
         self.weather_intent = "auto"
-        self._planning_catalog = self._load_planning_catalog()
-        self._planning_item_catalog = self._load_planning_json("journey_items.json")
+        from engine.game_support import matches_game
+        self._planning_catalog = [record for record in self._load_planning_catalog()
+                                  if matches_game(record, self.pending_game)]
+        self._planning_item_catalog = [record for record in self._load_planning_json("journey_items.json")
+                                       if matches_game(record, self.pending_game)]
         self._planning_learnsets = self.app_state.reference_data.get("learnsets_swsh", {})
 
         self.file_picker = ft.FilePicker()
@@ -115,6 +122,8 @@ class OnboardingView:
 
         if show_welcome:
             initial_content = self._build_welcome_screen()
+        elif force_game_selection:
+            initial_content = self._build_game_selection()
         elif (
             not app_state.has_team_member
             and app_state.starter in STARTER_DEFAULTS
@@ -124,7 +133,7 @@ class OnboardingView:
                 app_state.starter
             )
         else:
-            initial_content = self._build_starter_selection()
+            initial_content = self._build_game_selection()
 
         self.content_host = ft.Container(
             content=initial_content,
@@ -251,7 +260,7 @@ class OnboardingView:
 
         del event
         self.show_welcome = False
-        self.content_host.content = self._build_starter_selection()
+        self.content_host.content = self._build_game_selection()
         self.page.update()
 
     async def _select_journey_file(
@@ -529,13 +538,91 @@ class OnboardingView:
         self.page.pop_dialog()
         self.page.update()
 
-    def _build_starter_selection(self) -> ft.Control:
-        """Build the starter-selection component."""
+    def _build_game_selection(self) -> ft.Control:
+        """Select a supported game before starter/strategy onboarding.
 
-        return StarterSelection(
+        Optional artwork goes in assets/raw/game_logos/{game}.png. Use
+        transparent images, displayed inside a 220 x 96 contain frame.
+        """
+        from ui.rendering import asset_exists, ASSETS_DIR
+        cards = []
+        for game in ("Sword", "Shield", "Scarlet", "Violet"):
+            supported = game in ("Sword", "Shield")
+            logo = f"raw/game_logos/{game.lower()}.png"
+            artwork = (
+                ft.Image(src=logo, width=220, height=96,
+                         fit=ft.BoxFit.CONTAIN, semantics_label=f"Pokémon {game} logo")
+                if asset_exists(ASSETS_DIR / logo)
+                else ft.Text(f"Pokémon {game}", size=25, weight=ft.FontWeight.BOLD,
+                             color=TEXT_PRIMARY)
+            )
+            def choose(event, selected=game):
+                self.pending_game = selected
+                from engine.game_support import matches_game
+                self._planning_catalog = [record for record in self._load_planning_catalog()
+                                          if matches_game(record, selected)]
+                self._planning_item_catalog = [record for record in self._load_planning_json("journey_items.json")
+                                               if matches_game(record, selected)]
+                self.content_host.content = self._build_starter_selection()
+                self.page.update()
+            cards.append(ft.Container(
+                content=ft.Column(controls=[
+                    ft.Container(content=artwork, width=232, height=110,
+                                 alignment=ft.Alignment.CENTER),
+                    ft.Text("Available" if supported else "Coming Soon",
+                            color=TEXT_SECONDARY, size=14),
+                    ft.Button(content=f"Play {game}" if supported else "Stay tuned!", disabled=not supported,
+                              on_click=choose),
+                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=10),
+                width=260, padding=16, bgcolor=SURFACE_RAISED, border_radius=14))
+        return self._onboarding_panel("Which game are you playing?", [
+            ft.Text("Your Journey uses the opponents and battle rules for your selected game. "
+                    "Scarlet and Violet are not yet supported.", color=TEXT_SECONDARY,
+                    text_align=ft.TextAlign.CENTER),
+            ft.Text("Generation VIII", size=24, weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY),
+            ft.Row(controls=cards[:2], wrap=True, alignment=ft.MainAxisAlignment.CENTER,
+                   spacing=12, run_spacing=12),
+            ft.Text("Generation IX", size=24, weight=ft.FontWeight.BOLD,
+                    color=TEXT_PRIMARY),
+            ft.Row(controls=cards[2:], wrap=True, alignment=ft.MainAxisAlignment.CENTER,
+                   spacing=12, run_spacing=12),
+            *([ft.Button(content="Cancel", icon=ft.Icons.CLOSE,
+                         on_click=lambda event: self.on_cancel())]
+              if self.on_cancel is not None and self.app_state.has_journey else []),
+        ], centered=True)
+
+    def _return_to_game_selection(self, event=None) -> None:
+        """Return to game selection without saving or resetting a Journey."""
+        del event
+        self.pending_starter = None
+        self.starter_details = None
+        self.content_host.content = self._build_game_selection()
+        self.page.update()
+
+    def _build_starter_selection(self) -> ft.Control:
+        """Allow game corrections adjacent to the primary starter action."""
+        selection = StarterSelection(
             starter_defaults=STARTER_DEFAULTS,
             on_selected=self._handle_starter_selected,
         )
+        # Move the existing action—not a new action—so selection state and
+        # validation remain owned by StarterSelection.
+        selection.content.controls.remove(selection.continue_button)
+        selection.content.controls.insert(
+            -1,
+            ft.Row(
+                controls=[
+                    ft.Button(content="Back to Game Selection",
+                              icon=ft.Icons.ARROW_BACK_ROUNDED,
+                              on_click=self._return_to_game_selection),
+                    selection.continue_button,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                wrap=True, spacing=12, run_spacing=12,
+            ),
+        )
+        return selection
 
     def _build_starter_details(
         self,
@@ -558,7 +645,12 @@ class OnboardingView:
             on_completed=self._starter_ready,
         )
 
-        return self.starter_details
+        return ft.Column(controls=[
+            ft.Button(content="Back to Game Selection",
+                      icon=ft.Icons.ARROW_BACK_ROUNDED,
+                      on_click=self._return_to_game_selection),
+            self.starter_details,
+        ], spacing=16)
 
     def _handle_starter_selected(
         self,
@@ -637,13 +729,17 @@ class OnboardingView:
         )
 
     @staticmethod
-    def _onboarding_panel(title: str, controls: list[ft.Control]) -> ft.Control:
+    def _onboarding_panel(title: str, controls: list[ft.Control],
+                          centered: bool = False) -> ft.Control:
         return ft.Container(
             content=ft.Column(controls=[
                 ft.Text(title, size=TEXT_SIZE_PAGE_TITLE, weight=ft.FontWeight.BOLD,
-                        font_family=FONT_FAMILY_HEADER, color=TEXT_PRIMARY),
+                        font_family=FONT_FAMILY_HEADER, color=TEXT_PRIMARY,
+                        text_align=ft.TextAlign.CENTER if centered else ft.TextAlign.LEFT),
                 *controls,
-            ], spacing=20),
+            ], spacing=20,
+                horizontal_alignment=(ft.CrossAxisAlignment.CENTER if centered
+                                      else ft.CrossAxisAlignment.START)),
             width=940, padding=32, bgcolor=SURFACE,
             border=ft.Border.all(1, "#354052"), border_radius=18,
         )
@@ -838,6 +934,16 @@ class OnboardingView:
             return None
         forms = record.get("types")
         known_types = forms.get(species) if isinstance(forms, dict) else None
+        if known_types is None and isinstance(forms, dict):
+            # Regional forms may be keyed by their full form name while the
+            # recommender displays the base species (e.g. Stunfisk). Match the
+            # final species, not acquire_as, which may name a pre-evolution.
+            matches = [
+                values for form_name, values in forms.items()
+                if str(form_name).casefold().endswith(f" {species.casefold()}")
+            ]
+            if len(matches) == 1:
+                known_types = matches[0]
         if not isinstance(known_types, list):
             return None
         types = [value for value in known_types if isinstance(value, str) and value.strip()]
@@ -1295,7 +1401,7 @@ class OnboardingView:
         """Only commit after the user approves the complete onboarding plan."""
         if self.pending_starter is None or self.pending_starter_record is None:
             return
-        saved = await self.app_state.replace_journey(starter=self.pending_starter, team_data=[self.pending_starter_record])
+        saved = await self.app_state.replace_journey(starter=self.pending_starter, team_data=[self.pending_starter_record], game=self.pending_game)
         if not saved:
             self._show_onboarding_error("Could not save your new Journey. The previous Journey remains safe.")
             return

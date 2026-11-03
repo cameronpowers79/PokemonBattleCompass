@@ -432,19 +432,29 @@ def _recognize_capability_keys(
         if _target_negative_stage_changes(move):
             capability_keys.add("SETUP_FACILITATION")
 
-        # Deliberate status moves count; incidental damaging-move proc chances do not.
-        if category == "Status":
+        # DirectStatus marks intentional/guaranteed status on a successful hit,
+        # including damaging moves such as Nuzzle. Incidental secondary-effect
+        # chances on attacks must not be counted as reliable status delivery.
+        # Accuracy is the delivery gate, not the move's damage category.
+        try:
+            status_accuracy = float(move.get("Accuracy") or 0)
+        except (TypeError, ValueError):
+            status_accuracy = 0.0
+        direct_status = "DirectStatus" in tags and (category == "Status" or category in {"Physical", "Special"})
+        reliable_status = direct_status and status_accuracy >= 85
+        if reliable_status:
             if status_effect == "burn":
                 capability_keys.add("STATUS_BURN_RELIABLE")
             elif status_effect in {"paralysis", "paralyze", "paralyzed"}:
                 capability_keys.add("STATUS_PARALYSIS_RELIABLE")
             elif status_effect == "sleep":
                 capability_keys.add("STATUS_SLEEP_RELIABLE")
-            if move_name == "Yawn":
-                capability_keys.add("STATUS_YAWN")
-                capability_keys.add("STATUS_SLEEP_RELIABLE")
-            if status_effect in {"burn", "paralysis", "paralyze", "paralyzed", "sleep", "poison"} or move_name == "Yawn":
+            if status_effect in {"burn", "paralysis", "paralyze", "paralyzed", "sleep", "poison"}:
                 capability_keys.add("STATUS_ANY_RELIABLE")
+        if category == "Status" and move_name == "Yawn":
+            capability_keys.add("STATUS_YAWN")
+            capability_keys.add("STATUS_SLEEP_RELIABLE")
+            capability_keys.add("STATUS_ANY_RELIABLE")
         if _status_exploit_damage(move):
             capability_keys.add("STATUS_EXPLOIT_DAMAGE")
             if str(move.get("ActivationCondition") or "") == "TargetAnyStatus":
@@ -1310,7 +1320,7 @@ def _weighted_role_quality(strategy_key: str, pokemon: dict, names: set[str], ca
     if key == "poison_offensive_pressure":
         return (115 if names & {"Toxic", "Toxic Spikes", "Poison Gas"} else 0) + (125 if names & {"Venoshock", "Hex"} else 0) + (80 if ability == "merciless" else 0) + (65 if ability == "corrosion" else 0)
     if key == "status_control_punish":
-        return (100 if "STATUS_ANY_RELIABLE" in caps else 0) + (125 if names & {"Hex", "Venoshock"} else 0) + (65 if ability == "prankster" and "STATUS_ANY_RELIABLE" in caps else 0)
+        return (145 if "STATUS_ANY_RELIABLE" in caps else 0) + (125 if names & {"Hex", "Venoshock"} else 0) + (65 if ability == "prankster" and "STATUS_ANY_RELIABLE" in caps else 0)
     if key == "weather_control":
         automatic = {"drizzle", "drought", "sand stream", "snow warning"}
         return (200 if ability in automatic else 0) + (90 if any(c.startswith("WEATHER_SET_") for c in caps) else 0) + (80 if any(c.startswith("WEATHER_BENEFIT_") for c in caps) else 0)

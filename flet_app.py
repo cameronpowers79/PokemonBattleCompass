@@ -423,6 +423,7 @@ async def main(page: ft.Page) -> None:
         show_welcome: bool = False,
 
         offer_tutorial_on_new_journey: bool = False,
+        force_game_selection: bool = False,
 
     ) -> None:
 
@@ -475,6 +476,8 @@ async def main(page: ft.Page) -> None:
             ),
 
             show_welcome=show_welcome,
+            force_game_selection=force_game_selection,
+            on_cancel=show_main_application if app_state.has_journey else None,
 
         )
 
@@ -493,24 +496,39 @@ async def main(page: ft.Page) -> None:
 
 
     def start_new_journey_from_app() -> None:
+        """Confirm before leaving the active Journey for game selection."""
 
-        """Open the established starter onboarding flow."""
+        def cancel_new_journey(event) -> None:
+            del event
+            page.pop_dialog()
+            page.update()
 
+        def confirm_new_journey(event) -> None:
+            del event
+            page.pop_dialog()
+            show_onboarding(
+                show_welcome=False,
+                force_game_selection=True,
+                offer_tutorial_on_new_journey=(
+                    not tutorial_persistence_enabled
+                ),
+            )
 
-
-        show_onboarding(
-
-            show_welcome=False,
-
-            offer_tutorial_on_new_journey=(
-
-                not tutorial_persistence_enabled
-
+        page.show_dialog(ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Start a New Journey?"),
+            content=ft.Text(
+                "Your current Journey will remain saved until you finish "
+                "creating the new one. Export it first if you want a backup "
+                "you can load later."
             ),
-
-        )
-
-
+            actions=[
+                ft.Button(content="Cancel", on_click=cancel_new_journey),
+                ft.Button(content="Continue", bgcolor="#4995F5",
+                          color="#FFFFFF", on_click=confirm_new_journey),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        ))
 
     def close_journey_loaded_dialog(
 
@@ -728,6 +746,12 @@ async def main(page: ft.Page) -> None:
 
 
 
+        async def export_journey_from_my_journey(event) -> None:
+            await my_team_view._export_journey(event)
+
+        async def load_journey_from_my_journey(event) -> None:
+            await my_team_view._select_journey_file(event)
+
         my_journey_view = MyJourneyView(
 
             page,
@@ -737,6 +761,9 @@ async def main(page: ft.Page) -> None:
             on_go_to_my_team=go_to_my_team_with_prefill,
 
             on_scroll_to=scroll_app_shell,
+            on_export_journey=export_journey_from_my_journey,
+            on_load_journey=load_journey_from_my_journey,
+            on_start_new_journey=start_new_journey_from_app,
 
         )
 
@@ -861,6 +888,7 @@ async def main(page: ft.Page) -> None:
                 my_team_view.discard_unsaved_changes
 
             ),
+            game=app_state.game,
 
         )
 

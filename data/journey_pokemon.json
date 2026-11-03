@@ -51,7 +51,8 @@
       "Rillaboom": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cinderace",
@@ -105,7 +106,8 @@
       "Cinderace": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "inteleon",
@@ -159,7 +161,8 @@
       "Inteleon": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "orbeetle",
@@ -223,7 +226,8 @@
         "Bug",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "butterfree",
@@ -278,7 +282,8 @@
         "Bug",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "vikavolt",
@@ -340,7 +345,8 @@
         "Bug",
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "noctowl",
@@ -395,7 +401,8 @@
         "Normal",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "corviknight",
@@ -458,7 +465,8 @@
         "Flying",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "greedent",
@@ -511,7 +519,8 @@
       "Greedent": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "unfezant",
@@ -576,7 +585,8 @@
         "Normal",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "thievul",
@@ -629,7 +639,8 @@
       "Thievul": [
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "obstagoon",
@@ -695,7 +706,8 @@
         "Dark",
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dubwool",
@@ -748,7 +760,8 @@
       "Dubwool": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "shiftry",
@@ -818,7 +831,8 @@
         "Grass",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "drednaw",
@@ -872,7 +886,8 @@
         "Water",
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "liepard",
@@ -925,7 +940,8 @@
       "Liepard": [
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "boltund",
@@ -978,7 +994,8 @@
       "Boltund": [
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "diggersby",
@@ -1032,7 +1049,8 @@
         "Normal",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cinccino",
@@ -1091,7 +1109,8 @@
       "Cinccino": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "tsareena",
@@ -1153,7 +1172,8 @@
       "Tsareena": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "vileplume",
@@ -1224,7 +1244,8 @@
         "Grass",
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "bellossom",
@@ -1294,7 +1315,8 @@
       "Bellossom": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "roserade",
@@ -1365,7 +1387,8 @@
         "Grass",
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "pelipper",
@@ -1420,7 +1443,8 @@
         "Water",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "galvantula",
@@ -1475,7 +1499,8 @@
         "Bug",
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "manectric",
@@ -1528,7 +1553,8 @@
       "Manectric": [
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "ninetales",
@@ -1587,7 +1613,8 @@
       "Ninetales": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "arcanine",
@@ -1646,7 +1673,8 @@
       "Arcanine": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "vanilluxe",
@@ -1708,7 +1736,8 @@
       "Vanilluxe": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mamoswine",
@@ -1773,7 +1802,8 @@
         "Ice",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "delibird",
@@ -1817,7 +1847,8 @@
         "Ice",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "glalie",
@@ -1870,7 +1901,8 @@
       "Glalie": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "froslass",
@@ -1932,7 +1964,8 @@
         "Ice",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "claydol",
@@ -1987,7 +2020,8 @@
         "Ground",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mudsdale",
@@ -2040,7 +2074,8 @@
       "Mudsdale": [
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "crustle",
@@ -2087,7 +2122,8 @@
         "Bug",
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "golurk",
@@ -2142,7 +2178,8 @@
         "Ground",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "musharna",
@@ -2193,7 +2230,8 @@
       "Musharna": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "xatu",
@@ -2248,7 +2286,8 @@
         "Psychic",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "bewear",
@@ -2303,7 +2342,8 @@
         "Normal",
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "abomasnow",
@@ -2358,7 +2398,8 @@
         "Grass",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "kingler",
@@ -2411,7 +2452,8 @@
       "Kingler": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "quagsire",
@@ -2466,7 +2508,8 @@
         "Water",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "crawdaunt",
@@ -2520,7 +2563,8 @@
         "Water",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "ninjask",
@@ -2575,7 +2619,8 @@
         "Bug",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "shedinja",
@@ -2631,7 +2676,8 @@
         "Bug",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hitmonlee",
@@ -2685,7 +2731,8 @@
       "Hitmonlee": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hitmonchan",
@@ -2739,7 +2786,8 @@
       "Hitmonchan": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hitmontop",
@@ -2793,7 +2841,8 @@
       "Hitmontop": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "pangoro",
@@ -2847,7 +2896,8 @@
         "Fighting",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "klinklang",
@@ -2909,7 +2959,8 @@
       "Klinklang": [
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "vespiquen",
@@ -2964,7 +3015,8 @@
         "Bug",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "bronzong",
@@ -3019,7 +3071,8 @@
         "Steel",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gardevoir",
@@ -3084,7 +3137,8 @@
         "Psychic",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gallade",
@@ -3155,7 +3209,8 @@
         "Psychic",
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "drifblim",
@@ -3211,7 +3266,8 @@
         "Ghost",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "eldegoss",
@@ -3265,7 +3321,8 @@
       "Eldegoss": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cherrim",
@@ -3319,7 +3376,8 @@
       "Cherrim": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "skuntank",
@@ -3375,7 +3433,8 @@
         "Poison",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "seismitoad",
@@ -3439,7 +3498,8 @@
         "Water",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dusknoir",
@@ -3501,7 +3561,8 @@
       "Dusknoir": [
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "machamp",
@@ -3564,7 +3625,8 @@
       "Machamp": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gengar",
@@ -3630,7 +3692,8 @@
         "Ghost",
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gyarados",
@@ -3685,7 +3748,8 @@
         "Water",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "seaking",
@@ -3739,7 +3803,8 @@
       "Seaking": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "octillery",
@@ -3793,7 +3858,8 @@
       "Octillery": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cloyster",
@@ -3853,7 +3919,8 @@
         "Water",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "milotic",
@@ -3898,7 +3965,8 @@
       "Milotic": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "basculin",
@@ -3941,7 +4009,8 @@
       "Basculin": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "wishiwashi",
@@ -3985,7 +4054,8 @@
       "Wishiwashi": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "pyukumuku",
@@ -4028,7 +4098,8 @@
       "Pyukumuku": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "garbodor",
@@ -4081,7 +4152,8 @@
       "Garbodor": [
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "centiskorch",
@@ -4137,7 +4209,8 @@
         "Fire",
         "Bug"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "coalossal",
@@ -4202,7 +4275,8 @@
         "Rock",
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dugtrio",
@@ -4255,7 +4329,8 @@
       "Dugtrio": [
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "excadrill",
@@ -4309,7 +4384,8 @@
         "Ground",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gigalith",
@@ -4371,7 +4447,8 @@
       "Gigalith": [
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "conkeldurr",
@@ -4433,7 +4510,8 @@
       "Conkeldurr": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "swoobat",
@@ -4488,7 +4566,8 @@
         "Psychic",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "noivern",
@@ -4543,7 +4622,8 @@
         "Flying",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "steelix",
@@ -4598,7 +4678,8 @@
         "Steel",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "barraskewda",
@@ -4651,7 +4732,8 @@
       "Barraskewda": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "perrserker",
@@ -4705,7 +4787,8 @@
       "Perrserker": [
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "persian",
@@ -4751,7 +4834,8 @@
       "Persian": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "alcremie",
@@ -4804,7 +4888,8 @@
       "Alcremie": [
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "ribombee",
@@ -4859,7 +4944,8 @@
         "Bug",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "ferrothorn",
@@ -4914,7 +5000,8 @@
         "Grass",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gourgeist",
@@ -4969,7 +5056,8 @@
         "Ghost",
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "raichu",
@@ -5028,7 +5116,8 @@
       "Raichu": [
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "vaporeon",
@@ -5079,7 +5168,8 @@
       "Vaporeon": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "jolteon",
@@ -5130,7 +5220,8 @@
       "Jolteon": [
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "flareon",
@@ -5181,7 +5272,8 @@
       "Flareon": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "espeon",
@@ -5226,7 +5318,8 @@
       "Espeon": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "umbreon",
@@ -5271,7 +5364,8 @@
       "Umbreon": [
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "leafeon",
@@ -5322,7 +5416,8 @@
       "Leafeon": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "glaceon",
@@ -5373,7 +5468,8 @@
       "Glaceon": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sylveon",
@@ -5418,7 +5514,8 @@
       "Sylveon": [
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "flapple",
@@ -5479,7 +5576,8 @@
         "Grass",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "meowstic",
@@ -5532,7 +5630,8 @@
       "Meowstic": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "slurpuff",
@@ -5585,7 +5684,8 @@
       "Slurpuff": [
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "araquanid",
@@ -5640,7 +5740,8 @@
         "Water",
         "Bug"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "wynaut",
@@ -5677,7 +5778,8 @@
       "Wynaut": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "wobbuffet",
@@ -5720,7 +5822,8 @@
       "Wobbuffet": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sirfetch_d",
@@ -5773,7 +5876,8 @@
       "Sirfetch'd": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword"
   },
   {
     "id": "lanturn",
@@ -5828,7 +5932,8 @@
         "Water",
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "scrafty",
@@ -5883,7 +5988,8 @@
         "Dark",
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "stunfisk",
@@ -5927,7 +6033,8 @@
         "Ground",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "shuckle",
@@ -5971,7 +6078,8 @@
         "Bug",
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "whiscash",
@@ -6026,7 +6134,8 @@
         "Water",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gastrodon",
@@ -6081,7 +6190,8 @@
         "Water",
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "golisopod",
@@ -6136,7 +6246,8 @@
         "Bug",
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "barbaracle",
@@ -6191,7 +6302,8 @@
         "Rock",
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "grimmsnarl",
@@ -6256,7 +6368,8 @@
         "Dark",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hatterene",
@@ -6319,7 +6432,8 @@
         "Psychic",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "salazzle",
@@ -6374,7 +6488,8 @@
         "Poison",
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "bisharp",
@@ -6429,7 +6544,8 @@
         "Dark",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "throh",
@@ -6465,7 +6581,8 @@
       "Throh": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sawk",
@@ -6508,7 +6625,8 @@
       "Sawk": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "weezing",
@@ -6562,7 +6680,8 @@
         "Poison",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sudowoodo",
@@ -6615,7 +6734,8 @@
       "Sudowoodo": [
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "clefable",
@@ -6674,7 +6794,8 @@
       "Clefable": [
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "togekiss",
@@ -6744,7 +6865,8 @@
         "Fairy",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "snorlax",
@@ -6789,7 +6911,8 @@
       "Snorlax": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "whimsicott",
@@ -6842,7 +6965,8 @@
         "Grass",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "rhyperior",
@@ -6907,7 +7031,8 @@
         "Ground",
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "gothitelle",
@@ -6970,7 +7095,8 @@
         ],
         "required_badge": 8
       }
-    ]
+    ],
+    "Game": "Sword and Shield"
   },
   {
     "id": "escavalier",
@@ -7026,7 +7152,8 @@
         "Bug",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "accelgor",
@@ -7081,7 +7208,8 @@
       "Accelgor": [
         "Bug"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "beheeyem",
@@ -7134,7 +7262,8 @@
       "Beheeyem": [
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "beartic",
@@ -7187,7 +7316,8 @@
       "Beartic": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "braviary",
@@ -7243,7 +7373,8 @@
         "Normal",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "drapion",
@@ -7299,7 +7430,8 @@
         "Poison",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "chandelure",
@@ -7371,7 +7503,8 @@
         "Ghost",
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "malamar",
@@ -7427,7 +7560,8 @@
         "Dark",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "weavile",
@@ -7483,7 +7617,8 @@
         "Dark",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mawile",
@@ -7519,7 +7654,8 @@
         "Steel",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "maractus",
@@ -7562,7 +7698,8 @@
       "Maractus": [
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sigilyph",
@@ -7607,7 +7744,8 @@
         "Psychic",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "lucario",
@@ -7662,7 +7800,8 @@
         "Fighting",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "torkoal",
@@ -7706,7 +7845,8 @@
       "Torkoal": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mimikyu",
@@ -7777,7 +7917,8 @@
         "Ghost",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "copperajah",
@@ -7830,7 +7971,8 @@
       "Copperajah": [
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "qwilfish",
@@ -7874,7 +8016,8 @@
         "Water",
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "jellicent",
@@ -7921,7 +8064,8 @@
         "Water",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "toxapex",
@@ -7977,7 +8121,8 @@
         "Poison",
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cramorant",
@@ -8021,7 +8166,8 @@
         "Flying",
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "toxtricity",
@@ -8089,7 +8235,8 @@
         "Electric",
         "Poison"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "sandaconda",
@@ -8142,7 +8289,8 @@
       "Sandaconda": [
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hippowdon",
@@ -8195,7 +8343,8 @@
       "Hippowdon": [
         "Ground"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "durant",
@@ -8239,7 +8388,8 @@
         "Bug",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "heatmor",
@@ -8283,7 +8433,8 @@
       "Heatmor": [
         "Fire"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "heliolisk",
@@ -8345,7 +8496,8 @@
         "Electric",
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hawlucha",
@@ -8390,7 +8542,8 @@
         "Fighting",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "flygon",
@@ -8446,7 +8599,8 @@
         "Ground",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "haxorus",
@@ -8509,7 +8663,8 @@
       "Haxorus": [
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "runerigus",
@@ -8570,7 +8725,8 @@
         "Ground",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "cofagrigus",
@@ -8616,7 +8772,8 @@
       "Cofagrigus": [
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "aegislash",
@@ -8687,7 +8844,8 @@
         "Steel",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "polteageist",
@@ -8747,7 +8905,8 @@
       "Polteageist": [
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "indeedee",
@@ -8783,7 +8942,8 @@
         "Psychic",
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "trevenant",
@@ -8831,7 +8991,8 @@
         "Ghost",
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "shiinotic",
@@ -8871,7 +9032,8 @@
         "Grass",
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "passimian",
@@ -8906,7 +9068,8 @@
       "Passimian": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "morpeko",
@@ -8951,7 +9114,8 @@
         "Electric",
         "Dark"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "falinks",
@@ -8994,7 +9158,8 @@
       "Falinks": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "turtonator",
@@ -9030,7 +9195,8 @@
         "Fire",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword"
   },
   {
     "id": "togedemaru",
@@ -9075,7 +9241,8 @@
         "Electric",
         "Steel"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "frosmoth",
@@ -9130,7 +9297,8 @@
         "Ice",
         "Bug"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "grapploct",
@@ -9184,7 +9352,8 @@
       "Grapploct": [
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "pincurchin",
@@ -9228,7 +9397,8 @@
       "Pincurchin": [
         "Electric"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mantine",
@@ -9283,7 +9453,8 @@
         "Water",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "wailord",
@@ -9336,7 +9507,8 @@
       "Wailord": [
         "Water"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "avalugg",
@@ -9390,7 +9562,8 @@
       "Avalugg": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dhelmise",
@@ -9528,7 +9701,8 @@
         "Ghost",
         "Grass"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "lapras",
@@ -9573,7 +9747,8 @@
         "Water",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "solrock",
@@ -9618,7 +9793,8 @@
         "Rock",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "mr_rime",
@@ -9674,7 +9850,8 @@
         "Ice",
         "Psychic"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "darmanitan",
@@ -9729,7 +9906,8 @@
       "Galarian Darmanitan": [
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword"
   },
   {
     "id": "stonjourner",
@@ -9773,7 +9951,8 @@
       "Stonjourner": [
         "Rock"
       ]
-    }
+    },
+    "Game": "Sword"
   },
   {
     "id": "duraludon",
@@ -9818,7 +9997,8 @@
         "Steel",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "rotom",
@@ -9862,7 +10042,8 @@
         "Electric",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "ditto",
@@ -9905,7 +10086,8 @@
       "Ditto": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dracozolt",
@@ -9941,7 +10123,8 @@
         "Electric",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "arctozolt",
@@ -9977,7 +10160,8 @@
         "Electric",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dracovish",
@@ -10013,7 +10197,8 @@
         "Water",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "arctovish",
@@ -10049,7 +10234,8 @@
         "Water",
         "Ice"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "charizard",
@@ -10105,7 +10291,8 @@
         "Fire",
         "Flying"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "silvally",
@@ -10151,7 +10338,8 @@
       "Silvally": [
         "Normal"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "hydreigon",
@@ -10209,7 +10397,8 @@
         "Dark",
         "Dragon"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "kommo_o",
@@ -10274,7 +10463,8 @@
         "Dragon",
         "Fighting"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "dragapult",
@@ -10356,7 +10546,8 @@
         "Dragon",
         "Ghost"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "zacian",
@@ -10392,7 +10583,8 @@
       "Zacian": [
         "Fairy"
       ]
-    }
+    },
+    "Game": "Sword and Shield"
   },
   {
     "id": "eternatus",
@@ -10427,6 +10619,190 @@
     "types": {
       "Eternatus": [
         "Poison",
+        "Dragon"
+      ]
+    },
+    "Game": "Sword and Shield"
+  },
+  {
+    "id": "rapidash",
+    "pokemon": "Rapidash",
+    "acquire_as": "Galarian Ponyta",
+    "marker_pokemon": "Galarian Ponyta",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/ponyta-galar.png",
+    "Game": "Shield",
+    "required_badge": 4,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Glimwood Tangle",
+      "map_locations": [
+        "glimwood_tangle"
+      ],
+      "encounters": [
+        {
+          "location": "Glimwood Tangle",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 10,
+          "level_min": 34,
+          "level_max": 36
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once",
+    "evolution_steps": [
+      {
+        "from": "Ponyta",
+        "to": "Rapidash",
+        "method": "level",
+        "level": 40
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/rapidash/locations.shtml",
+    "encounter_data_status": "shield_initial_verified",
+    "types": {
+      "Galarian Ponyta": [
+        "Psychic"
+      ],
+      "Galarian Rapidash": [
+        "Psychic",
+        "Fairy"
+      ]
+    }
+  },
+  {
+    "id": "cursola",
+    "pokemon": "Cursola",
+    "acquire_as": "Galarian Corsola",
+    "marker_pokemon": "Galarian Corsola",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/corsola-galar.png",
+    "Game": "Shield",
+    "required_badge": 2,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Giant's Mirror",
+      "map_locations": [
+        "giants_mirror"
+      ],
+      "encounters": [
+        {
+          "location": "Giant's Mirror",
+          "method": "Overworld",
+          "weather": "Overcast",
+          "rarity_percent": 5,
+          "level_min": 28,
+          "level_max": 30
+        }
+      ]
+    },
+    "evolution_summary": "Evolve once",
+    "evolution_steps": [
+      {
+        "from": "Corsola",
+        "to": "Cursola",
+        "method": "level",
+        "level": 38
+      }
+    ],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/cursola/locations.shtml",
+    "encounter_data_status": "shield_initial_verified",
+    "types": {
+      "Galarian Corsola": [
+        "Ghost"
+      ],
+      "Cursola": [
+        "Ghost"
+      ]
+    }
+  },
+  {
+    "id": "eiscue",
+    "pokemon": "Eiscue",
+    "acquire_as": "Eiscue",
+    "marker_pokemon": "Eiscue",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/eiscue.png",
+    "Game": "Shield",
+    "required_badge": 8,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Route 10",
+      "map_locations": [
+        "route_10",
+        "lake_of_outrage"
+      ],
+      "encounters": [
+        {
+          "location": "Route 10",
+          "method": "Random",
+          "weather": "All Weather",
+          "rarity_percent": 2,
+          "level_min": 44,
+          "level_max": 46
+        },
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Snowing",
+          "rarity_percent": 2,
+          "level_min": 50,
+          "level_max": 52
+        },
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Snowstorm",
+          "rarity_percent": 5,
+          "level_min": 50,
+          "level_max": 52
+        }
+      ]
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/eiscue/locations.shtml",
+    "encounter_data_status": "shield_initial_verified",
+    "types": {
+      "Eiscue": [
+        "Ice"
+      ]
+    }
+  },
+  {
+    "id": "drampa",
+    "pokemon": "Drampa",
+    "acquire_as": "Drampa",
+    "marker_pokemon": "Drampa",
+    "marker_asset": "raw/pokesprite/pokemon-gen8/regular/drampa.png",
+    "Game": "Shield",
+    "required_badge": 6,
+    "primary_acquisition": {
+      "method": "wild_encounter",
+      "location": "Lake of Outrage",
+      "map_locations": [
+        "lake_of_outrage"
+      ],
+      "encounters": [
+        {
+          "location": "Lake of Outrage",
+          "method": "Random",
+          "weather": "Thunderstorm",
+          "rarity_percent": 2,
+          "level_min": 50,
+          "level_max": 52
+        }
+      ]
+    },
+    "evolution_summary": "No evolution required",
+    "evolution_steps": [],
+    "required_items": [],
+    "source_url": "https://www.serebii.net/pokedex-swsh/drampa/locations.shtml",
+    "encounter_data_status": "shield_initial_verified",
+    "types": {
+      "Drampa": [
+        "Normal",
         "Dragon"
       ]
     }

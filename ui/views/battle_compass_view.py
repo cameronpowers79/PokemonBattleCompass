@@ -113,7 +113,7 @@ class BattleCompassView:
         self.on_start_new_journey = on_start_new_journey
         self.on_strategy_updated: Callable[[str], None] | None = None
         self.on_journey_updated: Callable[[], None] | None = None
-        reference_data = load_reference_data()
+        reference_data = load_reference_data(game=app_state.game)
         self.team_data = (
             team_data
             if team_data is not None
@@ -1974,8 +1974,21 @@ class BattleCompassView:
         view_model = calculate()
 
         if view_model.recommendation is None:
+            explanation = view_model.empty_state_message
+            opponent = self._selected_opponent()
+            types = {str(opponent.get(key) or "") for key in ("Type1", "Type2")}
+            if "Ghost" in types and self.team_data:
+                attacks = [str(member.get(f"Move{i}") or "")
+                           for member in self.team_data for i in range(1, 5)]
+                if attacks and all(move in {"", "Tackle", "Pound", "Scratch", "Growl"}
+                                   for move in attacks):
+                    explanation = (
+                        "No damaging move on your current team can hit this Ghost-type "
+                        "opponent. Normal-type attacks such as Tackle have no effect. "
+                        "Teach or add a move that can hit Ghost types and save your team."
+                    )
             self.results_host.content = self._build_no_recommendation_state(
-                view_model.empty_state_message
+                explanation
             )
             return
         self.results_host.content = self._build_results(view_model)
@@ -2946,10 +2959,9 @@ class BattleCompassView:
             / filename
         )
         if not asset_exists(trainer_path):
-            raise FileNotFoundError(
-                "No trainer texture found for "
-                f"{trainer_name}: {trainer_path}"
-            )
+            # Optional trainer art must not crash the entire battle UI.
+            # Keep the trainer's name visible without substituting wrong art.
+            return ""
         return self._asset_src(
             trainer_path
         )

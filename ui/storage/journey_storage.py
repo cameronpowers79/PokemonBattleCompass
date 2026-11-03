@@ -29,7 +29,7 @@ JOURNEY_STORAGE_KEY = "pokemon_battle_compass.journey.v1"
 
 JOURNEY_BACKUP_STORAGE_KEY = "pokemon_battle_compass.journey.backup.v1"
 
-JOURNEY_SCHEMA_VERSION = 2
+JOURNEY_SCHEMA_VERSION = 3
 
 JOURNEY_EXPORT_FORMAT = "pokemon-battle-compass-journey"
 
@@ -41,6 +41,8 @@ VALID_ACTIVE_VIEWS = {
     "my_journey",
     "about",
 }
+
+from engine.game_support import SUPPORTED_GAMES
 
 VALID_STARTERS = {
     "Grookey",
@@ -124,16 +126,20 @@ def create_journey(
     *,
     starter: str,
     team: list[dict] | None = None,
+    game: str = "Sword",
 ) -> dict:
     """Create a new versioned Journey record."""
     if starter not in VALID_STARTERS:
         raise ValueError(
             f"Unsupported starter: {starter}"
         )
+    if game not in SUPPORTED_GAMES:
+        raise ValueError(f"Unsupported game: {game}")
     timestamp = _utc_timestamp()
     record = {
         "schema_version": JOURNEY_SCHEMA_VERSION,
         "starter": starter,
+        "game": game,
         "team": deepcopy(team or []),
         "box": [],
         "active_view": "battle_compass",
@@ -240,8 +246,17 @@ def _migrate_v1_to_v2(journey: dict) -> dict:
     return migrated
 
 
+def _migrate_v2_to_v3(journey: dict) -> dict:
+    """Legacy Journeys were all Pokémon Sword; preserve that choice."""
+    migrated = deepcopy(journey)
+    migrated["game"] = "Sword"
+    migrated["schema_version"] = 3
+    return migrated
+
+
 JOURNEY_MIGRATIONS: dict[int, Callable[[dict], dict]] = {
     1: _migrate_v1_to_v2,
+    2: _migrate_v2_to_v3,
 }
 
 
@@ -259,6 +274,8 @@ def _validate_journey(
             "Stored Journey uses an unsupported "
             "schema version."
         )
+    if journey.get("game") not in SUPPORTED_GAMES:
+        return "Stored Journey game is unsupported or missing."
     starter = journey.get("starter")
     if not isinstance(starter, str):
         return (

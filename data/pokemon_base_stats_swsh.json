@@ -1789,5 +1789,41 @@
     "SPA": 80,
     "SPD": 115,
     "SPE": 138
+  },
+  {
+    "pokemon_id": "rapidash-galar",
+    "HP": 65,
+    "ATK": 100,
+    "DEF": 70,
+    "SPA": 80,
+    "SPD": 80,
+    "SPE": 105
+  },
+  {
+    "pokemon_id": "cursola",
+    "HP": 60,
+    "ATK": 95,
+    "DEF": 50,
+    "SPA": 145,
+    "SPD": 130,
+    "SPE": 30
+  },
+  {
+    "pokemon_id": "eiscue-ice",
+    "HP": 75,
+    "ATK": 80,
+    "DEF": 110,
+    "SPA": 65,
+    "SPD": 90,
+    "SPE": 50
+  },
+  {
+    "pokemon_id": "drampa",
+    "HP": 78,
+    "ATK": 60,
+    "DEF": 85,
+    "SPA": 135,
+    "SPD": 91,
+    "SPE": 36
   }
 ]
