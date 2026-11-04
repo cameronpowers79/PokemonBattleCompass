@@ -429,7 +429,7 @@ class MyJourneyView:
             return {}
         return {
             pokemon_id: {key: value for key, value in settings.items()
-                         if key in {"form", "gender"} and isinstance(value, str)}
+                         if key in {"form", "gender", "ability"} and isinstance(value, str)}
             for pokemon_id, settings in raw.items()
             if pokemon_id in valid_ids and isinstance(settings, dict)
         }
@@ -972,12 +972,16 @@ class MyJourneyView:
         records = []
         for planned in self.pokemon:
             record = dict(planned)
-            for owned in known:
-                if (str(owned.get('Pokemon') or '').casefold()
-                        == str(record.get('pokemon') or '').casefold()
-                        and owned.get('Ability')):
-                    record['Ability'] = owned['Ability']
-                    break
+            planned_ability = str(self.planned_pokemon_forms.get(str(record.get("id") or ""), {}).get("ability") or "")
+            if planned_ability:
+                record["Ability"] = planned_ability
+            else:
+                for owned in known:
+                    if (str(owned.get('Pokemon') or '').casefold()
+                            == str(record.get('pokemon') or '').casefold()
+                            and owned.get('Ability')):
+                        record['Ability'] = owned['Ability']
+                        break
             records.append(record)
         coverage = planned_coverage(
             records, self.planned_moves,
@@ -4870,6 +4874,81 @@ class MyJourneyView:
         self._reload_planner_dependencies()
         self._refresh()
 
+    def _planned_ability_options(self, pokemon: dict[str, Any]) -> tuple[str, ...]:
+        """Legal Ability choices for the intended Sword/Shield form."""
+        from engine.ability_registry import eligible_abilities
+        from engine.pokemon_identity import resolve_pokemon_id
+
+        planned_id = str(pokemon.get("id") or "")
+        prefs = self.planned_pokemon_forms.get(planned_id, {})
+        selected_form = str(prefs.get("form") or "")
+        species = (selected_form if selected_form.startswith((
+            "Kantonian ", "Alolan ", "Unovan ", "Hoennian ", "Johtonian "
+        )) else str(pokemon.get("pokemon") or ""))
+        species_id = resolve_pokemon_id(
+            species,
+            gender=prefs.get("gender"),
+            form=prefs.get("form"),
+            game=self.app_state.game,
+        )
+        if not species_id:
+            return ()
+        abilities = eligible_abilities(species_id)
+        # Some identity keys encode a battle form while the Ability registry
+        # indexes its shared species entry (e.g., Aegislash-Shield).
+        if not abilities:
+            normalized = species_id
+            for suffix in ("-standard", "-shield", "-disguised", "-ice", "-red-striped", "-solo"):
+                if normalized.endswith(suffix):
+                    normalized = normalized[:-len(suffix)]
+                    break
+            if normalized != species_id:
+                abilities = eligible_abilities(normalized)
+        return abilities
+
+    def _build_planned_ability_cell(self, pokemon: dict[str, Any]) -> ft.Control:
+        """An explicit planned Ability, distinct from an acquired Pokémon's Ability."""
+        planned_id = str(pokemon.get("id") or "")
+        options = self._planned_ability_options(pokemon)
+        selected = str(self.planned_pokemon_forms.get(planned_id, {}).get("ability") or "")
+        # An unselected Ability is genuinely unknown, not a recommendation guess.
+        return ft.Dropdown(
+            value=selected if selected in options else "",
+            width=166,
+            dense=True,
+            text_size=12,
+            options=[ft.DropdownOption(key="", text="Unspecified"), *[
+                ft.DropdownOption(key=ability, text=ability) for ability in options
+            ]],
+            on_select=lambda event, pid=planned_id: self.page.run_task(
+                self._save_planned_ability_choice,
+                pid,
+                str(event.control.value or ""),
+            ),
+        )
+
+    async def _save_planned_ability_choice(self, pokemon_id: str, ability: str) -> None:
+        record = next((row for row in self.pokemon if str(row.get("id") or "") == pokemon_id), None)
+        if record is None or (ability and ability not in self._planned_ability_options(record)):
+            self._show_save_error("The selected Ability is not valid for this planned Pokémon form.")
+            self._refresh()
+            return
+        updated = deepcopy(self.planned_pokemon_forms)
+        prefs = dict(updated.get(pokemon_id, {}))
+        if ability:
+            prefs["ability"] = ability
+        else:
+            prefs.pop("ability", None)
+        if prefs:
+            updated[pokemon_id] = prefs
+        else:
+            updated.pop(pokemon_id, None)
+        if not await self.app_state.save_planned_pokemon_forms(updated):
+            self._show_save_error("The planned Ability could not be saved.")
+        else:
+            self.planned_pokemon_forms = updated
+        self._refresh()
+
     def _planned_move_type_badge(self, pokemon_id: str, slot_index: int) -> ft.Control:
         """Compact type indicator for a committed planned move."""
         slots = self.planned_moves.get(pokemon_id, [])
@@ -4950,6 +5029,7 @@ class MyJourneyView:
                                 size=14,
                             )
                         ),
+                        ft.DataCell(self._build_planned_ability_cell(pokemon)),
                         *[
                             ft.DataCell(
                                 ft.Row(controls=[
@@ -4963,7 +5043,7 @@ class MyJourneyView:
                 )
             )
 
-        move_widths = [160, 252, 252, 252, 252]
+        move_widths = [160, 186, 252, 252, 252, 252]
         table = fdt.DataTable2(
             columns=[
                 fdt.DataColumn2(
@@ -4974,6 +5054,10 @@ class MyJourneyView:
                     ),
                     fixed_width=move_widths[0],
                 ),
+                fdt.DataColumn2(
+                    label=ft.Text("Ability", weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
+                    fixed_width=move_widths[1],
+                ),
                 *[
                     fdt.DataColumn2(
                         label=ft.Text(
@@ -4981,7 +5065,7 @@ class MyJourneyView:
                             weight=ft.FontWeight.BOLD,
                             color=TEXT_PRIMARY,
                         ),
-                        fixed_width=move_widths[slot_index + 1],
+                        fixed_width=move_widths[slot_index + 2],
                     )
                     for slot_index in range(4)
                 ],
@@ -5008,7 +5092,9 @@ class MyJourneyView:
                 (
                     "Choose a suggestion to save. Select the plain move name for "
                     "a level-up or otherwise self-supplied move; select a TM/TR "
-                    "version to add that item to the Journey Checklist. Swipe left "
+                    "version to add that item to the Journey Checklist. The Ability "
+                    "column is a planned choice, not a confirmation of the Pokémon's "
+                    "currently owned Ability. Swipe left "
                     "or right to view more columns."
                 ),
                 size=12,
@@ -5040,7 +5126,7 @@ class MyJourneyView:
             title="Move Planner",
             icon=ft.Icons.LIST_ALT_ROUNDED,
             subtitle=(
-                "Plan each team member's four moves and automatically track "
+                "Plan each member's Ability and four moves; automatically track "
                 "required TMs and TRs."
             ),
             body=ft.Column(

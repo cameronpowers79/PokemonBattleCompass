@@ -30,6 +30,9 @@ class ComplementarySuggestion:
     new_immunities: tuple[str, ...]
     projected_score: float
     coverage_only: bool
+    recommendation_reason: str = "Core Strategy"
+    coverage_focus: str = ""
+    priority_weaknesses: tuple[str, ...] = ()
 
 
 def _key(name: str) -> str:
@@ -81,6 +84,15 @@ def rank_with_team_coverage(
         return [ComplementarySuggestion(rec, (), (), (), (), (), rec.score, False) for rec in original]
 
     before = team_coverage(team, type_chart, moves_data)
+    # The two most exposed types should drive complementary defensive selection,
+    # not vanish into a sum of minor resistance improvements across 18 types.
+    vulnerabilities = sorted(
+        ((t, row['average']) for t, row in before['defensive'].items()
+         if row['average'] is not None and row['average'] > 1.001),
+        key=lambda x: x[1], reverse=True,
+    )
+    worst = vulnerabilities[0][1] if vulnerabilities else 1.0
+    urgent = {t for t, value in vulnerabilities if value >= worst - 0.05}
     active = { _key(str(x.get('Pokemon') or x.get('pokemon') or '')) for x in team }
     indexed = {_candidate_for_display(c).casefold():dict(c) for c in candidates if _candidate_name(c)}
     known = {rec.pokemon_name.casefold():rec for rec in original}
@@ -130,6 +142,8 @@ def rank_with_team_coverage(
         improved = []
         new_immune = []
         benefit = 0.0
+        urgent_gain = 0.0
+        urgent_fixed = []
         for t in type_chart:
             old = before['defensive'][t]
             new = after['defensive'][t]
@@ -140,19 +154,32 @@ def rank_with_team_coverage(
             # Prioritize fixing weaknesses over adding yet another resistance.
             if reduction > 0.05:
                 improved.append(t)
+            # Averaging in another neutral team member also lowers an average
+            # above 1x, but that is *dilution*, not a genuine defensive answer.
+            # Reserve the urgent-weakness bonus for actual resistances/immunities.
+            new_member = next((m for m in new['members']
+                               if m['slot'] == len(team)), None)
+            new_multiplier = new_member['multiplier'] if new_member else None
+            if (t in urgent and reduction > 0 and new_multiplier is not None
+                    and new_multiplier < 0.999):
+                urgent_gain += reduction * (12.0 + 6.0 * (old_average - 1.0))
+                if reduction >= 0.05:
+                    urgent_fixed.append(t)
             if new['has_immunity'] and not old['has_immunity']:
                 new_immune.append(t)
             if reduction > 0:
                 benefit += reduction * (2.0 if old_average > 1.001 else 0.65)
             else:
                 benefit += reduction * (1.25 if old_average >= 1.0 else 0.85)
-        def_score = max(-5.0, min(10.0, benefit)) + 1.1 * len(new_immune)
+        # A serious weakness matters more than several insignificant gains.
+        # Still charge for any new above-neutral exposures via `benefit`.
+        def_score = max(-5.0, min(10.0, benefit + urgent_gain)) + 1.1 * len(new_immune)
         new_types = tuple(potential['newly_covered_types'])
         off_score = min(8.0, len(new_types))
         if strategy_key == 'defensive_attrition':
             context = 0.7 * def_score + 0.3 * off_score
         elif strategy_key == 'status_control_punish':
-            context = 0.45 * def_score + 0.55 * off_score
+            context = (0.65 * def_score + 0.35 * off_score) if urgent else (0.45 * def_score + 0.55 * off_score)
         else:
             context = 0.25 * def_score + 0.75 * off_score
         # The candidate may be new to our list; only add if it offers a real,
@@ -164,7 +191,37 @@ def rank_with_team_coverage(
             0.0, 'Strong', 2, (), (), (),
             f"Add {_candidate_for_display(entry)} for complementary coverage. Projected strategy readiness remains Strong.",
         )
+        # The on-card reason uses the *same* marginal contributions as ranking.
+        # A strategy specialist may still be selected for coverage once the core
+        # requirements are established. Before Strong, the UI says Core Strategy.
+        if strategy_key == 'defensive_attrition':
+            defensive_weight, offensive_weight = 0.7, 0.3
+        elif strategy_key == 'status_control_punish':
+            defensive_weight, offensive_weight = ((0.65, 0.35) if urgent else (0.45, 0.55))
+        else:
+            defensive_weight, offensive_weight = 0.25, 0.75
+        defense_contribution = max(0.0, defensive_weight * def_score)
+        offense_contribution = max(0.0, offensive_weight * off_score)
+        complementary = (original_rec is None or
+                         (context >= 1.4 and
+                          (defense_contribution >= 1.0 or offense_contribution >= 1.0)))
+        focus = ''
+        if complementary:
+            has_defense = defense_contribution >= 0.75
+            has_offense = offense_contribution >= 0.75
+            if has_defense and has_offense and min(defense_contribution, offense_contribution) >= 0.42 * max(defense_contribution, offense_contribution):
+                focus = 'Both'
+            elif has_defense and (defense_contribution >= offense_contribution or not has_offense):
+                focus = 'Defense'
+            elif has_offense:
+                focus = 'Offense'
+            elif defense_contribution >= offense_contribution:
+                focus = 'Defense'
+            else:
+                focus = 'Offense'
         explanatory = []
+        if urgent_fixed:
+            explanatory.append('addresses team weakness to ' + ', '.join(urgent_fixed[:2]) + ' attacks')
         if improved:
             explanatory.append('lowers average defensive exposure to ' + ', '.join(improved[:4]) + ' attacks')
         if new_immune:
@@ -179,7 +236,9 @@ def rank_with_team_coverage(
         if explanatory:
             rec = replace(rec, summary=rec.summary + ' Team coverage: ' + '; '.join(explanatory) + '.')
         ranked.append(ComplementarySuggestion(rec, tuple(potential['proposed_moves']), notes,
-            new_types, tuple(improved), tuple(new_immune), context, original_rec is None))
+            new_types, tuple(improved), tuple(new_immune), context, original_rec is None,
+            'Complementary Coverage' if complementary else 'Core Strategy', focus,
+            tuple(urgent_fixed)))
     # Compare existing strategy scores on a relative scale; preserve that
     # signal, but place majority weight on team-specific complementarity.
     normal = [c.recommendation.score for c in ranked if not c.coverage_only]

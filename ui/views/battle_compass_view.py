@@ -826,7 +826,8 @@ class BattleCompassView:
                     candidate.summary, "Plan this Pokémon",
                     lambda e, name=candidate.pokemon_name, key=strategy_key:
                         self._show_strategy_pokemon_plan(e, key, name),
-                    pokemon_name=candidate.pokemon_name))
+                    pokemon_name=candidate.pokemon_name,
+                    recommendation_reason=self._strategy_recommendation_reason(candidate.pokemon_name)))
             if not additions:
                 controls.append(ft.Text("No further qualifying teammate suggestions.",
                                         color=TEXT_MUTED))
@@ -929,9 +930,17 @@ class BattleCompassView:
             on_tap=lambda e, selected=tuple(types): self._show_type_matchups(list(selected)),
         )
 
+    def _strategy_recommendation_reason(self, pokemon_name: str) -> str:
+        suggestion = getattr(self, '_coverage_suggestions', {}).get(pokemon_name.casefold())
+        reason = suggestion.recommendation_reason if suggestion else 'Core Strategy'
+        if suggestion and suggestion.coverage_focus:
+            reason += f" ({suggestion.coverage_focus})"
+        return 'Currently Recommended for: ' + reason
+
     def _build_strategy_recommendation_row(
         self, summary: str, button_text: str, on_click,
         *, pokemon_name: str | None = None, move_name: str | None = None,
+        recommendation_reason: str | None = None,
     ) -> ft.Control:
         if pokemon_name:
             gender_match = re.search(r"\((Male|Female)\)$", pokemon_name, re.IGNORECASE)
@@ -955,16 +964,31 @@ class BattleCompassView:
                                   height=90, alignment=ft.Alignment.CENTER, bgcolor=SURFACE)
             heading = ft.Text("Recommended move", weight=ft.FontWeight.BOLD,
                               size=16, color=TEXT_PRIMARY)
+        # An independent, bounded header prevents wrapping/expanding text
+        # from disturbing the fixed-size artwork column.
+        heading.expand = True
+        title_controls: list[ft.Control] = [heading]
+        if recommendation_reason and pokemon_name:
+            title_controls.append(ft.Container(
+                content=ft.Text(recommendation_reason, size=12,
+                                color=TEXT_SECONDARY, text_align=ft.TextAlign.RIGHT),
+                width=280,
+            ))
+        card_heading = ft.Row(controls=title_controls,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER)
         details = ft.Column(controls=[
-            heading,
             ft.Text(summary, size=13, color=TEXT_SECONDARY),
             *([self._strategy_base_stat_display(pokemon_name)] if pokemon_name else []),
             ft.Button(content=button_text, icon=ft.Icons.ADD_ROUNDED,
                       bgcolor=PRIMARY_BLUE, color="#FFFFFF", icon_color="#FFFFFF", on_click=on_click),
         ], spacing=8, tight=True, expand=True)
         return ft.Container(
-            content=ft.Row(controls=[visual, details], spacing=14,
-                           vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            content=ft.Column(controls=[
+                card_heading,
+                ft.Row(controls=[visual, details], spacing=14,
+                       vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            ], spacing=8),
             padding=12, bgcolor=SURFACE_RAISED,
             border=ft.Border.all(1, BORDER_DEFAULT), border_radius=10,
         )

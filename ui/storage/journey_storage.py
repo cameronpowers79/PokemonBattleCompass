@@ -379,7 +379,7 @@ def _validate_journey(
                 return "Stored Team Planner form preference ID is invalid."
             if not isinstance(settings, dict):
                 return "Stored Team Planner form preference is invalid."
-            if any(key not in {"form", "gender"} or not isinstance(value, str)
+            if any(key not in {"form", "gender", "ability"} or not isinstance(value, str)
                    for key, value in settings.items()):
                 return "Stored Team Planner form selection is invalid."
         planned_moves = my_journey.get("planned_moves", {})

@@ -1249,8 +1249,25 @@ class OnboardingView:
                 max_page = max(0, (len(options) - 1) // page_size)
                 self._onboarding_recommendation_page = min(self._onboarding_recommendation_page, max_page)
                 for item in options[self._onboarding_recommendation_page * page_size:(self._onboarding_recommendation_page + 1) * page_size]:
+                    suggestion = self._coverage_suggestions.get(item.pokemon_name.casefold())
+                    reason = (suggestion.recommendation_reason if suggestion else 'Core Strategy')
+                    if suggestion and suggestion.coverage_focus:
+                        reason += f" ({suggestion.coverage_focus})"
+                    # Keep the heading outside the artwork/details Row. Expanding
+                    # text inside a wrapping row can make Flet give the artwork
+                    # an unbounded area (the large blank-texture regression).
+                    card_heading = ft.Row(controls=[
+                        ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY,
+                                weight=ft.FontWeight.BOLD, expand=True),
+                        ft.Container(
+                            content=ft.Text('Currently Recommended for: ' + reason,
+                                            color=TEXT_SECONDARY, size=12,
+                                            text_align=ft.TextAlign.RIGHT),
+                            width=280,
+                        ),
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                       vertical_alignment=ft.CrossAxisAlignment.CENTER)
                     details = ft.Column(controls=[
-                        ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
                         self._strategy_fit_controls(item.pokemon_name, item.summary),
                         ft.Text(item.summary, size=14, color=TEXT_SECONDARY),
                         self._recommendation_base_stats(item.pokemon_name),
@@ -1266,9 +1283,11 @@ class OnboardingView:
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     )
                     controls.append(ft.Container(
-                        content=ft.Row(controls=[
-                            visual, details,
-                        ], spacing=18, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                        content=ft.Column(controls=[
+                            card_heading,
+                            ft.Row(controls=[visual, details], spacing=18,
+                                   vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                        ], spacing=10),
                         padding=16, bgcolor=SURFACE_RAISED,
                         border=ft.Border.all(1, "#354052"), border_radius=14))
                 if max_page:
@@ -1543,6 +1562,30 @@ class OnboardingView:
             if not result:
                 self._show_onboarding_error("Journey saved, but some team objectives could not be saved. Check My Journey.")
                 return
+            # Preserve the recommended/chosen Ability for future planning.
+            # The saved plan expresses intent; it does not overwrite My Team's
+            # actual Ability for a Pokémon the player has acquired.
+            chosen_ability = str(selection.get("ability") or "").strip()
+            if chosen_ability:
+                from engine.ability_registry import eligible_abilities
+                from engine.pokemon_identity import resolve_pokemon_id
+                identifier = resolve_pokemon_id(
+                    mon.get("Pokemon"), gender=mon.get("Gender"),
+                    form=mon.get("Form"), game=self.pending_game,
+                )
+                if identifier and chosen_ability in eligible_abilities(identifier):
+                    preferences = dict(self.app_state.my_journey_data.get("planned_pokemon_forms", {}))
+                    # The first occurrence uses the catalog id; additional
+                    # occurrences receive a suffixed planned id.
+                    matching = [pid for pid in self.app_state.my_journey_data.get("planned_pokemon_ids", [])
+                                if str(pid).split("~", 1)[0] == str(record["id"])]
+                    planned_id = matching[-1] if matching else str(record["id"])
+                    details = dict(preferences.get(planned_id, {}))
+                    details["ability"] = chosen_ability
+                    preferences[planned_id] = details
+                    if not await self.app_state.save_planned_pokemon_forms(preferences):
+                        self._show_onboarding_error("Journey saved, but its planned Ability could not be saved.")
+                        return
         self._show_journey_ready()
 
     def _item_objective_id(self, code: str) -> str | None:

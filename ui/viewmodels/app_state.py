@@ -450,7 +450,7 @@ class AppState:
                     continue
                 fields = {
                     key: val for key, val in preference.items()
-                    if key in {"form", "gender"} and isinstance(val, str)
+                    if key in {"form", "gender", "ability"} and isinstance(val, str)
                 }
                 if fields:
                     planned_pokemon_forms[pokemon_id] = fields
@@ -2888,7 +2888,7 @@ class AppState:
     async def save_planned_pokemon_forms(
         self, preferences: dict[str, dict[str, str]],
     ) -> bool:
-        """Persist selected regional, gender and evolution forms."""
+        """Persist optional planned form, gender, and Ability preferences."""
         if self.journey is None:
             return False
         if not isinstance(preferences, dict):
@@ -2901,7 +2901,7 @@ class AppState:
                 raise ValueError("Form preference must be an object.")
             fields: dict[str, str] = {}
             for key, value in preference.items():
-                if key not in {"form", "gender"} or not isinstance(value, str):
+                if key not in {"form", "gender", "ability"} or not isinstance(value, str):
                     raise ValueError("Invalid Pokémon form preference.")
                 fields[key] = value.strip()
             if fields:

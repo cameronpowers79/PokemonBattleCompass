@@ -51,5 +51,6 @@ def planned_coverage(records: Sequence[Mapping[str, Any]],
         identity = str(record.get("id") or "")
         prefs = (forms_by_id or {}).get(identity, {})
         members.append(catalog_team_member(record, moves=planned_moves_from_slots(slots_by_id.get(identity, [])),
+            ability=str(prefs.get("ability") or record.get("Ability") or ""),
             form=str(prefs.get("form") or ""), gender=str(prefs.get("gender") or "")))
     return team_coverage(members, type_chart, moves_data)

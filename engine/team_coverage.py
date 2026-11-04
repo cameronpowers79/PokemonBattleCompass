@@ -187,13 +187,25 @@ def team_coverage(
         breakdown = []
         for mon in defenders:
             base = type_multiplier(attack_type, mon["types"], type_chart)
-            ability_immune = mon["ability"].strip().casefold() in IMMUNITY_ABILITIES.get(attack_type, frozenset())
+            ability_name = mon["ability"].strip().casefold()
+            # Wonder Guard blocks direct damaging moves unless they are
+            # super-effective against the holder. Neutral and resisted hits
+            # are therefore immune, as are types already blocked by typing.
+            # This type-coverage model does not represent indirect damage,
+            # ability-bypassing effects, or battle-specific exceptions.
+            ability_immune = (
+                ability_name in IMMUNITY_ABILITIES.get(attack_type, frozenset())
+                or (ability_name == "wonder guard" and base <= 1.0)
+            )
             effective = 0.0 if ability_immune else base
+            immunity_source = (
+                "typing" if base == 0 else "ability" if ability_immune else None
+            )
             breakdown.append({"pokemon": mon["name"], "slot": mon["slot"],
                               "types": list(mon["types"]), "ability": mon["ability"],
                               "multiplier": effective,
                               "immune": effective == 0,
-                              "immunity_source": ("ability" if ability_immune else "typing") if effective == 0 else None})
+                              "immunity_source": immunity_source})
         avg = sum(x["multiplier"] for x in breakdown) / len(breakdown) if breakdown else None
         result["defensive"][attack_type] = {
             "average": avg,
