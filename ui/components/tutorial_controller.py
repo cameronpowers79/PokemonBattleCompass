@@ -513,7 +513,7 @@ class TutorialController:
                                     size=21,
                                     weight=ft.FontWeight.BOLD,
                                     font_family=FONT_FAMILY_HEADER,
-                                    color=STRATEGY_COLORS.get(step.strategy_key, TEXT_PRIMARY),
+                                    color=(STRATEGY_COLORS.get(step.strategy_key, TEXT_PRIMARY) if step.strategy_key is not None else TEXT_PRIMARY),
                                 ),
                                 ft.Text(
                                     f"Tutorial · Step {self.current_index + 1} of {len(TUTORIAL_STEPS)}",

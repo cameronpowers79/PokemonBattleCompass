@@ -40,6 +40,9 @@ from ui.theme import (
 from ..rendering import get_sprite_src
 from ..viewmodels.app_state import AppState
 from engine.pokemon_identity import normalized_display_name, regional_choices, REGIONAL_FORMS
+from engine.coverage_planning import planned_coverage
+from engine.learnsets import supported_strategy_move_names
+from ui.components.team_coverage_panel import team_coverage_panel
 
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
@@ -690,10 +693,24 @@ class MyJourneyView:
         kind, number, _ = parts
         return f"{kind} {number} {move_name}"
 
+    def _legal_moves_for_planned_pokemon(self, pokemon_id: str) -> set[str]:
+        """Filter suggestions to supported base-game moves when the form resolves."""
+        record = next((row for row in self.pokemon if str(row.get('id') or '') == pokemon_id),None)
+        if record is None:
+            return set()
+        prefs = self.planned_pokemon_forms.get(pokemon_id,{})
+        candidate = {'Pokemon':str(record.get('pokemon') or ''),
+                     'Gender':prefs.get('gender',''), 'Form':prefs.get('form','')}
+        names = supported_strategy_move_names(candidate,
+            self.app_state.reference_data.get('learnsets_swsh',{}),
+            self.app_state.moves_data)
+        return set(names)
+
     def _move_planner_suggestions(
         self,
         query: str,
         *,
+        pokemon_id: str = '',
         limit: int = 30,
     ) -> list[ft.AutoCompleteSuggestion]:
         """Return a small filtered suggestion set for one move cell."""
@@ -702,8 +719,11 @@ class MyJourneyView:
         if not folded_query:
             return []
 
+        legal = self._legal_moves_for_planned_pokemon(pokemon_id) if pokemon_id else set()
         matches: list[ft.AutoCompleteSuggestion] = []
         for option in self._move_planner_options:
+            if legal and option['move_name'] not in legal:
+                continue
             display = str(option["display"])
             move_name = str(option["move_name"])
             if (
@@ -941,7 +961,31 @@ class MyJourneyView:
                 spacing=20,
                 run_spacing=20,
             ),
+            self._build_team_coverage_card(),
         ]
+
+    def _build_team_coverage_card(self) -> ft.Control:
+        """Show committed Team Planner moves, never hypothetical coverage."""
+        # Known equipped or boxed Abilities can establish a real immunity.
+        # Don't guess Hidden Abilities for Pokémon not yet acquired.
+        known = [*self.app_state.team_data, *self.app_state.box_data]
+        records = []
+        for planned in self.pokemon:
+            record = dict(planned)
+            for owned in known:
+                if (str(owned.get('Pokemon') or '').casefold()
+                        == str(record.get('pokemon') or '').casefold()
+                        and owned.get('Ability')):
+                    record['Ability'] = owned['Ability']
+                    break
+            records.append(record)
+        coverage = planned_coverage(
+            records, self.planned_moves,
+            self.app_state.reference_data['type_chart'],
+            self.app_state.moves_data, self.planned_pokemon_forms,
+        )
+        return team_coverage_panel(self.page, coverage,
+            heading='Planned Team Coverage · My Journey')
 
     def _refresh(self) -> None:
         if self._root is None:
@@ -4587,7 +4631,7 @@ class MyJourneyView:
         slot = slots[slot_index] if slot_index < len(slots) else None
         display = self._move_plan_display_value(slot)
         control.value = display
-        control.suggestions = self._move_planner_suggestions(display)
+        control.suggestions = self._move_planner_suggestions(display,pokemon_id=pokemon_id)
         control.update()
 
     def _handle_move_planner_change(
@@ -4601,7 +4645,7 @@ class MyJourneyView:
 
         del event
         entered = str(control.value or "").strip()
-        control.suggestions = self._move_planner_suggestions(entered)
+        control.suggestions = self._move_planner_suggestions(entered,pokemon_id=pokemon_id)
         control.update()
 
         if entered:
@@ -4749,6 +4793,12 @@ class MyJourneyView:
         if selected is None:
             return
 
+        legal = self._legal_moves_for_planned_pokemon(pokemon_id)
+        if legal and str(selected['move_name']) not in legal:
+            self._restore_move_planner_control(pokemon_id, slot_index, control)
+            self._show_save_error('That move is not supported for this Pokémon in the base Sword/Shield learnset.')
+            return
+
         selected_slot = {
             "move_name": str(selected["move_name"]),
             "source_item_id": selected.get("source_item_id"),
@@ -4820,6 +4870,19 @@ class MyJourneyView:
         self._reload_planner_dependencies()
         self._refresh()
 
+    def _planned_move_type_badge(self, pokemon_id: str, slot_index: int) -> ft.Control:
+        """Compact type indicator for a committed planned move."""
+        slots = self.planned_moves.get(pokemon_id, [])
+        slot = slots[slot_index] if slot_index < len(slots) else None
+        name = str(slot.get('move_name') or '').strip() if isinstance(slot,dict) else ''
+        move = next((row for row in self.app_state.moves_data
+                     if isinstance(row,dict) and str(row.get('Move') or '') == name), {})
+        move_type = str(move.get('Type') or '').strip()
+        if move_type and (Path(__file__).resolve().parents[2] / 'assets' / 'type_badges' / f'{move_type}.png').exists():
+            return ft.Image(src=f'type_badges/{move_type}.png',width=72,height=18,
+                            fit=ft.BoxFit.CONTAIN)
+        return ft.Container(width=72,height=18)
+
     def _build_move_planner_cell(
         self,
         pokemon_id: str,
@@ -4833,9 +4896,9 @@ class MyJourneyView:
 
         control = ft.AutoComplete(
             value=value,
-            suggestions=self._move_planner_suggestions(value),
+            suggestions=self._move_planner_suggestions(value,pokemon_id=pokemon_id),
             suggestions_max_height=240,
-            width=190,
+            width=166,
         )
         control.on_change = (
             lambda event,
@@ -4889,10 +4952,10 @@ class MyJourneyView:
                         ),
                         *[
                             ft.DataCell(
-                                self._build_move_planner_cell(
-                                    pokemon_id,
-                                    slot_index,
-                                )
+                                ft.Row(controls=[
+                                    self._build_move_planner_cell(pokemon_id,slot_index),
+                                    self._planned_move_type_badge(pokemon_id,slot_index),
+                                ],spacing=6,vertical_alignment=ft.CrossAxisAlignment.CENTER)
                             )
                             for slot_index in range(4)
                         ],
@@ -4900,7 +4963,7 @@ class MyJourneyView:
                 )
             )
 
-        move_widths = [160, 205, 205, 205, 205]
+        move_widths = [160, 252, 252, 252, 252]
         table = fdt.DataTable2(
             columns=[
                 fdt.DataColumn2(
@@ -4963,7 +5026,6 @@ class MyJourneyView:
         if rows:
             body_controls.extend([
                 table,
-                ft.Container(height=140),
             ])
         else:
             body_controls.append(

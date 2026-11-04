@@ -46,7 +46,11 @@ from engine.strategy_capabilities import (
     evaluate_strategy_viability,
     strategy_move_guidance,
 )
-from engine.learnsets import supported_strategy_move_methods
+from engine.learnsets import supported_strategy_move_methods, supported_strategy_move_names
+from engine.coverage_planning import catalog_team_member
+from engine.team_coverage import team_coverage
+from engine.team_complementarity import rank_with_team_coverage
+from ui.components.team_coverage_panel import team_coverage_panel
 from engine.base_stats_registry import base_stat_profiles
 from ui.rendering import get_sprite_path
 from ui.strategy_ui import strategy_color
@@ -106,6 +110,7 @@ class OnboardingView:
         self.pending_strategy = "strongest_matchup"
         self.planned_team: list[dict] = []
         self._onboarding_recommendation_page = 0
+        self._coverage_suggestions = {}
         self.weather_focus: str | None = None
         self.weather_intent = "auto"
         from engine.game_support import matches_game, resolve_game_record
@@ -1061,11 +1066,145 @@ class OnboardingView:
                 self.weather_intent = 'setter'
         return out
 
+    def _coverage_team_members(self) -> list[dict]:
+        """Selected future roster with committed moves; never hypothetical moves."""
+        team = []
+        if self.starter_retention != "box":
+            if self.pending_starter_record:
+                team.append(dict(self.pending_starter_record))
+            elif self.pending_starter:
+                team.append(self._starter_final_candidate())
+        for selection in self.planned_team:
+            record = self._planning_record(selection['name'])
+            if record is None:
+                continue
+            member = self._planned_candidate(selection)
+            team.append(catalog_team_member(
+                record, moves=selection.get('moves') or [],
+                ability=str(selection.get('ability') or ''),
+                gender=str(member.get('Gender') or '')))
+        return team[:6]
+
+    @staticmethod
+    def _starting_moves(selection: dict, guidance) -> list[str]:
+        """Strategy moves first, then explicit coverage suggestions; all optional."""
+        base = [name for name, _, _ in guidance]
+        coverage = selection.get('coverage_moves') or []
+        return list(dict.fromkeys([*base[:2], *coverage, *base[2:]]))[:4]
+
+    def _onboarding_coverage(self, *, include_moves: bool) -> dict:
+        """Show only the selected roster and explicitly chosen move slots."""
+        team = []
+        if self.pending_starter_record and self.starter_retention != 'box':
+            team.append(dict(self.pending_starter_record))
+        for selection in self.planned_team:
+            candidate = self._planned_candidate(selection)
+            record = self._planning_record(selection['name'])
+            if not record:
+                continue
+            member = catalog_team_member(record,
+                moves=selection.get('moves') or [] if include_moves else [],
+                ability=str(selection.get('ability') or ''),
+                gender=str(candidate.get('Gender') or ''))
+            team.append(member)
+        return team_coverage(team[:6], self.app_state.reference_data['type_chart'],
+                             self.app_state.moves_data)
+
+    def _onboarding_coverage_panel(self, *, include_moves: bool) -> ft.Control:
+        return team_coverage_panel(self.page, self._onboarding_coverage(include_moves=include_moves),
+                                   heading='Planned Team Coverage')
+
+    def _editable_onboarding_moves(self, selection: dict, candidate: dict,
+                                   coverage_host: ft.Container) -> ft.Control:
+        """Four optional, validated move slots. Strategy suggestions are editable defaults."""
+        guidance = self._planned_move_guidance(selection, candidate)
+        if selection.get('moves') is None:
+            selection['moves'] = self._starting_moves(selection, guidance)
+        current = list(selection.get('moves') or [])[:4]
+        while len(current) < 4:
+            current.append('')
+        legal = supported_strategy_move_names(candidate, self._planning_learnsets,
+                                               self.app_state.moves_data)
+        # Keep existing saved choices visible if the catalog is incomplete, but
+        # only allow NEW choices from validated base-game learnsets.
+        legal_set = set(legal)
+        for name in current:
+            if name and name not in legal_set:
+                legal = tuple([*legal,name])
+        sources = selection.setdefault('move_sources', {})
+        for selected_name in current:
+            if not selected_name:
+                continue
+            choices = self._move_acquisition_options(list(
+                supported_strategy_move_methods(candidate, selected_name, self._planning_learnsets)))
+            if choices and sources.get(selected_name) not in {key for key, _ in choices}:
+                sources[selected_name] = choices[0][0]
+        controls: list[ft.Control] = []
+        warning = ft.Text('',size=12,color='#D6A652')
+        def update_cover():
+            selection['moves'] = [name for name in current if name]
+            coverage_host.content = self._onboarding_coverage_panel(include_moves=True)
+            self.page.update()
+        def change_move(index: int, dropdown: ft.Dropdown):
+            value = str(dropdown.value or '')
+            if value and value in [n for i,n in enumerate(current) if i != index]:
+                warning.value = 'Each move can occupy only one slot.'
+                dropdown.value = current[index] or ''
+                self.page.update()
+                return
+            if value and value not in legal_set and value not in current:
+                warning.value = 'Choose a move from the supported Sword/Shield learnset.'
+                return
+            warning.value = ''
+            current[index] = value
+            if value:
+                methods = supported_strategy_move_methods(candidate,value,self._planning_learnsets)
+                source_options = self._move_acquisition_options(list(methods))
+                if source_options and sources.get(value) not in {k for k,_ in source_options}:
+                    sources[value] = source_options[0][0]
+            update_cover()
+        def move_type_badge(name: str) -> ft.Control:
+            move = next((row for row in self.app_state.moves_data
+                         if isinstance(row,dict) and row.get('Move') == name), {})
+            move_type = str(move.get('Type') or '').strip()
+            if not move_type or not (Path(__file__).resolve().parents[2] / 'assets' / 'type_badges' / f'{move_type}.png').exists():
+                return ft.Container(width=76, height=22)
+            return ft.Image(src=f'type_badges/{move_type}.png',width=76,height=20,
+                            fit=ft.BoxFit.CONTAIN)
+        for i in range(4):
+            dropdown = ft.Dropdown(
+                label=f'Move {i+1}',width=370,menu_height=300,
+                value=current[i] or '',
+                options=[ft.DropdownOption(key='',text='— Open slot —')] +
+                        [ft.DropdownOption(key=m,text=m) for m in legal],
+            )
+            type_host = ft.Container(width=78,height=24,
+                content=move_type_badge(current[i]))
+            def on_move_select(event, n=i, d=dropdown, host=type_host):
+                change_move(n,d)
+                host.content = move_type_badge(current[n])
+                self.page.update()
+            dropdown.on_select = on_move_select
+            controls.append(ft.Row(controls=[dropdown,type_host],spacing=12,
+                                   vertical_alignment=ft.CrossAxisAlignment.CENTER,wrap=True))
+        controls.append(warning)
+        for name, types, timing in selection.get('coverage_move_details') or []:
+            controls.append(ft.Text(
+                f"Coverage option: {name} adds super-effective coverage against "
+                f"{', '.join(types[:5])}. "
+                + ("Acquisition timing needs checking." if timing != 'available_now' else "Available at current progression."),
+                size=12, color=TEXT_SECONDARY))
+        controls.append(ft.Text('Moves must be available from the supported base-game learnset; '
+            'egg and DLC-only moves are excluded. Move sources are selected automatically '
+            'where needed and can be adjusted in My Journey.',size=12,color=TEXT_SECONDARY))
+        return ft.Column(controls=controls,spacing=8,tight=True)
+
     def _build_team_planning(self) -> ft.Control:
         max_picks = 6 if self.starter_retention == "box" else 5
         controls: list[ft.Control] = [
             ft.Text(f"Starter: {self.pending_starter}  •  Strategy: {get_strategy_definition(self.pending_strategy).label}", color=strategy_color(self.pending_strategy), weight=ft.FontWeight.BOLD, size=17),
             ft.Text(f"Future teammates selected: {len(self.planned_team)} / {max_picks}. These will be Journey goals, not immediately added to My Team.", color=TEXT_SECONDARY),
+            self._onboarding_coverage_panel(include_moves=False),
         ]
         for selection in self.planned_team:
             controls.append(ft.Row(controls=[
@@ -1088,6 +1227,20 @@ class OnboardingView:
                                                                 "DUAL_SCREEN" in x.capability_keys for x in capabilities) else None))
             if self.pending_strategy == "weather_control" and not self.weather_focus:
                 options = []
+            self._coverage_suggestions = {}
+            if viability.viability == 'Strong' and self.pending_strategy in {
+                'defensive_attrition', 'status_control_punish', 'setup_offense'
+            }:
+                assessed = rank_with_team_coverage(
+                    self.pending_strategy, viability.viability, self._coverage_team_members(),
+                    options, self._planning_options(),
+                    self.app_state.reference_data['type_chart'],
+                    self.app_state.moves_data, self._planning_learnsets,
+                )
+                self._coverage_suggestions = {
+                    entry.recommendation.pokemon_name.casefold(): entry for entry in assessed
+                }
+                options = [entry.recommendation for entry in assessed]
             if not options:
                 controls.append(ft.Text("Choose a weather above to see matched recommendations, or finish planning when you are ready." if self.pending_strategy == "weather_control" else "No further supported strategy contributors were found; remaining slots are yours for coverage and personal preferences.", color=TEXT_SECONDARY))
             else:
@@ -1272,9 +1425,16 @@ class OnboardingView:
 
     def _add_planned(self, recommendation):
         ability = re.search(r"Recommended Ability: ([^.]+)", recommendation.summary)
+        suggestion = self._coverage_suggestions.get(recommendation.pokemon_name.casefold())
         self._append_planned_selection(
             recommendation.pokemon_name,
             ability.group(1).split(" (")[0] if ability else "")
+        if suggestion:
+            for item in reversed(self.planned_team):
+                if item.get('name', '').casefold() == recommendation.pokemon_name.casefold():
+                    item['coverage_moves'] = [name for name, _, _ in suggestion.coverage_moves]
+                    item['coverage_move_details'] = list(suggestion.coverage_moves)
+                    break
 
     def _planned_move_guidance(self, selection: dict, candidate: dict):
         # Carry the player's weather package intent into shared move guidance.
@@ -1302,74 +1462,30 @@ class OnboardingView:
         return strategy_move_card(move_name, move_type, badge_src, width=174)
 
     def _show_plan_review(self):
+        for selection in self.planned_team:
+            if selection.get('moves') is None:
+                candidate = self._planned_candidate(selection)
+                selection['moves'] = self._starting_moves(
+                    selection, self._planned_move_guidance(selection, candidate))
+        coverage_host = ft.Container(content=self._onboarding_coverage_panel(include_moves=True))
         items: list[ft.Control] = [
-            ft.Text(f"Starter: {self.pending_starter} (always retained in your Journey)"),
-            ft.Text(f"Starter team preference: {self.starter_retention}"),
-            ft.Text(f"Strategy: {get_strategy_definition(self.pending_strategy).label}"),
-            ft.Text(f"Future teammates: {len(self.planned_team)}"),
+            ft.Text(f'Starter: {self.pending_starter} (always retained in your Journey)'),
+            ft.Text(f'Strategy: {get_strategy_definition(self.pending_strategy).label}'),
+            ft.Text('Choose up to four moves per Pokémon. Suggested strategy moves are '
+                    'starting points, not mandatory choices.',color=TEXT_SECONDARY),
+            coverage_host,
         ]
         for selection in self.planned_team:
             candidate = self._planned_candidate(selection)
-            guidance = self._planned_move_guidance(selection, candidate)
-            if selection.get("moves") is None:
-                selection["moves"] = [name for name, _, _ in guidance]
-            items.append(ft.Text(f"{selection['name']} — recommended Ability: {selection.get('ability') or 'Flexible'}", weight=ft.FontWeight.BOLD))
-            if not guidance:
-                items.append(ft.Text("No additional strategy move is necessary for this role; choose the remaining moves to suit your team.", color=TEXT_SECONDARY))
-            selection.setdefault("move_sources", {})
-            for name, purpose, method in guidance:
-                methods = supported_strategy_move_methods(candidate, name, self._planning_learnsets)
-                options = self._move_acquisition_options(methods)
-                toggle = ft.Checkbox(label=f"{name} — {purpose}", value=name in selection["moves"])
-                def changed(event, mon=selection, move=name, box=toggle):
-                    current = list(mon.get("moves") or [])
-                    if box.value and move not in current:
-                        current.append(move)
-                    elif not box.value and move in current:
-                        current.remove(move)
-                    mon["moves"] = current
-                toggle.on_change = changed
-                # Keep the explanation inside the available width beside the card.
-                # A checkbox with a long inline label otherwise forces a Row wider
-                # than the review panel and clips the text off-screen.
-                toggle.label = None
-                items.append(ft.Row(
-                    controls=[
-                        self._onboarding_move_badge(name),
-                        ft.Column(
-                            controls=[
-                                ft.Row(controls=[
-                                    toggle,
-                                    ft.Text(f"{name} — {purpose}",
-                                            color=TEXT_PRIMARY, size=14,
-                                            expand=True, max_lines=None),
-                                ], spacing=6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                            ], expand=True, spacing=0,
-                        ),
-                    ],
-                    spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                ))
-                if options:
-                    allowed = {key for key, _ in options}
-                    selected_source = selection["move_sources"].get(name)
-                    if selected_source not in allowed:
-                        selected_source = options[0][0]
-                        selection["move_sources"][name] = selected_source
-                    source_picker = ft.Dropdown(
-                        label=f"How to learn {name}", width=420,
-                        value=selected_source,
-                        options=[ft.DropdownOption(key=key, text=label) for key, label in options],
-                    )
-                    def source_changed(event, mon=selection, move=name, dropdown=source_picker):
-                        mon["move_sources"][move] = str(dropdown.value or "natural")
-                    source_picker.on_select = source_changed
-                    items.append(ft.Container(content=source_picker, padding=ft.Padding.only(left=30)))
-        items.append(ft.Text("Only checked moves will be planned. You can freely choose remaining slots later.", color=TEXT_SECONDARY))
+            items.append(ft.Text(f"{selection['name']} — recommended Ability: "
+                                 f"{selection.get('ability') or 'Flexible'}",
+                                 weight=ft.FontWeight.BOLD))
+            items.append(self._editable_onboarding_moves(selection,candidate,coverage_host))
         items.append(ft.Row(controls=[
-            ft.Button(content="Back", on_click=lambda e: self._return_to_planning()),
-            self._primary_button("Prepare My Journey", lambda e: self.page.run_task(self._replace_journey)),
-        ], wrap=True))
-        self.content_host.content = self._onboarding_panel("Review your new Journey", items)
+            ft.Button(content='Back',on_click=lambda e:self._return_to_planning()),
+            self._primary_button('Prepare My Journey',lambda e:self.page.run_task(self._replace_journey)),
+        ],wrap=True))
+        self.content_host.content = self._onboarding_panel('Review your new Journey',items)
         self.page.update()
 
     @staticmethod
@@ -1414,12 +1530,8 @@ class OnboardingView:
             if record is None or not record.get("id"):
                 continue
             mon = self._planned_candidate(selection)
-            guidance = self._planned_move_guidance(selection, mon)
             slots = []
-            selected = set(selection.get("moves") or [])
-            for move_name, _, _ in guidance:
-                if move_name not in selected:
-                    continue
+            for move_name in list(selection.get('moves') or [])[:4]:
                 source = selection.get("move_sources", {}).get(move_name, "natural")
                 objective_id = self._item_objective_id(source) if source != "natural" else None
                 slots.append({"move_name": move_name, "source_item_id": objective_id})

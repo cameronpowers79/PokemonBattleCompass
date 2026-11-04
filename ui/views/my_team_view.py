@@ -37,6 +37,8 @@ from engine.item_recommendations import (
     recommend_held_items,
 )
 from engine.moves import apply_move_metadata
+from engine.team_coverage import team_coverage
+from ui.components.team_coverage_panel import team_coverage_panel
 from engine.mechanics import get_effective_pokemon_types
 from engine.pokemon_identity import (
     normalized_display_name, regional_choices, regional_types,
@@ -345,7 +347,7 @@ def _app_version() -> str:
     try:
         return version("pokemon-battle-compass")
     except PackageNotFoundError:
-        return "0.3.1"
+        return "0.3.0"
 
 
 class MyTeamView:
@@ -892,6 +894,8 @@ class MyTeamView:
             content=self._build_editor_table(),
         )
         self.box_table_host.content = self._build_box_table()
+        self.current_coverage_host = ft.Container()
+        self._refresh_current_team_coverage()
 
         self._refresh_selector()
         self._refresh_detail()
@@ -1824,10 +1828,58 @@ class MyTeamView:
                     editor_card,
                     details_card,
                     box_card,
+                    self.current_coverage_host,
                 ],
             ),
             spacing=24,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+
+    def _refresh_current_team_coverage(self) -> None:
+        """Render the saved party's actual typing, moves and known Abilities.
+
+        Do not include Box members, Journey plans, or unsaved editor changes.
+        The panel is refreshed after successful team and party saves.
+        """
+        members: list[dict] = []
+        for pokemon in self.app_state.team_data[:6]:
+            if not isinstance(pokemon, dict) or not pokemon.get("Pokemon"):
+                continue
+            # Effective types account for form-specific mechanics while leaving
+            # the persisted party record untouched.
+            record = dict(pokemon)
+            types = get_effective_pokemon_types(record)
+            record["Type1"] = types[0] or ""
+            record["Type2"] = types[1] or ""
+            members.append(record)
+
+        coverage = team_coverage(members, self.type_chart, self.moves_data)
+        display = team_coverage_panel(
+            self.page,
+            coverage,
+            heading="Current Team Coverage",
+            offensive_description=(
+                "Best effectiveness from your team's currently learned attacking "
+                "moves against each single defending type; higher is better. "
+                "No usable move means no coverage credit."
+            ),
+        )
+        self.current_coverage_host.content = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        "Based on the saved party's current types, equipped "
+                        "moves, and recorded Abilities. Boxed Pokémon and "
+                        "unsaved edits are excluded. Type coverage is not a "
+                        "damage or survival prediction.",
+                        size=TEXT_SIZE_DETAIL,
+                        color=TEXT_SECONDARY,
+                    ),
+                    display,
+                ],
+                spacing=12,
+            ),
+            width=1280,
         )
 
     def _build_box_card(self) -> ft.Control:
@@ -2465,6 +2517,7 @@ class MyTeamView:
         self._autocomplete_edit_versions.clear()
         self.table_host.content = self._build_editor_table()
         self.box_table_host.content = self._build_box_table()
+        self._refresh_current_team_coverage()
         self._refresh_selector()
         self._refresh_detail()
         self._sync_team_management_buttons()
@@ -8174,6 +8227,7 @@ class MyTeamView:
         self.working_box = deepcopy(self.app_state.box_data)
         self.saved_box_snapshot = deepcopy(self.app_state.box_data)
         self.box_table_host.content = self._build_box_table()
+        self._refresh_current_team_coverage()
         self.save_button.disabled = True
         self.discard_button.disabled = True
         self.detail_notice.visible = False

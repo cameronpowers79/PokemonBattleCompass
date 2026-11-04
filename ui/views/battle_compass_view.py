@@ -30,7 +30,11 @@ from engine.mechanics import (
     get_type_multiplier,
 )
 from engine.calculations import calculate_move_score, get_effective_move_power, get_weather_ability_power_multiplier
-from engine.learnsets import supported_strategy_move_methods
+from engine.learnsets import supported_strategy_move_methods, supported_strategy_move_names
+from engine.coverage_planning import catalog_team_member
+from engine.team_coverage import team_coverage
+from engine.team_complementarity import rank_with_team_coverage
+from ui.components.team_coverage_panel import team_coverage_panel
 from engine.strategy_capabilities import (
     evaluate_strategy_recommendations,
     evaluate_strategy_viability,
@@ -429,6 +433,24 @@ class BattleCompassView:
             move_limit=5,
         )
 
+    def _team_coverage_in_recommender(self, members: list[dict]) -> ft.Control:
+        """Coverage uses equipped moves for My Team and saved moves for goals."""
+        prepared = []
+        for mon in members[:6]:
+            if mon.get('Type1'):
+                prepared.append(mon)
+                continue
+            record = self._strategy_catalog_record_for_name(str(mon.get('Pokemon') or ''))
+            if record is None:
+                prepared.append(mon)
+                continue
+            moves = [str(mon.get(f'Move{i}') or '') for i in range(1,5)]
+            prepared.append(catalog_team_member(record,moves=moves,
+                ability=str(mon.get('Ability') or ''),form=str(mon.get('Form') or ''),
+                gender=str(mon.get('Gender') or '')))
+        coverage = team_coverage(prepared,self.type_chart,self.moves_data)
+        return team_coverage_panel(self.page,coverage,heading='Projected Team Coverage')
+
     def _show_strategy_recommender(
         self,
         event: ft.Event[ft.IconButton] | None = None,
@@ -560,6 +582,9 @@ class BattleCompassView:
                     border_radius=12,
                 )
             )
+
+        _, _, coverage_team, _ = self._strategy_planned_snapshot(self.app_state.team_strategy,rank=False)
+        cards.insert(0,self._team_coverage_in_recommender(coverage_team))
 
         cards.append(
             ft.Text(
@@ -694,6 +719,19 @@ class BattleCompassView:
         additions = (recommend_strategy_pokemon_additions(
             strategy_key, results, candidates, self.moves_data, self.learnsets_data,
             limit=None) if rank and len(team) < 6 else [])
+        if rank:
+            self._coverage_suggestions = {}
+            if viability.viability == 'Strong' and strategy_key in {
+                'defensive_attrition', 'status_control_punish', 'setup_offense'
+            }:
+                assessed = rank_with_team_coverage(
+                    strategy_key, viability.viability, team, additions, candidates,
+                    self.type_chart, self.moves_data, self.learnsets_data,
+                )
+                additions = [row.recommendation for row in assessed]
+                self._coverage_suggestions = {
+                    row.recommendation.pokemon_name.casefold(): row for row in assessed
+                }
         excluded = max(0, len(planned_ids) - len(included_ids))
         return viability, additions, team, excluded
 
@@ -723,6 +761,7 @@ class BattleCompassView:
                                  for index, p in enumerate(planned_team)) or "none"),
                     size=12, color=TEXT_MUTED),
         ])
+        controls.append(self._team_coverage_in_recommender(planned_team))
         if excluded:
             # Show the precise omitted selections, not just a mysterious count.
             credited_planned = set()
@@ -991,18 +1030,41 @@ class BattleCompassView:
             pokemon, self.moves_data, self.learnsets_data)
         guidance = strategy_move_guidance(strategy_key, pokemon, self.moves_data, self.learnsets_data)
         notes = {name.casefold(): (purpose, method) for name, purpose, method in guidance}
-        choices = list(dict.fromkeys([*existing, *recommended]))
+        coverage = getattr(self, '_coverage_suggestions', {}).get(pokemon_name.casefold())
+        coverage_moves = ([name for name, _, _ in coverage.coverage_moves]
+                          if coverage and not planned else [])
+        # First honor saved moves and a compact strategy package; then present
+        # feasible offensive complements in the remaining slots.
+        choices = list(dict.fromkeys([*existing, *recommended, *coverage_moves]))
         # Additional guidance moves are optional alternatives, not preselected.
         choices.extend(name for name, _, _ in guidance if name.casefold() not in {x.casefold() for x in choices})
         boxes: list[ft.Checkbox] = []
         initial_choices = {n.casefold() for n in existing}
         if not planned:
-            initial_choices.update(n.casefold() for n in recommended[:4])
+            starting = list(dict.fromkeys([*recommended[:2], *coverage_moves, *recommended[2:]]))[:4]
+            initial_choices.update(n.casefold() for n in starting)
         count = ft.Text("", size=12, color=TEXT_SECONDARY)
         warning = ft.Text("", size=12, color=WARNING)
         def update_count():
             used = sum(box.value is True for box in boxes)
             count.value = f"{used} of 4 planned move slots selected. Uncheck a move to make room for another."
+        # Preview the proposed saved move changes before committing them.
+        coverage_host = ft.Container()
+        def refresh_coverage():
+            _, _, projected, _ = self._strategy_planned_snapshot(strategy_key,rank=False)
+            replacements = [str(box.data) for box in boxes if box.value is True]
+            if planned:
+                for member in projected:
+                    if self._strategy_name_key(member.get('Pokemon')) == self._strategy_name_key(pokemon.get('Pokemon')):
+                        for n in range(1,5):
+                            member[f'Move{n}'] = replacements[n-1] if n <= len(replacements) else ''
+                        break
+            elif len(projected) < 6:
+                candidate = dict(pokemon)
+                for n in range(1,5):
+                    candidate[f'Move{n}'] = replacements[n-1] if n <= len(replacements) else ''
+                projected.append(candidate)
+            coverage_host.content = self._team_coverage_in_recommender(projected)
         def toggle_move(event):
             if sum(box.value is True for box in boxes) > 4:
                 event.control.value = False
@@ -1010,7 +1072,13 @@ class BattleCompassView:
             else:
                 warning.value = ""
             update_count()
+            refresh_coverage()
             self.page.update()
+        for move_name in coverage_moves:
+            notes[move_name.casefold()] = (
+                'Potential offensive coverage for gaps in your team',
+                'See My Journey for acquisition details',
+            )
         rows = []
         for move_name in choices:
             toggle = ft.Checkbox(value=move_name.casefold() in initial_choices,
@@ -1022,7 +1090,30 @@ class BattleCompassView:
                 ft.Text(f"{purpose}. How to learn: {method}.", size=12,
                         color=TEXT_SECONDARY, expand=True, max_lines=None)],
                 spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER))
+        rows_host = ft.Column(controls=rows,spacing=10,tight=True)
+        valid_moves = supported_strategy_move_names(pokemon,self.learnsets_data,self.moves_data)
+        picker = ft.Dropdown(label='Add any supported move',width=400,menu_height=280,
+            options=[ft.DropdownOption(key=name,text=name) for name in valid_moves])
+        def add_custom_move(event):
+            name = str(picker.value or '')
+            if not name or any(str(box.data).casefold() == name.casefold() for box in boxes):
+                return
+            if sum(box.value is True for box in boxes) >= 4:
+                warning.value = 'Uncheck an existing move before adding another.'
+                self.page.update()
+                return
+            toggle = ft.Checkbox(value=True,data=name,on_change=toggle_move)
+            boxes.append(toggle)
+            rows_host.controls.append(ft.Row(controls=[toggle,self._strategy_move_badge(name),
+                ft.Text('Custom supported move · source tracked in My Journey',
+                        size=12,color=TEXT_SECONDARY,expand=True)],spacing=10))
+            warning.value = ''
+            update_count()
+            refresh_coverage()
+            self.page.update()
+        picker.on_select = add_custom_move
         update_count()
+        refresh_coverage()
         definition = get_strategy_definition(strategy_key)
         self.page.show_dialog(ft.AlertDialog(
             modal=True,
@@ -1036,18 +1127,15 @@ class BattleCompassView:
                 count, warning,
                 ft.Text("Existing moves and strategy suggestions", size=14,
                         weight=ft.FontWeight.BOLD, color=TEXT_PRIMARY),
-                *(rows if rows else [ft.Text(
-                    "No additional supported Screen Control moves were found for this Pokémon. "
-                    "Screen Control focuses on the screen setter; other teammates can be "
-                    "built for offense, setup, or coverage in Move Planner. "
-                    "Try Setup Offense for setup-specific recommendations.",
-                    size=13, color=TEXT_SECONDARY)]),
+                rows_host,
+                picker,
+                coverage_host,
             ], spacing=10, scroll=ft.ScrollMode.AUTO)),
             actions=[
                 ft.Button(content="Back to recommendations", on_click=lambda e: (
                     self.page.pop_dialog(), self._show_strategy_build_options(None, strategy_key, from_dialog=False))),
                 ft.Button(content="Save move plan" if planned else "Add to My Journey",
-                    disabled=not bool(rows) and planned,
+                    disabled=False,
                     icon=ft.Icons.PLAYLIST_ADD_CHECK_ROUNDED, bgcolor=PRIMARY_BLUE,
                     color=TEXT_PRIMARY, icon_color=TEXT_PRIMARY,
                     on_click=lambda e: self._confirm_strategy_full_move_plan(
