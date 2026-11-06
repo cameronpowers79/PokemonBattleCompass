@@ -1828,11 +1828,48 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
     return max(candidates, key=lambda x: x[0]) if candidates else None
 
 
+def _defensive_setup_boosts(move, member):
+    """Return reliable self-targeted defensive stage boosts from move metadata.
+
+    Ghost-type Curse spends HP rather than increasing defensive stats; moves
+    with conditional activation are not assumed to produce a free boost.
+    """
+    if not isinstance(move, dict) or move.get("Category") != "Status":
+        return None
+    if move.get("StageChangeTarget") != "User":
+        return None
+    if str(move.get("ActivationCondition") or "Always") != "Always":
+        return None
+    if str(move.get("Move") or "") == "Curse" and "Ghost" in {
+        str(member.get("Type1") or ""), str(member.get("Type2") or "")
+    }:
+        return None
+    defense = int(move.get("DefStageChange") or 0)
+    special = int(move.get("SpDStageChange") or 0)
+    if defense <= 0 and special <= 0:
+        return None
+    # Exclude moves with a defensive penalty or health cost; this branch
+    # evaluates safe setup, not risky stat exchanges.
+    if defense < 0 or special < 0:
+        return None
+    return min(defense, 6), min(special, 6)
+
+
+def _apply_defensive_setup(member, defense_stages, special_stages):
+    """Apply Gen VIII positive stat-stage multipliers to a projected copy."""
+    boosted = dict(member)
+    if defense_stages:
+        boosted["DEF"] = float(get_stat(member, "DEF")) * (2 + min(6, defense_stages)) / 2
+    if special_stages:
+        boosted["SPD"] = float(get_stat(member, "SPD")) * (2 + min(6, special_stages)) / 2
+    return boosted
+
+
 def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
     """Select a cautious defensive setup and project its immediate payoff.
 
     Scores and damage forecasts are conditional; no live boosts or HP are assumed.
-    Iron Defense contributes +2 Defense stages, capped at +6 after three uses.
+    Each reliable self-targeting defense boost uses its actual +Def/+SpD stages.
     """
     from engine.calculations import calculate_damage_range
 
@@ -1867,29 +1904,17 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         # a modeled immediate OHKO from this Pokémon.
         if {"Likely OHKO", "Likely Survival OHKO"} & notes:
             continue
-        for setup_name, defense_stages in (("Iron Defense", 2), ("Amnesia", 0), ("Cosmic Power", 1), ("Stockpile", 1)):
-            if setup_name not in equipped:
+        for setup_name in equipped:
+            setup_move = move_lookup.get(setup_name)
+            boosts = _defensive_setup_boosts(setup_move, member)
+            if boosts is None:
                 continue
-            # Favor Iron Defense when it mitigates actual physical pressure or
-            # produces a worthwhile Body Press damage payoff.
-            new_member = dict(member)
-            if defense_stages:
-                new_member["DEF"] = original_def * (2 + defense_stages) / 2
+            defense_stages, special_stages = boosts
+            new_member = _apply_defensive_setup(member, defense_stages, special_stages)
             post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
             post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
             original_worst = float(row.get("Incoming Worst Score") or 0)
             mitigation = max(0, original_worst - post_iws)
-            if setup_name == "Amnesia":
-                # Calculate the SpD gain, not just Defense.
-                new_member["SPD"] = float(get_stat(member, "SPD")) * 2
-                post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
-                post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
-                mitigation = max(0, original_worst - post_iws)
-            if setup_name in {"Cosmic Power", "Stockpile"}:
-                new_member["SPD"] = float(get_stat(member, "SPD")) * 1.5
-                post_scores = [(str(move.get("Move") or ""), float(calculate_move_score(opponent, new_member, move, items, ability_rules))) for move in incoming_moves]
-                post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
-                mitigation = max(0, original_worst - post_iws)
             boosted_bp = float(calculate_move_score(new_member, opponent, body_press, items, ability_rules)) if body_press else 0
             bp_gain = max(0, boosted_bp - base_bp)
             if mitigation < original_worst * 0.08 and bp_gain < max(20, base_bp * 0.35):
@@ -1902,33 +1927,52 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
                      + max(0, attack_score - direct_score) / max(direct_score, 1) * 1.3
                      + min(float(row.get("Ratio") or 0), 4) * 0.30
                      - worst_max / hp)
-            candidates.append((score, member, row, setup_name, attack_name, attack_score, post_worst_move, post_iws, worst_max / hp, body_press, original_def))
+            candidates.append((score, member, row, setup_name, attack_name, attack_score, post_worst_move, post_iws, worst_max / hp, body_press, original_def, defense_stages, special_stages))
     if not candidates:
         return "No sufficiently safe, valuable defensive setup was modeled; use Strongest Matchup."
-    _, member, row, setup_name, attack_name, attack_score, post_move, post_iws, risk, body_press, original_def = max(candidates, key=lambda entry: entry[0])
+    _, member, row, setup_name, attack_name, attack_score, post_move, post_iws, risk, body_press, original_def, defense_stages, special_stages = max(candidates, key=lambda entry: entry[0])
     name = pokemon_display_name(member)
+    # Reuse the same follow-up fields rendered by Setup Offense.  The selected
+    # defensive line models ONE use of the setup move; further Body Press
+    # milestones in action_detail are informational rather than prescribed.
+    from engine.calculations import calculate_damage_range, OHKO_RECOMMENDATION_CONFIDENCE
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+    attack = move_lookup.get(attack_name)
+    if attack is None or attack.get("Category") not in {"Physical", "Special"}:
+        return "No valid damaging follow-up was modeled; use Strongest Matchup."
+    boosted_member = _apply_defensive_setup(member, defense_stages, special_stages)
+    followup_base = float(calculate_move_score(member, opponent, attack, items, ability_rules))
+    followup_score = float(calculate_move_score(boosted_member, opponent, attack, items, ability_rules))
+    followup_low, _ = calculate_damage_range(boosted_member, opponent, attack, items, ability_rules)
+    target_hp = float(get_stat(opponent, "HP") or 0)
+    followup_ohko = bool(
+        followup_low is not None and target_hp > 0
+        and float(followup_low) >= OHKO_RECOMMENDATION_CONFIDENCE * target_hp
+    )
+    followup_type = str(attack.get("Type") or "")
+    followup_effectiveness = float(get_type_multiplier(
+        followup_type, get_effective_pokemon_types(opponent)
+    ))
     detailed = ""
-    if setup_name == "Iron Defense" and body_press is not None:
+    if defense_stages and body_press is not None:
         base = float(calculate_move_score(member, opponent, body_press, items, ability_rules))
         milestones = []
         first_ko = None
         target_hp = float(get_stat(opponent, "HP"))
-        for uses in (1, 2, 3):
-            boosted = dict(member)
-            # +2/+4/+6 stages = 2x/3x/4x Defense respectively.
-            boosted["DEF"] = original_def * (1 + uses)
+        for uses in range(1, min(3, 6 // defense_stages) + 1):
+            boosted = _apply_defensive_setup(member, defense_stages * uses, special_stages * uses)
             value = float(calculate_move_score(boosted, opponent, body_press, items, ability_rules))
             minimum, maximum = calculate_damage_range(boosted, opponent, body_press, items, ability_rules)
             ko = bool(minimum is not None and target_hp > 0 and float(minimum) >= target_hp)
             if ko and first_ko is None:
                 first_ko = uses
             milestones.append(f"{uses}: {value:.2f}" + (" (Likely OHKO)" if ko else ""))
-        detailed = (f"Body Press Move Scores after Iron Defense(s) (unboosted {base:.2f}): "
+        detailed = (f"Body Press Move Scores after {setup_name} use(s) (unboosted {base:.2f}): "
                     + "; ".join(milestones) + ". ")
         if first_ko is not None:
-            detailed += f"The first projected Likely OHKO occurs after {first_ko} Iron Defense(s); additional boosts may be unnecessary. "
+            detailed += f"The first projected Likely OHKO occurs after {first_ko} use(s) of {setup_name}; additional boosts may be unnecessary. "
         else:
-            detailed += "No guaranteed-range OHKO is projected within three Iron Defenses. "
+            detailed += f"No guaranteed-range OHKO is projected within the shown {setup_name} boosts. "
         detailed += "Likely OHKO assumes Body Press can hit and the opponent does not interrupt setup; the damage range uses its modeled HP. "
     fit = "Strong" if risk < 0.40 and (attack_score >= float(row.get("Best MoveScore") or 0) * 1.5 or post_iws < float(row.get("Incoming Worst Score") or 0) * 0.7) else "Viable"
     return dict(
@@ -1943,6 +1987,12 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
                        f"is {post_move} (IWS {post_iws:.2f}). " + detailed
                        + "Boosts are lost when switching."),
         plan_kind="defensive_setup", can_override_direct=True,
+        setup_followup_move=attack_name,
+        setup_followup_type=followup_type,
+        setup_followup_score=followup_score,
+        setup_followup_base_score=followup_base,
+        setup_followup_effectiveness=followup_effectiveness,
+        setup_followup_likely_ohko=followup_ohko,
         opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
         opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
         opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
@@ -1956,6 +2006,194 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         fallback_if_assumption_fails="If setup is unsafe or interrupted, use the named direct fallback.",
         condition_detail=f"Assumes {setup_name} succeeded and {name} remains on the field.",
     )
+
+def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Evaluate productive, inherently safe direct attacks with the battle damage engine.
+
+    This is not an immunity shortcut: each attacker must have a damaging move,
+    survive the opponent's known damaging moves, and make meaningful progress.
+    """
+    from math import ceil
+    from engine.calculations import calculate_damage_range
+
+    index = _matchup_index(matchups)
+    target_hp = float(get_stat(opponent, "HP") or 0)
+    if target_hp <= 0:
+        return None
+    incoming = [move for move in get_moves(opponent, moves_data)
+                if move.get("Category") in {"Physical", "Special"}]
+    if not incoming:
+        return None
+    candidates = []
+    for member in team_data:
+        row = index.get(member.get("MemberID")) or index.get(member.get("Pokemon"))
+        if not row:
+            continue
+        hp = float(get_stat(member, "HP") or 0)
+        if hp <= 0:
+            continue
+        ranges = [calculate_damage_range(opponent, member, move, items, ability_rules)
+                  for move in incoming]
+        if any(high is None for _, high in ranges):
+            continue
+        worst = max(float(high) for _, high in ranges)
+        risk = worst / hp
+        # A favorable direct matchup isn't automatically Defensive Attrition.
+        # Enter this pathway only for complete direct-damage immunity, or for
+        # exceptional bulk (at most 10% maximum HP per modeled hit) paired
+        # with an actual sustain / attrition mechanism. Plain resistances and
+        # a fast KO belong to Strongest Matchup instead.
+        fully_immune = worst == 0
+        equipped = {str(member.get(f"Move{i}") or "") for i in range(1, 5)}
+        recovery_moves = {
+            "Recover", "Roost", "Slack Off", "Soft-Boiled", "Rest",
+            "Synthesis", "Moonlight", "Morning Sun", "Shore Up", "Milk Drink",
+            "Strength Sap", "Heal Order", "Wish",
+        }
+        # Contact-punishing Abilities/items count only if a known incoming
+        # damaging move actually makes contact. No probabilistic activation
+        # (e.g. Static) is assumed as dependable attrition.
+        has_contact_threat = any(move.get("MakesContact") is True for move in incoming)
+        contact_chip = has_contact_threat and (
+            str(member.get("Ability") or "") in {"Iron Barbs", "Rough Skin"}
+            or str(member.get("Item") or member.get("HeldItem") or "") == "Rocky Helmet"
+        )
+        can_seed = "Leech Seed" in equipped and "Grass" not in {
+            str(opponent.get("Type1") or ""), str(opponent.get("Type2") or "")
+        }
+        # The contact-protection route remains evaluated separately; don't
+        # count plain Protect/Detect as a persistent attrition mechanism here.
+        has_sustain_or_chip = bool(equipped & recovery_moves) or can_seed or contact_chip
+        if not fully_immune and (risk > 0.10 or not has_sustain_or_chip):
+            continue
+        # Wonder Guard only blocks direct hits. An opponent that can place a
+        # damaging status, entry hazard, or weather chip makes a 1-HP immune
+        # attacker too precarious to promote as an unconditional safe plan.
+        if worst == 0 and hp <= 1 and any(
+            str(move.get("Move") or "") in {
+                "Will-O-Wisp", "Toxic", "Poison Gas", "Leech Seed",
+                "Sandstorm", "Hail", "Stealth Rock", "Spikes", "Toxic Spikes",
+            }
+            for move in get_moves(opponent, moves_data)
+        ):
+            continue
+        attacks = []
+        for move in get_moves(member, moves_data):
+            if move.get("Category") not in {"Physical", "Special"}:
+                continue
+            low, high = calculate_damage_range(member, opponent, move, items, ability_rules)
+            if high is None or high <= 0:
+                continue
+            # Use conservative minimum-range damage; a 0 low can't be reliable.
+            minimum = float(low or 0)
+            if minimum <= 0:
+                continue
+            turns = ceil(target_hp / minimum)
+            # Avoid calling negligible, indefinitely slow chip an efficient plan.
+            if turns > 8:
+                continue
+            accuracy = float(move.get("Accuracy") or 100)
+            hit_chance = min(1.0, max(0.01, accuracy / 100.0))
+            expected_turns = turns / hit_chance
+            attacks.append((expected_turns, turns, -minimum, move))
+        if not attacks:
+            continue
+        expected_turns, turns, neg_minimum, move = min(attacks, key=lambda a: (a[0], a[2]))
+        # The candidate cannot be assumed to survive multiple hits simply
+        # because each individual hit is nonlethal. One turn of attack is
+        # possible; repeated attacks require modeled survival throughout.
+        if worst > 0 and expected_turns * worst >= hp:
+            continue
+        score = expected_turns + risk * 1.5 - (0.2 if worst == 0 else 0)
+        candidates.append((score, turns, risk, worst, member, row, move))
+    if not candidates:
+        return None
+    score, turns, risk, worst, member, row, move = min(candidates, key=lambda x:x[0])
+    name = pokemon_display_name(member)
+    attack = str(move.get("Move") or "")
+    fully_immune = worst == 0
+    advantage = ("takes no modeled direct damage from this opponent's damaging moves"
+                 if fully_immune else
+                 f"faces at most {risk:.0%} of its maximum HP per modeled hit and has "
+                 "a recovery or attrition mechanism to exploit that durability")
+    detail = (f"{name} {advantage}. {attack} can defeat the opponent in approximately "
+              f"{turns} hit(s) using the modeled minimum damage range; no defensive setup turn is needed. "
+              "This projection assumes full HP and does not model entry hazards, weather damage, "
+              "ongoing status, or an opponent's future move choices.")
+    immune_alternatives = [c for c in candidates if c[3] == 0 and c[4] is not member]
+    if immune_alternatives:
+        alternative = min(immune_alternatives, key=lambda entry: entry[0])
+        alternative_name = pokemon_display_name(alternative[4])
+        if turns < alternative[1]:
+            detail += (f" {alternative_name} is immune to this opponent's modeled direct attacks, "
+                       f"but {name}'s {attack} wins in fewer projected hits while remaining safe.")
+    return score, dict(
+        member_id=member.get("MemberID"),
+        pokemon_name=name, recommended_pokemon_name=name, lead_pokemon_name=name,
+        lead_move=attack, fit="Strong" if fully_immune or risk <= 0.25 else "Viable",
+        fit_rank=3 if fully_immune or risk <= 0.25 else 2,
+        summary=f"{name} → {attack}", reason=detail,
+        action=f"Counterattack safely with {name}", action_detail=detail,
+        plan_kind="defensive_counterattack", can_override_direct=True,
+        opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
+        opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
+        opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(row.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
+        strategy_branch="defensive_attrition", action_type="Defensive Counterattack",
+        plan_role="Immune Counterattacker" if fully_immune else "Defensive Counterattacker",
+        fit_explanation=(f"{name}'s direct defensive advantage supports {attack} without setup."),
+        sequence_heading=f"{name} → {attack}",
+        state_assumption="Uses the opponent's known damaging moves against an unboosted, full-HP teammate.",
+        fallback_if_assumption_fails="If hazards, residual damage, or unexpected attacks compromise safety, reassess the direct matchup.",
+        condition_detail="Projected hit count uses minimum modeled damage, not Move Score.",
+    ), turns, worst, name, attack
+
+
+def _defensive_attrition_setup_cost(plan, team_data, opponent, moves_data, items, ability_rules):
+    """Estimate setup + attack turns with the same conservative damage model."""
+    from math import ceil
+    from engine.calculations import calculate_damage_range
+
+    member = next((m for m in team_data if
+                   m.get("MemberID") == plan.get("member_id") and m.get("MemberID")), None)
+    if member is None:
+        member = next((m for m in team_data if
+                       pokemon_display_name(m) == plan.get("pokemon_name")), None)
+    if member is None:
+        return float("inf")
+    target = float(get_stat(opponent, "HP") or 0)
+    hp = float(get_stat(member, "HP") or 0)
+    if target <= 0 or hp <= 0:
+        return float("inf")
+    follow_name = str(plan.get("summary") or "").split("→")[-1].strip()
+    attacks = {str(m.get("Move")): m for m in get_moves(member, moves_data)}
+    attack = attacks.get(follow_name)
+    if not attack or attack.get("Category") not in {"Physical", "Special"}:
+        return float("inf")
+    boosted = dict(member)
+    setup = str(plan.get("lead_move") or "")
+    # get_moves() omits stat-stage metadata. Read the complete move record
+    # rather than the equipped-move projection for this calculation.
+    setup_move = _build_move_lookup(moves_data).get(setup)
+    boosts = _defensive_setup_boosts(setup_move, member)
+    if boosts is None:
+        return float("inf")
+    boosted = _apply_defensive_setup(member, *boosts)
+    low, high = calculate_damage_range(boosted, opponent, attack, items, ability_rules)
+    if low is None or low <= 0:
+        return float("inf")
+    attacks_needed = ceil(target / float(low))
+    incoming = [m for m in get_moves(opponent, moves_data)
+                if m.get("Category") in {"Physical", "Special"}]
+    incoming_ranges = [calculate_damage_range(opponent, boosted, m, items, ability_rules) for m in incoming]
+    if not incoming_ranges or any(upper is None for _, upper in incoming_ranges):
+        return float("inf")
+    worst = max(float(high) for _, high in incoming_ranges)
+    if worst > 0 and (attacks_needed + 1) * worst >= hp:
+        return float("inf")
+    return 1 + attacks_needed + 1.5 * worst / hp
+
 
 def _anti_setup_interception(team_data, opponent, matchups, moves_data, items, ability_rules):
     """Find a credible immediate KO before a dangerous opposing offensive boost.
@@ -3343,6 +3581,33 @@ def build_battle_compass_view_model(
             if contact_candidate is not None and (isinstance(defensive_result, str) or
                     contact_candidate[0] >= 3.0):
                 defensive_result = contact_candidate[1]
+            counter = _defensive_attrition_counterattack(
+                team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            if counter is not None:
+                counter_cost, counter_plan, counter_turns, counter_worst, counter_name, counter_attack = counter
+                if isinstance(defensive_result, str):
+                    defensive_result = counter_plan
+                else:
+                    setup_cost = _defensive_attrition_setup_cost(
+                        defensive_result, team_data, opponent, moves_data, items, ability_rules)
+                    if (counter_cost < setup_cost):
+                        prior_name = defensive_result.get("pokemon_name")
+                        prior_attack = str(defensive_result.get("summary") or "").split("→")[-1].strip()
+                        if prior_name != counter_name:
+                            counter_plan["reason"] += (
+                                f" {prior_name}'s {prior_attack} is another defensive option, "
+                                "but the direct counterattack offers a safer or faster projected route.")
+                            counter_plan["action_detail"] = counter_plan["reason"]
+                        defensive_result = counter_plan
+                    elif counter_name != defensive_result.get("pokemon_name"):
+                        # Make the meaningful immunity-versus-damage comparison
+                        # explicit rather than silently disregarding the immune user.
+                        if counter_worst == 0:
+                            addendum = (f" {counter_name} is immune to the opponent's modeled damaging moves, "
+                                        f"but {defensive_result.get('pokemon_name')}'s projected "
+                                        "counterattack is more efficient while remaining safe.")
+                            defensive_result["reason"] += addendum
+                            defensive_result["action_detail"] += addendum
             if isinstance(defensive_result, str):
                 fallback_reason = defensive_result
                 # Why? is composed once by the shared explanation builder.
@@ -3806,10 +4071,12 @@ def build_battle_compass_view_model(
 
 
 def load_reference_data(game: str | None = None) -> ReferenceData:
-    """Load references for the selected game; Sword and Shield share Gen VIII mechanics."""
+    """Load Gen VIII references, filtering opponents for the selected Sword/Shield game."""
     from engine.game_support import matches_game, mechanics_for
+
     if game is not None and mechanics_for(game) != "swsh":
         raise NotImplementedError("Gen IX reference data and mechanics are not yet available")
+
     opponents = load_json("opponents")
     if game is not None:
         opponents = [row for row in opponents if matches_game(row, game)]

@@ -178,15 +178,24 @@ def build_recommendation_why(
         return opening
 
     if strategy == "defensive_attrition":
+        comparison = str(_field(plan, "reason") or "")
+        # The planner provides a grounded comparison only when an inherently
+        # immune option loses to a faster, sufficiently safe counterattack.
+        comparison_note = ""
+        if " is immune to the opponent's modeled damaging moves, but " in comparison:
+            comparison_note = " " + comparison.rsplit(". ", 1)[-1]
+        if kind == "defensive_counterattack":
+            return str(_field(plan, "reason") or
+                       f"{name} can safely counterattack with {lead} without defensive setup.")
         if kind == "contact_punishment":
             if lead == "Obstruct":
-                return f"{name} can use Obstruct to punish contact by lowering {opponent_name}'s Defense, strengthening subsequent physical attacks."
+                return f"{name} can use Obstruct to punish contact by lowering {opponent_name}'s Defense, strengthening subsequent physical attacks." + comparison_note
             if lead == "Baneful Bunker":
-                return f"{name} can block a contact attack with Baneful Bunker and poison {opponent_name}, creating steady attrition pressure."
-            return f"{name} can use {lead} to punish {opponent_name}'s contact attacks and gain an attrition advantage."
+                return f"{name} can block a contact attack with Baneful Bunker and poison {opponent_name}, creating steady attrition pressure." + comparison_note
+            return f"{name} can use {lead} to punish {opponent_name}'s contact attacks and gain an attrition advantage." + comparison_note
         if setup == "Iron Defense" and attack == "Body Press":
-            return f"{name} can use Iron Defense to improve both its durability and Body Press damage against {opponent_name}."
-        return f"{name} can use {lead} defensively while increasing pressure on {opponent_name}."
+            return f"{name} can use Iron Defense to improve both its durability and Body Press damage against {opponent_name}." + comparison_note
+        return f"{name} can use {lead} defensively while increasing pressure on {opponent_name}." + comparison_note
 
     if strategy == "weather_control":
         # Use the plan's actual evidence, not its Strategic Fit caption.
