@@ -529,6 +529,28 @@ class RecommendationCard(ft.Container):
                 effect_color, effect_background = "#FACC15", "#3B3017"
             else:
                 effect_color, effect_background = "#D1D5DB", "#303640"
+            contact_punishment = self.best_move in {"Obstruct", "Baneful Bunker"}
+            conditional_payoff = (
+                contact_punishment
+                and self.setup_followup_base_score is not None
+                and self.setup_followup_score > self.setup_followup_base_score + 0.01
+            )
+            followup_score_label = (
+                "Conditional Move Score" if conditional_payoff else
+                "Move Score" if contact_punishment else
+                "Boosted Move Score"
+            )
+            followup_note = (
+                "Conditional on blocking a contact move and lowering the opponent's Defense."
+                if self.best_move == "Obstruct" else
+                "Conditional on blocking a contact move and poisoning the opponent."
+                if self.best_move == "Baneful Bunker" and conditional_payoff else
+                "The attack score does not assume that contact or poison occurs."
+                if self.best_move == "Baneful Bunker" else
+                "Conditional on the boost remaining active."
+                if established_sweeper else
+                "Conditional on successfully establishing the boost."
+            )
             controls.extend([
                 *([] if established_sweeper else [ft.Divider(color=BORDER_DEFAULT, height=1)]),
                 ft.Text("Recommended Attack" if established_sweeper
@@ -541,7 +563,7 @@ class RecommendationCard(ft.Container):
                                 fit=ft.BoxFit.CONTAIN)]
                       if self.setup_followup_type_badge_src else []),
                 ], spacing=9, wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                ft.Text(f"Boosted Move Score: {self.setup_followup_score:.2f}",
+                ft.Text(f"{followup_score_label}: {self.setup_followup_score:.2f}",
                         size=TEXT_SIZE_BODY_LARGE, weight=ft.FontWeight.BOLD,
                         color=TEXT_PRIMARY),
                 *([ft.Container(
@@ -553,9 +575,7 @@ class RecommendationCard(ft.Container):
                 *([ft.Text("Projected reliable OHKO", size=TEXT_SIZE_BODY,
                            weight=ft.FontWeight.BOLD, color=SUCCESS)]
                   if self.setup_followup_likely_ohko else []),
-                ft.Text("Conditional on the boost remaining active." if established_sweeper
-                        else "Conditional on successfully establishing the boost.",
-                        size=TEXT_SIZE_DETAIL, color=TEXT_MUTED),
+                ft.Text(followup_note, size=TEXT_SIZE_DETAIL, color=TEXT_MUTED),
             ])
         return ft.Column(controls=controls, spacing=9)
 

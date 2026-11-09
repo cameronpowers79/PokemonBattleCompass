@@ -128,6 +128,7 @@ class StrategyPlanViewModel:
     setup_followup_base_score: float | None = None
     setup_followup_effectiveness: float | None = None
     setup_followup_likely_ohko: bool = False
+    projected_plan_cost: float | None = None
     # Explanation evidence only; never changes strategy selection.
     continuation_same_direct: bool = False
     continuation_below_threshold: bool = False
@@ -1696,7 +1697,8 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
     Opponent move choice and prior Protect uses are unknown. A contact-heavy
     attacking moveset is evidence of value, not a guarantee that contact occurs.
     """
-    from engine.calculations import calculate_damage_range
+    from engine.calculations import calculate_damage_range, OHKO_RECOMMENDATION_CONFIDENCE
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
 
     lookup = _build_move_lookup(moves_data)
     by_name = _matchup_index(matchups)
@@ -1801,6 +1803,38 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
                 role, action = "Attrition Anchor", "Attrition"
                 note = "Contact-only damaging moves make Obstruct's Defense reduction a credible payoff."
                 quality = 2 if projected >= normal * 1.4 else 1
+            # Share the same offensive follow-up display as defensive setup.
+            # Obstruct's Defense drop and Baneful Bunker's poisoning are
+            # conditional on an opponent making contact; never show their
+            # projected payoff as an unconditional damage result.
+            follow_record = lookup.get(follow)
+            if follow_record is None or follow_record.get("Category") not in {"Physical", "Special"}:
+                continue
+            follow_type = str(follow_record.get("Type") or "")
+            follow_effectiveness = float(get_type_multiplier(
+                follow_type, get_effective_pokemon_types(opponent)))
+            if guard == "Obstruct":
+                follow_base_score = normal
+                follow_score = projected
+                follow_target = dropped
+                follow_attack = follow_record
+            elif payoff is not None:
+                follow_base_score = payoff[1]
+                follow_score = payoff[2]
+                follow_target = opponent
+                follow_attack = dict(follow_record, Power=float(follow_record.get("Power") or 0) * 2)
+            else:
+                follow_base_score = float(calculate_move_score(
+                    member, opponent, follow_record, items, ability_rules))
+                follow_score = follow_base_score
+                follow_target = opponent
+                follow_attack = follow_record
+            follow_low, _ = calculate_damage_range(
+                member, follow_target, follow_attack, items, ability_rules)
+            opponent_hp = float(get_stat(opponent, "HP") or 0)
+            follow_likely_ohko = bool(
+                follow_low is not None and opponent_hp > 0
+                and float(follow_low) >= OHKO_RECOMMENDATION_CONFIDENCE * opponent_hp)
             fit = "Strong" if quality >= 2 and risk < 0.5 else "Viable"
             # Give contact punishment a role, but preserve much stronger
             # Iron Defense/Body Press plans via a later comparison.
@@ -1819,6 +1853,14 @@ def _contact_punishment_plan(team_data, opponent, matchups, moves_data, items, a
                 opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
                 strategy_branch="defensive_attrition", action_type=action, plan_role=role,
                 fit_explanation=note,
+                setup_followup_move=follow,
+                setup_followup_type=follow_type,
+                setup_followup_score=follow_score,
+                setup_followup_base_score=follow_base_score,
+                setup_followup_effectiveness=follow_effectiveness,
+                setup_followup_likely_ohko=follow_likely_ohko,
+                attack_move_score=follow_score,
+                attack_score_conditional=True,
                 sequence_heading=f"{display_name} → {guard} → {follow}",
                 state_assumption="No contact or status is assumed active at entry.",
                 fallback_if_assumption_fails="If the opponent uses a noncontact or status move, reassess and use the direct fallback.",
@@ -1936,6 +1978,19 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
             chosen_bp_gain = bp_gain if attack_name == "Body Press" else 0.0
             if not meaningful_move_mitigation and chosen_bp_gain < max(20, base_bp * 0.35):
                 continue
+            # Critical hits bypass positive Defense/SpD stages. A high-crit
+            # threat that can KO on a critical hit makes boosting unsafe,
+            # even when its ordinary post-setup damage looks manageable.
+            from engine.defensive_risk import has_critical_threat
+            detailed_incoming = [(dict(move, EffectDescription=move_lookup.get(str(move.get("Move") or ""), {}).get("EffectDescription", "")), damage)
+                                 for move, damage in incoming_ranges]
+            critical_threats = [
+                move for move, (_, high) in detailed_incoming
+                if has_critical_threat(move, opponent) and high is not None
+                and float(high) * 1.5 >= hp
+            ]
+            if critical_threats:
+                continue
             # Compare the *defensive lines*, not the percentage of improvement
             # from the boost. A fragile Pokemon can see a large relative gain
             # while still taking far more damage than a naturally bulky ally.
@@ -1961,11 +2016,17 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
             # miss, choose status, or be KO'd before a final response.
             # Favor absolute safety first, then the ability to finish promptly.
             # Retain a small reward for a substantial Body Press payoff.
+            from engine.defensive_risk import critical_hit_probability
+            crit_risk = max(critical_hit_probability(m, opponent) for m, _ in detailed_incoming)
+            # Modest penalty for high-critical moves; normal baseline crits
+            # shouldn't disqualify a worthwhile defensive strategy.
+            crit_penalty = 0.4 if crit_risk >= 0.125 else 0.0
             score = (-3.0 * setup_exposure
                      -3.0 * boosted_exposure
                      -0.45 * min(total_exposure, 5.0)
                      -0.12 * min(attack_turns, 12)
-                     +0.15 * min(max(attack_score / max(direct_score, 1) - 1, 0), 3))
+                     +0.15 * min(max(attack_score / max(direct_score, 1) - 1, 0), 3)
+                     - crit_penalty)
             candidates.append((score, member, row, setup_name, attack_name, attack_score,
                                post_worst_move, post_iws, worst_max / hp, body_press,
                                original_def, defense_stages, special_stages))
@@ -2015,6 +2076,12 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         else:
             detailed += f"No guaranteed-range OHKO is projected within the shown {setup_name} boosts. "
         detailed += "Likely OHKO assumes Body Press can hit and the opponent does not interrupt setup; the damage range uses its modeled HP. "
+    from engine.defensive_risk import has_critical_threat
+    crit_names = [str(m.get("Move") or "") for m in get_moves(opponent, moves_data)
+                  if has_critical_threat(dict(m, EffectDescription=move_lookup.get(str(m.get("Move") or ""), {}).get("EffectDescription", "")), opponent)]
+    crit_caution = (" Critical-hit caution: " + ", ".join(crit_names)
+                    + " can bypass Defense/Sp. Defense stage boosts on a critical hit."
+                    if crit_names else "")
     fit = "Strong" if risk < 0.40 and (attack_score >= float(row.get("Best MoveScore") or 0) * 1.5 or post_iws < float(row.get("Incoming Worst Score") or 0) * 0.7) else "Viable"
     return dict(
         member_id=member.get("MemberID"),
@@ -2026,7 +2093,7 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         action_detail=(f"Step 1: {name} uses {setup_name} when sufficiently healthy. "
                        f"Step 2: use {attack_name}. With one setup, the modeled Incoming Worst Move "
                        f"is {post_move} (IWS {post_iws:.2f}). " + detailed
-                       + "Boosts are lost when switching."),
+                       + "Boosts are lost when switching." + crit_caution),
         plan_kind="defensive_setup", can_override_direct=True,
         setup_followup_move=attack_name,
         setup_followup_type=followup_type,
@@ -2047,6 +2114,172 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         fallback_if_assumption_fails="If setup is unsafe or interrupted, use the named direct fallback.",
         condition_detail=f"Assumes {setup_name} succeeded and {name} remains on the field.",
     )
+
+def _defensive_attrition_avoidance_plan(team_data, opponent, matchups, moves_data, items, ability_rules):
+    """Consider one-turn evasion/accuracy setup with conservative survival checks.
+
+    Hit probabilities are projected, not certainty. Direct incoming damage
+    remains unchanged; the risk adjustment is local to Defensive Attrition.
+    """
+    from math import ceil
+    from engine.calculations import calculate_damage_range
+    from engine.defensive_risk import (
+        avoidance_setup, accuracy_after_setup, critical_hit_probability,
+        has_critical_threat, minimize_damage_multiplier,
+    )
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+
+    by_name = _matchup_index(matchups)
+    lookup = _build_move_lookup(moves_data)
+    full_lookup = _build_move_lookup(moves_data)
+    incoming = [dict(m, EffectDescription=full_lookup.get(str(m.get("Move") or ""), {}).get("EffectDescription", ""))
+                for m in get_moves(opponent, moves_data)
+                if m.get("Category") in {"Physical", "Special"}]
+    target_hp = float(get_stat(opponent, "HP") or 0)
+    if not incoming or target_hp <= 0:
+        return None
+    candidates = []
+    for member in team_data:
+        row = by_name.get(member.get("MemberID")) or by_name.get(member.get("Pokemon"))
+        if not row:
+            continue
+        hp = float(get_stat(member, "HP") or 0)
+        if hp <= 0:
+            continue
+        equipped = [str(member.get(f"Move{i}") or "") for i in range(1, 5)]
+        damaging = [m for m in get_moves(member, moves_data)
+                    if m.get("Category") in {"Physical", "Special"}]
+        if not damaging:
+            continue
+        baseline = [(m, calculate_damage_range(opponent, member, m, items, ability_rules))
+                    for m in incoming]
+        if any(high is None for _, (_, high) in baseline):
+            continue
+        worst = max(float(high) for _, (_, high) in baseline if high is not None)
+        # Even a faster setup must withstand one successful retaliation.
+        if worst >= hp or worst / hp > 0.65:
+            continue
+        attacks = []
+        for m in damaging:
+            low, high = calculate_damage_range(member, opponent, m, items, ability_rules)
+            if low is None or high is None or float(low) <= 0:
+                continue
+            turns = ceil(target_hp / float(low))
+            if turns < 2 or turns > 5:
+                continue  # Never spend setup on a reliable immediate KO.
+            attacks.append((turns, -float(low), m))
+        if not attacks:
+            continue
+        turns, _, attack = min(attacks, key=lambda x: (x[0], x[1]))
+        for name in equipped:
+            move = lookup.get(name)
+            setup = avoidance_setup(move)
+            if setup is None:
+                continue
+            kind, stages = setup
+            setup_accuracy = float(move.get("Accuracy") or 100) / 100.0
+            if kind == "accuracy" and str(opponent.get("Ability") or "") in {
+                "Keen Eye", "Clear Body", "White Smoke", "Full Metal Body"
+            }:
+                continue
+            if kind == "accuracy" and setup_accuracy < 0.80:
+                continue  # Unreliable debuffs can't underpin a safe plan.
+            minimize = name == "Minimize"
+            weighted = []
+            maximum_crit = 0.0
+            high_crit_moves = []
+            for enemy_move, (_, upper) in baseline:
+                normal_high = float(upper)
+                multiplied = normal_high * minimize_damage_multiplier(enemy_move, minimize=minimize)
+                probability = accuracy_after_setup(enemy_move, stages, minimize=minimize, opponent=opponent)
+                # Accuracy reduction can fail. Penalize that possibility.
+                if kind == "accuracy":
+                    probability = setup_accuracy * probability + (1.0 - setup_accuracy) * accuracy_after_setup(enemy_move, 0, opponent=opponent)
+                crit_probability = critical_hit_probability(enemy_move, opponent)
+                expected = multiplied * probability * (1.0 + 0.5 * crit_probability)
+                weighted.append((expected, probability, multiplied, enemy_move))
+                maximum_crit = max(maximum_crit, multiplied * 1.5)
+                if has_critical_threat(enemy_move, opponent):
+                    high_crit_moves.append(str(enemy_move.get("Move") or ""))
+            if not weighted:
+                continue
+            post_expected, post_chance, post_successful, worst_move = max(weighted, key=lambda v: v[0])
+            # The setup must meaningfully improve expected incoming exposure;
+            # 1-HP immunities and never-miss attacks won't manufacture evasion.
+            base_expected = max(float(high) * accuracy_after_setup(m, 0, opponent=opponent)
+                                for m, (_, high) in baseline if high is not None)
+            if base_expected <= 0 or post_expected >= base_expected * 0.82:
+                continue
+            # The reduced chance must matter across the proposed attack line;
+            # don't prescribe evasion against negligible incoming pressure.
+            expected_hp_saved = turns * max(0.0, base_expected - post_expected) / hp
+            if expected_hp_saved < 0.08:
+                continue
+            # A potential critical strike remains damaging even after evasion.
+            # Don't rely on setup when a heightened critical threat can OHKO.
+            if high_crit_moves and maximum_crit >= hp:
+                continue
+            # Model one setup action plus an attack sequence. Evasion is not
+            # guaranteed, so retain extra buffer against hit variance.
+            setup_exposure = worst / hp
+            expected_exposure = (worst + turns * post_expected) / hp
+            if expected_exposure > 0.85:
+                continue
+            # Strongly prefer reliable mitigation when another defensive plan
+            # offers comparable safety; avoidance has a variance penalty.
+            risk_penalty = 0.45 + (0.25 if high_crit_moves else 0.0)
+            cost = 1 + turns + risk_penalty + 1.5 * expected_exposure
+            candidates.append((cost, member, row, name, attack, turns,
+                               stages, kind, post_chance, worst, post_expected,
+                               sorted(set(high_crit_moves))))
+    if not candidates:
+        return None
+    (cost, member, row, name, attack, turns, stages, kind, post_chance,
+     worst, post_expected, crit_moves) = min(candidates, key=lambda c: c[0])
+    pokemon_name = pokemon_display_name(member)
+    attack_name = str(attack.get("Move") or "")
+    score = float(calculate_move_score(member, opponent, attack, items, ability_rules))
+    attack_low, _ = calculate_damage_range(member, opponent, attack, items, ability_rules)
+    efficacy = float(get_type_multiplier(str(attack.get("Type") or ""),
+                                          get_effective_pokemon_types(opponent)))
+    detail = (
+        f"{pokemon_name} can survive a modeled hit while using {name}, then "
+        f"follow with {attack_name} (approximately {turns} hit(s)). "
+        f"{name} changes the opponent's estimated hit chance on its most "
+        f"dangerous projected attack to about {post_chance:.0%}; an attack "
+        "that connects still deals its normal damage. "
+    )
+    if crit_moves:
+        detail += ("Critical-hit caution: " + ", ".join(crit_moves)
+                   + " can threaten this plan; evasion does not prevent critical damage on a hit. ")
+    detail += "This assumes one successful setup, full HP, and no untracked hazards or live stat stages."
+    return cost, dict(
+        projected_plan_cost=cost,
+        member_id=member.get("MemberID"),
+        pokemon_name=pokemon_name, recommended_pokemon_name=pokemon_name,
+        lead_pokemon_name=pokemon_name, lead_move=name,
+        fit="Viable", fit_rank=2, summary=f"{name} → {attack_name}",
+        reason=detail, action=f"Reduce incoming hit chance with {pokemon_name}",
+        action_detail=detail, plan_kind="defensive_avoidance", can_override_direct=True,
+        setup_followup_move=attack_name,
+        setup_followup_type=str(attack.get("Type") or ""),
+        setup_followup_score=score, setup_followup_base_score=score,
+        setup_followup_effectiveness=efficacy,
+        setup_followup_likely_ohko=bool(attack_low is not None and float(attack_low) >= target_hp),
+        opener_threat_move=str(row.get("Worst Incoming Move") or "") or None,
+        opener_threat_category=str(row.get("Worst Incoming Move Category") or "") or None,
+        opener_threat_type=str(row.get("Worst Incoming Move Type") or "") or None,
+        opener_threat_score=float(row.get("Incoming Worst Score") or 0),
+        opener_threat_multiplier=float(row.get("Incoming Multiplier") or 1),
+        strategy_branch="defensive_attrition", action_type="Avoidance Setup",
+        plan_role="Defensive Anchor",
+        fit_explanation=(f"{name} reduces expected hit probability, then {attack_name} provides the counterattack."),
+        sequence_heading=f"{pokemon_name} → {name} → {attack_name}",
+        state_assumption="One avoidance setup turn is projected; no live boosts are assumed.",
+        fallback_if_assumption_fails="If setup is unsafe or the opponent bypasses accuracy checks, prefer a reliable defensive plan.",
+        condition_detail="Evasion reduces expected hit chance, not the damage of a hit that connects.",
+    )
+
 
 def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data, items, ability_rules, *, compare_safe_resistance=False):
     """Evaluate productive, inherently safe direct attacks with the battle damage engine.
@@ -2249,6 +2482,8 @@ def _defensive_attrition_setup_cost(plan, team_data, opponent, moves_data, items
         return float("inf")
     boosted = dict(member)
     setup = str(plan.get("lead_move") or "")
+    if plan.get("plan_kind") == "defensive_avoidance":
+        return float(plan.get("projected_plan_cost") or float("inf"))
     # get_moves() omits stat-stage metadata. Read the complete move record
     # rather than the equipped-move projection for this calculation.
     setup_move = _build_move_lookup(moves_data).get(setup)
@@ -3653,6 +3888,17 @@ def build_battle_compass_view_model(
         else:
             contact_candidate = _contact_punishment_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
             defensive_result = _defensive_attrition_battle_plan(team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            avoidance = _defensive_attrition_avoidance_plan(
+                team_data, opponent, matchup_results, moves_data, items, ability_rules)
+            # Compare avoidance to established defensive setup with an explicit
+            # variance penalty already included in the avoidance cost.
+            if avoidance is not None:
+                avoidance_cost, avoidance_plan = avoidance
+                if isinstance(defensive_result, str) or (
+                    avoidance_cost + 0.35 < _defensive_attrition_setup_cost(
+                        defensive_result, team_data, opponent, moves_data, items, ability_rules)
+                ):
+                    defensive_result = avoidance_plan
             # Prefer contact punishment when the opposing damaging moveset is
             # entirely contact-based; neither plan assumes a live battle state.
             if contact_candidate is not None and (isinstance(defensive_result, str) or
