@@ -1915,19 +1915,60 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
             post_worst_move, post_iws = max(post_scores, key=lambda entry: entry[1])
             original_worst = float(row.get("Incoming Worst Score") or 0)
             mitigation = max(0, original_worst - post_iws)
+            # The worst move can change after a boost. For example, Harden
+            # reduces Psyshock but not Psybeam; Psybeam may therefore remain
+            # the worst response. The boost still has a genuine effect against
+            # a credible attack and should remain eligible for comparison.
+            meaningful_move_mitigation = any(
+                (base := float(calculate_move_score(opponent, member, move, items, ability_rules)))
+                >= original_worst * 0.85
+                and base - float(calculate_move_score(opponent, new_member, move, items, ability_rules))
+                >= max(0.01, base * 0.08)
+                for move in incoming_moves
+            )
             boosted_bp = float(calculate_move_score(new_member, opponent, body_press, items, ability_rules)) if body_press else 0
             bp_gain = max(0, boosted_bp - base_bp)
-            if mitigation < original_worst * 0.08 and bp_gain < max(20, base_bp * 0.35):
-                continue
             attack_name = "Body Press" if boosted_bp > direct_score * 1.1 else direct_move
             attack_score = boosted_bp if attack_name == "Body Press" else direct_score
-            # A useful setup needs to compensate for a lost turn and yield either
-            # stronger offense or genuine mitigation of the opponent's attacks.
-            score = (mitigation / max(original_worst, 1) * 3
-                     + max(0, attack_score - direct_score) / max(direct_score, 1) * 1.3
-                     + min(float(row.get("Ratio") or 0), 4) * 0.30
-                     - worst_max / hp)
-            candidates.append((score, member, row, setup_name, attack_name, attack_score, post_worst_move, post_iws, worst_max / hp, body_press, original_def, defense_stages, special_stages))
+            # The setup must benefit the attack we ACTUALLY recommend or
+            # mitigate a meaningful opposing attack. A hypothetical Body Press
+            # improvement cannot qualify Iron Defense -> Throat Chop.
+            chosen_bp_gain = bp_gain if attack_name == "Body Press" else 0.0
+            if not meaningful_move_mitigation and chosen_bp_gain < max(20, base_bp * 0.35):
+                continue
+            # Compare the *defensive lines*, not the percentage of improvement
+            # from the boost. A fragile Pokemon can see a large relative gain
+            # while still taking far more damage than a naturally bulky ally.
+            # Use the same maximum-range damage model for the setup turn and
+            # all subsequent turns, and the minimum-range damage model for the
+            # offensive follow-up. Move Score is not HP damage.
+            attack_move = move_lookup.get(attack_name)
+            if not attack_move or attack_move.get("Category") not in {"Physical", "Special"}:
+                continue
+            low, _ = calculate_damage_range(new_member, opponent, attack_move, items, ability_rules)
+            opponent_hp = float(get_stat(opponent, "HP") or 0)
+            if low is None or float(low) <= 0 or opponent_hp <= 0:
+                continue
+            from math import ceil
+            attack_turns = ceil(opponent_hp / float(low))
+            # A setup turn is paid for at unboosted defenses; each attack
+            # turn thereafter faces the opponent's worst post-setup attack.
+            setup_exposure = worst_max / hp
+            boosted_exposure = max(0.0, post_iws) / hp
+            total_exposure = setup_exposure + attack_turns * boosted_exposure
+            # Survival is a major consideration, but projected accumulated
+            # exposure must not become a hard KO forecast: the opponent may
+            # miss, choose status, or be KO'd before a final response.
+            # Favor absolute safety first, then the ability to finish promptly.
+            # Retain a small reward for a substantial Body Press payoff.
+            score = (-3.0 * setup_exposure
+                     -3.0 * boosted_exposure
+                     -0.45 * min(total_exposure, 5.0)
+                     -0.12 * min(attack_turns, 12)
+                     +0.15 * min(max(attack_score / max(direct_score, 1) - 1, 0), 3))
+            candidates.append((score, member, row, setup_name, attack_name, attack_score,
+                               post_worst_move, post_iws, worst_max / hp, body_press,
+                               original_def, defense_stages, special_stages))
     if not candidates:
         return "No sufficiently safe, valuable defensive setup was modeled; use Strongest Matchup."
     _, member, row, setup_name, attack_name, attack_score, post_move, post_iws, risk, body_press, original_def, defense_stages, special_stages = max(candidates, key=lambda entry: entry[0])
@@ -2007,14 +2048,17 @@ def _defensive_attrition_battle_plan(team_data, opponent, matchups, moves_data, 
         condition_detail=f"Assumes {setup_name} succeeded and {name} remains on the field.",
     )
 
-def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data, items, ability_rules):
+def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data, items, ability_rules, *, compare_safe_resistance=False):
     """Evaluate productive, inherently safe direct attacks with the battle damage engine.
 
     This is not an immunity shortcut: each attacker must have a damaging move,
     survive the opponent's known damaging moves, and make meaningful progress.
+    Optional broader counterattacks are considered only against an already
+    qualified defensive plan, never to relabel an ordinary fallback.
     """
     from math import ceil
     from engine.calculations import calculate_damage_range
+    from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
 
     index = _matchup_index(matchups)
     target_hp = float(get_stat(opponent, "HP") or 0)
@@ -2034,9 +2078,10 @@ def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data
             continue
         ranges = [calculate_damage_range(opponent, member, move, items, ability_rules)
                   for move in incoming]
-        if any(high is None for _, high in ranges):
+        valid_highs = [float(high) for _, high in ranges if high is not None]
+        if len(valid_highs) != len(ranges):
             continue
-        worst = max(float(high) for _, high in ranges)
+        worst = max(valid_highs)
         risk = worst / hp
         # A favorable direct matchup isn't automatically Defensive Attrition.
         # Enter this pathway only for complete direct-damage immunity, or for
@@ -2064,7 +2109,36 @@ def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data
         # The contact-protection route remains evaluated separately; don't
         # count plain Protect/Detect as a persistent attrition mechanism here.
         has_sustain_or_chip = bool(equipped & recovery_moves) or can_seed or contact_chip
-        if not fully_immune and (risk > 0.10 or not has_sustain_or_chip):
+        # When an actual defensive plan already exists, compare it with a
+        # naturally resilient, decisive counterattack. This does NOT broaden
+        # the standalone counterattack route used after a strategy fallback.
+        # Requiring resistance to the worst modeled attack, low exposure and
+        # a short knockout path keeps ordinary good matchups out of this path.
+        resistant_counter = False
+        if compare_safe_resistance and not fully_immune and risk <= 0.25:
+            from engine.mechanics import get_type_multiplier, get_effective_pokemon_types
+            worst_move = max(incoming, key=lambda m: float(
+                calculate_damage_range(opponent, member, m, items, ability_rules)[1] or 0
+            ))
+            worst_type = str(worst_move.get("Type") or "")
+            member_types = get_effective_pokemon_types(member)
+            resistant_counter = bool(
+                worst_type and get_type_multiplier(worst_type, member_types) < 1
+            )
+        # A resilient recovery/attrition user may also qualify without a
+        # setup move when it truly resists the worst attack. Its conservative
+        # knockout projection is checked below. This is narrower than merely
+        # taking a favorable hit (e.g. Yamper against Corvisquire).
+        sustainable_resistance = bool(
+            not fully_immune and has_sustain_or_chip and risk <= 0.20
+            and any(
+                float(get_type_multiplier(str(move.get("Type") or ""),
+                    get_effective_pokemon_types(member))) < 1
+                for move in incoming
+                if calculate_damage_range(opponent, member, move, items, ability_rules)[1] == worst
+            )
+        )
+        if not fully_immune and not resistant_counter and not sustainable_resistance and (risk > 0.10 or not has_sustain_or_chip):
             continue
         # Wonder Guard only blocks direct hits. An opponent that can place a
         # damaging status, entry hazard, or weather chip makes a 1-HP immune
@@ -2099,6 +2173,8 @@ def _defensive_attrition_counterattack(team_data, opponent, matchups, moves_data
         if not attacks:
             continue
         expected_turns, turns, neg_minimum, move = min(attacks, key=lambda a: (a[0], a[2]))
+        if (resistant_counter or sustainable_resistance) and not fully_immune and turns > 2:
+            continue
         # The candidate cannot be assumed to survive multiple hits simply
         # because each individual hit is nonlethal. One turn of attack is
         # possible; repeated attacks require modeled survival throughout.
@@ -2187,9 +2263,10 @@ def _defensive_attrition_setup_cost(plan, team_data, opponent, moves_data, items
     incoming = [m for m in get_moves(opponent, moves_data)
                 if m.get("Category") in {"Physical", "Special"}]
     incoming_ranges = [calculate_damage_range(opponent, boosted, m, items, ability_rules) for m in incoming]
-    if not incoming_ranges or any(upper is None for _, upper in incoming_ranges):
+    valid_incoming_highs = [float(high) for _, high in incoming_ranges if high is not None]
+    if not valid_incoming_highs or len(valid_incoming_highs) != len(incoming_ranges):
         return float("inf")
-    worst = max(float(high) for _, high in incoming_ranges)
+    worst = max(valid_incoming_highs)
     if worst > 0 and (attacks_needed + 1) * worst >= hp:
         return float("inf")
     return 1 + attacks_needed + 1.5 * worst / hp
@@ -3081,7 +3158,7 @@ def _weather_control_battle_plan(team_data, opponent, matchups, moves_data, item
              f'Maximum modeled hit {maximum_incoming_damage:.0f}/{get_stat(beneficiary, "HP"):.0f} HP.'
              f'{accuracy_note}{charge_note} '
              f'Weather lasts up to {duration} turns; switching uses one turn.')
-    if protected_alternative is not None:
+    if protected_alternative is not None and dmax_target is not None:
         protected_member, hit_fraction = protected_alternative
         line += (f' Counter preservation: {pokemon_display_name(protected_member)} '
                  f'is also recommended against the opposing '
@@ -3582,7 +3659,8 @@ def build_battle_compass_view_model(
                     contact_candidate[0] >= 3.0):
                 defensive_result = contact_candidate[1]
             counter = _defensive_attrition_counterattack(
-                team_data, opponent, matchup_results, moves_data, items, ability_rules)
+                team_data, opponent, matchup_results, moves_data, items, ability_rules,
+                compare_safe_resistance=not isinstance(defensive_result, str))
             if counter is not None:
                 counter_cost, counter_plan, counter_turns, counter_worst, counter_name, counter_attack = counter
                 if isinstance(defensive_result, str):
