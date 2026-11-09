@@ -2173,6 +2173,8 @@ def _defensive_attrition_avoidance_plan(team_data, opponent, matchups, moves_dat
         turns, _, attack = min(attacks, key=lambda x: (x[0], x[1]))
         for name in equipped:
             move = lookup.get(name)
+            if move is None:
+                continue
             setup = avoidance_setup(move)
             if setup is None:
                 continue
@@ -2189,6 +2191,8 @@ def _defensive_attrition_avoidance_plan(team_data, opponent, matchups, moves_dat
             maximum_crit = 0.0
             high_crit_moves = []
             for enemy_move, (_, upper) in baseline:
+                if upper is None:
+                    continue
                 normal_high = float(upper)
                 multiplied = normal_high * minimize_damage_multiplier(enemy_move, minimize=minimize)
                 probability = accuracy_after_setup(enemy_move, stages, minimize=minimize, opponent=opponent)
