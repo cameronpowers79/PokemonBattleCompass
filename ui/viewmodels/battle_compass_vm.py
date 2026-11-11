@@ -2165,12 +2165,15 @@ def _defensive_attrition_avoidance_plan(team_data, opponent, matchups, moves_dat
             if low is None or high is None or float(low) <= 0:
                 continue
             turns = ceil(target_hp / float(low))
-            if turns < 2 or turns > 5:
-                continue  # Never spend setup on a reliable immediate KO.
             attacks.append((turns, -float(low), m))
         if not attacks:
             continue
+        # Choose the strongest *actual* follow-up before deciding whether
+        # avoidance is justified.  Excluding OHKOs here would discard Psychic
+        # and choose a weaker 2HKO (e.g. Shadow Ball) just to qualify Minimize.
         turns, _, attack = min(attacks, key=lambda x: (x[0], x[1]))
+        if turns < 2 or turns > 5:
+            continue  # No setup for a reliable OHKO or an overly slow KO.
         for name in equipped:
             move = lookup.get(name)
             if move is None:

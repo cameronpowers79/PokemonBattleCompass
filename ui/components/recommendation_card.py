@@ -535,9 +535,10 @@ class RecommendationCard(ft.Container):
                 and self.setup_followup_base_score is not None
                 and self.setup_followup_score > self.setup_followup_base_score + 0.01
             )
+            avoidance_setup = self.action_type == "Avoidance Setup"
             followup_score_label = (
                 "Conditional Move Score" if conditional_payoff else
-                "Move Score" if contact_punishment else
+                "Move Score" if contact_punishment or avoidance_setup else
                 "Boosted Move Score"
             )
             followup_note = (
@@ -547,6 +548,8 @@ class RecommendationCard(ft.Container):
                 if self.best_move == "Baneful Bunker" and conditional_payoff else
                 "The attack score does not assume that contact or poison occurs."
                 if self.best_move == "Baneful Bunker" else
+                "Avoidance reduces the chance of being hit; it does not boost attack damage."
+                if avoidance_setup else
                 "Conditional on the boost remaining active."
                 if established_sweeper else
                 "Conditional on successfully establishing the boost."
