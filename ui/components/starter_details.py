@@ -15,7 +15,7 @@ import flet as ft
 
 from engine.moves import apply_move_metadata
 from ui.constants import TYPE_COLORS
-from ui.rendering import get_sprite_path
+from ui.rendering import get_sprite_path, slugify_pokemon_name, asset_exists
 from ui.theme import (
     BORDER_DEFAULT,
     CARD_RADIUS,
@@ -91,10 +91,12 @@ class StarterDetails(ft.Container):
         starter_defaults: dict,
         moves_data: list[dict],
         on_completed: Callable[[dict], None],
+        game: str = "Sword",
     ) -> None:
         super().__init__()
 
         self.starter_name = starter_name
+        self.game = game
         self.starter_defaults = starter_defaults
         self.moves_data = moves_data
         self.on_completed = on_completed
@@ -287,6 +289,16 @@ class StarterDetails(ft.Container):
                             starter_type,
                             height=25,
                         ),
+                        *([
+                            ft.Row(
+                                controls=[
+                                    ft.Text("Tera Type", color=TEXT_SECONDARY, size=14),
+                                    self._build_type_badge(starter_type, height=22),
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                spacing=10,
+                            ),
+                        ] if self.game in ("Scarlet", "Violet") else []),
                         ft.Text(
                             "Lv. 5",
                             size=16,
@@ -729,6 +741,8 @@ class StarterDetails(ft.Container):
             "Move4": None,
             "Ability": self.starter_defaults["Ability"],
             "Held Item": None,
+            **({"TeraType": self.starter_defaults["Type1"]}
+               if self.game in ("Scarlet", "Violet") else {}),
             "EffectiveDEF": stats["DEF"],
             "EffectiveSPD": stats["SPD"],
         }
@@ -773,10 +787,19 @@ class StarterDetails(ft.Container):
     def _build_starter_artwork(self) -> ft.Control:
         """Return starter artwork or a fallback placeholder."""
 
-        sprite_path = get_sprite_path(
-            self.starter_name,
-            use_texture=True,
-        )
+        sprite_path = None
+        if self.game in ("Scarlet", "Violet"):
+            gen9_path = (
+                ASSETS_DIR / "raw" / "pokesprite" / "pokemon-gen9"
+                / f"{slugify_pokemon_name(self.starter_name)}-texture.png"
+            )
+            if asset_exists(gen9_path):
+                sprite_path = gen9_path
+        if sprite_path is None:
+            sprite_path = get_sprite_path(
+                self.starter_name,
+                use_texture=True,
+            )
 
         if sprite_path is None:
             return ft.Container(
@@ -808,23 +831,16 @@ class StarterDetails(ft.Container):
     ) -> ft.Control:
         """Return the starter's type badge."""
 
-        badge_path = (
-            ASSETS_DIR
-            / "type_badges"
-            / f"{pokemon_type}.png"
-        )
-
+        is_gen9 = self.game in ("Scarlet", "Violet")
+        is_tera_badge = is_gen9 and height <= 22
+        folder = "gen9_type_badges" if is_gen9 else "type_badges"
+        filename = (f"{pokemon_type.lower()}{'-tera' if is_tera_badge else ''}.png"
+                    if is_gen9 else f"{pokemon_type}.png")
+        badge_path = ASSETS_DIR / folder / filename
         if badge_path.exists():
-            return ft.Image(
-                src=self._asset_src(
-                    badge_path
-                ),
-                height=height,
-                fit=ft.BoxFit.CONTAIN,
-                semantics_label=(
-                    f"{pokemon_type} type"
-                ),
-            )
+            return ft.Image(src=self._asset_src(badge_path), height=height,
+                            fit=ft.BoxFit.CONTAIN,
+                            semantics_label=f"{pokemon_type} {'Tera ' if is_tera_badge else ''}type")
 
         return ft.Text(
             pokemon_type,

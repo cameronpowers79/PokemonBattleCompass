@@ -1084,6 +1084,47 @@ class AppState:
 
 
 
+    async def save_gen9_tracker(self, team_data: list[dict], box_data: list[dict]) -> bool:
+        """Store Gen IX tracking data without Sword/Shield Journey objectives or engine calls."""
+        if self.game not in ("Scarlet", "Violet") or self.journey is None:
+            return False
+        from ui.storage.journey_storage import save_journey
+        current = self.journey
+        replacement = deepcopy(current)
+        old_records = list(current.get("team", [])) + list(current.get("box", []))
+        def merge_history(pokemon: dict, old: dict | None) -> dict:
+            updated = deepcopy(pokemon)
+            history = deepcopy((old or {}).get("_gen9_stat_history", []))
+            if not isinstance(history, list):
+                history = []
+            snapshot = {k: updated.get(k) for k in ("Level", "HP", "ATK", "DEF", "SPA", "SPD", "SPE")}
+            if snapshot["Level"] is not None and all(snapshot[k] is not None for k in ("HP", "ATK", "DEF", "SPA", "SPD", "SPE")):
+                if not history or any(history[-1].get(k) != v for k,v in snapshot.items()):
+                    history.append(snapshot)
+            updated["_gen9_stat_history"] = history
+            return updated
+        # Reuse the app's existing stable party/box identity. A newly added
+        # species gets an ID before its first stat snapshot is persisted.
+        old_by_id = {row.get("MemberID"): row for row in old_records if row.get("MemberID")}
+        from uuid import uuid4
+        def prepare(records: list[dict]) -> list[dict]:
+            output = []
+            for row in records:
+                record = deepcopy(row)
+                record.setdefault("MemberID", f"pkm_{uuid4().hex}")
+                previous = old_by_id.get(record["MemberID"])
+                output.append(merge_history(record, previous))
+            return output
+        replacement["team"] = prepare(team_data)
+        replacement["box"] = prepare(box_data)
+        try:
+            ok = await save_journey(self.storage, replacement)
+        except Exception:
+            return False
+        if ok:
+            self.journey = replacement
+        return bool(ok)
+
     def get_journey_export_copy(self) -> dict:
 
         """

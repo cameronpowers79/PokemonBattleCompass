@@ -52,7 +52,7 @@ class AppShell:
         game: str = "Sword",
     ) -> None:
         self.page = page
-        self.game = game if game in ("Sword", "Shield") else "Sword"
+        self.game = game if game in ("Sword", "Shield", "Scarlet", "Violet") else "Sword"
 
         self.view_builders = {
             "battle_compass": battle_compass_view,
@@ -178,32 +178,12 @@ class AppShell:
             wrap=True,
         )
 
-        # Separate from the primary branding: this is Journey context,
-        # aligned with navigation rather than competing with the wordmark.
-        self.game_identity = ft.Image(
-            src=f"raw/game_logos/{self.game.lower()}.png",
-            width=124, height=98, fit=ft.BoxFit.CONTAIN,
-            semantics_label=f"Pokémon {self.game} Journey",
-        )
-        self.navigation_host = ft.Container(
-            content=ft.Stack(
-                controls=[
-                    ft.Container(content=self.navigation,
-                                 alignment=ft.Alignment.CENTER),
-                    ft.Container(content=self.game_identity,
-                                 left=12, top=0),
-                ],
-                height=100,
-                clip_behavior=ft.ClipBehavior.NONE,
-            ),
-        )
-
         self.page_container = ft.Container(
             content=ft.SafeArea(
                 content=ft.Column(
                     controls=[
                         self.build_branding_header(),
-                        self.navigation_host,
+                        self.navigation,
                         ft.Divider(
                             color=BORDER_DEFAULT,
                             height=1,
@@ -383,8 +363,21 @@ class AppShell:
         )
 
     def build_branding_header(self) -> ft.Control:
-        """Center the main identity; the selected game appears by navigation."""
-        return ft.Container(
+        """Show the selected game at left and center the product branding."""
+        game_logo = ft.Container(
+            content=ft.Image(
+                src=f"raw/game_logos/{self.game.lower()}.png",
+                width=150, height=126, fit=ft.BoxFit.CONTAIN,
+                semantics_label=f"Pokémon {self.game} Journey",
+            ),
+            alignment=ft.Alignment.CENTER,
+            # Position the game logo between the wordmark and section divider,
+            # as in the original Sword/Shield design. Offset is paint-only:
+            # it does not change the row height or move the central branding.
+            offset=ft.Offset(0, 0.85),
+            col={"xs": 12, "md": 2},
+        )
+        main_brand = ft.Container(
             content=ft.Column(
                 controls=[
                     ft.Image(src="raw/BattleCompassLogo.png", width=122,
@@ -401,6 +394,17 @@ class AppShell:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             alignment=ft.Alignment.CENTER,
+            col={"xs": 12, "md": 8},
+        )
+        return ft.ResponsiveRow(
+            controls=[
+                game_logo,
+                main_brand,
+                ft.Container(col={"xs": 0, "md": 2}),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            run_spacing=8,
         )
 
     def _request_view_change(
@@ -636,29 +640,3 @@ class AppShell:
             if is_mobile
             else 12
         )
-
-        if is_mobile:
-            self.game_identity.width = 82
-            self.game_identity.height = 66
-            self.navigation_host.content = ft.Column(
-                controls=[
-                    ft.Container(content=self.game_identity,
-                                 alignment=ft.Alignment.CENTER),
-                    self.navigation,
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=8,
-            )
-        else:
-            self.game_identity.width = 124
-            self.game_identity.height = 98
-            self.navigation_host.content = ft.Stack(
-                controls=[
-                    ft.Container(content=self.navigation,
-                                 alignment=ft.Alignment.CENTER),
-                    ft.Container(content=self.game_identity,
-                                 left=12, top=0),
-                ],
-                height=100,
-                clip_behavior=ft.ClipBehavior.NONE,
-            )

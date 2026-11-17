@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 GAMES = ("Sword", "Shield", "Scarlet", "Violet")
-SUPPORTED_GAMES = ("Sword", "Shield")
+SUPPORTED_GAMES = GAMES
 GAME_MECHANICS = {"Sword": "swsh", "Shield": "swsh", "Scarlet": "sv", "Violet": "sv"}
 SHARED_GAME = "Sword and Shield"
 

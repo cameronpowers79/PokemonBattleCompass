@@ -49,7 +49,6 @@ from engine.strategy_capabilities import (
 from engine.learnsets import supported_strategy_move_methods, supported_strategy_move_names
 from engine.coverage_planning import catalog_team_member
 from engine.team_coverage import team_coverage
-from engine.team_complementarity import rank_with_team_coverage
 from ui.components.team_coverage_panel import team_coverage_panel
 from engine.base_stats_registry import base_stat_profiles
 from ui.rendering import get_sprite_path
@@ -75,6 +74,9 @@ STARTER_DEFAULTS = {
         "Move1": "Pound",
         "Move2": "Growl",
     },
+    "Sprigatito": {"Type1": "Grass", "Ability": "Overgrow", "Move1": "Scratch", "Move2": "Tail Whip"},
+    "Fuecoco": {"Type1": "Fire", "Ability": "Blaze", "Move1": "Tackle", "Move2": "Leer"},
+    "Quaxly": {"Type1": "Water", "Ability": "Torrent", "Move1": "Pound", "Move2": "Growl"},
 }
 
 
@@ -110,7 +112,6 @@ class OnboardingView:
         self.pending_strategy = "strongest_matchup"
         self.planned_team: list[dict] = []
         self._onboarding_recommendation_page = 0
-        self._coverage_suggestions = {}
         self.weather_focus: str | None = None
         self.weather_intent = "auto"
         from engine.game_support import matches_game, resolve_game_record
@@ -552,7 +553,7 @@ class OnboardingView:
         from ui.rendering import asset_exists, ASSETS_DIR
         cards = []
         for game in ("Sword", "Shield", "Scarlet", "Violet"):
-            supported = game in ("Sword", "Shield")
+            supported = True
             logo = f"raw/game_logos/{game.lower()}.png"
             artwork = (
                 ft.Image(src=logo, width=220, height=96,
@@ -574,7 +575,7 @@ class OnboardingView:
                 content=ft.Column(controls=[
                     ft.Container(content=artwork, width=232, height=110,
                                  alignment=ft.Alignment.CENTER),
-                    ft.Text("Available" if supported else "Coming Soon",
+                    ft.Text("Team Tracker Preview" if game in ("Scarlet", "Violet") else "Available",
                             color=TEXT_SECONDARY, size=14),
                     ft.Button(content=f"Play {game}" if supported else "Stay tuned!", disabled=not supported,
                               on_click=choose),
@@ -582,7 +583,7 @@ class OnboardingView:
                 width=260, padding=16, bgcolor=SURFACE_RAISED, border_radius=14))
         return self._onboarding_panel("Which game are you playing?", [
             ft.Text("Your Journey uses the opponents and battle rules for your selected game. "
-                    "Scarlet and Violet are not yet supported.", color=TEXT_SECONDARY,
+                    "Scarlet/Violet currently support My Team tracking only.", color=TEXT_SECONDARY,
                     text_align=ft.TextAlign.CENTER),
             ft.Text("Generation VIII", size=24, weight=ft.FontWeight.BOLD,
                     color=TEXT_PRIMARY),
@@ -607,8 +608,10 @@ class OnboardingView:
 
     def _build_starter_selection(self) -> ft.Control:
         """Allow game corrections adjacent to the primary starter action."""
+        starters = ("Sprigatito", "Fuecoco", "Quaxly") if self.pending_game in ("Scarlet", "Violet") else ("Grookey", "Scorbunny", "Sobble")
         selection = StarterSelection(
-            starter_defaults=STARTER_DEFAULTS,
+            starter_defaults={name: STARTER_DEFAULTS[name] for name in starters},
+            game=self.pending_game,
             on_selected=self._handle_starter_selected,
         )
         # Move the existing action—not a new action—so selection state and
@@ -648,6 +651,7 @@ class OnboardingView:
             ],
             moves_data=self.app_state.moves_data,
             on_completed=self._starter_ready,
+            game=self.pending_game,
         )
 
         return ft.Column(controls=[
@@ -722,6 +726,10 @@ class OnboardingView:
         self.planned_team = []
         self.weather_focus = None
         self.weather_intent = "auto"
+        if self.pending_game in ("Scarlet", "Violet"):
+            # Team-only preview: no Gen VIII strategy planning or recommendations.
+            self.page.run_task(self._replace_gen9_journey)
+            return
         self.content_host.content = self._build_strategy_intro()
         self.page.update()
 
@@ -1066,32 +1074,6 @@ class OnboardingView:
                 self.weather_intent = 'setter'
         return out
 
-    def _coverage_team_members(self) -> list[dict]:
-        """Selected future roster with committed moves; never hypothetical moves."""
-        team = []
-        if self.starter_retention != "box":
-            if self.pending_starter_record:
-                team.append(dict(self.pending_starter_record))
-            elif self.pending_starter:
-                team.append(self._starter_final_candidate())
-        for selection in self.planned_team:
-            record = self._planning_record(selection['name'])
-            if record is None:
-                continue
-            member = self._planned_candidate(selection)
-            team.append(catalog_team_member(
-                record, moves=selection.get('moves') or [],
-                ability=str(selection.get('ability') or ''),
-                gender=str(member.get('Gender') or '')))
-        return team[:6]
-
-    @staticmethod
-    def _starting_moves(selection: dict, guidance) -> list[str]:
-        """Strategy moves first, then explicit coverage suggestions; all optional."""
-        base = [name for name, _, _ in guidance]
-        coverage = selection.get('coverage_moves') or []
-        return list(dict.fromkeys([*base[:2], *coverage, *base[2:]]))[:4]
-
     def _onboarding_coverage(self, *, include_moves: bool) -> dict:
         """Show only the selected roster and explicitly chosen move slots."""
         team = []
@@ -1119,7 +1101,7 @@ class OnboardingView:
         """Four optional, validated move slots. Strategy suggestions are editable defaults."""
         guidance = self._planned_move_guidance(selection, candidate)
         if selection.get('moves') is None:
-            selection['moves'] = self._starting_moves(selection, guidance)
+            selection['moves'] = list(dict.fromkeys(name for name, _, _ in guidance))[:4]
         current = list(selection.get('moves') or [])[:4]
         while len(current) < 4:
             current.append('')
@@ -1188,12 +1170,6 @@ class OnboardingView:
             controls.append(ft.Row(controls=[dropdown,type_host],spacing=12,
                                    vertical_alignment=ft.CrossAxisAlignment.CENTER,wrap=True))
         controls.append(warning)
-        for name, types, timing in selection.get('coverage_move_details') or []:
-            controls.append(ft.Text(
-                f"Coverage option: {name} adds super-effective coverage against "
-                f"{', '.join(types[:5])}. "
-                + ("Acquisition timing needs checking." if timing != 'available_now' else "Available at current progression."),
-                size=12, color=TEXT_SECONDARY))
         controls.append(ft.Text('Moves must be available from the supported base-game learnset; '
             'egg and DLC-only moves are excluded. Move sources are selected automatically '
             'where needed and can be adjusted in My Journey.',size=12,color=TEXT_SECONDARY))
@@ -1227,20 +1203,6 @@ class OnboardingView:
                                                                 "DUAL_SCREEN" in x.capability_keys for x in capabilities) else None))
             if self.pending_strategy == "weather_control" and not self.weather_focus:
                 options = []
-            self._coverage_suggestions = {}
-            if viability.viability == 'Strong' and self.pending_strategy in {
-                'defensive_attrition', 'status_control_punish', 'setup_offense'
-            }:
-                assessed = rank_with_team_coverage(
-                    self.pending_strategy, viability.viability, self._coverage_team_members(),
-                    options, self._planning_options(),
-                    self.app_state.reference_data['type_chart'],
-                    self.app_state.moves_data, self._planning_learnsets,
-                )
-                self._coverage_suggestions = {
-                    entry.recommendation.pokemon_name.casefold(): entry for entry in assessed
-                }
-                options = [entry.recommendation for entry in assessed]
             if not options:
                 controls.append(ft.Text("Choose a weather above to see matched recommendations, or finish planning when you are ready." if self.pending_strategy == "weather_control" else "No further supported strategy contributors were found; remaining slots are yours for coverage and personal preferences.", color=TEXT_SECONDARY))
             else:
@@ -1249,25 +1211,8 @@ class OnboardingView:
                 max_page = max(0, (len(options) - 1) // page_size)
                 self._onboarding_recommendation_page = min(self._onboarding_recommendation_page, max_page)
                 for item in options[self._onboarding_recommendation_page * page_size:(self._onboarding_recommendation_page + 1) * page_size]:
-                    suggestion = self._coverage_suggestions.get(item.pokemon_name.casefold())
-                    reason = (suggestion.recommendation_reason if suggestion else 'Core Strategy')
-                    if suggestion and suggestion.coverage_focus:
-                        reason += f" ({suggestion.coverage_focus})"
-                    # Keep the heading outside the artwork/details Row. Expanding
-                    # text inside a wrapping row can make Flet give the artwork
-                    # an unbounded area (the large blank-texture regression).
-                    card_heading = ft.Row(controls=[
-                        ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY,
-                                weight=ft.FontWeight.BOLD, expand=True),
-                        ft.Container(
-                            content=ft.Text('Currently Recommended for: ' + reason,
-                                            color=TEXT_SECONDARY, size=12,
-                                            text_align=ft.TextAlign.RIGHT),
-                            width=280,
-                        ),
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                       vertical_alignment=ft.CrossAxisAlignment.CENTER)
                     details = ft.Column(controls=[
+                        ft.Text(item.pokemon_name, size=19, color=TEXT_PRIMARY, weight=ft.FontWeight.BOLD),
                         self._strategy_fit_controls(item.pokemon_name, item.summary),
                         ft.Text(item.summary, size=14, color=TEXT_SECONDARY),
                         self._recommendation_base_stats(item.pokemon_name),
@@ -1283,11 +1228,9 @@ class OnboardingView:
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     )
                     controls.append(ft.Container(
-                        content=ft.Column(controls=[
-                            card_heading,
-                            ft.Row(controls=[visual, details], spacing=18,
-                                   vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                        ], spacing=10),
+                        content=ft.Row(controls=[
+                            visual, details,
+                        ], spacing=18, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=16, bgcolor=SURFACE_RAISED,
                         border=ft.Border.all(1, "#354052"), border_radius=14))
                 if max_page:
@@ -1444,16 +1387,9 @@ class OnboardingView:
 
     def _add_planned(self, recommendation):
         ability = re.search(r"Recommended Ability: ([^.]+)", recommendation.summary)
-        suggestion = self._coverage_suggestions.get(recommendation.pokemon_name.casefold())
         self._append_planned_selection(
             recommendation.pokemon_name,
             ability.group(1).split(" (")[0] if ability else "")
-        if suggestion:
-            for item in reversed(self.planned_team):
-                if item.get('name', '').casefold() == recommendation.pokemon_name.casefold():
-                    item['coverage_moves'] = [name for name, _, _ in suggestion.coverage_moves]
-                    item['coverage_move_details'] = list(suggestion.coverage_moves)
-                    break
 
     def _planned_move_guidance(self, selection: dict, candidate: dict):
         # Carry the player's weather package intent into shared move guidance.
@@ -1484,8 +1420,8 @@ class OnboardingView:
         for selection in self.planned_team:
             if selection.get('moves') is None:
                 candidate = self._planned_candidate(selection)
-                selection['moves'] = self._starting_moves(
-                    selection, self._planned_move_guidance(selection, candidate))
+                selection['moves'] = list(dict.fromkeys(
+                    name for name, _, _ in self._planned_move_guidance(selection, candidate)))[:4]
         coverage_host = ft.Container(content=self._onboarding_coverage_panel(include_moves=True))
         items: list[ft.Control] = [
             ft.Text(f'Starter: {self.pending_starter} (always retained in your Journey)'),
@@ -1532,6 +1468,21 @@ class OnboardingView:
         self.content_host.content = self._build_team_planning()
         self.page.update()
 
+    async def _replace_gen9_journey(self) -> None:
+        """Create the ordinary persistent Journey with only My Team enabled."""
+        if self.pending_starter is None or self.pending_starter_record is None:
+            return
+        saved = await self.app_state.replace_journey(
+            starter=self.pending_starter,
+            team_data=[self.pending_starter_record],
+            game=self.pending_game,
+        )
+        if not saved:
+            self._show_onboarding_error("Could not save the team-tracker Journey.")
+            return
+        await self.app_state.save_active_view("my_team")
+        self._show_journey_ready()
+
     async def _replace_journey(self) -> None:
         """Only commit after the user approves the complete onboarding plan."""
         if self.pending_starter is None or self.pending_starter_record is None:
@@ -1562,30 +1513,6 @@ class OnboardingView:
             if not result:
                 self._show_onboarding_error("Journey saved, but some team objectives could not be saved. Check My Journey.")
                 return
-            # Preserve the recommended/chosen Ability for future planning.
-            # The saved plan expresses intent; it does not overwrite My Team's
-            # actual Ability for a Pokémon the player has acquired.
-            chosen_ability = str(selection.get("ability") or "").strip()
-            if chosen_ability:
-                from engine.ability_registry import eligible_abilities
-                from engine.pokemon_identity import resolve_pokemon_id
-                identifier = resolve_pokemon_id(
-                    mon.get("Pokemon"), gender=mon.get("Gender"),
-                    form=mon.get("Form"), game=self.pending_game,
-                )
-                if identifier and chosen_ability in eligible_abilities(identifier):
-                    preferences = dict(self.app_state.my_journey_data.get("planned_pokemon_forms", {}))
-                    # The first occurrence uses the catalog id; additional
-                    # occurrences receive a suffixed planned id.
-                    matching = [pid for pid in self.app_state.my_journey_data.get("planned_pokemon_ids", [])
-                                if str(pid).split("~", 1)[0] == str(record["id"])]
-                    planned_id = matching[-1] if matching else str(record["id"])
-                    details = dict(preferences.get(planned_id, {}))
-                    details["ability"] = chosen_ability
-                    preferences[planned_id] = details
-                    if not await self.app_state.save_planned_pokemon_forms(preferences):
-                        self._show_onboarding_error("Journey saved, but its planned Ability could not be saved.")
-                        return
         self._show_journey_ready()
 
     def _item_objective_id(self, code: str) -> str | None:

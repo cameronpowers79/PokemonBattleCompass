@@ -13,7 +13,7 @@ from typing import cast
 
 import flet as ft
 
-from ui.rendering import get_sprite_path
+from ui.rendering import get_sprite_path, slugify_pokemon_name, asset_exists
 from ui.theme import (
     BORDER_DEFAULT,
     CARD_RADIUS,
@@ -39,11 +39,13 @@ class StarterSelection(ft.Container):
         *,
         starter_defaults: dict[str, dict],
         on_selected: Callable[[str], None],
+        game: str = "Sword",
     ) -> None:
         super().__init__()
 
         self._starter_defaults = starter_defaults
         self._on_selected = on_selected
+        self.game = game
 
         self.selected_starter: str | None = None
         self.cards: dict[str, ft.Container] = {}
@@ -110,10 +112,13 @@ class StarterSelection(ft.Container):
                     ),
                     ft.Text(
                         (
-                            "Leon has just entrusted you with your first "
-                            "Pokémon. The Battle Compass is ready to travel "
-                            "alongside you throughout your adventure and help "
-                            "you navigate every matchup with confidence!"
+                            ("Choose your starter to begin tracking your team. "
+                             "Battle guidance will arrive in a later update."
+                             if self.game in ("Scarlet", "Violet") else
+                             "Leon has just entrusted you with your first "
+                             "Pokémon. The Battle Compass is ready to travel "
+                             "alongside you throughout your adventure and help "
+                             "you navigate every matchup with confidence!")
                         ),
                         size=16,
                         color=TEXT_SECONDARY,
@@ -228,15 +233,19 @@ class StarterSelection(ft.Container):
                 self.selected_starter,
             )
 
-    @staticmethod
     def _build_sprite(
+        self,
         pokemon: str,
     ) -> ft.Control:
 
-        sprite = get_sprite_path(
-            pokemon,
-            use_texture=True,
-        )
+        sprite = None
+        if self.game in ("Scarlet", "Violet"):
+            gen9_dir = ASSETS_DIR / "raw" / "pokesprite" / "pokemon-gen9"
+            gen9_path = gen9_dir / f"{slugify_pokemon_name(pokemon)}-texture.png"
+            if asset_exists(gen9_path):
+                sprite = gen9_path
+        if sprite is None:
+            sprite = get_sprite_path(pokemon, use_texture=True)
 
         if sprite is None:
             return ft.Text("?")

@@ -630,6 +630,7 @@ async def main(page: ft.Page) -> None:
 
 
 
+        _diag(f"Journey import rebuilding shell for game={app_state.game!r}")
         show_main_application()
 
 
@@ -648,7 +649,7 @@ async def main(page: ft.Page) -> None:
 
         journey_loaded_dialog.content = ft.Text(
 
-            "Your saved Journey has been restored."
+            f"Your Pokémon {app_state.game} Journey has been restored."
 
         )
 
@@ -699,6 +700,42 @@ async def main(page: ft.Page) -> None:
         page.scroll = None
 
 
+
+        if app_state.game in ("Scarlet", "Violet"):
+            from ui.views.gen9_team_view import Gen9TeamView
+            from ui.theme import SURFACE, TEXT_SECONDARY
+            tracker = Gen9TeamView(page, app_state=app_state,
+                                   on_start_new_journey=start_new_journey_from_app,
+                                   on_journey_loaded=show_loaded_application)
+
+            def coming_soon(section: str):
+                return ft.Container(content=ft.Column([
+                    ft.Text(section, size=29, weight=ft.FontWeight.BOLD),
+                    ft.Text("Coming Soon", size=23, color=TEXT_SECONDARY),
+                    ft.Text("Scarlet/Violet preview currently enables My Team growth tracking only. "
+                            "Battle calculations and Journey planning are disabled.",
+                            color=TEXT_SECONDARY),
+                ], spacing=16), padding=32, bgcolor=SURFACE, border_radius=14)
+
+            def persist_tracker_view(name: str):
+                page.run_task(app_state.save_active_view, name)
+
+            app_shell = AppShell(
+                page=page, game=app_state.game,
+                battle_compass_view=lambda: coming_soon("Battle Compass"),
+                my_team_view=tracker.build,
+                my_journey_view=lambda: coming_soon("My Journey"),
+                about_view=lambda: coming_soon("About"),
+                initial_view="my_team" if app_state.active_view in ("battle_compass", "my_journey") else app_state.active_view,
+                on_view_changed=persist_tracker_view,
+                my_team_has_unsaved_changes=lambda: tracker.has_unsaved_changes,
+                discard_my_team_changes=tracker.discard_unsaved_changes,
+            )
+            page.controls.clear()
+            page.on_resize = lambda event: app_shell.apply_responsive_layout(event.width)
+            page.add(app_shell.build())
+            page.update()
+            return
 
         battle_compass_view = BattleCompassView(
 

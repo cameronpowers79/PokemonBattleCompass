@@ -30,6 +30,7 @@ from ui.constants import SPRITE_DIR as RELATIVE_SPRITE_DIR
 
 
 SPRITE_DIR = (PROJECT_ROOT / RELATIVE_SPRITE_DIR).resolve()
+GEN9_SPRITE_DIR = (PROJECT_ROOT / "assets" / "raw" / "pokesprite" / "pokemon-gen9").resolve()
 
 BACKUP_ROOT = (
     PROJECT_ROOT.parent
@@ -41,10 +42,11 @@ DEFAULT_ALPHA_THRESHOLD = 8
 
 
 def find_texture_files() -> list[Path]:
-    """Return every texture artwork file beneath the sprite directory."""
+    """Find texture artwork in both the existing Gen VIII and Gen IX locations."""
     return sorted(
         path
-        for path in SPRITE_DIR.rglob("*-texture.png")
+        for directory in (SPRITE_DIR, GEN9_SPRITE_DIR)
+        for path in directory.rglob("*-texture.png")
         if path.is_file()
     )
 
@@ -149,9 +151,11 @@ def backup_file(
     source_path: Path,
 ) -> Path:
     """Copy an original texture to the external backup directory."""
-    relative_path = source_path.relative_to(
-        SPRITE_DIR
-    )
+    if source_path.is_relative_to(GEN9_SPRITE_DIR):
+        relative_path = Path("pokemon-gen9") / source_path.relative_to(GEN9_SPRITE_DIR)
+    else:
+        # Preserve existing Gen VIII backup paths.
+        relative_path = source_path.relative_to(SPRITE_DIR)
 
     backup_path = (
         BACKUP_ROOT

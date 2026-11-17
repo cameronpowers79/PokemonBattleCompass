@@ -48,6 +48,9 @@ VALID_STARTERS = {
     "Grookey",
     "Scorbunny",
     "Sobble",
+    "Sprigatito",
+    "Fuecoco",
+    "Quaxly",
 }
 
 DEFAULT_TEAM_STRATEGY = "strongest_matchup"
